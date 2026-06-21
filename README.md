@@ -42,12 +42,21 @@ npm run build      # production build → dist/
 
 ## Deployment
 
-Pushing to `main` triggers the GitHub Actions workflow in
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which builds and
-publishes to GitHub Pages.
+The site is published to **GitHub Pages** from the `gh-pages` branch (the built
+`dist/` plus a `.nojekyll` marker). To redeploy after changes:
 
-The Vite `base` is set to `/LLMScale/` (the repo path). For a custom
-domain or the user root, build with `VITE_BASE=/ npm run build`.
+```bash
+npm run build      # outputs to dist/
+npm run deploy     # pushes dist/ to the gh-pages branch (gh-pages CLI)
+```
+
+The Vite `base` is set to `/LLMScale/` (the repo path). For a custom domain or
+the user root, build with `VITE_BASE=/ npm run build`.
+
+> **Optional CI:** a ready-to-use Actions workflow is kept locally at
+> `.github/workflows/deploy.yml` (git-ignored). To auto-deploy on push, grant the
+> `workflow` scope (`gh auth refresh -h github.com -s workflow`), commit that
+> file, and switch the Pages source to "GitHub Actions".
 
 ## License
 
