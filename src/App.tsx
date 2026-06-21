@@ -39,10 +39,21 @@ export default function App() {
   useEffect(() => {
     if (state.hfId && !state.arch) {
       resolveModel(state.hfId).then((r) => {
-        if (r.arch) {
-          setMeta({ source: r.source, gated: r.gated, modelType: r.modelType, warningKey: r.warningKey });
-          setState((s) => ({ ...s, arch: r.arch }));
-        }
+        setMeta({
+          source: r.source,
+          gated: r.gated,
+          modelType: r.modelType,
+          isMoE: r.isMoE,
+          warningKey: r.warningKey,
+        });
+        const arch = r.arch ?? {
+          numParams: r.numParams || 7e9,
+          numLayers: 32,
+          hiddenSize: 4096,
+          numAttentionHeads: 32,
+          numKeyValueHeads: 8,
+        };
+        setState((s) => ({ ...s, arch }));
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

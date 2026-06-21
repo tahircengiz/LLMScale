@@ -4,7 +4,7 @@
 // config.json from the browser; for those we fall back to the bundled arch DB.
 
 import type { ModelArch } from "./calc";
-import { findKnownByHfId } from "./models";
+import { findKnownByHfId } from "./models.ts";
 
 const HF = "https://huggingface.co";
 
@@ -32,11 +32,24 @@ export type WarningKey = "gatedBundled" | "gatedUnknown" | "configFailed";
 export interface ResolvedModel {
   hfId: string;
   arch: ModelArch | null;
+  /** Best-known total parameter count, even when full arch is unavailable. */
+  numParams: number;
   gated: boolean;
   source: ArchSource;
   modelType?: string;
   isMoE?: boolean;
   warningKey?: WarningKey;
+}
+
+/** Rough parameter count parsed from a repo id, e.g. "...-35B-A3B" → 35e9.
+ * Used only as a fallback when the API has no safetensors size (e.g. GGUF repos).
+ * Takes the largest "<n>B" token so "8x7B" / "30B-A3B" lean toward total size. */
+export function paramsFromName(id: string): number {
+  let max = 0;
+  for (const m of id.matchAll(/(\d+(?:\.\d+)?)\s*b\b/gi)) {
+    max = Math.max(max, parseFloat(m[1]));
+  }
+  return max > 0 ? max * 1e9 : 0;
 }
 
 /** Autocomplete search for text-generation models, ranked by downloads. */
@@ -115,18 +128,21 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
   ]);
 
   const gated = info?.gated ?? Boolean(known?.gated);
-  const numParams = info?.numParams ?? known?.numParams ?? 0;
+  const numParams =
+    info?.numParams ?? known?.numParams ?? paramsFromName(hfId) ?? 0;
 
-  if (cfg && numParams) {
-    const arch = archFromConfig(cfg, numParams);
-    if (arch) {
+  if (cfg) {
+    const arch = archFromConfig(cfg, numParams || known?.numParams || 0);
+    if (arch && arch.numParams > 0) {
+      const modelType = cfg.text_config?.model_type ?? cfg.model_type ?? info?.modelType;
       return {
         hfId,
         arch,
+        numParams: arch.numParams,
         gated,
         source: "config",
-        modelType: cfg.model_type ?? info?.modelType,
-        isMoE: known?.isMoE,
+        modelType,
+        isMoE: (modelType ?? "").includes("moe") || known?.isMoE,
       };
     }
   }
@@ -136,6 +152,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     return {
       hfId,
       arch: { ...known, numParams: numParams || known.numParams },
+      numParams: numParams || known.numParams,
       gated,
       source: "bundled",
       modelType: info?.modelType ?? known.family.toLowerCase(),
@@ -147,6 +164,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
   return {
     hfId,
     arch: null,
+    numParams,
     gated,
     source: "partial",
     modelType: info?.modelType,

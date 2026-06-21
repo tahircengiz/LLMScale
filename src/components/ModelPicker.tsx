@@ -18,6 +18,7 @@ export interface ResolvedMeta {
   source: ArchSource;
   gated: boolean;
   modelType?: string;
+  isMoE?: boolean;
   warningKey?: WarningKey;
 }
 
@@ -73,9 +74,25 @@ export function ModelPicker({
         source: r.source,
         gated: r.gated,
         modelType: r.modelType,
+        isMoE: r.isMoE,
         warningKey: r.warningKey,
       };
-      onModel(id, r.arch, m);
+      if (r.arch) {
+        onModel(id, r.arch, m);
+      } else {
+        // Architecture couldn't be auto-detected (e.g. a GGUF repo or an
+        // unknown model). Seed the Custom tab with the best-known param count
+        // so the result panel stays populated instead of blanking out.
+        const seeded: ModelArch = {
+          numParams: r.numParams || 7e9,
+          numLayers: 32,
+          hiddenSize: 4096,
+          numAttentionHeads: 32,
+          numKeyValueHeads: 8,
+        };
+        onModel(id, seeded, m);
+        setTab("custom");
+      }
       setResults([]);
       setQuery(id);
     } catch {
@@ -235,6 +252,7 @@ export function ModelPicker({
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-ink-850/50 p-3 text-xs ring-1 ring-white/5">
           {sourceBadge}
           {meta?.gated && <Badge tone="warn">gated</Badge>}
+          {meta?.isMoE && <Badge tone="neutral">MoE</Badge>}
           {meta?.modelType && <Badge>{meta.modelType}</Badge>}
           <span className="text-slate-300">{t("model.params", { n: formatParams(arch.numParams) })}</span>
           <span className="text-slate-500">·</span>
