@@ -1,0 +1,18 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vite
+
+# Pushing workflow files needs the gh `workflow` OAuth scope. Until that's
+# granted, deploy is done via the gh-pages branch (see README). Keep the
+# workflow file locally but untracked so it doesn't block `git push`.
+.github/workflows/
+
+# Editor / OS
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+*.log
+npm-debug.log*

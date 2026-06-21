@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>LLMScale — LLM VRAM Calculator (weights, KV cache & GPU sizing)</title>
+    <meta
+      name="description"
+      content="Estimate the GPU memory an LLM needs: model weights, KV cache, context window and concurrent users — then see which GPUs fit. Pulls live config from Hugging Face."
+    />
+    <meta name="author" content="Tahir Cengiz" />
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LLMScale — LLM VRAM Calculator" />
+    <meta
+      property="og:description"
+      content="How much VRAM does your LLM need? Weights + KV cache + context + concurrency, with GPU recommendations."
+    />
+    <meta property="og:image" content="og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LLMScale — LLM VRAM Calculator" />
+    <meta
+      name="twitter:description"
+      content="How much VRAM does your LLM need? Weights + KV cache + context + concurrency, with GPU recommendations."
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
