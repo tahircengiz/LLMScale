@@ -33,7 +33,8 @@ async function search(q: string) {
 
 console.log("=== SEARCH ===");
 await search("Qwen3");
-await search("Qwen/Qwen3.6-35B-A3B");
+await search("RedHatAI/Qwen"); // quantized repos that the text-generation filter used to hide
+await search("redhatai/qwen"); // lowercase
 await search("llama 3");
 
 console.log("\n=== RESOLVE ===");

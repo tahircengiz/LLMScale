@@ -52,10 +52,13 @@ export function paramsFromName(id: string): number {
   return max > 0 ? max * 1e9 : 0;
 }
 
-/** Autocomplete search for text-generation models, ranked by downloads. */
-export async function searchModels(query: string, limit = 12): Promise<HfSearchResult[]> {
+/** Autocomplete search ranked by downloads.
+ * Note: we deliberately do NOT filter by `text-generation` — many popular
+ * quantized/derivative repos (e.g. RedHatAI FP8/NVFP4) omit that pipeline tag,
+ * and filtering would hide them. Non-LLM hits still resolve gracefully. */
+export async function searchModels(query: string, limit = 15): Promise<HfSearchResult[]> {
   if (!query.trim()) return [];
-  const url = `${HF}/api/models?search=${encodeURIComponent(query)}&filter=text-generation&sort=downloads&direction=-1&limit=${limit}`;
+  const url = `${HF}/api/models?search=${encodeURIComponent(query)}&sort=downloads&direction=-1&limit=${limit}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HF search failed: ${res.status}`);
   return (await res.json()) as HfSearchResult[];

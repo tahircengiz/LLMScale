@@ -133,7 +133,7 @@ export default function App() {
       {/* Main grid */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <div className="space-y-5">
-          <Card className="p-5">
+          <Card className="p-5 relative z-30">
             <ModelPicker
               hfId={state.hfId}
               arch={state.arch}
