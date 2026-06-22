@@ -11,8 +11,8 @@ import { GpuFit } from "./components/GpuFit";
 import { Card, Badge, Segmented } from "./components/ui";
 
 // Personal links shown in the footer.
-const GITHUB_URL = "https://github.com/tahircengiz";
-const LINKEDIN_URL = "https://www.linkedin.com/in/tahircengiz/"; // TODO: confirm exact handle
+const GITHUB_URL = "https://github.com/tahircengiz/";
+const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
 // Default hero model so the page shows a real result on first load.
 const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
@@ -219,10 +219,6 @@ function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: st
   const { t } = useLang();
   return (
     <footer className="mt-8 flex flex-col items-center gap-2 border-t border-white/10 pt-6 text-center text-sm text-slate-400">
-      <p>
-        {t("footer.builtBy")} <span className="font-medium text-slate-200">Tahir Cengiz</span> ·{" "}
-        {t("footer.privacy")}
-      </p>
       <div className="flex gap-4 text-slate-400">
         <a href={githubUrl} target="_blank" rel="noreferrer" className="hover:text-brand-400">
           {t("link.github")}
@@ -231,6 +227,7 @@ function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: st
           {t("link.linkedin")}
         </a>
       </div>
+      <p className="text-xs text-slate-500">{t("footer.privacy")}</p>
     </footer>
   );
 }
