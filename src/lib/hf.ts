@@ -23,6 +23,10 @@ export interface HfModelInfo {
   modelType?: string;
   /** dtype of the largest safetensors shard, e.g. "BF16". */
   paramDtype?: string;
+  /** Hub tags (e.g. "conversational", "code", "multimodal", language codes). */
+  tags: string[];
+  /** Primary pipeline tag, e.g. "text-generation", "feature-extraction". */
+  pipelineTag?: string;
 }
 
 export type ArchSource = "config" | "bundled" | "partial";
@@ -38,6 +42,9 @@ export interface ResolvedModel {
   source: ArchSource;
   modelType?: string;
   isMoE?: boolean;
+  /** Hub tags + pipeline tag — capability signals for the task-fit checker. */
+  tags: string[];
+  pipelineTag?: string;
   warningKey?: WarningKey;
 }
 
@@ -82,6 +89,8 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
     numParams: typeof params === "number" ? params : null,
     modelType: d?.config?.model_type,
     paramDtype,
+    tags: Array.isArray(d?.tags) ? d.tags : [],
+    pipelineTag: d?.pipeline_tag,
   };
 }
 
@@ -133,6 +142,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
   const gated = info?.gated ?? Boolean(known?.gated);
   const numParams =
     info?.numParams ?? known?.numParams ?? paramsFromName(hfId) ?? 0;
+  const tags = info?.tags ?? [];
+  const pipelineTag = info?.pipelineTag;
 
   if (cfg) {
     const arch = archFromConfig(cfg, numParams || known?.numParams || 0);
@@ -146,6 +157,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
         source: "config",
         modelType,
         isMoE: (modelType ?? "").includes("moe") || known?.isMoE,
+        tags,
+        pipelineTag,
       };
     }
   }
@@ -160,6 +173,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
       source: "bundled",
       modelType: info?.modelType ?? known.family.toLowerCase(),
       isMoE: known.isMoE,
+      tags,
+      pipelineTag,
       warningKey: gated ? "gatedBundled" : undefined,
     };
   }
@@ -171,6 +186,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     gated,
     source: "partial",
     modelType: info?.modelType,
+    tags,
+    pipelineTag,
     warningKey: gated ? "gatedUnknown" : "configFailed",
   };
 }

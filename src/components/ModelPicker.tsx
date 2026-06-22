@@ -19,6 +19,8 @@ export interface ResolvedMeta {
   gated: boolean;
   modelType?: string;
   isMoE?: boolean;
+  tags?: string[];
+  pipelineTag?: string;
   warningKey?: WarningKey;
 }
 
@@ -75,6 +77,8 @@ export function ModelPicker({
         gated: r.gated,
         modelType: r.modelType,
         isMoE: r.isMoE,
+        tags: r.tags,
+        pipelineTag: r.pipelineTag,
         warningKey: r.warningKey,
       };
       if (r.arch) {
