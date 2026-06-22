@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script>
+      try {
+        if (localStorage.getItem("theme") === "light") document.documentElement.classList.add("light");
+      } catch (e) {}
+    </script>
+    <title>LLMScale — vLLM Parameter Helper (tuned vllm serve command)</title>
+    <meta
+      name="description"
+      content="Generate a tuned vllm serve command for any model — flags for throughput, latency, accuracy or memory, plus tool-calling, long context and quantization, with a copyable command."
+    />
+    <meta name="author" content="Tahir Cengiz" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LLMScale — vLLM Parameter Helper" />
+    <meta
+      property="og:description"
+      content="Pick a model + workload and get a tuned, copyable vllm serve command optimized for performance, accuracy and reliability."
+    />
+    <meta property="og:image" content="og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LLMScale — vLLM Parameter Helper" />
+    <meta
+      name="twitter:description"
+      content="Pick a model + workload and get a tuned, copyable vllm serve command."
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

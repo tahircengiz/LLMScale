@@ -2,14 +2,18 @@ import { useState } from "react";
 import { useLang, type Lang } from "./lib/i18n";
 import { SizingPage } from "./pages/SizingPage";
 import { FitPage } from "./pages/FitPage";
+import { VllmPage } from "./pages/VllmPage";
 import { Badge, Segmented } from "./components/ui";
 
 // Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
-function currentPage(): "fit" | "sizing" {
-  return window.location.pathname.endsWith("fit.html") ? "fit" : "sizing";
+function currentPage(): "fit" | "sizing" | "vllm" {
+  const p = window.location.pathname;
+  if (p.endsWith("fit.html")) return "fit";
+  if (p.endsWith("vllm.html")) return "vllm";
+  return "sizing";
 }
 
 export default function App() {
@@ -85,17 +89,20 @@ export default function App() {
             </button>
           </div>
         </div>
-        <nav className="mt-4 inline-flex gap-1 rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
+        <nav className="mt-4 inline-flex flex-wrap gap-1 rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
           <a href={base} className={tabCls(page === "sizing")}>
             {t("nav.sizing")}
           </a>
           <a href={`${base}fit.html`} className={tabCls(page === "fit")}>
             {t("nav.fit")}
           </a>
+          <a href={`${base}vllm.html`} className={tabCls(page === "vllm")}>
+            {t("nav.vllm")}
+          </a>
         </nav>
       </header>
 
-      {page === "fit" ? <FitPage /> : <SizingPage />}
+      {page === "vllm" ? <VllmPage /> : page === "fit" ? <FitPage /> : <SizingPage />}
 
       <Footer githubUrl={GITHUB_URL} linkedinUrl={LINKEDIN_URL} />
     </div>

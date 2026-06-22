@@ -13,6 +13,7 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL("./index.html", import.meta.url)),
         fit: fileURLToPath(new URL("./fit.html", import.meta.url)),
+        vllm: fileURLToPath(new URL("./vllm.html", import.meta.url)),
       },
     },
   },
