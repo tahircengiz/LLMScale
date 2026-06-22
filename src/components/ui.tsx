@@ -83,7 +83,7 @@ export function Segmented<T extends string>({
             (size === "sm" ? "px-2.5 py-1 text-xs " : "px-3 py-1.5 text-sm ") +
             "rounded-lg font-medium transition " +
             (value === o.value
-              ? "bg-brand-600 text-white shadow"
+              ? "bg-brand-600 text-onbrand shadow"
               : "text-slate-300 hover:bg-white/5")
           }
         >

@@ -16,7 +16,23 @@ export default function App() {
   const { t, lang, setLang } = useLang();
   const page = currentPage();
   const [copied, setCopied] = useState(false);
+  const [light, setLight] = useState(
+    () => typeof document !== "undefined" && document.documentElement.classList.contains("light")
+  );
   const base = import.meta.env.BASE_URL;
+
+  function toggleTheme() {
+    setLight((prev) => {
+      const next = !prev;
+      document.documentElement.classList.toggle("light", next);
+      try {
+        localStorage.setItem("theme", next ? "light" : "dark");
+      } catch {
+        /* localStorage unavailable */
+      }
+      return next;
+    });
+  }
 
   async function share() {
     try {
@@ -30,7 +46,7 @@ export default function App() {
 
   const tabCls = (active: boolean) =>
     "rounded-lg px-3 py-1.5 text-sm font-medium transition " +
-    (active ? "bg-brand-600 text-white shadow" : "text-slate-300 hover:bg-white/5");
+    (active ? "bg-brand-600 text-onbrand shadow" : "text-slate-300 hover:bg-white/5");
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
@@ -42,6 +58,15 @@ export default function App() {
             <Badge tone="good">{t("header.badge")}</Badge>
           </a>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              title="Toggle light / dark"
+              className="rounded-xl bg-ink-850 px-3 py-2 text-sm ring-1 ring-white/10 transition hover:bg-white/5"
+            >
+              {light ? "🌙" : "☀️"}
+            </button>
             <Segmented<Lang>
               value={lang}
               onChange={setLang}
@@ -54,7 +79,7 @@ export default function App() {
             <button
               type="button"
               onClick={share}
-              className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-brand-600/30 transition hover:bg-brand-500"
+              className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-onbrand shadow-lg shadow-brand-600/30 transition hover:bg-brand-500"
             >
               {copied ? t("header.shareCopied") : t("header.share")}
             </button>

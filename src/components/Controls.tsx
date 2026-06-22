@@ -87,7 +87,7 @@ export function Controls({
               className={
                 "rounded-lg px-2 py-1 text-[11px] ring-1 transition " +
                 (contextLength === c
-                  ? "bg-brand-600 text-white ring-brand-500"
+                  ? "bg-brand-600 text-onbrand ring-brand-500"
                   : "bg-ink-850 text-slate-300 ring-white/10 hover:bg-white/5")
               }
             >
@@ -112,7 +112,7 @@ export function Controls({
               className={
                 "rounded-lg px-2.5 py-1 text-[11px] ring-1 transition " +
                 (concurrency === n
-                  ? "bg-brand-600 text-white ring-brand-500"
+                  ? "bg-brand-600 text-onbrand ring-brand-500"
                   : "bg-ink-850 text-slate-300 ring-white/10 hover:bg-white/5")
               }
             >
