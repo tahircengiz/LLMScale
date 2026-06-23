@@ -29,6 +29,7 @@ export const GPUS: Gpu[] = [
   { id: "a6000-48", name: "RTX A6000", vramGiB: 48, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 768 },
   { id: "rtx6000ada-48", name: "RTX 6000 Ada", vramGiB: 48, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 960 },
   { id: "l40s-48", name: "NVIDIA L40S", vramGiB: 48, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 864 },
+  { id: "rtxpro6000-96", name: "RTX PRO 6000 Blackwell", vramGiB: 96, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 1792 },
 
   // Datacenter
   { id: "t4-16", name: "NVIDIA T4", vramGiB: 16, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 320 },
@@ -121,6 +122,12 @@ export const MIG_PROFILES: Record<string, MigProfile[]> = {
     { id: "3g.90gb", memGiB: 90, max: 2 },
     { id: "4g.90gb", memGiB: 90, max: 1 },
     { id: "7g.180gb", memGiB: 180, max: 1 },
+  ],
+  // RTX PRO 6000 Blackwell (96GB) supports up to 4 MIG instances.
+  "rtxpro6000-96": [
+    { id: "1g.24gb", memGiB: 24, max: 4 },
+    { id: "2g.48gb", memGiB: 48, max: 2 },
+    { id: "4g.96gb", memGiB: 96, max: 1 },
   ],
 };
 
