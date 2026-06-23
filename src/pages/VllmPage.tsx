@@ -4,7 +4,7 @@ import { resolveModel } from "../lib/hf";
 import { findKnownByHfId } from "../lib/models";
 import { extractCaps } from "../lib/fit";
 import { recommend, PRIORITIES, VLLM_TASKS, type Priority, type VllmTask } from "../lib/vllm";
-import { GPUS } from "../lib/gpus";
+import { GPUS, migMem, migProfilesFor } from "../lib/gpus";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Card, Field, NumberInput, SectionTitle, Segmented } from "../components/ui";
@@ -22,6 +22,7 @@ function initial() {
     gpuId: p.get("gpu") || "h100-80",
     gpuCount: Number(p.get("n")) || 1,
     ctx: Number(p.get("ctx")) || 8192,
+    mig: p.get("mig") || "",
   };
 }
 
@@ -37,6 +38,7 @@ export function VllmPage() {
   const [task, setTask] = useState<VllmTask>(init.task);
   const [gpuId, setGpuId] = useState(init.gpuId);
   const [gpuCount, setGpuCount] = useState(init.gpuCount);
+  const [migId, setMigId] = useState(init.mig);
   const [maxLen, setMaxLen] = useState(init.ctx);
   const [copied, setCopied] = useState(false);
 
@@ -61,10 +63,14 @@ export function VllmPage() {
     p.set("gpu", gpuId);
     p.set("n", String(gpuCount));
     p.set("ctx", String(maxLen));
+    if (migId) p.set("mig", migId);
     window.history.replaceState(null, "", `${window.location.pathname}?${p.toString()}`);
-  }, [hfId, priority, task, gpuId, gpuCount, maxLen]);
+  }, [hfId, priority, task, gpuId, gpuCount, migId, maxLen]);
 
   const gpu = GPUS.find((g) => g.id === gpuId) ?? GPUS[0];
+  const migProfiles = migProfilesFor(gpu.id);
+  const effVram = (migId && migMem(gpu.id, migId)) || gpu.vramGiB;
+  const effCount = migId ? 1 : gpuCount;
 
   const rec = useMemo(() => {
     if (!arch) return null;
@@ -74,9 +80,9 @@ export function VllmPage() {
     });
     return recommend({
       hfId, arch, modelType: meta?.modelType, isMoE: caps.isMoE, vision: caps.vision,
-      priority, task, gpuVramGiB: gpu.vramGiB, gpuCount, maxModelLen: maxLen,
+      priority, task, gpuVramGiB: effVram, gpuCount: effCount, maxModelLen: maxLen, mig: !!migId,
     });
-  }, [hfId, arch, meta, priority, task, gpu, gpuCount, maxLen]);
+  }, [hfId, arch, meta, priority, task, effVram, effCount, migId, maxLen]);
 
   async function copy() {
     if (!rec) return;
@@ -139,7 +145,10 @@ export function VllmPage() {
               <Field label="GPU">
                 <select
                   value={gpuId}
-                  onChange={(e) => setGpuId(e.target.value)}
+                  onChange={(e) => {
+                    setGpuId(e.target.value);
+                    setMigId("");
+                  }}
                   className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-brand-500/60"
                 >
                   {(["consumer", "workstation", "datacenter", "apple"] as const).map((cat) => (
@@ -153,13 +162,34 @@ export function VllmPage() {
                   ))}
                 </select>
               </Field>
-              <Field label={t("vllm.gpuCount")}>
-                <NumberInput value={gpuCount} onChange={(v) => setGpuCount(Math.max(1, Math.min(16, v)))} min={1} max={16} />
+              <Field label={t("vllm.gpuCount")} hint={migId ? "MIG = 1" : undefined}>
+                <NumberInput
+                  value={migId ? 1 : gpuCount}
+                  onChange={(v) => setGpuCount(Math.max(1, Math.min(16, v)))}
+                  min={1}
+                  max={16}
+                />
               </Field>
               <Field label={t("vllm.maxlen")} hint={arch?.maxContext ? String(arch.maxContext) : undefined}>
                 <NumberInput value={maxLen} onChange={(v) => setMaxLen(Math.max(512, v))} min={512} step={1024} suffix="tok" />
               </Field>
             </div>
+            {migProfiles.length > 0 && (
+              <Field label={t("gpu.mig")}>
+                <select
+                  value={migId}
+                  onChange={(e) => setMigId(e.target.value)}
+                  className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-slate-200 ring-1 ring-white/10 outline-none focus:ring-brand-500/60"
+                >
+                  <option value="">{t("gpu.migOff")}</option>
+                  {migProfiles.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      MIG {m.id} — {m.memGiB} GB{m.max > 1 ? ` (×${m.max})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
           </Card>
         </div>
 

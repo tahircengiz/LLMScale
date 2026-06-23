@@ -22,6 +22,8 @@ export interface VllmInput {
   gpuVramGiB: number;
   gpuCount: number;
   maxModelLen: number;
+  /** Serving on a single MIG slice (no tensor parallelism across MIG). */
+  mig?: boolean;
 }
 
 export interface VllmFlag {
@@ -91,7 +93,9 @@ export function recommend(i: VllmInput): VllmRec {
   flags.push({ flag: "--max-model-len", value: String(i.maxModelLen), reasonKey: "vllm.r.maxlen" });
 
   // --- parallelism ---
-  if (i.gpuCount > 1) {
+  if (i.mig) {
+    warnings.push({ key: "vllm.w.mig" });
+  } else if (i.gpuCount > 1) {
     flags.push({ flag: "--tensor-parallel-size", value: String(i.gpuCount), reasonKey: "vllm.r.tp" });
     if (i.isMoE) flags.push({ flag: "--enable-expert-parallel", reasonKey: "vllm.r.ep" });
   }

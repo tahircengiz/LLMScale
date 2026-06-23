@@ -112,7 +112,9 @@ export function SizingPage() {
                 cudaContextGiB={state.cudaContextGiB}
                 totalGiB={result.totalGiB}
                 gpuId={state.gpuId}
-                onGpu={(id) => patch({ gpuId: id })}
+                migId={state.migId}
+                onGpu={(id) => patch({ gpuId: id, migId: "" })}
+                onMig={(id) => patch({ migId: id })}
               />
             </Card>
           )}

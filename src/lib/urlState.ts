@@ -13,6 +13,7 @@ export interface AppState {
   overheadPct: number;
   cudaContextGiB: number;
   gpuId: string;
+  migId: string;
 }
 
 export const DEFAULT_STATE: AppState = {
@@ -25,6 +26,7 @@ export const DEFAULT_STATE: AppState = {
   overheadPct: 0.1,
   cudaContextGiB: 0.75,
   gpuId: "rtx4090-24",
+  migId: "",
 };
 
 export function encodeState(s: AppState): string {
@@ -44,6 +46,7 @@ export function encodeState(s: AppState): string {
   p.set("n", String(s.concurrency));
   p.set("ov", String(s.overheadPct));
   p.set("g", s.gpuId);
+  if (s.migId) p.set("mig", s.migId);
   return p.toString();
 }
 
@@ -85,5 +88,6 @@ export function decodeState(search: string): Partial<AppState> {
   const ov = num(p.get("ov"));
   if (ov !== undefined) out.overheadPct = ov;
   if (p.get("g")) out.gpuId = p.get("g")!;
+  if (p.get("mig")) out.migId = p.get("mig")!;
   return out;
 }

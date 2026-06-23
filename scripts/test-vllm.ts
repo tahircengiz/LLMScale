@@ -61,6 +61,10 @@ check("405B on 24GB → fit warning", tight.warnings.some((w) => w.key === "vllm
 const q = recommend(base({ hfId: "Qwen/Qwen2.5-7B-Instruct", arch: qwen7b, task: "structured" }));
 check("structured → guided xgrammar", has(q.command, "--guided-decoding-backend xgrammar"));
 
+const mig = recommend(base({ gpuCount: 4, mig: true, gpuVramGiB: 40 }));
+check("MIG → no tensor-parallel", !has(mig.command, "--tensor-parallel-size"));
+check("MIG → mig warning", mig.warnings.some((w) => w.key === "vllm.w.mig"));
+
 console.log("\n--- sample command (tool, balanced) ---\n" + tool.command);
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);

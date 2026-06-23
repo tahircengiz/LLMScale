@@ -75,6 +75,8 @@ const en: Dict = {
   "gpu.maxContext": "Max context (1 user)",
   "gpu.tokens": "tokens",
   "gpu.weightsNoFit": "weights don't fit",
+  "gpu.mig": "MIG profile",
+  "gpu.migOff": "Full GPU (no MIG)",
   "gpu.cardFits": "fits · {p}%",
   "gpu.cardNeeds": "{n}× needed",
   "cat.consumer": "Consumer",
@@ -218,6 +220,7 @@ const en: Dict = {
   "vllm.w.quant": "Pre-quantized model ({q}) — vLLM auto-detects it; no --quantization needed.",
   "vllm.w.gguf": "GGUF support in vLLM is experimental — a safetensors/native repo is recommended.",
   "vllm.w.fit": "~{need} GiB needed vs ~{have} GiB available — add GPUs (≈{gpus}), quantize, shorten context, or use FP8 KV.",
+  "vllm.w.mig": "MIG = one isolated GPU slice; tensor-parallel across MIG isn't supported. Pin the instance with CUDA_VISIBLE_DEVICES=MIG-…",
 };
 
 const tr: Dict = {
@@ -290,6 +293,8 @@ const tr: Dict = {
   "gpu.maxContext": "Maks context (1 kullanıcı)",
   "gpu.tokens": "token",
   "gpu.weightsNoFit": "ağırlıklar sığmıyor",
+  "gpu.mig": "MIG profili",
+  "gpu.migOff": "Tam GPU (MIG yok)",
   "gpu.cardFits": "sığar · %{p}",
   "gpu.cardNeeds": "{n}× gerekir",
   "cat.consumer": "Tüketici",
@@ -433,6 +438,7 @@ const tr: Dict = {
   "vllm.w.quant": "Önceden quantize edilmiş model ({q}) — vLLM otomatik algılar; --quantization gerekmez.",
   "vllm.w.gguf": "vLLM'de GGUF desteği deneyseldir — safetensors/native repo önerilir.",
   "vllm.w.fit": "~{need} GiB gerekiyor, ~{have} GiB var — GPU ekle (≈{gpus}), quantize et, context'i kısalt ya da FP8 KV kullan.",
+  "vllm.w.mig": "MIG = tek izole GPU dilimi; MIG'ler arası tensor-parallel desteklenmez. Instance'ı CUDA_VISIBLE_DEVICES=MIG-… ile sabitle.",
 };
 
 const DICTS: Record<Lang, Dict> = { en, tr };
