@@ -38,6 +38,8 @@ export interface VllmWarn {
 }
 export interface VllmRec {
   command: string;
+  /** Kubernetes-style args: one `--key=value` per line, no serve/model, no indent. */
+  k8sArgs: string;
   flags: VllmFlag[];
   warnings: VllmWarn[];
 }
@@ -172,10 +174,16 @@ export function recommend(i: VllmInput): VllmRec {
     });
   }
 
-  // --- assemble command ---
+  // --- assemble shell command ---
   const lines = [`vllm serve ${i.hfId}`];
   for (const f of flags) lines.push(`  ${f.flag}${f.value !== undefined ? " " + f.value : ""}`);
   const command = lines.join(" \\\n");
 
-  return { command, flags, warnings };
+  // --- assemble Kubernetes args (one --key=value per line, no serve/model) ---
+  const stripQuotes = (v: string) => v.replace(/^['"]|['"]$/g, "");
+  const k8sArgs = flags
+    .map((f) => `${f.flag}${f.value !== undefined ? "=" + stripQuotes(f.value) : ""}`)
+    .join("\n");
+
+  return { command, k8sArgs, flags, warnings };
 }

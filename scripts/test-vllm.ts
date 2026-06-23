@@ -65,6 +65,14 @@ const mig = recommend(base({ gpuCount: 4, mig: true, gpuVramGiB: 40 }));
 check("MIG → no tensor-parallel", !has(mig.command, "--tensor-parallel-size"));
 check("MIG → mig warning", mig.warnings.some((w) => w.key === "vllm.w.mig"));
 
+console.log("\n--- k8s args format ---");
+const k8s = recommend(base({ task: "tool" }));
+check("k8s uses --key=value", k8s.k8sArgs.includes("--max-model-len=8192"));
+check("k8s no leading whitespace", k8s.k8sArgs.split("\n").every((l) => l === l.trimStart()));
+check("k8s omits 'vllm serve' + model", !k8s.k8sArgs.includes("vllm serve") && !k8s.k8sArgs.includes("Llama-3.1-8B"));
+check("k8s keeps bare boolean flags", k8s.k8sArgs.split("\n").includes("--enable-prefix-caching"));
+console.log("\n--- sample k8s args ---\n" + k8s.k8sArgs);
+
 console.log("\n--- sample command (tool, balanced) ---\n" + tool.command);
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);

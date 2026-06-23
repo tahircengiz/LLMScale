@@ -40,7 +40,7 @@ export function VllmPage() {
   const [gpuCount, setGpuCount] = useState(init.gpuCount);
   const [migId, setMigId] = useState(init.mig);
   const [maxLen, setMaxLen] = useState(init.ctx);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     if (hfId && !arch) {
@@ -84,12 +84,11 @@ export function VllmPage() {
     });
   }, [hfId, arch, meta, priority, task, effVram, effCount, migId, maxLen]);
 
-  async function copy() {
-    if (!rec) return;
+  async function copyText(text: string, which: string) {
     try {
-      await navigator.clipboard.writeText(rec.command);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      await navigator.clipboard.writeText(text);
+      setCopied(which);
+      setTimeout(() => setCopied(null), 1500);
     } catch {
       /* clipboard blocked */
     }
@@ -198,19 +197,42 @@ export function VllmPage() {
           <Card className="p-5">
             {rec ? (
               <div>
-                <div className="mb-3 flex items-center justify-between">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <SectionTitle title={t("vllm.commandTitle")} />
-                  <button
-                    type="button"
-                    onClick={copy}
-                    className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-onbrand transition hover:bg-brand-500"
-                  >
-                    {copied ? t("vllm.copied") : t("vllm.copy")}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => copyText(rec.command, "shell")}
+                      className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-onbrand transition hover:bg-brand-500"
+                    >
+                      {copied === "shell" ? t("vllm.copied") : t("vllm.copy")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => copyText(rec.k8sArgs, "k8s")}
+                      title={t("vllm.k8sHint")}
+                      className="rounded-lg bg-ink-800 px-3 py-1.5 text-xs font-medium text-slate-200 ring-1 ring-white/10 transition hover:bg-white/5"
+                    >
+                      {copied === "k8s" ? t("vllm.copied") : `⇄ ${t("vllm.copyK8s")}`}
+                    </button>
+                  </div>
                 </div>
                 <pre className="overflow-x-auto rounded-xl bg-ink-950 p-4 text-xs leading-relaxed text-slate-200 ring-1 ring-white/10">
                   <code>{rec.command}</code>
                 </pre>
+
+                {/* Model id (selected separately on the K8s platform) */}
+                <div className="mt-3 flex items-center gap-2 rounded-lg bg-ink-850/50 px-3 py-2 text-xs ring-1 ring-white/5">
+                  <span className="shrink-0 text-slate-500">{t("vllm.model")}</span>
+                  <code className="min-w-0 flex-1 truncate text-slate-200">{hfId}</code>
+                  <button
+                    type="button"
+                    onClick={() => copyText(hfId, "model")}
+                    className="shrink-0 rounded-md bg-ink-800 px-2 py-1 text-[11px] text-slate-300 ring-1 ring-white/10 transition hover:bg-white/5"
+                  >
+                    {copied === "model" ? t("vllm.copied") : t("vllm.copy")}
+                  </button>
+                </div>
 
                 <div className="mt-4 text-[11px] uppercase tracking-wide text-slate-400">{t("vllm.flagsTitle")}</div>
                 <ul className="mt-2 space-y-1.5">
