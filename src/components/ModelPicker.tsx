@@ -122,6 +122,8 @@ export function ModelPicker({
   const sourceBadge =
     meta?.source === "config" ? (
       <Badge tone="good">{t("model.badge.config")}</Badge>
+    ) : meta?.source === "base" ? (
+      <Badge tone="good">{t("model.badge.base")}</Badge>
     ) : meta?.source === "bundled" ? (
       <Badge tone="warn">{t("model.badge.bundled")}</Badge>
     ) : meta?.source === "partial" ? (

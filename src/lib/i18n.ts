@@ -23,6 +23,7 @@ const en: Dict = {
   "model.search.loading": "Loading {id}…",
   "model.search.error": "Failed to load model",
   "model.badge.config": "live config.json",
+  "model.badge.base": "base model config",
   "model.badge.bundled": "built-in DB",
   "model.badge.manual": "manual",
   "model.params": "{n} params",
@@ -42,6 +43,7 @@ const en: Dict = {
     "Gated model and not in the built-in database — enter the architecture manually below.",
   "warning.configFailed":
     "Could not read this model's config — enter the architecture manually below.",
+  "warning.archFromBase": "Architecture loaded from the base model (this repo has no config of its own).",
 
   "controls.step": "Precision & workload",
   "controls.weightQuant": "Weight quantization",
@@ -242,6 +244,7 @@ const tr: Dict = {
   "model.search.loading": "{id} yükleniyor…",
   "model.search.error": "Model yüklenemedi",
   "model.badge.config": "canlı config.json",
+  "model.badge.base": "base model config",
   "model.badge.bundled": "gömülü DB",
   "model.badge.manual": "manuel",
   "model.params": "{n} parametre",
@@ -260,6 +263,7 @@ const tr: Dict = {
   "warning.gatedUnknown":
     "Gated model ve gömülü veri tabanında yok — mimariyi aşağıdan manuel gir.",
   "warning.configFailed": "Modelin config'i okunamadı — mimariyi aşağıdan manuel gir.",
+  "warning.archFromBase": "Mimari base model'den yüklendi (bu repo'nun kendi config'i yok).",
 
   "controls.step": "Hassasiyet & yük",
   "controls.weightQuant": "Ağırlık quantization",

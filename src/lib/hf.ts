@@ -27,11 +27,26 @@ export interface HfModelInfo {
   tags: string[];
   /** Primary pipeline tag, e.g. "text-generation", "feature-extraction". */
   pipelineTag?: string;
+  /** Base model this repo was quantized/fine-tuned from (for GGUF/AWQ/FP8 repos). */
+  baseModel?: string;
 }
 
-export type ArchSource = "config" | "bundled" | "partial";
+/** Extract the base model id from cardData.base_model or a base_model:* tag. */
+function baseModelOf(d: any): string | undefined {
+  const cd = d?.cardData?.base_model;
+  if (typeof cd === "string" && cd.includes("/")) return cd;
+  if (Array.isArray(cd) && typeof cd[0] === "string" && cd[0].includes("/")) return cd[0];
+  const tag = (d?.tags ?? []).find((t: unknown) => typeof t === "string" && t.startsWith("base_model:"));
+  if (typeof tag === "string") {
+    const id = tag.slice("base_model:".length).replace(/^(quantized|finetune|merge|adapter|lora):/, "");
+    if (id.includes("/")) return id;
+  }
+  return undefined;
+}
 
-export type WarningKey = "gatedBundled" | "gatedUnknown" | "configFailed";
+export type ArchSource = "config" | "base" | "bundled" | "partial";
+
+export type WarningKey = "gatedBundled" | "gatedUnknown" | "configFailed" | "archFromBase";
 
 export interface ResolvedModel {
   hfId: string;
@@ -76,7 +91,8 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
   const res = await fetch(`${HF}/api/models/${hfId}`);
   if (!res.ok) throw new Error(`Model not found: ${res.status}`);
   const d = await res.json();
-  const params = d?.safetensors?.total ?? null;
+  // GGUF repos expose params under `gguf.total` instead of `safetensors.total`.
+  const params = d?.safetensors?.total ?? d?.gguf?.total ?? null;
   let paramDtype: string | undefined;
   if (d?.safetensors?.parameters) {
     paramDtype = Object.entries(d.safetensors.parameters as Record<string, number>).sort(
@@ -91,6 +107,7 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
     paramDtype,
     tags: Array.isArray(d?.tags) ? d.tags : [],
     pipelineTag: d?.pipeline_tag,
+    baseModel: baseModelOf(d),
   };
 }
 
@@ -160,6 +177,30 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
         tags,
         pipelineTag,
       };
+    }
+  }
+
+  // GGUF / quantized repos have no own config — borrow the base model's
+  // architecture (params still come from this repo's gguf/safetensors size).
+  if (info?.baseModel && info.baseModel.toLowerCase() !== hfId.toLowerCase()) {
+    const baseCfg = await fetchConfig(info.baseModel);
+    if (baseCfg) {
+      const arch = archFromConfig(baseCfg, numParams || 0);
+      if (arch && arch.numParams > 0) {
+        const modelType = baseCfg.text_config?.model_type ?? baseCfg.model_type ?? info?.modelType;
+        return {
+          hfId,
+          arch,
+          numParams: arch.numParams,
+          gated,
+          source: "base",
+          modelType,
+          isMoE: (modelType ?? "").includes("moe") || known?.isMoE,
+          tags,
+          pipelineTag,
+          warningKey: "archFromBase",
+        };
+      }
     }
   }
 
