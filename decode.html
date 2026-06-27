@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script>
+      try {
+        if (localStorage.getItem("theme") === "light") document.documentElement.classList.add("light");
+      } catch (e) {}
+    </script>
+    <title>LLMScale — LLM Model Name Decoder (70B, AWQ, GGUF, FP8, A3B…)</title>
+    <meta
+      name="description"
+      content="Decode any LLM model name: what 70B, AWQ, GGUF, FP8, A3B, Instruct and more mean — colour-coded, explained, and interactive."
+    />
+    <meta name="author" content="Tahir Cengiz" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LLMScale — Model Name Decoder" />
+    <meta
+      property="og:description"
+      content="What does each part of an LLM model name mean? 70B · AWQ · GGUF · FP8 · A3B… colour-coded and explained, interactively."
+    />
+    <meta property="og:image" content="og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LLMScale — Model Name Decoder" />
+    <meta name="twitter:description" content="Decode any LLM model name — 70B, AWQ, GGUF, FP8, A3B and more, explained interactively." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

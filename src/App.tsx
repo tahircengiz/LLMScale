@@ -3,16 +3,18 @@ import { useLang, type Lang } from "./lib/i18n";
 import { SizingPage } from "./pages/SizingPage";
 import { FitPage } from "./pages/FitPage";
 import { VllmPage } from "./pages/VllmPage";
+import { DecodePage } from "./pages/DecodePage";
 import { Badge, Segmented } from "./components/ui";
 
 // Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
-function currentPage(): "fit" | "sizing" | "vllm" {
+function currentPage(): "fit" | "sizing" | "vllm" | "decode" {
   const p = window.location.pathname;
   if (p.endsWith("fit.html")) return "fit";
   if (p.endsWith("vllm.html")) return "vllm";
+  if (p.endsWith("decode.html")) return "decode";
   return "sizing";
 }
 
@@ -99,10 +101,21 @@ export default function App() {
           <a href={`${base}vllm.html`} className={tabCls(page === "vllm")}>
             {t("nav.vllm")}
           </a>
+          <a href={`${base}decode.html`} className={tabCls(page === "decode")}>
+            {t("nav.decode")}
+          </a>
         </nav>
       </header>
 
-      {page === "vllm" ? <VllmPage /> : page === "fit" ? <FitPage /> : <SizingPage />}
+      {page === "vllm" ? (
+        <VllmPage />
+      ) : page === "fit" ? (
+        <FitPage />
+      ) : page === "decode" ? (
+        <DecodePage />
+      ) : (
+        <SizingPage />
+      )}
 
       <Footer githubUrl={GITHUB_URL} linkedinUrl={LINKEDIN_URL} />
     </div>

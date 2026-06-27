@@ -167,6 +167,13 @@ const en: Dict = {
   "fit.msg.effDense": "{params} dense — heavier compute per token",
 
   "nav.vllm": "vLLM Params",
+  "nav.decode": "Name Decoder",
+  "decode.subtitle":
+    "What does each part of a model name mean? Type or pick a model — every token (size, quantization, variant…) is colour-coded and explained. Hover to highlight.",
+  "decode.input": "Model name",
+  "decode.breakdown": "Breakdown",
+  "decode.hint": "Hover a token to light up its meaning.",
+  "decode.empty": "Type a model name to decode it.",
   "vllm.subtitle":
     "Generate a tuned `vllm serve` command. Pick a model, what you're optimizing for, and your workload — LLMScale recommends flags for the best performance, accuracy and reliability, with a copyable command.",
   "vllm.pickPriority": "Optimize for",
@@ -390,6 +397,13 @@ const tr: Dict = {
   "fit.msg.effDense": "{params} yoğun — token başına daha ağır",
 
   "nav.vllm": "vLLM Parametreleri",
+  "nav.decode": "İsim Çözücü",
+  "decode.subtitle":
+    "Bir model adındaki her parça ne anlama geliyor? Bir model yaz ya da seç — her token (boyut, quantization, varyant…) renklendirilip açıklanır. Üzerine gel, parlasın.",
+  "decode.input": "Model adı",
+  "decode.breakdown": "Parçalar",
+  "decode.hint": "Bir token'ın üzerine gel, anlamı parlasın.",
+  "decode.empty": "Çözmek için bir model adı yaz.",
   "vllm.subtitle":
     "Ayarlanmış bir `vllm serve` komutu üret. Bir model, neyi optimize ettiğini ve iş tipini seç — LLMScale en iyi performans, doğruluk ve güvenilirlik için parametreleri önerir ve kopyalanabilir komut verir.",
   "vllm.pickPriority": "Neyi optimize et",
