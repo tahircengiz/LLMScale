@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script>
+      try {
+        if (localStorage.getItem("theme") === "light") document.documentElement.classList.add("light");
+      } catch (e) {}
+    </script>
+    <title>LLMScale — LLM VRAM Calculator (weights, KV cache & GPU sizing)</title>
+    <meta
+      name="description"
+      content="Estimate the GPU memory an LLM needs: model weights, KV cache, context window and concurrent users — then see which GPUs fit. Pulls live config from Hugging Face."
+    />
+    <meta name="author" content="Tahir Cengiz" />
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LLMScale — LLM VRAM Calculator" />
+    <meta
+      property="og:description"
+      content="How much VRAM does your LLM need? Weights + KV cache + context + concurrency, with GPU recommendations."
+    />
+    <meta property="og:image" content="og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LLMScale — LLM VRAM Calculator" />
+    <meta
+      name="twitter:description"
+      content="How much VRAM does your LLM need? Weights + KV cache + context + concurrency, with GPU recommendations."
+    />
+    <script type="module" crossorigin src="/LLMScale/assets/main-x-a2KD-0.js"></script>
+    <link rel="stylesheet" crossorigin href="/LLMScale/assets/main-C9pU4ZHQ.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
