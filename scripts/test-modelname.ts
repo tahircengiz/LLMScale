@@ -44,6 +44,14 @@ const g = kinds("deepseek-ai/DeepSeek-R1-Distill-Qwen-7B");
 check("R1 → reasoning", g["R1"] === "reasoning");
 check("Distill → reasoning", g["Distill"] === "reasoning");
 
+const h = kinds("yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF");
+check("agentic → agentic", h["agentic"] === "agentic");
+check("3.5x → multiplier", h["3.5x"] === "multiplier");
+check("fable5 → codename", h["fable5"] === "codename");
+check("composer2.5 → codename", h["composer2.5"] === "codename");
+check("tau2 → codename", h["tau2"] === "codename");
+check("no token left as 'unknown'", !Object.values(h).includes("unknown"), Object.entries(h).map(([k, v]) => `${k}:${v}`).join(" "));
+
 console.log("\nsample segments:", parseModelName("RedHatAI/Qwen3.6-35B-A3B-NVFP4").segments.map((s) => s.type === "sep" ? s.text : `[${s.text}:${s.kind}]`).join(" "));
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);

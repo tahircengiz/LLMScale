@@ -8,6 +8,8 @@ export type Kind =
   | "quantINT" | "quantWA" | "quantBnb" | "quantDynamic" | "precision"
   | "instruct" | "chat" | "base" | "coder" | "math" | "vision"
   | "embedding" | "reranker" | "reasoning" | "sizeClass" | "speed"
+  | "agentic" | "uncensored" | "method" | "creative" | "preview"
+  | "multiplier" | "codename" | "tag"
   | "context" | "date" | "format" | "unknown";
 
 interface KindInfo {
@@ -110,6 +112,30 @@ export const KIND_INFO: Record<Kind, KindInfo> = {
   format: { color: "#a78bfa",
     title: { en: "Format", tr: "Format" },
     desc: { en: "Packaging / runtime format (HF Transformers, MLX, ONNX …).", tr: "Paketleme / çalışma formatı (HF Transformers, MLX, ONNX …)." } },
+  agentic: { color: "#f97316",
+    title: { en: "Agentic / tool-use", tr: "Ajan / araç-kullanımı" },
+    desc: { en: "Tuned for agent workflows and tool / function calling.", tr: "Ajan akışları ve araç / fonksiyon çağrısı için ayarlanmış." } },
+  uncensored: { color: "#ef4444",
+    title: { en: "Uncensored", tr: "Sansürsüz" },
+    desc: { en: "Safety filtering reduced or removed (abliterated). Behaves with fewer refusals — use responsibly.", tr: "Güvenlik filtresi azaltılmış/kaldırılmış (abliterated). Daha az reddeder — sorumlu kullan." } },
+  method: { color: "#a78bfa",
+    title: { en: "Tuning / merge method", tr: "Eğitim / merge yöntemi" },
+    desc: { en: "How it was post-trained or merged (DPO, ORPO, LoRA, SLERP, TIES, DARE …).", tr: "Nasıl post-train/merge edildiği (DPO, ORPO, LoRA, SLERP, TIES, DARE …)." } },
+  creative: { color: "#ec4899",
+    title: { en: "Roleplay / creative", tr: "Roleplay / yaratıcı" },
+    desc: { en: "Tuned for roleplay, story or creative writing.", tr: "Roleplay, hikâye veya yaratıcı yazım için ayarlanmış." } },
+  preview: { color: "#eab308",
+    title: { en: "Preview / experimental", tr: "Önizleme / deneysel" },
+    desc: { en: "Early / experimental release — may be unstable or change.", tr: "Erken / deneysel sürüm — kararsız olabilir veya değişebilir." } },
+  multiplier: { color: "#22d3ee",
+    title: { en: "Multiplier", tr: "Çarpan" },
+    desc: { en: "A numeric factor — often a merge weight, layer scaling or speed multiplier.", tr: "Sayısal bir katsayı — genelde merge ağırlığı, katman ölçeği veya hız çarpanı." } },
+  codename: { color: "#94a3b8",
+    title: { en: "Codename + number", tr: "Kod-adı + sayı" },
+    desc: { en: "A named component with a number — usually a base model, dataset, method or benchmark this build draws on.", tr: "Sayılı bir bileşen adı — genelde bu yapının dayandığı bir base model, veri seti, yöntem ya da benchmark." } },
+  tag: { color: "#64748b",
+    title: { en: "Custom tag", tr: "Özel etiket" },
+    desc: { en: "A label the author added for this specific fine-tune / merge.", tr: "Yazarın bu fine-tune / merge için eklediği özel etiket." } },
   unknown: { color: "#64748b",
     title: { en: "Name part", tr: "Ad parçası" },
     desc: { en: "A family, variant or label specific to this model.", tr: "Bu modele özgü bir aile, varyant veya etiket." } },
@@ -144,6 +170,13 @@ const MATCHERS: [RegExp, Kind][] = [
   [/^(r1|qwq|thinking|reasoner|reasoning|cot|o1|o3)$/, "reasoning"],
   [/^(mini|nano|tiny|small|medium|large|xl|xxl)$/, "sizeClass"],
   [/^(turbo|flash|lite|fast)$/, "speed"],
+  [/^(agentic|agent|tool|tools|tooluse|functioncalling)$/, "agentic"],
+  [/^(uncensored|abliterated|unfiltered|deabliterated|decensored)$/, "uncensored"],
+  [/^(dpo|orpo|kto|rlhf|ppo|grpo|simpo|merge|merged|slerp|ties|dare|frankenmerge|passthrough|megamerge|lora|qlora)$/, "method"],
+  [/^(roleplay|rp|story|storywriter|creative|writer|novel|erp)$/, "creative"],
+  [/^(preview|exp|experimental|alpha|beta|rc|wip|early)$/, "preview"],
+  [/^moe$/, "moe"],
+  [/^\d+(\.\d+)?x$/, "multiplier"],
   [/^(hf|mlx|onnx|safetensors)$/, "format"],
   [/^\d+k$/, "context"],
   [/^1m$/, "context"],
@@ -157,7 +190,12 @@ const MATCHERS: [RegExp, Kind][] = [
 function classify(token: string, isFirstName: boolean): Kind {
   const s = token.toLowerCase();
   for (const [re, kind] of MATCHERS) if (re.test(s)) return kind;
-  return isFirstName ? "family" : "unknown";
+  if (isFirstName) return "family";
+  // Pattern-based fallback so custom community tags aren't all "unknown":
+  const hasAlpha = /[a-z]/i.test(token);
+  const hasDigit = /\d/.test(token);
+  if (hasAlpha && hasDigit) return "codename"; // e.g. fable5, composer2.5, tau2
+  return "tag"; // e.g. agentic-style custom labels
 }
 
 export interface Seg {
