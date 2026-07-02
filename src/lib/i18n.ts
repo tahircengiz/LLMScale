@@ -100,7 +100,7 @@ const en: Dict = {
     "Estimates are for planning, not a guarantee. Real usage varies by serving engine (vLLM, TGI, llama.cpp), paged-attention efficiency, and special attention variants (e.g. MLA in DeepSeek), which this model does not yet capture.",
 
   "footer.builtBy": "Built by",
-  "footer.privacy": "Runs entirely in your browser — no data leaves your machine.",
+  "footer.privacy": "Your inputs never leave your browser — only anonymous, cookieless visit counts.",
   "link.github": "GitHub",
   "link.linkedin": "LinkedIn",
   "link.hf": "Hugging Face",
@@ -330,7 +330,7 @@ const tr: Dict = {
     "Tahminler planlama içindir, garanti değildir. Gerçek kullanım; servis motoruna (vLLM, TGI, llama.cpp), paged-attention verimliliğine ve özel attention türlerine (ör. DeepSeek'teki MLA) göre değişir — bunlar henüz modellenmemiştir.",
 
   "footer.builtBy": "Yapan:",
-  "footer.privacy": "Tamamen tarayıcında çalışır — hiçbir veri makineni terk etmez.",
+  "footer.privacy": "Girdilerin tarayıcını hiç terk etmez — yalnızca anonim, çerezsiz ziyaret sayımı.",
   "link.github": "GitHub",
   "link.linkedin": "LinkedIn",
   "link.hf": "Hugging Face",
