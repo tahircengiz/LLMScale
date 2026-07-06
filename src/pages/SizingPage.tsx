@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
 import { findKnownByHfId } from "../lib/models";
@@ -28,6 +28,14 @@ export function SizingPage() {
   const [meta, setMeta] = useState<ResolvedMeta | null>(
     state.hfId === HERO.hfId ? { source: "bundled", gated: true, modelType: "llama" } : null
   );
+  // Whether the *original* URL pinned precision explicitly. Captured on first
+  // render, before the encode effect rewrites the query string with defaults —
+  // so a bare `?m=<model>` link still gets its detected quant auto-applied,
+  // while a shared estimate that set wd/kd keeps the user's choice.
+  const urlPinned = useRef({
+    wd: new URLSearchParams(window.location.search).has("wd"),
+    kd: new URLSearchParams(window.location.search).has("kd"),
+  }).current;
 
   useEffect(() => {
     if (state.hfId && !state.arch) {
@@ -39,7 +47,12 @@ export function SizingPage() {
         const arch = r.arch ?? {
           numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8,
         };
-        setState((s) => ({ ...s, arch }));
+        setState((s) => ({
+          ...s,
+          arch,
+          ...(r.weightDtype && !urlPinned.wd ? { weightDtype: r.weightDtype } : {}),
+          ...(r.kvDtype && !urlPinned.kd ? { kvDtype: r.kvDtype } : {}),
+        }));
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
