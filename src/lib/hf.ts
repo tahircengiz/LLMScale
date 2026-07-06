@@ -62,6 +62,8 @@ export interface ResolvedModel {
   pipelineTag?: string;
   /** Effective weight precision detected from quant config / name / torch_dtype. */
   weightDtype?: Dtype;
+  /** FP8 KV-cache precision, only when the model ships a kv_cache_scheme. */
+  kvDtype?: Dtype;
   warningKey?: WarningKey;
 }
 
@@ -199,6 +201,15 @@ function detectWeightDtype(id: string, cfg: any, paramDtype?: string): Dtype | u
   return undefined;
 }
 
+/** KV-cache precision is a serving choice, NOT a model property — so we only
+ * preselect it when the model explicitly ships an FP8 KV-cache calibration
+ * (`quantization_config.kv_cache_scheme`). Otherwise it stays the user's default. */
+function detectKvDtype(cfg: any): Dtype | undefined {
+  const kv = (cfg?.quantization_config ?? cfg?.text_config?.quantization_config)?.kv_cache_scheme;
+  if (kv && typeof kv === "object" && (kv.num_bits === 8 || kv.num_bits === 4)) return "fp8";
+  return undefined;
+}
+
 /**
  * Full resolution pipeline:
  *  1. metadata (param count, gated) — always works
@@ -218,6 +229,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
   const tags = info?.tags ?? [];
   const pipelineTag = info?.pipelineTag;
   const weightDtype = detectWeightDtype(hfId, cfg, info?.paramDtype);
+  const kvDtype = detectKvDtype(cfg);
 
   if (cfg) {
     const arch = archFromConfig(cfg, numParams || known?.numParams || 0);
@@ -234,6 +246,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
         tags,
         pipelineTag,
         weightDtype,
+        kvDtype,
       };
     }
   }
@@ -257,6 +270,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
           tags,
           pipelineTag,
           weightDtype: detectWeightDtype(hfId, baseCfg, info?.paramDtype),
+          kvDtype: detectKvDtype(baseCfg),
           warningKey: "archFromBase",
         };
       }
@@ -276,6 +290,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
       tags,
       pipelineTag,
       weightDtype,
+      kvDtype,
       warningKey: gated ? "gatedBundled" : undefined,
     };
   }
@@ -290,6 +305,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     tags,
     pipelineTag,
     weightDtype,
+    kvDtype,
     warningKey: gated ? "gatedUnknown" : "configFailed",
   };
 }

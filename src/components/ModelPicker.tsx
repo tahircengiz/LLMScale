@@ -22,6 +22,7 @@ export interface ResolvedMeta {
   tags?: string[];
   pipelineTag?: string;
   weightDtype?: Dtype;
+  kvDtype?: Dtype;
   warningKey?: WarningKey;
 }
 
@@ -81,6 +82,7 @@ export function ModelPicker({
         tags: r.tags,
         pipelineTag: r.pipelineTag,
         weightDtype: r.weightDtype,
+        kvDtype: r.kvDtype,
         warningKey: r.warningKey,
       };
       if (r.arch) {
@@ -262,6 +264,7 @@ export function ModelPicker({
           {meta?.gated && <Badge tone="warn">gated</Badge>}
           {meta?.isMoE && <Badge tone="neutral">MoE</Badge>}
           {meta?.weightDtype && <Badge tone="good">{meta.weightDtype.toUpperCase()}</Badge>}
+          {meta?.kvDtype && <Badge tone="good">KV {meta.kvDtype.toUpperCase()}</Badge>}
           {meta?.modelType && <Badge>{meta.modelType}</Badge>}
           <span className="text-slate-300">{t("model.params", { n: formatParams(arch.numParams) })}</span>
           <span className="text-slate-500">·</span>

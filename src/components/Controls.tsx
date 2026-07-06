@@ -58,7 +58,7 @@ export function Controls({
             size="sm"
           />
         </Field>
-        <Field label={t("controls.kvPrecision")}>
+        <Field label={t("controls.kvPrecision")} hint={t("controls.kvHint")}>
           <Segmented<Dtype>
             value={kvDtype}
             options={KV_DTYPES}
