@@ -3,7 +3,7 @@
 // proxy is needed. Gated models (Llama, Gemma, some Mistral) return 401 on
 // config.json from the browser; for those we fall back to the bundled arch DB.
 
-import type { ModelArch } from "./calc";
+import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
 
 const HF = "https://huggingface.co";
@@ -60,6 +60,8 @@ export interface ResolvedModel {
   /** Hub tags + pipeline tag — capability signals for the task-fit checker. */
   tags: string[];
   pipelineTag?: string;
+  /** Effective weight precision detected from quant config / name / torch_dtype. */
+  weightDtype?: Dtype;
   warningKey?: WarningKey;
 }
 
@@ -143,6 +145,60 @@ async function fetchConfig(hfId: string): Promise<any | null> {
   }
 }
 
+/** Map a config.json `quantization_config` to our weight-dtype buckets. */
+function dtypeFromQuantConfig(q: any): Dtype | null {
+  if (!q) return null;
+  const m = String(q.quant_method ?? q.quant_algo ?? "").toLowerCase();
+  const bits = q.bits ?? q.w_bit ?? q.weight_bits;
+  if (m === "awq" || m === "gptq" || m === "gptqmodel") return bits === 8 ? "int8" : "int4";
+  if (m.includes("bitsandbytes") || m === "bnb") return q.load_in_8bit ? "int8" : "int4";
+  // compressed-tensors: inspect the first group's weight quant
+  const groups = q.config_groups;
+  if (groups) {
+    const g: any = groups.group_0 ?? Object.values(groups)[0];
+    const w = g?.weights;
+    if (w?.num_bits) {
+      if (String(w.type ?? "").toLowerCase() === "float" && w.num_bits === 8) return "fp8";
+      if (w.num_bits === 8) return "int8";
+      if (w.num_bits <= 4) return "int4";
+    }
+  }
+  if (m.includes("fp8")) return "fp8";
+  if (bits === 8) return "int8";
+  if (bits === 4 || bits === 3) return "int4";
+  return null;
+}
+
+/** Detect quantization from the repo id (GGUF / name-tagged repos). */
+function dtypeFromName(id: string): Dtype | null {
+  const s = id.toLowerCase();
+  if (/fp8/.test(s)) return "fp8";
+  if (/(nvfp4|w4a16|awq|gptq|[-_.]int4|4[-_.]?bit|gguf|q4|q3|q2)/.test(s)) return "int4";
+  if (/(w8a8|w8a16|[-_.]int8|8[-_.]?bit|q8)/.test(s)) return "int8";
+  return null;
+}
+
+/** Effective weight precision to preselect in the sizing controls. Priority:
+ * quantization_config → repo-id tag → torch_dtype → safetensors dtype. */
+function detectWeightDtype(id: string, cfg: any, paramDtype?: string): Dtype | undefined {
+  const q = cfg?.quantization_config ?? cfg?.text_config?.quantization_config;
+  const fromQ = dtypeFromQuantConfig(q);
+  if (fromQ) return fromQ;
+  const fromName = dtypeFromName(id);
+  if (fromName) return fromName;
+  const td = String(cfg?.text_config?.torch_dtype ?? cfg?.torch_dtype ?? "").toLowerCase();
+  if (td.includes("bfloat16")) return "bf16";
+  if (td.includes("float16")) return "fp16";
+  if (td.includes("float8")) return "fp8";
+  if (td.includes("float32")) return "fp32";
+  const pd = String(paramDtype ?? "").toLowerCase();
+  if (pd.includes("bf16") || pd.includes("bfloat16")) return "bf16";
+  if (pd === "f16" || pd.includes("float16") || pd === "fp16") return "fp16";
+  if (pd.includes("f8") || pd.includes("fp8")) return "fp8";
+  if (pd === "i8" || pd === "int8") return "int8";
+  return undefined;
+}
+
 /**
  * Full resolution pipeline:
  *  1. metadata (param count, gated) — always works
@@ -161,6 +217,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     info?.numParams ?? known?.numParams ?? paramsFromName(hfId) ?? 0;
   const tags = info?.tags ?? [];
   const pipelineTag = info?.pipelineTag;
+  const weightDtype = detectWeightDtype(hfId, cfg, info?.paramDtype);
 
   if (cfg) {
     const arch = archFromConfig(cfg, numParams || known?.numParams || 0);
@@ -176,6 +233,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
         isMoE: (modelType ?? "").includes("moe") || known?.isMoE,
         tags,
         pipelineTag,
+        weightDtype,
       };
     }
   }
@@ -198,6 +256,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
           isMoE: (modelType ?? "").includes("moe") || known?.isMoE,
           tags,
           pipelineTag,
+          weightDtype: detectWeightDtype(hfId, baseCfg, info?.paramDtype),
           warningKey: "archFromBase",
         };
       }
@@ -216,6 +275,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
       isMoE: known.isMoE,
       tags,
       pipelineTag,
+      weightDtype,
       warningKey: gated ? "gatedBundled" : undefined,
     };
   }
@@ -229,6 +289,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     modelType: info?.modelType,
     tags,
     pipelineTag,
+    weightDtype,
     warningKey: gated ? "gatedUnknown" : "configFailed",
   };
 }

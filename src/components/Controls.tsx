@@ -9,6 +9,7 @@ const WEIGHT_DTYPES: { value: Dtype; label: string }[] = [
   { value: "fp8", label: "FP8" },
   { value: "int8", label: "INT8" },
   { value: "int4", label: "INT4" },
+  { value: "fp32", label: "FP32" },
 ];
 
 const KV_DTYPES: { value: Dtype; label: string }[] = [

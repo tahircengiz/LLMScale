@@ -34,7 +34,7 @@ export function SizingPage() {
       resolveModel(state.hfId).then((r) => {
         setMeta({
           source: r.source, gated: r.gated, modelType: r.modelType, isMoE: r.isMoE,
-          tags: r.tags, pipelineTag: r.pipelineTag, warningKey: r.warningKey,
+          tags: r.tags, pipelineTag: r.pipelineTag, weightDtype: r.weightDtype, warningKey: r.warningKey,
         });
         const arch = r.arch ?? {
           numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8,
@@ -74,7 +74,7 @@ export function SizingPage() {
               arch={state.arch}
               meta={meta}
               onModel={(hfId, arch, m) => {
-                patch({ hfId, arch });
+                patch({ hfId, arch, ...(m?.weightDtype ? { weightDtype: m.weightDtype } : {}) });
                 setMeta(m ?? null);
               }}
             />
