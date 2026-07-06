@@ -4,17 +4,19 @@ import { SizingPage } from "./pages/SizingPage";
 import { FitPage } from "./pages/FitPage";
 import { VllmPage } from "./pages/VllmPage";
 import { DecodePage } from "./pages/DecodePage";
+import { AnatomyPage } from "./pages/AnatomyPage";
 import { Badge, Segmented } from "./components/ui";
 
 // Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
-function currentPage(): "fit" | "sizing" | "vllm" | "decode" {
+function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" {
   const p = window.location.pathname;
   if (p.endsWith("fit.html")) return "fit";
   if (p.endsWith("vllm.html")) return "vllm";
   if (p.endsWith("decode.html")) return "decode";
+  if (p.endsWith("anatomy.html")) return "anatomy";
   return "sizing";
 }
 
@@ -104,6 +106,9 @@ export default function App() {
           <a href={`${base}decode.html`} className={tabCls(page === "decode")}>
             {t("nav.decode")}
           </a>
+          <a href={`${base}anatomy.html`} className={tabCls(page === "anatomy")}>
+            {t("nav.anatomy")}
+          </a>
         </nav>
       </header>
 
@@ -113,6 +118,8 @@ export default function App() {
         <FitPage />
       ) : page === "decode" ? (
         <DecodePage />
+      ) : page === "anatomy" ? (
+        <AnatomyPage />
       ) : (
         <SizingPage />
       )}

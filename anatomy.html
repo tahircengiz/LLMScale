@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script>
+      try {
+        if (localStorage.getItem("theme") === "light") document.documentElement.classList.add("light");
+      } catch (e) {}
+    </script>
+    <!-- Cloudflare Web Analytics (privacy-friendly, cookieless) -->
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "781c14086f3e4722b9cfeb3cea063164"}'></script>
+    <title>LLMScale — Model Anatomy (params, precision & KV, visualized)</title>
+    <meta
+      name="description"
+      content="A visual X-ray of any Hugging Face model: where its parameters go (embeddings / attention / experts), its precision mix, architecture, GQA and KV-cache growth — from live Hugging Face data."
+    />
+    <meta name="author" content="Tahir Cengiz" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LLMScale — Model Anatomy" />
+    <meta
+      property="og:description"
+      content="A visual X-ray of any LLM: parameter distribution, precision mix, architecture, GQA and KV-cache growth, from live Hugging Face data."
+    />
+    <meta property="og:image" content="og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LLMScale — Model Anatomy" />
+    <meta
+      name="twitter:description"
+      content="A visual X-ray of any LLM: parameter distribution, precision mix, architecture, GQA and KV-cache growth."
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

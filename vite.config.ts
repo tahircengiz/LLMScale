@@ -15,6 +15,7 @@ export default defineConfig({
         fit: fileURLToPath(new URL("./fit.html", import.meta.url)),
         vllm: fileURLToPath(new URL("./vllm.html", import.meta.url)),
         decode: fileURLToPath(new URL("./decode.html", import.meta.url)),
+        anatomy: fileURLToPath(new URL("./anatomy.html", import.meta.url)),
       },
     },
   },
