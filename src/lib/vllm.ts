@@ -24,6 +24,10 @@ export interface VllmInput {
   maxModelLen: number;
   /** Serving on a single MIG slice (no tensor parallelism across MIG). */
   mig?: boolean;
+  /** Config-detected weight precision (e.g. MXFP4 for gpt-oss) — overrides the
+   * name-based quant guess for the VRAM-fit sanity check so natively-quantized
+   * models aren't sized as bf16. */
+  weightDtype?: Dtype;
 }
 
 export interface VllmFlag {
@@ -162,7 +166,9 @@ export function recommend(i: VllmInput): VllmRec {
   else if (quant) warnings.push({ key: "vllm.w.quant", vars: { q: quant.toUpperCase() } });
 
   // --- VRAM fit sanity (reuses the sizing engine) ---
-  const wDtype = quantToDtype(quant);
+  // Prefer the config-detected precision (handles MXFP4 / config-only FP8 that
+  // the name-based detectQuant misses); fall back to the name-based guess.
+  const wDtype = i.weightDtype ?? quantToDtype(quant);
   const weightsGiB = weightsBytes(i.arch, wDtype) / BYTES_PER_GIB;
   const kvSeqGiB = (kvBytesPerToken(i.arch, kvDtype) * i.maxModelLen) / BYTES_PER_GIB;
   const required = (weightsGiB + kvSeqGiB) * 1.1 + 1; // +overhead +CUDA ctx

@@ -134,6 +134,9 @@ export function maxConcurrency(
   const usableForModel = (budget - cudaOverhead) / (1 + overheadPct);
   const remainingForKv = usableForModel - weights;
   if (remainingForKv <= 0) return 0;
+  // Guard a degenerate arch (0 KV heads / 0 context) so we never divide by zero
+  // and surface an "Infinity" in the UI.
+  if (!(kvPerSeq > 0)) return 0;
   return Math.floor(remainingForKv / kvPerSeq);
 }
 
@@ -152,5 +155,6 @@ export function maxContextLength(
   const usableForModel = (budget - cudaOverhead) / (1 + overheadPct);
   const remainingForKv = usableForModel - weights;
   if (remainingForKv <= 0) return 0;
+  if (!(kvPerTokenAllSeqs > 0)) return 0;
   return Math.floor(remainingForKv / kvPerTokenAllSeqs);
 }

@@ -47,7 +47,7 @@ export function VllmPage() {
       resolveModel(hfId).then((r) => {
         setMeta({
           source: r.source, gated: r.gated, modelType: r.modelType, isMoE: r.isMoE,
-          tags: r.tags, pipelineTag: r.pipelineTag, warningKey: r.warningKey,
+          tags: r.tags, pipelineTag: r.pipelineTag, weightDtype: r.weightDtype, warningKey: r.warningKey,
         });
         setArch(r.arch ?? { numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8 });
       });
@@ -80,6 +80,7 @@ export function VllmPage() {
     });
     return recommend({
       hfId, arch, modelType: meta?.modelType, isMoE: caps.isMoE, vision: caps.vision,
+      weightDtype: meta?.weightDtype,
       priority, task, gpuVramGiB: effVram, gpuCount: effCount, maxModelLen: maxLen, mig: !!migId,
     });
   }, [hfId, arch, meta, priority, task, effVram, effCount, migId, maxLen]);
