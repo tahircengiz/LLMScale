@@ -147,6 +147,15 @@ async function fetchConfig(hfId: string): Promise<any | null> {
   }
 }
 
+/** Detect a Mixture-of-Experts model from config, even when model_type has no
+ * "moe" substring (e.g. gpt_oss, deepseek_v3, qwen3_moe use expert-count keys). */
+function isMoEFromConfig(cfg: any): boolean {
+  const c = cfg?.text_config ?? cfg?.llm_config ?? cfg;
+  const experts =
+    c?.num_local_experts ?? c?.num_experts ?? c?.n_routed_experts ?? c?.moe_num_experts;
+  return typeof experts === "number" && experts > 1;
+}
+
 /** Map a config.json `quantization_config` to our weight-dtype buckets. */
 function dtypeFromQuantConfig(q: any): Dtype | null {
   if (!q) return null;
@@ -154,6 +163,8 @@ function dtypeFromQuantConfig(q: any): Dtype | null {
   const bits = q.bits ?? q.w_bit ?? q.weight_bits;
   if (m === "awq" || m === "gptq" || m === "gptqmodel") return bits === 8 ? "int8" : "int4";
   if (m.includes("bitsandbytes") || m === "bnb") return q.load_in_8bit ? "int8" : "int4";
+  // 4-bit float families (MXFP4 in gpt-oss, NVFP4 in TensorRT/RedHat repos).
+  if (m.includes("fp4")) return "int4";
   // compressed-tensors: inspect the first group's weight quant
   const groups = q.config_groups;
   if (groups) {
@@ -175,7 +186,7 @@ function dtypeFromQuantConfig(q: any): Dtype | null {
 function dtypeFromName(id: string): Dtype | null {
   const s = id.toLowerCase();
   if (/fp8/.test(s)) return "fp8";
-  if (/(nvfp4|w4a16|awq|gptq|[-_.]int4|4[-_.]?bit|gguf|q4|q3|q2)/.test(s)) return "int4";
+  if (/(nvfp4|mxfp4|fp4|w4a16|awq|gptq|[-_.]int4|4[-_.]?bit|gguf|q4|q3|q2)/.test(s)) return "int4";
   if (/(w8a8|w8a16|[-_.]int8|8[-_.]?bit|q8)/.test(s)) return "int8";
   return null;
 }
@@ -242,7 +253,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
         gated,
         source: "config",
         modelType,
-        isMoE: (modelType ?? "").includes("moe") || known?.isMoE,
+        isMoE: (modelType ?? "").includes("moe") || isMoEFromConfig(cfg) || known?.isMoE,
         tags,
         pipelineTag,
         weightDtype,
@@ -266,7 +277,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
           gated,
           source: "base",
           modelType,
-          isMoE: (modelType ?? "").includes("moe") || known?.isMoE,
+          isMoE: (modelType ?? "").includes("moe") || isMoEFromConfig(baseCfg) || known?.isMoE,
           tags,
           pipelineTag,
           weightDtype: detectWeightDtype(hfId, baseCfg, info?.paramDtype),
