@@ -42,7 +42,8 @@ check("U8 → int4 (packed)", classifyDtype("U8") === "int4");
 check("F8_E4M3 → fp8", classifyDtype("F8_E4M3") === "fp8");
 check("F32 → full", classifyDtype("F32") === "full");
 check("I8 → int8", classifyDtype("I8") === "int8");
-check("I32 → other", classifyDtype("I32") === "other");
+check("I32 → int4 (AWQ/GPTQ packed qweight)", classifyDtype("I32") === "int4");
+check("I16 → other", classifyDtype("I16") === "other");
 
 const parts = dtypePartsOf({ BF16: 1804459584, U8: 19707494400 });
 check("dtypeParts sorted desc (U8 first for gpt-oss)", parts[0].dtype === "U8" && parts[0].tier === "int4");

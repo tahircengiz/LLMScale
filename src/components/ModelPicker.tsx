@@ -31,11 +31,15 @@ export function ModelPicker({
   arch,
   meta,
   onModel,
+  hideCustom = false,
 }: {
   hfId: string;
   arch: ModelArch | null;
   meta: ResolvedMeta | null;
   onModel: (hfId: string, arch: ModelArch | null, meta?: ResolvedMeta) => void;
+  /** Hide the manual "Custom" tab — used where the page needs real HF data
+   * (e.g. Model Anatomy) that a hand-entered arch can't provide. */
+  hideCustom?: boolean;
 }) {
   const { t } = useLang();
   const [tab, setTab] = useState<Tab>("search");
@@ -143,7 +147,7 @@ export function ModelPicker({
         options={[
           { value: "search", label: t("model.tab.search") },
           { value: "presets", label: t("model.tab.presets") },
-          { value: "custom", label: t("model.tab.custom") },
+          ...(hideCustom ? [] : [{ value: "custom" as Tab, label: t("model.tab.custom") }]),
         ]}
       />
 

@@ -23,12 +23,22 @@ export interface HfModelInfo {
   modelType?: string;
   /** dtype of the largest safetensors shard, e.g. "BF16". */
   paramDtype?: string;
+  /** Full safetensors dtype→element-count map (for the precision-mix chart). */
+  dtypeParams?: Record<string, number>;
   /** Hub tags (e.g. "conversational", "code", "multimodal", language codes). */
   tags: string[];
   /** Primary pipeline tag, e.g. "text-generation", "feature-extraction". */
   pipelineTag?: string;
   /** Base model this repo was quantized/fine-tuned from (for GGUF/AWQ/FP8 repos). */
   baseModel?: string;
+  // Hub metadata (surfaced for the Model Anatomy tab).
+  downloads?: number;
+  likes?: number;
+  license?: string;
+  createdAt?: string;
+  lastModified?: string;
+  /** Total on-disk repo size in bytes. */
+  usedStorage?: number;
 }
 
 /** Extract the base model id from cardData.base_model or a base_model:* tag. */
@@ -65,6 +75,12 @@ export interface ResolvedModel {
   /** FP8 KV-cache precision, only when the model ships a kv_cache_scheme. */
   kvDtype?: Dtype;
   warningKey?: WarningKey;
+  /** Raw hub metadata already fetched here — reused by the Anatomy tab to avoid
+   * a second round-trip. */
+  info?: HfModelInfo | null;
+  /** The config.json this resolution used (the base model's for source "base"),
+   * so callers can read extra fields (intermediate_size, experts, rope…). */
+  cfg?: any;
 }
 
 /** Rough parameter count parsed from a repo id, e.g. "...-35B-A3B" → 35e9.
@@ -97,11 +113,10 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
   const d = await res.json();
   // GGUF repos expose params under `gguf.total` instead of `safetensors.total`.
   const params = d?.safetensors?.total ?? d?.gguf?.total ?? null;
+  const dtypeParams: Record<string, number> | undefined = d?.safetensors?.parameters;
   let paramDtype: string | undefined;
-  if (d?.safetensors?.parameters) {
-    paramDtype = Object.entries(d.safetensors.parameters as Record<string, number>).sort(
-      (a, b) => b[1] - a[1]
-    )[0]?.[0];
+  if (dtypeParams) {
+    paramDtype = Object.entries(dtypeParams).sort((a, b) => b[1] - a[1])[0]?.[0];
   }
   return {
     id: d?.id ?? hfId,
@@ -109,9 +124,16 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
     numParams: typeof params === "number" ? params : null,
     modelType: d?.config?.model_type,
     paramDtype,
+    dtypeParams,
     tags: Array.isArray(d?.tags) ? d.tags : [],
     pipelineTag: d?.pipeline_tag,
     baseModel: baseModelOf(d),
+    downloads: typeof d?.downloads === "number" ? d.downloads : undefined,
+    likes: typeof d?.likes === "number" ? d.likes : undefined,
+    license: d?.cardData?.license,
+    createdAt: d?.createdAt,
+    lastModified: d?.lastModified,
+    usedStorage: typeof d?.usedStorage === "number" ? d.usedStorage : undefined,
   };
 }
 
@@ -258,6 +280,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
         pipelineTag,
         weightDtype,
         kvDtype,
+        info,
+        cfg,
       };
     }
   }
@@ -283,6 +307,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
           weightDtype: detectWeightDtype(hfId, baseCfg, info?.paramDtype),
           kvDtype: detectKvDtype(baseCfg),
           warningKey: "archFromBase",
+          info,
+          cfg: baseCfg,
         };
       }
     }
@@ -303,6 +329,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
       weightDtype,
       kvDtype,
       warningKey: gated ? "gatedBundled" : undefined,
+      info,
+      cfg,
     };
   }
 
@@ -318,5 +346,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     weightDtype,
     kvDtype,
     warningKey: gated ? "gatedUnknown" : "configFailed",
+    info,
+    cfg,
   };
 }

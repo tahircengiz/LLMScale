@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { BYTES_PER_GIB, DTYPE_BYTES, kvBytesPerToken, type ModelArch } from "../lib/calc";
-import { fetchAnatomy, type Anatomy, type DtypeTier } from "../lib/anatomy";
+import { fetchAnatomy, tierOf, type Anatomy, type DtypeTier } from "../lib/anatomy";
 import { useLang } from "../lib/i18n";
 import { formatGiB, formatInt, formatParams } from "../lib/format";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
@@ -30,7 +30,7 @@ function gb(bytes?: number): string {
 }
 
 export function AnatomyPage() {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const [hfId, setHfId] = useState(initialHfId);
   const [arch, setArch] = useState<ModelArch | null>(null);
   const [meta, setMeta] = useState<ResolvedMeta | null>(null);
@@ -48,9 +48,13 @@ export function AnatomyPage() {
         setMeta({
           source: a.source as ResolvedMeta["source"],
           gated: a.gated,
+          modelType: a.modelType,
           isMoE: a.isMoE,
-          weightDtype: a.weightDtype,
+          tags: a.tags,
           pipelineTag: a.pipelineTag,
+          weightDtype: a.weightDtype,
+          kvDtype: a.kvDtype,
+          warningKey: a.warningKey,
         });
       })
       .finally(() => alive && setLoading(false));
@@ -74,6 +78,7 @@ export function AnatomyPage() {
           hfId={hfId}
           arch={arch}
           meta={meta}
+          hideCustom
           onModel={(id, a, m) => {
             if (id) setHfId(id);
             setArch(a);
@@ -88,12 +93,15 @@ export function AnatomyPage() {
         </Card>
       ) : anatomy ? (
         <div className="space-y-5">
-          <MetaStrip a={anatomy} />
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-            <ParamCard a={anatomy} />
-            <PrecisionCard a={anatomy} />
-            <ArchCard a={anatomy} />
-            <KvCard a={anatomy} />
+          {loading && <div className="text-xs font-medium text-brand-400">{t("anatomy.loading")}</div>}
+          <div className={"space-y-5 transition-opacity " + (loading ? "opacity-50" : "")}>
+            <MetaStrip a={anatomy} />
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <ParamCard a={anatomy} />
+              <PrecisionCard a={anatomy} />
+              <ArchCard a={anatomy} />
+              <KvCard a={anatomy} />
+            </div>
           </div>
           <p className="text-xs text-slate-500">{t("anatomy.disclaimer")}</p>
         </div>
@@ -102,7 +110,6 @@ export function AnatomyPage() {
           <p className="py-10 text-center text-sm text-slate-400">{t("anatomy.empty")}</p>
         </Card>
       )}
-      <span className="sr-only">{lang}</span>
     </div>
   );
 }
@@ -173,11 +180,14 @@ function ParamCard({ a }: { a: Anatomy }) {
 function PrecisionCard({ a }: { a: Anatomy }) {
   const { t } = useLang();
   const p = a.numParams;
-  const bars = [
+  const rows: { label: string; bytes: number; tiers: DtypeTier[] }[] = [
     { label: "BF16 / FP16", bytes: DTYPE_BYTES.fp16, tiers: ["half"] },
     { label: "FP8 / INT8", bytes: DTYPE_BYTES.fp8, tiers: ["fp8", "int8"] },
     { label: "INT4", bytes: DTYPE_BYTES.int4, tiers: ["int4"] },
-  ].map((b) => {
+  ];
+  // Only surface the FP32 row for an fp32-native model, so it can be highlighted.
+  if (a.weightDtype === "fp32") rows.unshift({ label: "FP32", bytes: DTYPE_BYTES.fp32, tiers: ["full"] });
+  const bars = rows.map((b) => {
     const gib = (p * b.bytes) / BYTES_PER_GIB;
     const native = a.weightDtype ? b.tiers.includes(tierOf(a.weightDtype)) : false;
     return { label: b.label, value: gib, valueLabel: formatGiB(gib), color: "#6366f1", highlight: native };
@@ -211,19 +221,11 @@ function PrecisionCard({ a }: { a: Anatomy }) {
   );
 }
 
-function tierOf(dt: string): DtypeTier {
-  if (dt === "fp16" || dt === "bf16") return "half";
-  if (dt === "fp8") return "fp8";
-  if (dt === "int8") return "int8";
-  if (dt === "int4") return "int4";
-  if (dt === "fp32") return "full";
-  return "other";
-}
-
 function ArchCard({ a }: { a: Anatomy }) {
   const { t } = useLang();
   const ar = a.arch;
-  const gqa = ar.numKeyValueHeads < ar.numAttentionHeads;
+  const gqa = ar.numKeyValueHeads > 0 && ar.numKeyValueHeads < ar.numAttentionHeads;
+  const gqaRatio = ar.numKeyValueHeads > 0 ? Math.round(ar.numAttentionHeads / ar.numKeyValueHeads) : 1;
   const mlpRatio = a.intermediateSize ? (a.intermediateSize / ar.hiddenSize).toFixed(1) + "×" : "—";
   const ctxK = ar.maxContext ? (ar.maxContext >= 1024 ? `${Math.round(ar.maxContext / 1024)}k` : String(ar.maxContext)) : "—";
 
@@ -235,7 +237,9 @@ function ArchCard({ a }: { a: Anatomy }) {
         <Spec label={t("anatomy.arch.hidden")} value={ar.hiddenSize} />
         <Spec label={t("anatomy.arch.headDim")} value={a.headDim} />
         <Spec label={t("anatomy.arch.heads")} value={`${ar.numAttentionHeads} / ${ar.numKeyValueHeads}`} sub={gqa ? "GQA" : "MHA"} />
-        <Spec label={t("anatomy.arch.mlpRatio")} value={mlpRatio} sub={a.intermediateSize ? formatInt(a.intermediateSize) : undefined} />
+        {!a.isMoE && (
+          <Spec label={t("anatomy.arch.mlpRatio")} value={mlpRatio} sub={a.intermediateSize ? formatInt(a.intermediateSize) : undefined} />
+        )}
         <Spec label={t("anatomy.arch.context")} value={ctxK} />
         <Spec label={t("anatomy.arch.vocab")} value={ar.vocabSize ? formatInt(ar.vocabSize) : "—"} />
         {a.numExperts != null && (
@@ -247,7 +251,7 @@ function ArchCard({ a }: { a: Anatomy }) {
       <div className="mt-4 text-[11px] uppercase tracking-wide text-slate-400">{t("anatomy.arch.gqaTitle")}</div>
       <p className="mb-2 mt-0.5 text-xs text-slate-400">
         {gqa
-          ? t("anatomy.arch.gqaNote", { q: ar.numAttentionHeads, kv: ar.numKeyValueHeads, ratio: Math.round(ar.numAttentionHeads / ar.numKeyValueHeads) })
+          ? t("anatomy.arch.gqaNote", { q: ar.numAttentionHeads, kv: ar.numKeyValueHeads, ratio: gqaRatio })
           : t("anatomy.arch.mhaNote", { n: ar.numAttentionHeads })}
       </p>
       <GqaDiagram attnHeads={ar.numAttentionHeads} kvHeads={ar.numKeyValueHeads} />

@@ -3,9 +3,7 @@
 // dependency-free and unit-tested; fetchAnatomy plumbs the live data in.
 
 import { resolveHeadDim, type Dtype, type ModelArch } from "./calc.ts";
-import { resolveModel } from "./hf.ts";
-
-const HF = "https://huggingface.co";
+import { resolveModel, type WarningKey } from "./hf.ts";
 
 // ---- parameter distribution ----------------------------------------------
 
@@ -75,9 +73,20 @@ export function classifyDtype(dtype: string): DtypeTier {
   if (d === "F16" || d === "BF16") return "half";
   if (d.startsWith("F8")) return "fp8";
   if (d === "I8") return "int8";
-  // U8 shows up as the packed 4-bit weight tensor in MXFP4/NVFP4/AWQ repos.
-  if (d === "U8" || d === "I4" || d === "U4") return "int4";
-  return "other"; // I32/I16 scales, BOOL masks, etc.
+  // Packed 4-bit weights: U8 for MXFP4/NVFP4 (gpt-oss), I32 for AWQ/GPTQ
+  // (the `qweight` tensor packs 8×int4 into each int32).
+  if (d === "U8" || d === "I4" || d === "U4" || d === "I32") return "int4";
+  return "other"; // I16, BOOL masks, etc.
+}
+
+/** Map an internal weight Dtype to its precision tier (chart colouring). */
+export function tierOf(dt: string): DtypeTier {
+  if (dt === "fp16" || dt === "bf16") return "half";
+  if (dt === "fp8") return "fp8";
+  if (dt === "int8") return "int8";
+  if (dt === "int4") return "int4";
+  if (dt === "fp32") return "full";
+  return "other";
 }
 
 /** Turn safetensors.parameters (dtype→element-count) into sorted parts. */
@@ -97,9 +106,13 @@ export interface Anatomy {
   numParams: number;
   headDim: number;
   weightDtype?: Dtype;
+  kvDtype?: Dtype;
   isMoE: boolean;
   gated: boolean;
   source: string;
+  modelType?: string;
+  tags?: string[];
+  warningKey?: WarningKey;
 
   // architecture extras (from config; may be missing for gated models)
   intermediateSize?: number;
@@ -123,30 +136,16 @@ export interface Anatomy {
   paramDist: ParamDist;
 }
 
-function baseModelOf(d: any): string | undefined {
-  const cd = d?.cardData?.base_model;
-  if (typeof cd === "string" && cd.includes("/")) return cd;
-  if (Array.isArray(cd) && typeof cd[0] === "string" && cd[0].includes("/")) return cd[0];
-  return undefined;
-}
-
-async function fetchJson(url: string): Promise<any | null> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
-/** Resolve the full anatomy for a model id (arch via resolveModel + rich extras). */
+/**
+ * Resolve the full anatomy for a model id. Reuses resolveModel — which already
+ * fetched api/models + config.json and now surfaces them as `info`/`cfg` — so
+ * this adds no extra network round-trips. For a base-resolved (GGUF/quant) repo,
+ * `cfg` is the BASE model's config, so architecture extras are still available.
+ */
 export async function fetchAnatomy(hfId: string): Promise<Anatomy> {
-  const [r, info, cfg] = await Promise.all([
-    resolveModel(hfId),
-    fetchJson(`${HF}/api/models/${hfId}`),
-    fetchJson(`${HF}/${hfId}/resolve/main/config.json`),
-  ]);
+  const r = await resolveModel(hfId);
+  const info = r.info ?? null;
+  const cfg = r.cfg ?? null;
 
   const arch: ModelArch =
     r.arch ?? { numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8 };
@@ -154,7 +153,9 @@ export async function fetchAnatomy(hfId: string): Promise<Anatomy> {
   const headDim = resolveHeadDim(arch);
   const c = cfg?.text_config ?? cfg?.llm_config ?? cfg ?? {};
 
-  const numExperts = c.num_local_experts ?? c.num_experts ?? c.n_routed_experts ?? undefined;
+  // Keep the expert-key list in sync with hf.ts isMoEFromConfig.
+  const numExperts =
+    c.num_local_experts ?? c.num_experts ?? c.n_routed_experts ?? c.moe_num_experts ?? undefined;
   const expertsPerTok = c.num_experts_per_tok ?? undefined;
 
   const paramDist = computeParamDist({
@@ -177,9 +178,13 @@ export async function fetchAnatomy(hfId: string): Promise<Anatomy> {
     numParams,
     headDim,
     weightDtype: r.weightDtype,
+    kvDtype: r.kvDtype,
     isMoE: Boolean(r.isMoE),
     gated: r.gated,
     source: r.source,
+    modelType: r.modelType,
+    tags: r.tags,
+    warningKey: r.warningKey,
     intermediateSize: c.intermediate_size,
     numExperts,
     expertsPerTok,
@@ -188,13 +193,13 @@ export async function fetchAnatomy(hfId: string): Promise<Anatomy> {
     slidingWindow: c.sliding_window,
     downloads: info?.downloads,
     likes: info?.likes,
-    license: info?.cardData?.license,
+    license: info?.license,
     createdAt: info?.createdAt,
     lastModified: info?.lastModified,
     usedStorage: info?.usedStorage,
-    baseModel: baseModelOf(info),
-    pipelineTag: info?.pipeline_tag ?? r.pipelineTag,
-    dtypeParts: dtypePartsOf(info?.safetensors?.parameters),
+    baseModel: info?.baseModel,
+    pipelineTag: info?.pipelineTag ?? r.pipelineTag,
+    dtypeParts: dtypePartsOf(info?.dtypeParams),
     paramDist,
   };
 }
