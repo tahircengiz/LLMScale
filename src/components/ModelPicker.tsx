@@ -49,11 +49,15 @@ export function ModelPicker({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const seq = useRef(0);
+  // The id a pick() just wrote into `query`; the search effect skips it so the
+  // results dropdown doesn't reopen right after a model is selected.
+  const pickedId = useRef<string | null>(null);
 
   // Debounced HF search.
   useEffect(() => {
     if (tab !== "search") return;
     const q = query.trim();
+    if (q === pickedId.current) return;
     if (q.length < 2) {
       setResults([]);
       return;
@@ -106,6 +110,7 @@ export function ModelPicker({
         setTab("custom");
       }
       setResults([]);
+      pickedId.current = id;
       setQuery(id);
     } catch {
       setError(t("model.search.error"));
