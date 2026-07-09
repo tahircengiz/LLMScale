@@ -173,7 +173,7 @@ type Col = { id: string; entry?: Entry };
 
 function LabelCell({ children }: { children: ReactNode }) {
   return (
-    <td className="sticky left-0 z-10 whitespace-nowrap bg-ink-900 px-3 py-2 text-xs font-medium text-slate-400">
+    <td className="sticky left-0 z-10 whitespace-nowrap bg-ink-900 px-3 py-2 text-xs font-medium text-slate-400 transition-colors group-hover:bg-ink-850">
       {children}
     </td>
   );
@@ -211,7 +211,7 @@ function NumRow({
   const vals = cols.map((c) => (c.entry?.anatomy ? get(c.entry.anatomy) : undefined));
   const wins = highlight ? winners(vals, true) : vals.map(() => false);
   return (
-    <tr>
+    <tr className="group transition-colors hover:bg-white/5">
       <LabelCell>{label}</LabelCell>
       {cols.map((c, i) => (
         <DataCell key={c.id} win={wins[i]}>
@@ -224,7 +224,7 @@ function NumRow({
 
 function TxtRow({ label, cols, get }: { label: string; cols: Col[]; get: (a: Anatomy) => string }) {
   return (
-    <tr>
+    <tr className="group transition-colors hover:bg-white/5">
       <LabelCell>{label}</LabelCell>
       {cols.map((c) => (
         <DataCell key={c.id}>{c.entry?.anatomy ? get(c.entry.anatomy) : <Placeholder entry={c.entry} />}</DataCell>
@@ -235,7 +235,7 @@ function TxtRow({ label, cols, get }: { label: string; cols: Col[]; get: (a: Ana
 
 function CapRow({ label, cols, get }: { label: string; cols: Col[]; get: (c: Caps) => boolean }) {
   return (
-    <tr>
+    <tr className="group transition-colors hover:bg-white/5">
       <LabelCell>{label}</LabelCell>
       {cols.map((c) => (
         <DataCell key={c.id}>
@@ -254,7 +254,7 @@ function TaskRow({ label, cols, task }: { label: string; cols: Col[]; task: (typ
   const scores = cols.map((c) => (c.entry?.caps ? scoreFit(c.entry.caps, task).overall : undefined));
   const wins = winners(scores, true);
   return (
-    <tr>
+    <tr className="group transition-colors hover:bg-white/5">
       <LabelCell>{label}</LabelCell>
       {cols.map((c, i) => {
         const s = scores[i];
