@@ -122,34 +122,34 @@ export function ComparePage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 <Section title={t("compare.sec.identity")} span={cols.length} />
-                <NumRow label={t("compare.row.params")} cols={cols} get={(a) => a.numParams} fmt={formatParams} />
-                <TxtRow label={t("compare.row.moe")} cols={cols} get={(a) => (a.isMoE ? `${a.expertsPerTok ?? "?"} / ${a.numExperts ?? "?"}` : t("compare.dense"))} />
-                <NumRow label={t("compare.row.context")} cols={cols} get={(a) => a.arch.maxContext} fmt={(n) => (n >= 1024 ? `${Math.round(n / 1024)}k` : String(n))} highlight />
-                <TxtRow label={t("compare.row.license")} cols={cols} get={(a) => a.license?.toUpperCase() ?? "—"} />
-                <NumRow label={t("compare.row.downloads")} cols={cols} get={(a) => a.downloads} fmt={formatParams} highlight />
-                <NumRow label={t("compare.row.likes")} cols={cols} get={(a) => a.likes} fmt={formatInt} highlight />
-                <TxtRow label={t("compare.row.updated")} cols={cols} get={(a) => a.lastModified?.slice(0, 10) ?? "—"} />
-                <TxtRow label={t("compare.row.base")} cols={cols} get={(a) => a.baseModel ?? "—"} />
+                <NumRow label={t("compare.row.params")} tip={t("compare.tip.params")} cols={cols} get={(a) => a.numParams} fmt={formatParams} />
+                <TxtRow label={t("compare.row.moe")} tip={t("compare.tip.moe")} cols={cols} get={(a) => (a.isMoE ? `${a.expertsPerTok ?? "?"} / ${a.numExperts ?? "?"}` : t("compare.dense"))} />
+                <NumRow label={t("compare.row.context")} tip={t("compare.tip.context")} cols={cols} get={(a) => a.arch.maxContext} fmt={(n) => (n >= 1024 ? `${Math.round(n / 1024)}k` : String(n))} highlight />
+                <TxtRow label={t("compare.row.license")} tip={t("compare.tip.license")} cols={cols} get={(a) => a.license?.toUpperCase() ?? "—"} />
+                <NumRow label={t("compare.row.downloads")} tip={t("compare.tip.downloads")} cols={cols} get={(a) => a.downloads} fmt={formatParams} highlight />
+                <NumRow label={t("compare.row.likes")} tip={t("compare.tip.likes")} cols={cols} get={(a) => a.likes} fmt={formatInt} highlight />
+                <TxtRow label={t("compare.row.updated")} tip={t("compare.tip.updated")} cols={cols} get={(a) => a.lastModified?.slice(0, 10) ?? "—"} />
+                <TxtRow label={t("compare.row.base")} tip={t("compare.tip.base")} cols={cols} get={(a) => a.baseModel ?? "—"} />
 
                 <Section title={t("compare.sec.arch")} span={cols.length} />
-                <TxtRow label={t("compare.row.precision")} cols={cols} get={(a) => (a.weightDtype ?? "bf16").toUpperCase()} />
-                <NumRow label={t("compare.row.layers")} cols={cols} get={(a) => a.arch.numLayers} fmt={String} />
-                <NumRow label={t("compare.row.hidden")} cols={cols} get={(a) => a.arch.hiddenSize} fmt={formatInt} />
-                <TxtRow label={t("compare.row.heads")} cols={cols} get={(a) => `${a.arch.numAttentionHeads} / ${a.arch.numKeyValueHeads}${a.arch.numKeyValueHeads < a.arch.numAttentionHeads ? " (GQA)" : ""}`} />
-                <NumRow label={t("compare.row.headDim")} cols={cols} get={(a) => a.headDim} fmt={String} />
-                <NumRow label={t("compare.row.vocab")} cols={cols} get={(a) => a.arch.vocabSize} fmt={formatInt} />
-                <TxtRow label={t("compare.row.weights")} cols={cols} get={(a) => formatGiB(weightsBytes(a.arch, a.weightDtype ?? "bf16") / BYTES_PER_GIB)} />
-                <TxtRow label={t("compare.row.kvtoken")} cols={cols} get={(a) => formatBytes(kvBytesPerToken(a.arch, "fp16"))} />
-                <TxtRow label={t("compare.row.vram8k")} cols={cols} get={(a) => formatGiB(vram8k(a))} />
+                <TxtRow label={t("compare.row.precision")} tip={t("compare.tip.precision")} cols={cols} get={(a) => (a.weightDtype ?? "bf16").toUpperCase()} />
+                <NumRow label={t("compare.row.layers")} tip={t("compare.tip.layers")} cols={cols} get={(a) => a.arch.numLayers} fmt={String} />
+                <NumRow label={t("compare.row.hidden")} tip={t("compare.tip.hidden")} cols={cols} get={(a) => a.arch.hiddenSize} fmt={formatInt} />
+                <TxtRow label={t("compare.row.heads")} tip={t("compare.tip.heads")} cols={cols} get={(a) => `${a.arch.numAttentionHeads} / ${a.arch.numKeyValueHeads}${a.arch.numKeyValueHeads < a.arch.numAttentionHeads ? " (GQA)" : ""}`} />
+                <NumRow label={t("compare.row.headDim")} tip={t("compare.tip.headDim")} cols={cols} get={(a) => a.headDim} fmt={String} />
+                <NumRow label={t("compare.row.vocab")} tip={t("compare.tip.vocab")} cols={cols} get={(a) => a.arch.vocabSize} fmt={formatInt} />
+                <TxtRow label={t("compare.row.weights")} tip={t("compare.tip.weights")} cols={cols} get={(a) => formatGiB(weightsBytes(a.arch, a.weightDtype ?? "bf16") / BYTES_PER_GIB)} />
+                <TxtRow label={t("compare.row.kvtoken")} tip={t("compare.tip.kvtoken")} cols={cols} get={(a) => formatBytes(kvBytesPerToken(a.arch, "fp16"))} />
+                <TxtRow label={t("compare.row.vram8k")} tip={t("compare.tip.vram8k")} cols={cols} get={(a) => formatGiB(vram8k(a))} />
 
                 <Section title={t("compare.sec.caps")} span={cols.length} />
                 {CAP_ROWS.map((cap) => (
-                  <CapRow key={cap} label={t(`compare.cap.${cap}`)} cols={cols} get={(c) => c[cap]} />
+                  <CapRow key={cap} label={t(`compare.cap.${cap}`)} tip={t("compare.tip.capGeneric", { cap: t(`compare.cap.${cap}`) })} cols={cols} get={(c) => c[cap]} />
                 ))}
 
                 <Section title={t("compare.sec.fit")} span={cols.length} hint={t("compare.fitHint")} />
                 {TASKS.map((task) => (
-                  <TaskRow key={task} label={t(`fit.task.${task}`)} cols={cols} task={task} />
+                  <TaskRow key={task} label={t(`fit.task.${task}`)} tip={t("compare.tip.taskGeneric", { task: t(`fit.task.${task}`) })} cols={cols} task={task} />
                 ))}
               </tbody>
             </table>
@@ -171,10 +171,21 @@ function vram8k(a: Anatomy): number {
 
 type Col = { id: string; entry?: Entry };
 
-function LabelCell({ children }: { children: ReactNode }) {
+function LabelCell({ children, tip }: { children: ReactNode; tip?: string }) {
   return (
     <td className="sticky left-0 z-10 whitespace-nowrap bg-ink-900 px-3 py-2 text-xs font-medium text-slate-400 transition-colors group-hover:bg-ink-850">
-      {children}
+      <span className="inline-flex items-center gap-1.5">
+        {children}
+        {tip && (
+          <span
+            title={tip}
+            aria-label={tip}
+            className="cursor-help select-none text-[11px] leading-none text-slate-600 transition-colors hover:text-brand-400"
+          >
+            ⓘ
+          </span>
+        )}
+      </span>
     </td>
   );
 }
@@ -204,15 +215,15 @@ function Section({ title, span, hint }: { title: string; span: number; hint?: st
 }
 
 function NumRow({
-  label, cols, get, fmt, highlight = false,
+  label, cols, get, fmt, highlight = false, tip,
 }: {
-  label: string; cols: Col[]; get: (a: Anatomy) => number | undefined; fmt: (n: number) => string; highlight?: boolean;
+  label: string; cols: Col[]; get: (a: Anatomy) => number | undefined; fmt: (n: number) => string; highlight?: boolean; tip?: string;
 }) {
   const vals = cols.map((c) => (c.entry?.anatomy ? get(c.entry.anatomy) : undefined));
   const wins = highlight ? winners(vals, true) : vals.map(() => false);
   return (
     <tr className="group transition-colors hover:bg-white/5">
-      <LabelCell>{label}</LabelCell>
+      <LabelCell tip={tip}>{label}</LabelCell>
       {cols.map((c, i) => (
         <DataCell key={c.id} win={wins[i]}>
           {vals[i] != null ? fmt(vals[i]!) : <Placeholder entry={c.entry} />}
@@ -222,10 +233,10 @@ function NumRow({
   );
 }
 
-function TxtRow({ label, cols, get }: { label: string; cols: Col[]; get: (a: Anatomy) => string }) {
+function TxtRow({ label, cols, get, tip }: { label: string; cols: Col[]; get: (a: Anatomy) => string; tip?: string }) {
   return (
     <tr className="group transition-colors hover:bg-white/5">
-      <LabelCell>{label}</LabelCell>
+      <LabelCell tip={tip}>{label}</LabelCell>
       {cols.map((c) => (
         <DataCell key={c.id}>{c.entry?.anatomy ? get(c.entry.anatomy) : <Placeholder entry={c.entry} />}</DataCell>
       ))}
@@ -233,10 +244,10 @@ function TxtRow({ label, cols, get }: { label: string; cols: Col[]; get: (a: Ana
   );
 }
 
-function CapRow({ label, cols, get }: { label: string; cols: Col[]; get: (c: Caps) => boolean }) {
+function CapRow({ label, cols, get, tip }: { label: string; cols: Col[]; get: (c: Caps) => boolean; tip?: string }) {
   return (
     <tr className="group transition-colors hover:bg-white/5">
-      <LabelCell>{label}</LabelCell>
+      <LabelCell tip={tip}>{label}</LabelCell>
       {cols.map((c) => (
         <DataCell key={c.id}>
           {c.entry?.caps ? (
@@ -250,12 +261,12 @@ function CapRow({ label, cols, get }: { label: string; cols: Col[]; get: (c: Cap
   );
 }
 
-function TaskRow({ label, cols, task }: { label: string; cols: Col[]; task: (typeof TASKS)[number] }) {
+function TaskRow({ label, cols, task, tip }: { label: string; cols: Col[]; task: (typeof TASKS)[number]; tip?: string }) {
   const scores = cols.map((c) => (c.entry?.caps ? scoreFit(c.entry.caps, task).overall : undefined));
   const wins = winners(scores, true);
   return (
     <tr className="group transition-colors hover:bg-white/5">
-      <LabelCell>{label}</LabelCell>
+      <LabelCell tip={tip}>{label}</LabelCell>
       {cols.map((c, i) => {
         const s = scores[i];
         return (
