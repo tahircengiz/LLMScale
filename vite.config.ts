@@ -16,6 +16,7 @@ export default defineConfig({
         vllm: fileURLToPath(new URL("./vllm.html", import.meta.url)),
         decode: fileURLToPath(new URL("./decode.html", import.meta.url)),
         anatomy: fileURLToPath(new URL("./anatomy.html", import.meta.url)),
+        compare: fileURLToPath(new URL("./compare.html", import.meta.url)),
       },
     },
   },

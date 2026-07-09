@@ -1,0 +1,339 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { BYTES_PER_GIB, calculate, kvBytesPerToken, weightsBytes } from "../lib/calc";
+import { fetchAnatomy, type Anatomy } from "../lib/anatomy";
+import { extractCaps, scoreFit, TASKS, type Caps } from "../lib/fit";
+import { searchModels, type HfSearchResult } from "../lib/hf";
+import { useLang } from "../lib/i18n";
+import { formatBytes, formatGiB, formatInt, formatParams } from "../lib/format";
+import { Badge, Card, SectionTitle } from "../components/ui";
+
+const MAX_COLS = 4;
+const DEFAULT_IDS = ["Qwen/Qwen2.5-7B-Instruct", "Qwen/Qwen2.5-Coder-7B-Instruct"];
+
+interface Entry {
+  loading: boolean;
+  anatomy?: Anatomy;
+  caps?: Caps;
+  error?: boolean;
+}
+
+function initialIds(): string[] {
+  const m = new URLSearchParams(window.location.search).get("m");
+  if (m) {
+    const arr = m.split(",").map((s) => s.trim()).filter(Boolean).slice(0, MAX_COLS);
+    if (arr.length) return arr;
+  }
+  return DEFAULT_IDS;
+}
+
+function scoreColor(o: number): string {
+  return o >= 80 ? "#10b981" : o >= 60 ? "#34d399" : o >= 40 ? "#f59e0b" : "#f43f5e";
+}
+
+/** Indices that hold the best value; empty when all equal or <2 comparable. */
+function winners(vals: (number | undefined)[], higher = true): boolean[] {
+  const nums = vals.filter((v): v is number => typeof v === "number");
+  if (nums.length < 2) return vals.map(() => false);
+  const allEqual = nums.every((v) => v === nums[0]);
+  if (allEqual) return vals.map(() => false);
+  const best = higher ? Math.max(...nums) : Math.min(...nums);
+  return vals.map((v) => v === best);
+}
+
+export function ComparePage() {
+  const { t } = useLang();
+  const [ids, setIds] = useState<string[]>(initialIds);
+  const [entries, setEntries] = useState<Record<string, Entry>>({});
+
+  useEffect(() => {
+    for (const id of ids) {
+      if (entries[id]) continue; // already fetched / fetching (cached across removes)
+      setEntries((e) => ({ ...e, [id]: { loading: true } }));
+      fetchAnatomy(id)
+        .then((a) => {
+          const caps = extractCaps({
+            hfId: a.hfId, arch: a.arch, numParams: a.numParams,
+            modelType: a.modelType, isMoE: a.isMoE, tags: a.tags, pipelineTag: a.pipelineTag,
+          });
+          setEntries((e) => ({ ...e, [id]: { loading: false, anatomy: a, caps } }));
+        })
+        .catch(() => setEntries((e) => ({ ...e, [id]: { loading: false, error: true } })));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids]);
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (ids.length) p.set("m", ids.join(","));
+    window.history.replaceState(null, "", `${window.location.pathname}?${p.toString()}`);
+  }, [ids]);
+
+  const add = (id: string) =>
+    setIds((prev) => (prev.includes(id) || prev.length >= MAX_COLS ? prev : [...prev, id]));
+  const remove = (id: string) => setIds((prev) => prev.filter((x) => x !== id));
+
+  const cols = ids.map((id) => ({ id, entry: entries[id] as Entry | undefined }));
+
+  return (
+    <div>
+      <p className="mb-6 max-w-2xl text-sm text-slate-400">{t("compare.subtitle")}</p>
+
+      <Card className="mb-5 p-4 relative z-30">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <SectionTitle title={t("compare.pickTitle")} hint={t("compare.count", { n: ids.length, max: MAX_COLS })} />
+          <AddSearch onPick={add} disabled={ids.length >= MAX_COLS} />
+        </div>
+      </Card>
+
+      {ids.length === 0 ? (
+        <Card className="p-5">
+          <p className="py-10 text-center text-sm text-slate-400">{t("compare.empty")}</p>
+        </Card>
+      ) : (
+        <Card className="overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="sticky left-0 z-10 bg-ink-900 px-3 py-3" />
+                  {cols.map((c) => (
+                    <th key={c.id} className="min-w-[150px] px-3 py-3 align-top">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-semibold text-white" title={c.id}>
+                            {c.id.split("/").pop()}
+                          </div>
+                          <div className="truncate text-[10px] text-slate-500" title={c.id}>{c.id}</div>
+                          {c.entry?.error && <Badge tone="bad">{t("compare.err")}</Badge>}
+                          {c.entry?.loading && <span className="text-[10px] text-slate-500">{t("compare.loadingCol")}</span>}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => remove(c.id)}
+                          title={t("compare.remove")}
+                          className="shrink-0 rounded-md px-1.5 text-slate-500 ring-1 ring-white/10 transition hover:bg-white/5 hover:text-rose-300"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                <Section title={t("compare.sec.identity")} span={cols.length} />
+                <NumRow label={t("compare.row.params")} cols={cols} get={(a) => a.numParams} fmt={formatParams} />
+                <TxtRow label={t("compare.row.moe")} cols={cols} get={(a) => (a.isMoE ? `${a.expertsPerTok ?? "?"} / ${a.numExperts ?? "?"}` : t("compare.dense"))} />
+                <NumRow label={t("compare.row.context")} cols={cols} get={(a) => a.arch.maxContext} fmt={(n) => (n >= 1024 ? `${Math.round(n / 1024)}k` : String(n))} highlight />
+                <TxtRow label={t("compare.row.license")} cols={cols} get={(a) => a.license?.toUpperCase() ?? "—"} />
+                <NumRow label={t("compare.row.downloads")} cols={cols} get={(a) => a.downloads} fmt={formatParams} highlight />
+                <NumRow label={t("compare.row.likes")} cols={cols} get={(a) => a.likes} fmt={formatInt} highlight />
+                <TxtRow label={t("compare.row.updated")} cols={cols} get={(a) => a.lastModified?.slice(0, 10) ?? "—"} />
+                <TxtRow label={t("compare.row.base")} cols={cols} get={(a) => a.baseModel ?? "—"} />
+
+                <Section title={t("compare.sec.arch")} span={cols.length} />
+                <TxtRow label={t("compare.row.precision")} cols={cols} get={(a) => (a.weightDtype ?? "bf16").toUpperCase()} />
+                <NumRow label={t("compare.row.layers")} cols={cols} get={(a) => a.arch.numLayers} fmt={String} />
+                <NumRow label={t("compare.row.hidden")} cols={cols} get={(a) => a.arch.hiddenSize} fmt={formatInt} />
+                <TxtRow label={t("compare.row.heads")} cols={cols} get={(a) => `${a.arch.numAttentionHeads} / ${a.arch.numKeyValueHeads}${a.arch.numKeyValueHeads < a.arch.numAttentionHeads ? " (GQA)" : ""}`} />
+                <NumRow label={t("compare.row.headDim")} cols={cols} get={(a) => a.headDim} fmt={String} />
+                <NumRow label={t("compare.row.vocab")} cols={cols} get={(a) => a.arch.vocabSize} fmt={formatInt} />
+                <TxtRow label={t("compare.row.weights")} cols={cols} get={(a) => formatGiB(weightsBytes(a.arch, a.weightDtype ?? "bf16") / BYTES_PER_GIB)} />
+                <TxtRow label={t("compare.row.kvtoken")} cols={cols} get={(a) => formatBytes(kvBytesPerToken(a.arch, "fp16"))} />
+                <TxtRow label={t("compare.row.vram8k")} cols={cols} get={(a) => formatGiB(vram8k(a))} />
+
+                <Section title={t("compare.sec.caps")} span={cols.length} />
+                {CAP_ROWS.map((cap) => (
+                  <CapRow key={cap} label={t(`compare.cap.${cap}`)} cols={cols} get={(c) => c[cap]} />
+                ))}
+
+                <Section title={t("compare.sec.fit")} span={cols.length} hint={t("compare.fitHint")} />
+                {TASKS.map((task) => (
+                  <TaskRow key={task} label={t(`fit.task.${task}`)} cols={cols} task={task} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+const CAP_ROWS = ["instruct", "code", "math", "reasoning", "vision", "multilingual", "embedding"] as const;
+
+function vram8k(a: Anatomy): number {
+  return calculate({
+    arch: a.arch, weightDtype: a.weightDtype ?? "bf16", kvDtype: "fp16",
+    contextLength: 8192, concurrency: 1, overheadPct: 0.1, cudaContextGiB: 0.75,
+  }).totalGiB;
+}
+
+type Col = { id: string; entry?: Entry };
+
+function LabelCell({ children }: { children: ReactNode }) {
+  return (
+    <td className="sticky left-0 z-10 whitespace-nowrap bg-ink-900 px-3 py-2 text-xs font-medium text-slate-400">
+      {children}
+    </td>
+  );
+}
+
+function DataCell({ children, win }: { children: ReactNode; win?: boolean }) {
+  return (
+    <td className={"px-3 py-2 text-sm " + (win ? "bg-accent-500/10 font-semibold text-accent-400" : "text-slate-200")}>
+      {children}
+    </td>
+  );
+}
+
+function Placeholder({ entry }: { entry?: Entry }) {
+  if (entry?.loading) return <span className="text-slate-600">…</span>;
+  return <span className="text-slate-600">—</span>;
+}
+
+function Section({ title, span, hint }: { title: string; span: number; hint?: string }) {
+  return (
+    <tr>
+      <td colSpan={span + 1} className="bg-ink-850/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        {title}
+        {hint && <span className="ml-2 font-normal normal-case text-slate-500">{hint}</span>}
+      </td>
+    </tr>
+  );
+}
+
+function NumRow({
+  label, cols, get, fmt, highlight = false,
+}: {
+  label: string; cols: Col[]; get: (a: Anatomy) => number | undefined; fmt: (n: number) => string; highlight?: boolean;
+}) {
+  const vals = cols.map((c) => (c.entry?.anatomy ? get(c.entry.anatomy) : undefined));
+  const wins = highlight ? winners(vals, true) : vals.map(() => false);
+  return (
+    <tr>
+      <LabelCell>{label}</LabelCell>
+      {cols.map((c, i) => (
+        <DataCell key={c.id} win={wins[i]}>
+          {vals[i] != null ? fmt(vals[i]!) : <Placeholder entry={c.entry} />}
+        </DataCell>
+      ))}
+    </tr>
+  );
+}
+
+function TxtRow({ label, cols, get }: { label: string; cols: Col[]; get: (a: Anatomy) => string }) {
+  return (
+    <tr>
+      <LabelCell>{label}</LabelCell>
+      {cols.map((c) => (
+        <DataCell key={c.id}>{c.entry?.anatomy ? get(c.entry.anatomy) : <Placeholder entry={c.entry} />}</DataCell>
+      ))}
+    </tr>
+  );
+}
+
+function CapRow({ label, cols, get }: { label: string; cols: Col[]; get: (c: Caps) => boolean }) {
+  return (
+    <tr>
+      <LabelCell>{label}</LabelCell>
+      {cols.map((c) => (
+        <DataCell key={c.id}>
+          {c.entry?.caps ? (
+            get(c.entry.caps) ? <span className="text-accent-400">✓</span> : <span className="text-slate-600">✗</span>
+          ) : (
+            <Placeholder entry={c.entry} />
+          )}
+        </DataCell>
+      ))}
+    </tr>
+  );
+}
+
+function TaskRow({ label, cols, task }: { label: string; cols: Col[]; task: (typeof TASKS)[number] }) {
+  const scores = cols.map((c) => (c.entry?.caps ? scoreFit(c.entry.caps, task).overall : undefined));
+  const wins = winners(scores, true);
+  return (
+    <tr>
+      <LabelCell>{label}</LabelCell>
+      {cols.map((c, i) => {
+        const s = scores[i];
+        return (
+          <td key={c.id} className={"px-3 py-2 " + (wins[i] ? "bg-accent-500/10" : "")}>
+            {s != null ? (
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-full max-w-[90px] overflow-hidden rounded-full bg-ink-800">
+                  <div className="h-full rounded-full" style={{ width: `${s}%`, backgroundColor: scoreColor(s) }} />
+                </div>
+                <span className="w-6 shrink-0 text-xs tabular-nums" style={{ color: scoreColor(s) }}>{s}</span>
+              </div>
+            ) : (
+              <Placeholder entry={c.entry} />
+            )}
+          </td>
+        );
+      })}
+    </tr>
+  );
+}
+
+/** Compact HF search box for adding a model column. Dropdown renders above the
+ * comparison table (this card is outside the table's horizontal scroll). */
+function AddSearch({ onPick, disabled }: { onPick: (id: string) => void; disabled?: boolean }) {
+  const { t } = useLang();
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<HfSearchResult[]>([]);
+  const seq = useRef(0);
+
+  useEffect(() => {
+    const query = q.trim();
+    if (query.length < 2) {
+      setResults([]);
+      return;
+    }
+    const id = ++seq.current;
+    const timer = setTimeout(async () => {
+      try {
+        const r = await searchModels(query);
+        if (id === seq.current) setResults(r);
+      } catch {
+        if (id === seq.current) setResults([]);
+      }
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [q]);
+
+  return (
+    <div className="relative w-full sm:w-72">
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        disabled={disabled}
+        placeholder={disabled ? t("compare.max") : t("compare.search")}
+        className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none placeholder:text-slate-500 focus:ring-brand-500/60 disabled:opacity-50"
+      />
+      {results.length > 0 && (
+        <ul className="absolute right-0 z-30 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-white/10 bg-ink-850 shadow-2xl">
+          {results.map((r) => (
+            <li key={r.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  onPick(r.id);
+                  setQ("");
+                  setResults([]);
+                }}
+                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-brand-600/20"
+              >
+                <span className="truncate text-slate-200">{r.id}</span>
+                {typeof r.downloads === "number" && (
+                  <span className="shrink-0 text-[11px] text-slate-500">↓ {formatParams(r.downloads)}</span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
