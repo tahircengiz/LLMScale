@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { BYTES_PER_GIB, calculate, kvBytesPerToken, weightsBytes } from "../lib/calc";
 import { fetchAnatomy, type Anatomy } from "../lib/anatomy";
 import { extractCaps, scoreFit, TASKS, type Caps } from "../lib/fit";
@@ -171,20 +172,69 @@ function vram8k(a: Anatomy): number {
 
 type Col = { id: string; entry?: Entry };
 
+// Hover delay before the info tooltip opens — roughly half the browser's
+// native `title` delay, for a snappier feel.
+const TIP_DELAY_MS = 250;
+
+/** Info icon with a custom tooltip. Rendered via a body-level portal + fixed
+ * positioning so it isn't clipped by the table's overflow / the Card. */
+function InfoTip({ text }: { text: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const timer = useRef<number | undefined>(undefined);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const show = () => {
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => {
+      const r = ref.current?.getBoundingClientRect();
+      if (!r) return;
+      const W = 260;
+      const left = Math.max(8, Math.min(r.left, window.innerWidth - W - 8));
+      setPos({ top: r.bottom + 6, left });
+    }, TIP_DELAY_MS);
+  };
+  const hide = () => {
+    window.clearTimeout(timer.current);
+    setPos(null);
+  };
+
+  return (
+    <>
+      <span
+        ref={ref}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        tabIndex={0}
+        aria-label={text}
+        className="cursor-help select-none text-[11px] leading-none text-slate-600 outline-none transition-colors hover:text-brand-400 focus-visible:text-brand-400"
+      >
+        ⓘ
+      </span>
+      {pos &&
+        createPortal(
+          <div
+            role="tooltip"
+            style={{ position: "fixed", top: pos.top, left: pos.left, maxWidth: 260 }}
+            className="z-50 rounded-lg border border-white/10 bg-ink-850 px-3 py-2 text-xs font-normal leading-snug text-slate-200 shadow-2xl"
+          >
+            {text}
+          </div>,
+          document.body
+        )}
+    </>
+  );
+}
+
 function LabelCell({ children, tip }: { children: ReactNode; tip?: string }) {
   return (
     <td className="sticky left-0 z-10 whitespace-nowrap bg-ink-900 px-3 py-2 text-xs font-medium text-slate-400 transition-colors group-hover:bg-ink-850">
       <span className="inline-flex items-center gap-1.5">
         {children}
-        {tip && (
-          <span
-            title={tip}
-            aria-label={tip}
-            className="cursor-help select-none text-[11px] leading-none text-slate-600 transition-colors hover:text-brand-400"
-          >
-            ⓘ
-          </span>
-        )}
+        {tip && <InfoTip text={tip} />}
       </span>
     </td>
   );
