@@ -5,6 +5,7 @@ import { useLang } from "../lib/i18n";
 import { formatGiB, formatInt, formatParams } from "../lib/format";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Donut, HBars, LineChart, GqaDiagram, Spec, type DonutSeg } from "../components/charts";
+import { ArchDiagram } from "../components/ArchDiagram";
 import { Badge, Card, SectionTitle } from "../components/ui";
 
 const DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct";
@@ -96,12 +97,12 @@ export function AnatomyPage() {
           {loading && <div className="text-xs font-medium text-brand-400">{t("anatomy.loading")}</div>}
           <div className={"space-y-5 transition-opacity " + (loading ? "opacity-50" : "")}>
             <MetaStrip a={anatomy} />
+            <ArchHero a={anatomy} />
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
               <ParamCard a={anatomy} />
               <PrecisionCard a={anatomy} />
-              <ArchCard a={anatomy} />
-              <KvCard a={anatomy} />
             </div>
+            <KvCard a={anatomy} />
           </div>
           <p className="text-xs text-slate-500">{t("anatomy.disclaimer")}</p>
         </div>
@@ -221,7 +222,7 @@ function PrecisionCard({ a }: { a: Anatomy }) {
   );
 }
 
-function ArchCard({ a }: { a: Anatomy }) {
+function ArchHero({ a }: { a: Anatomy }) {
   const { t } = useLang();
   const ar = a.arch;
   const gqa = ar.numKeyValueHeads > 0 && ar.numKeyValueHeads < ar.numAttentionHeads;
@@ -231,30 +232,38 @@ function ArchCard({ a }: { a: Anatomy }) {
 
   return (
     <Card className="p-5">
-      <SectionTitle title={t("anatomy.arch.title")} />
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <Spec label={t("anatomy.arch.layers")} value={ar.numLayers} />
-        <Spec label={t("anatomy.arch.hidden")} value={ar.hiddenSize} />
-        <Spec label={t("anatomy.arch.headDim")} value={a.headDim} />
-        <Spec label={t("anatomy.arch.heads")} value={`${ar.numAttentionHeads} / ${ar.numKeyValueHeads}`} sub={gqa ? "GQA" : "MHA"} />
-        {!a.isMoE && (
-          <Spec label={t("anatomy.arch.mlpRatio")} value={mlpRatio} sub={a.intermediateSize ? formatInt(a.intermediateSize) : undefined} />
-        )}
-        <Spec label={t("anatomy.arch.context")} value={ctxK} />
-        <Spec label={t("anatomy.arch.vocab")} value={ar.vocabSize ? formatInt(ar.vocabSize) : "—"} />
-        {a.numExperts != null && (
-          <Spec label={t("anatomy.arch.experts")} value={`${a.expertsPerTok ?? "?"} / ${a.numExperts}`} sub={t("anatomy.arch.expertsSub")} />
-        )}
-        {a.ropeTheta != null && <Spec label="RoPE θ" value={formatInt(a.ropeTheta)} />}
-      </div>
+      <SectionTitle title={t("anatomy.arch.title")} hint={t("anatomy.arch.hint")} />
+      <div className="grid grid-cols-1 gap-x-8 gap-y-6 lg:grid-cols-2">
+        {/* left — dynamic block diagram */}
+        <ArchDiagram a={a} />
 
-      <div className="mt-4 text-[11px] uppercase tracking-wide text-slate-400">{t("anatomy.arch.gqaTitle")}</div>
-      <p className="mb-2 mt-0.5 text-xs text-slate-400">
-        {gqa
-          ? t("anatomy.arch.gqaNote", { q: ar.numAttentionHeads, kv: ar.numKeyValueHeads, ratio: gqaRatio })
-          : t("anatomy.arch.mhaNote", { n: ar.numAttentionHeads })}
-      </p>
-      <GqaDiagram attnHeads={ar.numAttentionHeads} kvHeads={ar.numKeyValueHeads} />
+        {/* right — spec grid + attention grouping */}
+        <div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <Spec label={t("anatomy.arch.layers")} value={ar.numLayers} />
+            <Spec label={t("anatomy.arch.hidden")} value={ar.hiddenSize} />
+            <Spec label={t("anatomy.arch.headDim")} value={a.headDim} />
+            <Spec label={t("anatomy.arch.heads")} value={`${ar.numAttentionHeads} / ${ar.numKeyValueHeads}`} sub={gqa ? "GQA" : "MHA"} />
+            {!a.isMoE && (
+              <Spec label={t("anatomy.arch.mlpRatio")} value={mlpRatio} sub={a.intermediateSize ? formatInt(a.intermediateSize) : undefined} />
+            )}
+            <Spec label={t("anatomy.arch.context")} value={ctxK} />
+            <Spec label={t("anatomy.arch.vocab")} value={ar.vocabSize ? formatInt(ar.vocabSize) : "—"} />
+            {a.numExperts != null && (
+              <Spec label={t("anatomy.arch.experts")} value={`${a.expertsPerTok ?? "?"} / ${a.numExperts}`} sub={t("anatomy.arch.expertsSub")} />
+            )}
+            {a.ropeTheta != null && <Spec label="RoPE θ" value={formatInt(a.ropeTheta)} />}
+          </div>
+
+          <div className="mt-5 text-[11px] uppercase tracking-wide text-slate-400">{t("anatomy.arch.gqaTitle")}</div>
+          <p className="mb-2 mt-0.5 text-xs text-slate-400">
+            {gqa
+              ? t("anatomy.arch.gqaNote", { q: ar.numAttentionHeads, kv: ar.numKeyValueHeads, ratio: gqaRatio })
+              : t("anatomy.arch.mhaNote", { n: ar.numAttentionHeads })}
+          </p>
+          <GqaDiagram attnHeads={ar.numAttentionHeads} kvHeads={ar.numKeyValueHeads} />
+        </div>
+      </div>
     </Card>
   );
 }
