@@ -14,6 +14,20 @@ import { Badge, Field, NumberInput, SectionTitle, Segmented } from "./ui";
 
 type Tab = "search" | "presets" | "custom";
 
+/** Offline fallback: filter the bundled model DB by name/family so the search
+ * box still surfaces popular models when Hugging Face is unreachable. */
+function localSearch(query: string): HfSearchResult[] {
+  const s = query.toLowerCase();
+  return KNOWN_MODELS.filter(
+    (m) =>
+      m.hfId.toLowerCase().includes(s) ||
+      m.displayName.toLowerCase().includes(s) ||
+      m.family.toLowerCase().includes(s),
+  )
+    .slice(0, 12)
+    .map((m) => ({ id: m.hfId, gated: m.gated }));
+}
+
 export interface ResolvedMeta {
   source: ArchSource;
   gated: boolean;
@@ -46,6 +60,7 @@ export function ModelPicker({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<HfSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [offline, setOffline] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const seq = useRef(0);
@@ -60,6 +75,7 @@ export function ModelPicker({
     if (q === pickedId.current) return;
     if (q.length < 2) {
       setResults([]);
+      setOffline(false);
       return;
     }
     const id = ++seq.current;
@@ -67,9 +83,14 @@ export function ModelPicker({
     const timer = setTimeout(async () => {
       try {
         const r = await searchModels(q);
-        if (id === seq.current) setResults(r);
+        if (id !== seq.current) return;
+        setResults(r);
+        setOffline(false);
       } catch {
-        if (id === seq.current) setResults([]);
+        // HF unreachable / timed out — fall back to the bundled model list.
+        if (id !== seq.current) return;
+        setResults(localSearch(q));
+        setOffline(true);
       } finally {
         if (id === seq.current) setSearching(false);
       }
@@ -194,6 +215,9 @@ export function ModelPicker({
               </ul>
             )}
           </div>
+          {offline && (
+            <p className="mt-2 text-xs text-amber-300/80">{t("model.search.offline")}</p>
+          )}
           {loadingId && (
             <p className="mt-2 text-xs text-slate-400">{t("model.search.loading", { id: loadingId })}</p>
           )}

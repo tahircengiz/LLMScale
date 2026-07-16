@@ -4,7 +4,7 @@ import { fetchAnatomy, tierOf, type Anatomy, type DtypeTier } from "../lib/anato
 import { useLang } from "../lib/i18n";
 import { formatGiB, formatInt, formatParams } from "../lib/format";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
-import { Donut, HBars, LineChart, GqaDiagram, Spec, type DonutSeg } from "../components/charts";
+import { Donut, HBars, LineChart, GqaDiagram, type DonutSeg } from "../components/charts";
 import { ArchDiagram } from "../components/ArchDiagram";
 import { Badge, Card, SectionTitle } from "../components/ui";
 
@@ -227,41 +227,35 @@ function ArchHero({ a }: { a: Anatomy }) {
   const ar = a.arch;
   const gqa = ar.numKeyValueHeads > 0 && ar.numKeyValueHeads < ar.numAttentionHeads;
   const gqaRatio = ar.numKeyValueHeads > 0 ? Math.round(ar.numAttentionHeads / ar.numKeyValueHeads) : 1;
-  const mlpRatio = a.intermediateSize ? (a.intermediateSize / ar.hiddenSize).toFixed(1) + "×" : "—";
-  const ctxK = ar.maxContext ? (ar.maxContext >= 1024 ? `${Math.round(ar.maxContext / 1024)}k` : String(ar.maxContext)) : "—";
+  const hasExtras = a.ropeTheta != null || (a.slidingWindow != null && a.slidingWindow > 0);
 
   return (
     <Card className="p-5">
       <SectionTitle title={t("anatomy.arch.title")} hint={t("anatomy.arch.hint")} />
-      <div className="grid grid-cols-1 gap-x-8 gap-y-6 lg:grid-cols-2">
-        {/* left — dynamic block diagram */}
-        <ArchDiagram a={a} />
 
-        {/* right — spec grid + attention grouping */}
-        <div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <Spec label={t("anatomy.arch.layers")} value={ar.numLayers} />
-            <Spec label={t("anatomy.arch.hidden")} value={ar.hiddenSize} />
-            <Spec label={t("anatomy.arch.headDim")} value={a.headDim} />
-            <Spec label={t("anatomy.arch.heads")} value={`${ar.numAttentionHeads} / ${ar.numKeyValueHeads}`} sub={gqa ? "GQA" : "MHA"} />
-            {!a.isMoE && (
-              <Spec label={t("anatomy.arch.mlpRatio")} value={mlpRatio} sub={a.intermediateSize ? formatInt(a.intermediateSize) : undefined} />
-            )}
-            <Spec label={t("anatomy.arch.context")} value={ctxK} />
-            <Spec label={t("anatomy.arch.vocab")} value={ar.vocabSize ? formatInt(ar.vocabSize) : "—"} />
-            {a.numExperts != null && (
-              <Spec label={t("anatomy.arch.experts")} value={`${a.expertsPerTok ?? "?"} / ${a.numExperts}`} sub={t("anatomy.arch.expertsSub")} />
-            )}
-            {a.ropeTheta != null && <Spec label="RoPE θ" value={formatInt(a.ropeTheta)} />}
+      {/* full-width annotated architecture diagram */}
+      <ArchDiagram a={a} />
+
+      {/* attention grouping detail + a few config extras the callouts don't carry */}
+      <div className="mt-5 border-t border-white/10 pt-4">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_auto] lg:items-start">
+          <div>
+            <div className="text-[11px] uppercase tracking-wide text-slate-400">{t("anatomy.arch.gqaTitle")}</div>
+            <p className="mb-2 mt-0.5 text-xs text-slate-400">
+              {gqa
+                ? t("anatomy.arch.gqaNote", { q: ar.numAttentionHeads, kv: ar.numKeyValueHeads, ratio: gqaRatio })
+                : t("anatomy.arch.mhaNote", { n: ar.numAttentionHeads })}
+            </p>
+            <GqaDiagram attnHeads={ar.numAttentionHeads} kvHeads={ar.numKeyValueHeads} />
           </div>
-
-          <div className="mt-5 text-[11px] uppercase tracking-wide text-slate-400">{t("anatomy.arch.gqaTitle")}</div>
-          <p className="mb-2 mt-0.5 text-xs text-slate-400">
-            {gqa
-              ? t("anatomy.arch.gqaNote", { q: ar.numAttentionHeads, kv: ar.numKeyValueHeads, ratio: gqaRatio })
-              : t("anatomy.arch.mhaNote", { n: ar.numAttentionHeads })}
-          </p>
-          <GqaDiagram attnHeads={ar.numAttentionHeads} kvHeads={ar.numKeyValueHeads} />
+          {hasExtras && (
+            <div className="flex flex-wrap gap-2 lg:justify-end">
+              {a.ropeTheta != null && <Badge tone="neutral">RoPE θ {formatInt(a.ropeTheta)}</Badge>}
+              {a.slidingWindow != null && a.slidingWindow > 0 && (
+                <Badge tone="neutral">SWA {formatInt(a.slidingWindow)}</Badge>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Card>

@@ -190,7 +190,9 @@ export async function fetchAnatomy(hfId: string): Promise<Anatomy> {
     expertsPerTok,
     tieEmbeddings: c.tie_word_embeddings,
     ropeTheta: c.rope_theta,
-    slidingWindow: c.sliding_window,
+    // Some models (e.g. Qwen2.5) declare a sliding_window but disable it via
+    // use_sliding_window:false — don't advertise SWA when it isn't actually used.
+    slidingWindow: c.use_sliding_window === false ? undefined : c.sliding_window,
     downloads: info?.downloads,
     likes: info?.likes,
     license: info?.license,

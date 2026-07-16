@@ -8,6 +8,19 @@ import { findKnownByHfId } from "./models.ts";
 
 const HF = "https://huggingface.co";
 
+/** fetch with an abort timeout so a blocked / black-holed network (e.g. a proxy
+ * that never responds) fails fast instead of hanging the search box or the
+ * model resolver forever. Aborted requests reject → callers fall back. */
+async function fetchWithTimeout(url: string, ms = 8000, init?: RequestInit): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export interface HfSearchResult {
   id: string;
   downloads?: number;
@@ -101,14 +114,14 @@ export function paramsFromName(id: string): number {
 export async function searchModels(query: string, limit = 15): Promise<HfSearchResult[]> {
   if (!query.trim()) return [];
   const url = `${HF}/api/models?search=${encodeURIComponent(query)}&sort=downloads&direction=-1&limit=${limit}`;
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url, 5000);
   if (!res.ok) throw new Error(`HF search failed: ${res.status}`);
   return (await res.json()) as HfSearchResult[];
 }
 
 /** Fetch model metadata (param count + gated flag) — works even for gated models. */
 export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
-  const res = await fetch(`${HF}/api/models/${hfId}`);
+  const res = await fetchWithTimeout(`${HF}/api/models/${hfId}`, 8000);
   if (!res.ok) throw new Error(`Model not found: ${res.status}`);
   const d = await res.json();
   // GGUF repos expose params under `gguf.total` instead of `safetensors.total`.
@@ -161,7 +174,7 @@ function archFromConfig(cfg: any, numParams: number): ModelArch | null {
 /** Try to read config.json directly (public models). Returns null if gated/missing. */
 async function fetchConfig(hfId: string): Promise<any | null> {
   try {
-    const res = await fetch(`${HF}/${hfId}/resolve/main/config.json`);
+    const res = await fetchWithTimeout(`${HF}/${hfId}/resolve/main/config.json`, 8000);
     if (!res.ok) return null;
     return await res.json();
   } catch {

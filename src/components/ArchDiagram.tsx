@@ -1,15 +1,12 @@
-// Dynamic transformer-architecture block diagram — renders the model's stack
+// Dynamic transformer-architecture infographic — an annotated block diagram
 // (embedding → N× [norm · attention · norm · FFN/MoE] → final norm → output)
-// straight from the fetched Anatomy config, annotated with the real numbers.
-// Data flows bottom → top, matching the familiar transformer-diagram convention.
+// generated from the fetched config, with leader-line callouts carrying the
+// real dimensions. Data flows bottom → top, matching the reference style.
 
 import { useLang } from "../lib/i18n";
 import { formatInt, formatParams } from "../lib/format";
 import type { Anatomy } from "../lib/anatomy";
 
-// Stage colours are kept in sync with the parameter-distribution donut so the
-// diagram and the donut read as the same model (embeddings=emerald, attn=indigo,
-// ffn=amber), with cyan for the output head and slate for norms / I/O.
 const COL = {
   io: "#64748b",
   embed: "#10b981",
@@ -33,70 +30,94 @@ function kLabel(n?: number): string {
   return n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
 }
 
-function Stage({
+function Box({
+  x,
+  y,
+  w,
+  h,
   color,
   title,
-  detail,
-  residual,
-  tight,
 }: {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
   color: string;
   title: string;
-  detail?: string;
-  residual?: boolean;
-  tight?: boolean;
 }) {
   return (
-    <div
-      className={
-        "relative flex items-center gap-3 rounded-xl ring-1 ring-white/10 " +
-        (tight ? "px-3 py-2" : "px-4 py-2.5")
-      }
-      style={{ background: `${color}14` }}
-    >
-      <span className="h-7 w-1 shrink-0 rounded-full" style={{ background: color }} />
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[13px] font-semibold text-white">{title}</div>
-        {detail && <div className="truncate text-[11px] text-slate-400">{detail}</div>}
-      </div>
-      {residual && (
-        <span
-          className="shrink-0 rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 ring-1 ring-white/10"
-          title="+ residual"
-        >
-          ⊕
-        </span>
+    <g>
+      <rect x={x} y={y} width={w} height={h} rx={9} fill={`${color}24`} stroke={`${color}99`} strokeWidth={1.2} />
+      <rect x={x + 1.2} y={y + 1.2} width={4} height={h - 2.4} rx={2} fill={color} />
+      <text
+        x={x + w / 2 + 3}
+        y={y + h / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-white"
+        style={{ fontSize: 12.5, fontWeight: 600 }}
+      >
+        {title}
+      </text>
+    </g>
+  );
+}
+
+/** Up-pointing chevron centred at (x, y) — reinforces bottom → top flow. */
+function Chevron({ x, y }: { x: number; y: number }) {
+  return (
+    <path
+      d={`M${x - 4} ${y + 4} L${x} ${y} L${x + 4} ${y + 4}`}
+      fill="none"
+      className="stroke-white"
+      strokeOpacity={0.3}
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  );
+}
+
+/** A leader-line callout: dot on the box edge, line out to the margin, value + label. */
+function Callout({
+  x,
+  y,
+  side,
+  value,
+  label,
+  accent,
+}: {
+  x: number;
+  y: number;
+  side: "l" | "r";
+  value: string;
+  label?: string;
+  accent?: boolean;
+}) {
+  const len = 34;
+  const end = side === "r" ? x + len : x - len;
+  const tx = side === "r" ? end + 7 : end - 7;
+  const anchor = side === "r" ? "start" : "end";
+  return (
+    <g>
+      <circle cx={x} cy={y} r={2.4} fill={COL.attn} className={accent ? "" : "fill-white"} fillOpacity={accent ? 1 : 0.45} />
+      <line x1={x} y1={y} x2={end} y2={y} className="stroke-white" strokeOpacity={0.28} strokeWidth={1} />
+      <text
+        x={tx}
+        y={y - 2}
+        textAnchor={anchor}
+        className={accent ? "" : "fill-white"}
+        fill={accent ? COL.attn : undefined}
+        style={{ fontSize: 12.5, fontWeight: 700 }}
+      >
+        {value}
+      </text>
+      {label && (
+        <text x={tx} y={y + 10} textAnchor={anchor} className="fill-slate-400" style={{ fontSize: 9.5 }}>
+          {label}
+        </text>
       )}
-    </div>
-  );
-}
-
-/** Upward connector (data flows bottom → top). */
-function Up() {
-  return (
-    <div className="flex justify-center py-0.5" aria-hidden>
-      <svg width="14" height="12" viewBox="0 0 14 12">
-        <path d="M7 2v9" className="stroke-white" strokeOpacity={0.18} strokeWidth={1.5} />
-        <path
-          d="M3.5 5.5 7 2l3.5 3.5"
-          fill="none"
-          className="stroke-white"
-          strokeOpacity={0.32}
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </div>
-  );
-}
-
-function Chip({ big, sub, accent }: { big: string; sub: string; accent?: boolean }) {
-  return (
-    <div className="rounded-xl bg-ink-850/60 px-3 py-2 ring-1 ring-white/5">
-      <div className={"text-sm font-bold " + (accent ? "text-accent-400" : "text-white")}>{big}</div>
-      <div className="text-[10px] uppercase tracking-wide text-slate-400">{sub}</div>
-    </div>
+    </g>
   );
 }
 
@@ -105,88 +126,155 @@ export function ArchDiagram({ a }: { a: Anatomy }) {
   const ar = a.arch;
   const gqa = ar.numKeyValueHeads > 0 && ar.numKeyValueHeads < ar.numAttentionHeads;
   const swa = a.slidingWindow && a.slidingWindow > 0 ? a.slidingWindow : null;
-
-  const attnTitle = gqa ? t("anatomy.diagram.attn") : t("anatomy.diagram.attnMha");
-  const attnDetail =
-    `${ar.numAttentionHeads}Q · ${ar.numKeyValueHeads}KV · dₕ${a.headDim}` +
-    (swa ? ` · SWA ${ctxLabel(swa)}` : "");
-
   const d = a.paramDist;
-  const swiglu = a.intermediateSize ? `SwiGLU ${formatInt(a.intermediateSize)}` : "SwiGLU";
-  const ffnTitle = a.isMoE ? t("anatomy.diagram.moe") : t("anatomy.diagram.mlp");
-  // For MoE only surface the expert counts / SwiGLU width we actually know — a
-  // bundled-DB entry carries neither, so the box degrades to just its title.
-  const ffnDetail = a.isMoE
-    ? [
-        a.numExperts != null
-          ? t("anatomy.diagram.expertsDetail", { act: a.expertsPerTok ?? "?", tot: a.numExperts })
-          : null,
-        a.intermediateSize ? swiglu : null,
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : swiglu;
-
-  const embedDetail = ar.vocabSize
-    ? `${kLabel(ar.vocabSize)} → ${formatInt(ar.hiddenSize)}`
-    : `→ ${formatInt(ar.hiddenSize)}`;
-  const outDetail = ar.vocabSize ? `→ ${kLabel(ar.vocabSize)} logits` : "→ logits";
-
-  // Active params: prefer the bundled-DB figure, else derive it from the live
-  // expert ratio (embeddings + attention + active experts). Undefined ⇒ we don't
-  // know, so the MoE headline collapses to a single total chip instead of lying.
   const knownActive =
     a.arch.activeParams ??
     (d.ffnActive != null ? d.embeddings + d.attention + d.ffnActive : undefined);
 
+  // ---- geometry: place boxes top→bottom, but ordered for bottom→top flow ----
+  const W = 760;
+  const colX = 250;
+  const colW = 210;
+  const colR = colX + colW; // 460
+  const cx = colX + colW / 2; // 355
+  const gap = 22;
+  const bGap = 12;
+  const hOut = 42, hFinal = 32, hNorm = 30, hAttn = 46, hFfn = 46, hEmbed = 44, hIn = 34;
+
+  let cy = 46;
+  const place = (h: number) => {
+    const top = cy;
+    cy += h;
+    return top;
+  };
+  const outT = place(hOut); cy += gap;
+  const fnT = place(hFinal); cy += gap;
+  const blkTop = cy; cy += 26; // container label row
+  const ffT = place(hFfn); cy += bGap;
+  const nBT = place(hNorm); cy += bGap;
+  const atT = place(hAttn); cy += bGap;
+  const nAT = place(hNorm); cy += 12;
+  const blkBot = cy; cy += gap;
+  const embT = place(hEmbed); cy += gap;
+  const inT = place(hIn);
+  const H = cy + 34;
+
+  const mid = (top: number, h: number) => top + h / 2;
+
+  const attnTitle = gqa ? t("anatomy.diagram.attn") : t("anatomy.diagram.attnMha");
+  const ffnTitle = a.isMoE ? t("anatomy.diagram.moe") : t("anatomy.diagram.mlp");
+
+  const ffnVal = a.isMoE
+    ? a.numExperts != null
+      ? `${a.expertsPerTok ?? "?"}/${a.numExperts}`
+      : "MoE"
+    : a.intermediateSize
+      ? formatInt(a.intermediateSize)
+      : "SwiGLU";
+  const ffnLabel = a.isMoE
+    ? a.numExperts != null
+      ? t("anatomy.diagram.expertsLabel")
+      : t("anatomy.diagram.moeLabel")
+    : t("anatomy.diagram.swigluLabel");
+
   return (
-    <div>
-      {/* summary chips */}
-      <div className="mb-4 flex flex-wrap gap-2">
-        {a.isMoE && knownActive != null ? (
-          <>
-            <Chip big={formatParams(knownActive)} sub={t("anatomy.diagram.activeSub")} accent />
-            <Chip big={formatParams(d.total)} sub={t("anatomy.diagram.totalSub")} />
-          </>
-        ) : (
-          <Chip big={formatParams(d.total)} sub={t("anatomy.diagram.totalSub")} />
-        )}
-        <Chip big={ctxLabel(ar.maxContext)} sub={t("anatomy.arch.context")} />
-        <Chip big={String(ar.numLayers)} sub={t("anatomy.arch.layers")} />
-      </div>
+    <div className="overflow-x-auto">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label="Transformer architecture diagram"
+        style={{ width: "100%", minWidth: 600, maxWidth: 720, display: "block", margin: "0 auto" }}
+      >
+        {/* summary header */}
+        <text x={cx} y={26} textAnchor="middle" style={{ fontSize: 13 }}>
+          {a.isMoE && knownActive != null ? (
+            <>
+              <tspan fill={COL.attn} style={{ fontWeight: 700 }}>{formatParams(knownActive)}</tspan>
+              <tspan className="fill-slate-400"> {t("anatomy.diagram.activeSub")} · </tspan>
+              <tspan className="fill-white" style={{ fontWeight: 700 }}>{formatParams(d.total)}</tspan>
+              <tspan className="fill-slate-400"> {t("anatomy.diagram.totalSub")}</tspan>
+            </>
+          ) : (
+            <>
+              <tspan className="fill-white" style={{ fontWeight: 700 }}>{formatParams(d.total)}</tspan>
+              <tspan className="fill-slate-400"> {t("anatomy.diagram.totalSub")}</tspan>
+            </>
+          )}
+          <tspan className="fill-slate-500"> · </tspan>
+          <tspan className="fill-white" style={{ fontWeight: 700 }}>{ctxLabel(ar.maxContext)}</tspan>
+          <tspan className="fill-slate-400"> {t("anatomy.arch.context")}</tspan>
+        </text>
 
-      {/* block stack */}
-      <div className="mx-auto max-w-sm space-y-1.5">
-        <Stage color={COL.out} title={t("anatomy.diagram.output")} detail={outDetail} />
-        <Up />
-        <Stage color={COL.norm} title={t("anatomy.diagram.finalNorm")} />
-        <Up />
+        {/* outer connectors (data flows bottom → top; chevrons point up) */}
+        {[
+          [outT + hOut, fnT],
+          [fnT + hFinal, blkTop],
+          [blkBot, embT],
+          [embT + hEmbed, inT],
+        ].map(([y1, y2], i) => (
+          <g key={i}>
+            <line x1={cx} y1={y1} x2={cx} y2={y2} className="stroke-white" strokeOpacity={0.18} strokeWidth={1.2} />
+            <Chevron x={cx} y={(y1 + y2) / 2 - 2} />
+          </g>
+        ))}
+        {/* inner block connectors */}
+        {[
+          [ffT + hFfn, nBT],
+          [nBT + hNorm, atT],
+          [atT + hAttn, nAT],
+        ].map(([y1, y2], i) => (
+          <g key={`b${i}`}>
+            <line x1={cx} y1={y1} x2={cx} y2={y2} className="stroke-white" strokeOpacity={0.16} strokeWidth={1.2} />
+            <Chevron x={cx} y={(y1 + y2) / 2 - 1} />
+          </g>
+        ))}
 
-        <div className="relative rounded-2xl border border-dashed border-white/15 bg-white/[0.02] px-3 pb-3 pt-9">
-          <div className="absolute left-3 top-2.5 text-[10px] uppercase tracking-wide text-slate-400">
-            {t("anatomy.diagram.block")}
-          </div>
-          <div className="absolute right-3 top-2 rounded-full bg-brand-600/25 px-2 py-0.5 text-[11px] font-bold text-brand-300 ring-1 ring-brand-500/40">
+        {/* block container */}
+        <rect
+          x={colX - 14}
+          y={blkTop}
+          width={colW + 28}
+          height={blkBot - blkTop}
+          rx={14}
+          fill="#ffffff"
+          fillOpacity={0.02}
+          stroke="#ffffff"
+          strokeOpacity={0.14}
+          strokeDasharray="4 4"
+        />
+        <text x={colX - 6} y={blkTop + 16} className="fill-slate-400" style={{ fontSize: 9.5, letterSpacing: 0.5 }}>
+          {t("anatomy.diagram.block").toUpperCase()}
+        </text>
+        <g>
+          <rect x={colR - 46} y={blkTop + 5} width={52} height={17} rx={8.5} fill={`${COL.attn}33`} stroke={`${COL.attn}88`} />
+          <text x={colR - 20} y={blkTop + 13.5} textAnchor="middle" dominantBaseline="central" fill={COL.attn} style={{ fontSize: 10.5, fontWeight: 700 }}>
             {t("anatomy.diagram.blockN", { n: ar.numLayers })}
-          </div>
-          <div className="space-y-1.5">
-            <Stage tight color={COL.norm} title="RMSNorm" />
-            <Up />
-            <Stage tight color={COL.attn} title={attnTitle} detail={attnDetail} residual />
-            <Up />
-            <Stage tight color={COL.norm} title="RMSNorm" />
-            <Up />
-            <Stage tight color={COL.ffn} title={ffnTitle} detail={ffnDetail} residual />
-          </div>
-        </div>
+          </text>
+        </g>
 
-        <Up />
-        <Stage color={COL.embed} title={t("anatomy.diagram.embed")} detail={embedDetail} />
-        <Up />
-        <Stage color={COL.io} title={t("anatomy.diagram.input")} />
-      </div>
+        {/* boxes */}
+        <Box x={colX} y={outT} w={colW} h={hOut} color={COL.out} title={t("anatomy.diagram.output")} />
+        <Box x={colX} y={fnT} w={colW} h={hFinal} color={COL.norm} title={t("anatomy.diagram.finalNorm")} />
+        <Box x={colX} y={ffT} w={colW} h={hFfn} color={COL.ffn} title={ffnTitle} />
+        <Box x={colX} y={nBT} w={colW} h={hNorm} color={COL.norm} title="RMSNorm" />
+        <Box x={colX} y={atT} w={colW} h={hAttn} color={COL.attn} title={attnTitle} />
+        <Box x={colX} y={nAT} w={colW} h={hNorm} color={COL.norm} title="RMSNorm" />
+        <Box x={colX} y={embT} w={colW} h={hEmbed} color={COL.embed} title={t("anatomy.diagram.embed")} />
+        <Box x={colX} y={inT} w={colW} h={hIn} color={COL.io} title={t("anatomy.diagram.input")} />
 
-      <p className="mt-3 text-center text-[11px] text-slate-500">{t("anatomy.diagram.flow")}</p>
+        {/* callouts */}
+        <Callout x={colR} y={mid(outT, hOut)} side="r" value={kLabel(ar.vocabSize)} label={t("anatomy.diagram.logitsLabel")} />
+        <Callout x={colR} y={mid(atT, hAttn)} side="r" value={`${ar.numAttentionHeads}Q · ${ar.numKeyValueHeads}KV`} label={gqa ? "GQA" : "MHA"} accent />
+        <Callout x={colX} y={mid(atT, hAttn)} side="l" value={`dₕ ${a.headDim}`} label={swa ? `SWA ${ctxLabel(swa)}` : t("anatomy.diagram.headDimLabel")} />
+        <Callout x={colR} y={mid(ffT, hFfn)} side="r" value={ffnVal} label={ffnLabel} />
+        <Callout x={colX} y={mid(embT, hEmbed)} side="l" value={kLabel(ar.vocabSize)} label={t("anatomy.diagram.vocabLabel")} />
+        <Callout x={colR} y={mid(embT, hEmbed)} side="r" value={formatInt(ar.hiddenSize)} label={t("anatomy.diagram.dimLabel")} />
+
+        {/* footer */}
+        <text x={cx} y={H - 10} textAnchor="middle" className="fill-slate-500" style={{ fontSize: 10 }}>
+          {t("anatomy.diagram.flow")}
+        </text>
+      </svg>
     </div>
   );
 }
