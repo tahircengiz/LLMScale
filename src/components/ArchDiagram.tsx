@@ -178,12 +178,13 @@ export function ArchDiagram({ a }: { a: Anatomy }) {
     : t("anatomy.diagram.swigluLabel");
 
   return (
-    <div className="overflow-x-auto">
+    <div className="flex w-full justify-center overflow-x-auto lg:h-full lg:overflow-visible">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label="Transformer architecture diagram"
-        style={{ width: "100%", minWidth: 600, maxWidth: 720, display: "block", margin: "0 auto" }}
+        preserveAspectRatio="xMidYMid meet"
+        className="block w-full min-w-[600px] max-w-[760px] shrink-0 lg:h-full lg:w-auto lg:min-w-0 lg:max-w-full"
       >
         {/* summary header */}
         <text x={cx} y={26} textAnchor="middle" style={{ fontSize: 13 }}>

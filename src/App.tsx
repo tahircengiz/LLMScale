@@ -55,83 +55,81 @@ export default function App() {
   }
 
   const tabCls = (active: boolean) =>
-    "rounded-lg px-3 py-1.5 text-sm font-medium transition " +
+    "rounded-lg px-2.5 py-1 text-sm font-medium transition whitespace-nowrap " +
     (active ? "bg-brand-600 text-onbrand shadow" : "text-slate-300 hover:bg-white/5");
 
+  // "Fit" pages fill exactly one viewport (dashboard, no page scroll); other
+  // pages keep the classic scrolling document inside the content area.
+  const isFit = page === "anatomy";
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
-      <header className="mb-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <a href={base} className="flex items-center gap-2 no-underline">
-            <img src={`${base}favicon.svg`} alt="" className="h-8 w-8" />
-            <span className="text-xl font-bold tracking-tight text-white">LLMScale</span>
-            <Badge tone="good">{t("header.badge")}</Badge>
-          </a>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-              title="Toggle light / dark"
-              className="rounded-xl bg-ink-850 px-3 py-2 text-sm ring-1 ring-white/10 transition hover:bg-white/5"
-            >
-              {light ? "🌙" : "☀️"}
-            </button>
-            <Segmented<Lang>
-              value={lang}
-              onChange={setLang}
-              size="sm"
-              options={[
-                { value: "en", label: "EN" },
-                { value: "tr", label: "TR" },
-              ]}
-            />
-            <button
-              type="button"
-              onClick={share}
-              className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-onbrand shadow-lg shadow-brand-600/30 transition hover:bg-brand-500"
-            >
-              {copied ? t("header.shareCopied") : t("header.share")}
-            </button>
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <header className="shrink-0 border-b border-white/10 px-4 py-2 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex items-center justify-between gap-3">
+            <a href={base} className="flex items-center gap-2 no-underline">
+              <img src={`${base}favicon.svg`} alt="" className="h-7 w-7" />
+              <span className="text-lg font-bold tracking-tight text-white">LLMScale</span>
+              <Badge tone="good">{t("header.badge")}</Badge>
+            </a>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label="Toggle theme"
+                title="Toggle light / dark"
+                className="rounded-xl bg-ink-850 px-2.5 py-1.5 text-sm ring-1 ring-white/10 transition hover:bg-white/5"
+              >
+                {light ? "🌙" : "☀️"}
+              </button>
+              <Segmented<Lang>
+                value={lang}
+                onChange={setLang}
+                size="sm"
+                options={[
+                  { value: "en", label: "EN" },
+                  { value: "tr", label: "TR" },
+                ]}
+              />
+              <button
+                type="button"
+                onClick={share}
+                className="rounded-xl bg-brand-600 px-3 py-1.5 text-sm font-medium text-onbrand shadow-lg shadow-brand-600/30 transition hover:bg-brand-500"
+              >
+                {copied ? t("header.shareCopied") : t("header.share")}
+              </button>
+            </div>
           </div>
+          <nav className="mt-2 inline-flex max-w-full flex-wrap gap-1 overflow-x-auto rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
+            <a href={base} className={tabCls(page === "sizing")}>{t("nav.sizing")}</a>
+            <a href={`${base}fit.html`} className={tabCls(page === "fit")}>{t("nav.fit")}</a>
+            <a href={`${base}vllm.html`} className={tabCls(page === "vllm")}>{t("nav.vllm")}</a>
+            <a href={`${base}decode.html`} className={tabCls(page === "decode")}>{t("nav.decode")}</a>
+            <a href={`${base}anatomy.html`} className={tabCls(page === "anatomy")}>{t("nav.anatomy")}</a>
+            <a href={`${base}compare.html`} className={tabCls(page === "compare")}>{t("nav.compare")}</a>
+          </nav>
         </div>
-        <nav className="mt-4 inline-flex flex-wrap gap-1 rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
-          <a href={base} className={tabCls(page === "sizing")}>
-            {t("nav.sizing")}
-          </a>
-          <a href={`${base}fit.html`} className={tabCls(page === "fit")}>
-            {t("nav.fit")}
-          </a>
-          <a href={`${base}vllm.html`} className={tabCls(page === "vllm")}>
-            {t("nav.vllm")}
-          </a>
-          <a href={`${base}decode.html`} className={tabCls(page === "decode")}>
-            {t("nav.decode")}
-          </a>
-          <a href={`${base}anatomy.html`} className={tabCls(page === "anatomy")}>
-            {t("nav.anatomy")}
-          </a>
-          <a href={`${base}compare.html`} className={tabCls(page === "compare")}>
-            {t("nav.compare")}
-          </a>
-        </nav>
       </header>
 
-      {page === "vllm" ? (
-        <VllmPage />
-      ) : page === "fit" ? (
-        <FitPage />
-      ) : page === "decode" ? (
-        <DecodePage />
-      ) : page === "anatomy" ? (
-        <AnatomyPage />
-      ) : page === "compare" ? (
-        <ComparePage />
-      ) : (
-        <SizingPage />
-      )}
+      <main className="min-h-0 flex-1 overflow-y-auto">
+        <div className={"mx-auto max-w-6xl px-4 sm:px-6 " + (isFit ? "flex h-full flex-col py-3" : "py-6")}>
+          {page === "vllm" ? (
+            <VllmPage />
+          ) : page === "fit" ? (
+            <FitPage />
+          ) : page === "decode" ? (
+            <DecodePage />
+          ) : page === "anatomy" ? (
+            <AnatomyPage />
+          ) : page === "compare" ? (
+            <ComparePage />
+          ) : (
+            <SizingPage />
+          )}
 
-      <Footer githubUrl={GITHUB_URL} linkedinUrl={LINKEDIN_URL} />
+          {!isFit && <Footer githubUrl={GITHUB_URL} linkedinUrl={LINKEDIN_URL} />}
+        </div>
+      </main>
     </div>
   );
 }

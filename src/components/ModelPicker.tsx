@@ -46,6 +46,7 @@ export function ModelPicker({
   meta,
   onModel,
   hideCustom = false,
+  compact = false,
 }: {
   hfId: string;
   arch: ModelArch | null;
@@ -54,6 +55,9 @@ export function ModelPicker({
   /** Hide the manual "Custom" tab — used where the page needs real HF data
    * (e.g. Model Anatomy) that a hand-entered arch can't provide. */
   hideCustom?: boolean;
+  /** Slim variant for the single-screen dashboard: drops the step heading,
+   * puts the tab switch + search on one row, tightens the resolved summary. */
+  compact?: boolean;
 }) {
   const { t } = useLang();
   const [tab, setTab] = useState<Tab>("search");
@@ -164,66 +168,67 @@ export function ModelPicker({
       <Badge tone="neutral">{t("model.badge.manual")}</Badge>
     ) : null;
 
+  const searchInput = (cls = "") => (
+    <div className={"relative " + cls}>
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={t("model.search.placeholder")}
+        className="w-full rounded-xl bg-ink-850 px-3 py-2.5 text-sm text-white ring-1 ring-white/10 outline-none placeholder:text-slate-500 focus:ring-brand-500/60"
+      />
+      {searching && (
+        <span className="absolute right-3 top-3 text-xs text-slate-500">{t("model.search.searching")}</span>
+      )}
+      {results.length > 0 && (
+        <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-white/10 bg-ink-850 shadow-2xl">
+          {results.map((r) => (
+            <li key={r.id}>
+              <button
+                type="button"
+                onClick={() => pick(r.id)}
+                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-brand-600/20"
+              >
+                <span className="truncate text-slate-200">{r.id}</span>
+                <span className="flex shrink-0 items-center gap-2">
+                  {r.gated && <Badge tone="warn">gated</Badge>}
+                  {typeof r.downloads === "number" && (
+                    <span className="text-[11px] text-slate-500">↓ {formatParams(r.downloads)}</span>
+                  )}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+
+  const searchHints = (
+    <>
+      {offline && <p className="mt-2 text-xs text-amber-300/80">{t("model.search.offline")}</p>}
+      {loadingId && <p className="mt-2 text-xs text-slate-400">{t("model.search.loading", { id: loadingId })}</p>}
+      {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
+    </>
+  );
+
   return (
     <div>
-      <SectionTitle step="1" title={t("model.step")} />
-      <Segmented<Tab>
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: "search", label: t("model.tab.search") },
-          { value: "presets", label: t("model.tab.presets") },
-          ...(hideCustom ? [] : [{ value: "custom" as Tab, label: t("model.tab.custom") }]),
-        ]}
-      />
+      {!compact && <SectionTitle step="1" title={t("model.step")} />}
+      <div className={compact && tab === "search" ? "flex items-center gap-2" : undefined}>
+        <Segmented<Tab>
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: "search", label: t("model.tab.search") },
+            { value: "presets", label: t("model.tab.presets") },
+            ...(hideCustom ? [] : [{ value: "custom" as Tab, label: t("model.tab.custom") }]),
+          ]}
+        />
+        {compact && tab === "search" && searchInput("flex-1")}
+      </div>
 
-      {tab === "search" && (
-        <div className="mt-3">
-          <div className="relative">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("model.search.placeholder")}
-              className="w-full rounded-xl bg-ink-850 px-3 py-2.5 text-sm text-white ring-1 ring-white/10 outline-none placeholder:text-slate-500 focus:ring-brand-500/60"
-            />
-            {searching && (
-              <span className="absolute right-3 top-3 text-xs text-slate-500">
-                {t("model.search.searching")}
-              </span>
-            )}
-            {results.length > 0 && (
-              <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-white/10 bg-ink-850 shadow-2xl">
-                {results.map((r) => (
-                  <li key={r.id}>
-                    <button
-                      type="button"
-                      onClick={() => pick(r.id)}
-                      className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-brand-600/20"
-                    >
-                      <span className="truncate text-slate-200">{r.id}</span>
-                      <span className="flex shrink-0 items-center gap-2">
-                        {r.gated && <Badge tone="warn">gated</Badge>}
-                        {typeof r.downloads === "number" && (
-                          <span className="text-[11px] text-slate-500">
-                            ↓ {formatParams(r.downloads)}
-                          </span>
-                        )}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {offline && (
-            <p className="mt-2 text-xs text-amber-300/80">{t("model.search.offline")}</p>
-          )}
-          {loadingId && (
-            <p className="mt-2 text-xs text-slate-400">{t("model.search.loading", { id: loadingId })}</p>
-          )}
-          {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
-        </div>
-      )}
+      {!compact && tab === "search" && <div className="mt-3">{searchInput()}</div>}
+      {tab === "search" && searchHints}
 
       {tab === "presets" && (
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -292,7 +297,8 @@ export function ModelPicker({
 
       {/* Resolved summary */}
       {arch && (
-        <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-ink-850/50 p-3 text-xs ring-1 ring-white/5">
+        <div className={"flex flex-wrap items-center gap-2 rounded-xl bg-ink-850/50 text-xs ring-1 ring-white/5 " + (compact ? "mt-2 p-2" : "mt-4 p-3")}>
+
           {sourceBadge}
           {meta?.gated && <Badge tone="warn">gated</Badge>}
           {meta?.isMoE && <Badge tone="neutral">MoE</Badge>}

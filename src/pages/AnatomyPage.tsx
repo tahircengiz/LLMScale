@@ -4,9 +4,9 @@ import { fetchAnatomy, tierOf, type Anatomy, type DtypeTier } from "../lib/anato
 import { useLang } from "../lib/i18n";
 import { formatGiB, formatInt, formatParams } from "../lib/format";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
-import { Donut, HBars, LineChart, GqaDiagram, type DonutSeg } from "../components/charts";
+import { Donut, HBars, LineChart, type DonutSeg } from "../components/charts";
 import { ArchDiagram } from "../components/ArchDiagram";
-import { Badge, Card, SectionTitle } from "../components/ui";
+import { Card } from "../components/ui";
 
 const DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct";
 
@@ -71,15 +71,14 @@ export function AnatomyPage() {
   }, [hfId]);
 
   return (
-    <div>
-      <p className="mb-6 max-w-2xl text-sm text-slate-400">{t("anatomy.subtitle")}</p>
-
-      <Card className="mb-5 p-5 relative z-30">
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      <Card className="relative z-30 shrink-0 p-3">
         <ModelPicker
           hfId={hfId}
           arch={arch}
           meta={meta}
           hideCustom
+          compact
           onModel={(id, a, m) => {
             if (id) setHfId(id);
             setArch(a);
@@ -89,26 +88,35 @@ export function AnatomyPage() {
       </Card>
 
       {loading && !anatomy ? (
-        <Card className="p-5">
-          <p className="py-10 text-center text-sm text-slate-400">{t("anatomy.loading")}</p>
+        <Card className="flex flex-1 items-center justify-center p-5">
+          <p className="text-sm text-slate-400">{t("anatomy.loading")}</p>
         </Card>
       ) : anatomy ? (
-        <div className="space-y-5">
-          {loading && <div className="text-xs font-medium text-brand-400">{t("anatomy.loading")}</div>}
-          <div className={"space-y-5 transition-opacity " + (loading ? "opacity-50" : "")}>
-            <MetaStrip a={anatomy} />
-            <ArchHero a={anatomy} />
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className={"min-h-0 flex-1 transition-opacity " + (loading ? "opacity-50" : "opacity-100")}>
+          <div className="grid grid-cols-1 gap-3 lg:h-full lg:grid-cols-12">
+            {/* left — annotated architecture diagram, fills the column */}
+            <Card className="flex min-h-0 flex-col p-3 lg:col-span-7 lg:h-full">
+              <div className="mb-1 flex items-baseline gap-2">
+                <h2 className="text-sm font-semibold tracking-tight text-white">{t("anatomy.arch.title")}</h2>
+                <span className="hidden text-[11px] text-slate-400 sm:inline">{t("anatomy.arch.hint")}</span>
+              </div>
+              <div className="mt-1 flex min-h-0 flex-1 items-center justify-center overflow-auto lg:overflow-hidden">
+                <ArchDiagram a={anatomy} />
+              </div>
+            </Card>
+
+            {/* right — meta + charts, scrolls only if the viewport is short */}
+            <div className="flex min-h-0 flex-col gap-2 lg:col-span-5 lg:h-full lg:overflow-y-auto">
+              <MetaStrip a={anatomy} />
               <ParamCard a={anatomy} />
               <PrecisionCard a={anatomy} />
+              <KvCard a={anatomy} />
             </div>
-            <KvCard a={anatomy} />
           </div>
-          <p className="text-xs text-slate-500">{t("anatomy.disclaimer")}</p>
         </div>
       ) : (
-        <Card className="p-5">
-          <p className="py-10 text-center text-sm text-slate-400">{t("anatomy.empty")}</p>
+        <Card className="flex flex-1 items-center justify-center p-5">
+          <p className="text-sm text-slate-400">{t("anatomy.empty")}</p>
         </Card>
       )}
     </div>
@@ -125,28 +133,15 @@ function MetaStrip({ a }: { a: Anatomy }) {
     { label: t("anatomy.meta.size"), value: gb(a.usedStorage) },
   ];
   return (
-    <Card className="p-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <Card className="shrink-0 px-3 py-2">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
         {cells.map((c, i) => (
-          <div key={i}>
-            <div className="text-[10px] uppercase tracking-wide text-slate-400">{c.label}</div>
-            <div className="mt-0.5 text-sm font-semibold text-white">{c.value}</div>
-          </div>
+          <span key={i} className="inline-flex items-baseline gap-1.5">
+            <span className="text-[10px] uppercase tracking-wide text-slate-400">{c.label}</span>
+            <span className="font-semibold text-white">{c.value}</span>
+          </span>
         ))}
       </div>
-      {a.baseModel && (
-        <div className="mt-3 border-t border-white/10 pt-3 text-xs text-slate-400">
-          {t("anatomy.meta.base")}{" "}
-          <a
-            href={`https://huggingface.co/${a.baseModel}`}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-brand-400 hover:underline"
-          >
-            {a.baseModel}
-          </a>
-        </div>
-      )}
     </Card>
   );
 }
@@ -162,18 +157,9 @@ function ParamCard({ a }: { a: Anatomy }) {
   ].filter((s) => s.value > 0);
 
   return (
-    <Card className="p-5">
-      <SectionTitle title={t("anatomy.params.title")} />
-      <Donut segments={segs} centerTop={formatParams(d.total)} centerBottom={t("anatomy.params.totalSub")} />
-      {d.ffnActive != null && (
-        <p className="mt-4 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90 ring-1 ring-amber-500/20">
-          {t("anatomy.params.activeNote", {
-            active: formatParams(d.ffnActive),
-            experts: a.numExperts ?? 0,
-            perTok: a.expertsPerTok ?? 0,
-          })}
-        </p>
-      )}
+    <Card className="shrink-0 px-3 py-2">
+      <h3 className="mb-1 text-sm font-semibold tracking-tight text-white">{t("anatomy.params.title")}</h3>
+      <Donut segments={segs} size={96} thickness={16} centerTop={formatParams(d.total)} centerBottom={t("anatomy.params.totalSub")} />
     </Card>
   );
 }
@@ -186,7 +172,6 @@ function PrecisionCard({ a }: { a: Anatomy }) {
     { label: "FP8 / INT8", bytes: DTYPE_BYTES.fp8, tiers: ["fp8", "int8"] },
     { label: "INT4", bytes: DTYPE_BYTES.int4, tiers: ["int4"] },
   ];
-  // Only surface the FP32 row for an fp32-native model, so it can be highlighted.
   if (a.weightDtype === "fp32") rows.unshift({ label: "FP32", bytes: DTYPE_BYTES.fp32, tiers: ["full"] });
   const bars = rows.map((b) => {
     const gib = (p * b.bytes) / BYTES_PER_GIB;
@@ -194,70 +179,20 @@ function PrecisionCard({ a }: { a: Anatomy }) {
     return { label: b.label, value: gib, valueLabel: formatGiB(gib), color: "#6366f1", highlight: native };
   });
 
-  const dtypeSegs: DonutSeg[] = a.dtypeParts.map((d) => ({
-    label: d.dtype,
-    value: d.count,
-    color: TIER_COLOR[d.tier],
-    sub: formatParams(d.count),
-  }));
-
   return (
-    <Card className="p-5">
-      <SectionTitle title={t("anatomy.precision.title")} />
-      {dtypeSegs.length > 0 ? (
-        <>
-          <div className="mb-1 text-[11px] uppercase tracking-wide text-slate-400">
-            {t("anatomy.precision.mix")}
-          </div>
-          <Donut segments={dtypeSegs} centerTop={a.weightDtype ? a.weightDtype.toUpperCase() : ""} centerBottom={t("anatomy.precision.native")} />
-        </>
-      ) : (
-        <p className="mb-3 text-xs text-slate-500">{t("anatomy.precision.mixNA")}</p>
-      )}
-      <div className="mt-4 mb-2 text-[11px] uppercase tracking-wide text-slate-400">
-        {t("anatomy.precision.memTitle")}
+    <Card className="shrink-0 px-3 py-2">
+      <div className="mb-1.5 flex items-baseline justify-between">
+        <h3 className="text-sm font-semibold tracking-tight text-white">{t("anatomy.precision.title")}</h3>
+        {a.weightDtype && (
+          <span className="text-[11px] text-slate-400">
+            {t("anatomy.precision.native")}{" "}
+            <span className="font-semibold" style={{ color: TIER_COLOR[tierOf(a.weightDtype)] }}>
+              {a.weightDtype.toUpperCase()}
+            </span>
+          </span>
+        )}
       </div>
       <HBars items={bars} />
-    </Card>
-  );
-}
-
-function ArchHero({ a }: { a: Anatomy }) {
-  const { t } = useLang();
-  const ar = a.arch;
-  const gqa = ar.numKeyValueHeads > 0 && ar.numKeyValueHeads < ar.numAttentionHeads;
-  const gqaRatio = ar.numKeyValueHeads > 0 ? Math.round(ar.numAttentionHeads / ar.numKeyValueHeads) : 1;
-  const hasExtras = a.ropeTheta != null || (a.slidingWindow != null && a.slidingWindow > 0);
-
-  return (
-    <Card className="p-5">
-      <SectionTitle title={t("anatomy.arch.title")} hint={t("anatomy.arch.hint")} />
-
-      {/* full-width annotated architecture diagram */}
-      <ArchDiagram a={a} />
-
-      {/* attention grouping detail + a few config extras the callouts don't carry */}
-      <div className="mt-5 border-t border-white/10 pt-4">
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_auto] lg:items-start">
-          <div>
-            <div className="text-[11px] uppercase tracking-wide text-slate-400">{t("anatomy.arch.gqaTitle")}</div>
-            <p className="mb-2 mt-0.5 text-xs text-slate-400">
-              {gqa
-                ? t("anatomy.arch.gqaNote", { q: ar.numAttentionHeads, kv: ar.numKeyValueHeads, ratio: gqaRatio })
-                : t("anatomy.arch.mhaNote", { n: ar.numAttentionHeads })}
-            </p>
-            <GqaDiagram attnHeads={ar.numAttentionHeads} kvHeads={ar.numKeyValueHeads} />
-          </div>
-          {hasExtras && (
-            <div className="flex flex-wrap gap-2 lg:justify-end">
-              {a.ropeTheta != null && <Badge tone="neutral">RoPE θ {formatInt(a.ropeTheta)}</Badge>}
-              {a.slidingWindow != null && a.slidingWindow > 0 && (
-                <Badge tone="neutral">SWA {formatInt(a.slidingWindow)}</Badge>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
     </Card>
   );
 }
@@ -284,33 +219,31 @@ function KvCard({ a }: { a: Anatomy }) {
   const fmtX = (x: number) => (x >= 1024 ? `${Math.round(x / 1024)}k` : String(Math.round(x)));
 
   return (
-    <Card className="p-5">
-      <SectionTitle title={t("anatomy.kv.title")} />
+    <Card className="shrink-0 px-3 py-2">
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 className="text-sm font-semibold tracking-tight text-white">{t("anatomy.kv.title")}</h3>
+        <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-4 rounded-full" style={{ backgroundColor: "#6366f1" }} />
+            {t("anatomy.kv.gqaLegend")}
+          </span>
+          {gqa && (
+            <span className="flex items-center gap-1.5">
+              <span className="h-0.5 w-4" style={{ backgroundColor: "#64748b" }} />
+              {t("anatomy.kv.mhaLegend")}
+            </span>
+          )}
+        </div>
+      </div>
       <LineChart
         series={series}
         xMax={maxCtx}
         yMax={yMax}
+        height={88}
         formatX={fmtX}
         formatY={(y) => formatGiB(y)}
         xTicks={ticks}
       />
-      <div className="mt-2 flex flex-wrap items-center gap-4 text-xs">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-4 rounded-full" style={{ backgroundColor: "#6366f1" }} />
-          {t("anatomy.kv.gqaLegend")}
-        </span>
-        {gqa && (
-          <span className="flex items-center gap-1.5">
-            <span className="h-0.5 w-4" style={{ backgroundColor: "#64748b" }} />
-            {t("anatomy.kv.mhaLegend")}
-          </span>
-        )}
-      </div>
-      <p className="mt-2 text-xs text-slate-400">
-        {gqa ? t("anatomy.kv.noteGqa", { ratio: Math.round(mhaFactor) }) : t("anatomy.kv.noteMha")}
-        {" "}
-        <Badge tone="neutral">{formatGiB(gqaSeries[gqaSeries.length - 1].y)} @ {fmtX(maxCtx)}</Badge>
-      </p>
     </Card>
   );
 }
