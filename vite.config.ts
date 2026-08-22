@@ -17,6 +17,7 @@ export default defineConfig({
         decode: fileURLToPath(new URL("./decode.html", import.meta.url)),
         anatomy: fileURLToPath(new URL("./anatomy.html", import.meta.url)),
         compare: fileURLToPath(new URL("./compare.html", import.meta.url)),
+        learn: fileURLToPath(new URL("./learn.html", import.meta.url)),
       },
     },
   },

@@ -172,6 +172,7 @@ const en: Dict = {
   "nav.decode": "Name Decoder",
   "nav.anatomy": "Model Anatomy",
   "nav.compare": "Model Compare",
+  "nav.learn": "LLM 101",
   "compare.subtitle":
     "Put 2–4 models side by side — specs, capabilities and per-task fit — to see which one is better for which use, from live Hugging Face data.",
   "compare.pickTitle": "Models",
@@ -530,6 +531,7 @@ const tr: Dict = {
   "nav.decode": "İsim Çözücü",
   "nav.anatomy": "Model Anatomisi",
   "nav.compare": "Model Karşılaştırma",
+  "nav.learn": "LLM 101",
   "compare.subtitle":
     "2–4 modeli yan yana koy — spec'ler, yetenekler ve görev-bazlı uygunluk — hangisinin ne için daha iyi olduğunu gör, canlı Hugging Face verisinden.",
   "compare.pickTitle": "Modeller",

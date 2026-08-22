@@ -107,6 +107,7 @@ export default function App() {
             <a href={`${base}decode.html`} className={tabCls(page === "decode")}>{t("nav.decode")}</a>
             <a href={`${base}anatomy.html`} className={tabCls(page === "anatomy")}>{t("nav.anatomy")}</a>
             <a href={`${base}compare.html`} className={tabCls(page === "compare")}>{t("nav.compare")}</a>
+            <a href={`${base}learn.html`} className={tabCls(false)}>{t("nav.learn")}</a>
           </nav>
         </div>
       </header>
