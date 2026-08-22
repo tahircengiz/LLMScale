@@ -50,8 +50,10 @@
       #brand:hover { opacity: 1; }
       #brand span { color: #8b5cf6; }
 
-      /* scrolling narrative steps over the fixed stage */
-      #scroll { position: relative; z-index: 2; }
+      /* scrolling narrative steps over the fixed stage.
+         pointer-events:none lets clicks/drags reach the 3D canvas underneath;
+         the cards re-enable pointer events for their own controls. */
+      #scroll { position: relative; z-index: 2; pointer-events: none; }
       section { min-height: 100vh; display: flex; align-items: center; }
       .card {
         pointer-events: auto; margin: 0 0 0 clamp(16px, 5vw, 90px); max-width: min(400px, 84vw);

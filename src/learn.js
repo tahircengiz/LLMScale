@@ -87,8 +87,12 @@ const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 10
 camera.position.set(0, 3, 14);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.dampingFactor = 0.08; controls.enablePan = false;
+controls.enableZoom = false; // wheel scrolls the page (chapters), never zooms the camera
 controls.minDistance = 8; controls.maxDistance = 30; controls.minPolarAngle = 0.35; controls.maxPolarAngle = 1.9;
 controls.target.set(0, 0.3, 0);
+// On touch devices, disable orbit so a finger-drag scrolls the page (not the
+// camera); tapping a token still selects it via the pointerup handler below.
+if (matchMedia("(pointer: coarse)").matches) controls.enableRotate = false;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ambient = new THREE.AmbientLight(0xffffff, THEME.dark.ambient); scene.add(ambient);
 const keyLight = new THREE.PointLight(0xffffff, 60, 100); keyLight.position.set(6, 10, 10); scene.add(keyLight);
@@ -128,7 +132,7 @@ function buildBeams() {
   activeHeads.forEach((h) => { const w = weights(h.i, query);
     for (let k = 0; k <= query; k++) { if (k === query) continue; incoming[k] += w[k]; if (w[k] < 0.04) continue;
       const from = nodes[query].mesh.position, to = nodes[k].mesh.position;
-      const mid = from.clone().add(to).multiplyScalar(0.5); mid.y += 2.4 + w[k] * 2.2;
+      const mid = from.clone().add(to).multiplyScalar(0.5); mid.y += 1.1 + w[k] * 1.3;
       const curve = new THREE.QuadraticBezierCurve3(from.clone(), mid, to.clone());
       beamGroup.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 44, 0.02 + w[k] * 0.3, 10, false),
         new THREE.MeshBasicMaterial({ color: hc(h.i), transparent: true, opacity: th.beamOp(w[k]), blending: th.beamBlend, depthWrite: false })));
@@ -180,13 +184,13 @@ loopPulse.scale.setScalar(0.8); loopGroup.add(loopPulse);
 // and the "billions of parameters" hero in the final chapter.
 const scaleGroup = new THREE.Group(); scene.add(scaleGroup);
 let bgMat;
-{ const cnt = 1800, pos = new Float32Array(cnt * 3);
-  for (let i = 0; i < cnt; i++) { const r = 8 + Math.random() * 16, a = Math.random() * Math.PI * 2, b = Math.acos(2 * Math.random() - 1);
-    pos[i * 3] = r * Math.sin(b) * Math.cos(a); pos[i * 3 + 1] = r * Math.sin(b) * Math.sin(a) * 0.7; pos[i * 3 + 2] = r * Math.cos(b); }
+{ const cnt = 2600, pos = new Float32Array(cnt * 3);
+  for (let i = 0; i < cnt; i++) { const r = 7 + Math.random() * 15, a = Math.random() * Math.PI * 2, b = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(b) * Math.cos(a); pos[i * 3 + 1] = r * Math.sin(b) * Math.sin(a) * 0.75; pos[i * 3 + 2] = r * Math.cos(b); }
   const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  bgMat = new THREE.PointsMaterial({ color: 0x8b5cf6, size: 0.06, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
+  bgMat = new THREE.PointsMaterial({ color: 0x8b5cf6, size: 0.09, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
   scaleGroup.add(new THREE.Points(geo, bgMat)); }
-function updateBg() { if (light) { bgMat.blending = THREE.NormalBlending; bgMat.color.setHex(0xa78bfa); bgMat.opacity = 0.32; } else { bgMat.blending = THREE.AdditiveBlending; bgMat.color.setHex(0x8b5cf6); bgMat.opacity = 0.4; } bgMat.needsUpdate = true; }
+function updateBg() { if (light) { bgMat.blending = THREE.NormalBlending; bgMat.color.setHex(0x7c3aed); bgMat.opacity = 0.5; } else { bgMat.blending = THREE.AdditiveBlending; bgMat.color.setHex(0x8b5cf6); bgMat.opacity = 0.7; } bgMat.needsUpdate = true; }
 
 // ---------------------------------------------------------------- chapter engine
 const camGoal = { pos: P(CH[0].cam), look: P(CH[0].look) }; let camLerp = true; let tokensHidden = false; let pendingBeams = false;
@@ -278,7 +282,7 @@ function tick(now) {
     if (layerGroup.visible) { const t = (clock * 0.35) % 1; layerPulse.position.y = 1.2 + t * 5.8; layerPulse.material.opacity = 0.55 * (1 - Math.abs(t - 0.5) * 1.4); }
     if (predictGroup.visible) bars[0].bar.material.emissiveIntensity = 1.0 + 0.6 * Math.sin(clock * 3);
     if (loopGroup.visible) { const t = (clock * 0.35) % 1; loopPulse.position.copy(loopCurve.getPoint(t)); loopPulse.material.opacity = 0.4 + 0.5 * Math.sin(t * Math.PI); }
-    scaleGroup.rotation.y += dt * 0.03; // ambient background, always drifting
+    scaleGroup.rotation.y += dt * 0.05; // ambient background, always drifting
   }
   projectLabels(); renderer.render(scene, camera); requestAnimationFrame(tick);
 }
