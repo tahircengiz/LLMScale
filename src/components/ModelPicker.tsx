@@ -9,6 +9,7 @@ import {
 } from "../lib/hf";
 import { KNOWN_MODELS } from "../lib/models";
 import { formatParams } from "../lib/format";
+import { track } from "../lib/analytics";
 import { useLang } from "../lib/i18n";
 import { Badge, Field, NumberInput, SectionTitle, Segmented } from "./ui";
 
@@ -118,6 +119,7 @@ export function ModelPicker({
         kvDtype: r.kvDtype,
         warningKey: r.warningKey,
       };
+      track("model-view", { model: id, source: r.source, moe: Boolean(r.isMoE) });
       if (r.arch) {
         onModel(id, r.arch, m);
       } else {
