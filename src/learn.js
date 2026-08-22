@@ -176,24 +176,30 @@ cone.position.copy(loopTip); cone.quaternion.setFromUnitVectors(new THREE.Vector
 const loopPulse = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0x6ee7b7, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
 loopPulse.scale.setScalar(0.8); loopGroup.add(loopPulse);
 
-// scale particle cloud
-const scaleGroup = new THREE.Group(); scaleGroup.visible = false; scene.add(scaleGroup);
-{ const cnt = 1400, pos = new Float32Array(cnt * 3);
-  for (let i = 0; i < cnt; i++) { const r = 5 + Math.random() * 12, a = Math.random() * Math.PI * 2, b = Math.acos(2 * Math.random() - 1);
-    pos[i * 3] = r * Math.sin(b) * Math.cos(a); pos[i * 3 + 1] = r * Math.sin(b) * Math.sin(a) * 0.6; pos[i * 3 + 2] = r * Math.cos(b); }
+// ambient particle field — a subtle drifting backdrop behind every chapter,
+// and the "billions of parameters" hero in the final chapter.
+const scaleGroup = new THREE.Group(); scene.add(scaleGroup);
+let bgMat;
+{ const cnt = 1800, pos = new Float32Array(cnt * 3);
+  for (let i = 0; i < cnt; i++) { const r = 8 + Math.random() * 16, a = Math.random() * Math.PI * 2, b = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(b) * Math.cos(a); pos[i * 3 + 1] = r * Math.sin(b) * Math.sin(a) * 0.7; pos[i * 3 + 2] = r * Math.cos(b); }
   const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  scaleGroup.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x8b5cf6, size: 0.07, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }))); }
+  bgMat = new THREE.PointsMaterial({ color: 0x8b5cf6, size: 0.06, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
+  scaleGroup.add(new THREE.Points(geo, bgMat)); }
+function updateBg() { if (light) { bgMat.blending = THREE.NormalBlending; bgMat.color.setHex(0xa78bfa); bgMat.opacity = 0.32; } else { bgMat.blending = THREE.AdditiveBlending; bgMat.color.setHex(0x8b5cf6); bgMat.opacity = 0.4; } bgMat.needsUpdate = true; }
 
 // ---------------------------------------------------------------- chapter engine
-const camGoal = { pos: P(CH[0].cam), look: P(CH[0].look) }; let camLerp = true; let tokensHidden = false;
+const camGoal = { pos: P(CH[0].cam), look: P(CH[0].look) }; let camLerp = true; let tokensHidden = false; let pendingBeams = false;
 function setChapter(i) {
   active = i; const c = CH[i]; const L = LAYOUTS[c.layout];
   nodes.forEach((nd, k) => { nd.target.copy(L[k]); nd.sub.style.display = c.ids ? "block" : "none"; });
   camGoal.pos.copy(P(c.cam)); camGoal.look.copy(P(c.look)); camLerp = true; tokensHidden = !!c.hideTokens;
   layerGroup.visible = c.group === "layer"; predictGroup.visible = c.group === "predict";
-  loopGroup.visible = c.group === "loop"; scaleGroup.visible = c.group === "scale";
+  loopGroup.visible = c.group === "loop";
   bars.forEach((b) => (b.el.style.display = c.group === "predict" ? "block" : "none"));
-  if (c.attn) buildBeams(); else { clearBeams(); paintIdle(); }
+  // build the attention beams only once the tokens have settled into the arc —
+  // building mid-morph would pin them to stale positions.
+  clearBeams(); paintIdle(); pendingBeams = !!c.attn;
 }
 
 // ---------------------------------------------------------------- narrative
@@ -233,7 +239,7 @@ canvas.addEventListener("pointerup", (e) => {
   if (!downXY) return; const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]); downXY = null;
   if (moved > 6 || !CH[active].attn) return;
   ptr.x = (e.clientX / innerWidth) * 2 - 1; ptr.y = -(e.clientY / innerHeight) * 2 + 1; ray.setFromCamera(ptr, camera);
-  const hit = ray.intersectObjects(nodes.map((n) => n.mesh))[0]; if (hit) { query = hit.object.userData.i; buildBeams(); }
+  const hit = ray.intersectObjects(nodes.map((n) => n.mesh))[0]; if (hit) { query = hit.object.userData.i; pendingBeams = false; buildBeams(); }
 });
 
 // ---------------------------------------------------------------- chrome
@@ -242,7 +248,7 @@ document.getElementById("lang").onclick = () => { lang = lang === "tr" ? "en" : 
   document.getElementById("scrollhint").textContent = HINTSCROLL[lang]; document.documentElement.lang = lang;
   const y = scrollY; buildSections(); scrollTo(0, y); };
 document.getElementById("theme").onclick = () => { light = document.body.classList.toggle("light");
-  document.getElementById("theme").textContent = light ? "🌙" : "☀️"; ambient.intensity = T().ambient;
+  document.getElementById("theme").textContent = light ? "🌙" : "☀️"; ambient.intensity = T().ambient; updateBg();
   try { localStorage.setItem("theme", light ? "light" : "dark"); } catch {}
   if (CH[active].attn) buildBeams(); else paintIdle(); };
 
@@ -263,6 +269,7 @@ let t0 = performance.now(), clock = 0;
 function tick(now) {
   const dt = Math.min(0.05, (now - t0) / 1000); t0 = now; clock += dt;
   nodes.forEach((nd) => nd.mesh.position.lerp(nd.target, 0.08));
+  if (pendingBeams) { let mx = 0; for (const nd of nodes) mx = Math.max(mx, nd.mesh.position.distanceTo(nd.target)); if (mx < 0.05) { buildBeams(); pendingBeams = false; } }
   if (downXY !== null) { camLerp = false; controls.update(); }
   else if (camLerp) { camera.position.lerp(camGoal.pos, 0.06); controls.target.lerp(camGoal.look, 0.09); camera.lookAt(controls.target); if (camera.position.distanceTo(camGoal.pos) < 0.12) camLerp = false; }
   else controls.update();
@@ -271,7 +278,7 @@ function tick(now) {
     if (layerGroup.visible) { const t = (clock * 0.35) % 1; layerPulse.position.y = 1.2 + t * 5.8; layerPulse.material.opacity = 0.55 * (1 - Math.abs(t - 0.5) * 1.4); }
     if (predictGroup.visible) bars[0].bar.material.emissiveIntensity = 1.0 + 0.6 * Math.sin(clock * 3);
     if (loopGroup.visible) { const t = (clock * 0.35) % 1; loopPulse.position.copy(loopCurve.getPoint(t)); loopPulse.material.opacity = 0.4 + 0.5 * Math.sin(t * Math.PI); }
-    if (scaleGroup.visible) scaleGroup.rotation.y += dt * 0.05;
+    scaleGroup.rotation.y += dt * 0.03; // ambient background, always drifting
   }
   projectLabels(); renderer.render(scene, camera); requestAnimationFrame(tick);
 }
@@ -280,4 +287,5 @@ addEventListener("resize", resize);
 
 resize(); document.getElementById("scrollhint").textContent = HINTSCROLL[lang];
 if (light) { document.body.classList.add("light"); document.getElementById("theme").textContent = "🌙"; ambient.intensity = T().ambient; }
+updateBg();
 setChapter(0); buildSections(); requestAnimationFrame(tick);
