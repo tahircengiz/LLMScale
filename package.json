@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "node scripts/test-calc.ts",
-    "deploy": "gh-pages -d dist -t true"
+    "deploy": "gh-pages -d dist --dotfiles"
   },
   "dependencies": {
     "react": "^19.0.0",
