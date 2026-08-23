@@ -5,105 +5,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <title>LLM 101 — how an LLM works, visualized | LLMScale</title>
-    <meta name="description" content="An interactive, animated walkthrough of how a large language model turns a sentence into the next word — tokenization, embeddings, attention, layers and sampling, in 3D." />
+    <meta name="description" content="An interactive, animated walkthrough of how a large language model turns a sentence into the next word — tokenization, embeddings, attention, layers and sampling, as a 3D neural constellation." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=VT323&display=swap" rel="stylesheet" />
     <!-- Umami analytics (self-hosted, privacy-friendly, cookieless) -->
     <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca"></script>
     <style>
       :root {
-        --bg1: #0a0f1b; --bg2: #0b1120; --ink: #e6ebf5; --muted: #93a1bd;
-        --panel: rgba(13, 19, 34, 0.72); --line: rgba(255, 255, 255, 0.12); --chip: rgba(255, 255, 255, 0.06);
-      }
-      body.light {
-        --bg1: #f8fafc; --bg2: #e9eef6; --ink: #0f172a; --muted: #475569;
-        --panel: rgba(255, 255, 255, 0.92); --line: #e2e8f0; --chip: #f1f5f9;
+        --cyan: #22d3ee; --pink: #a855f7; --purple: #8b5cf6; --indigo: #6366f1;
+        --blue: #8bd6ff; --ink: #e6ebf5; --dim: #93a1bd;
+        --panel: rgba(10, 14, 26, 0.66); --line: rgba(120, 140, 190, 0.18);
+        --disp: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+        --term: "VT323", ui-monospace, "Courier New", monospace;
       }
       * { box-sizing: border-box; }
-      html, body { margin: 0; }
-      body {
-        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        color: var(--ink);
-        background: radial-gradient(120% 120% at 70% 8%, var(--bg2), var(--bg1) 70%);
-      }
-      /* fixed 3D stage behind everything */
-      #c { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
-      #labels { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-      .lbl {
-        position: absolute; transform: translate(-50%, -50%);
-        font-weight: 650; font-size: 14px; color: var(--ink);
-        text-shadow: 0 1px 8px rgba(0,0,0,.55); white-space: nowrap; transition: opacity .25s;
-      }
-      body.light .lbl { text-shadow: 0 1px 6px rgba(255,255,255,.75); }
-      .lbl .sub { display: block; font: 600 10px/1 ui-monospace, monospace; color: var(--muted); margin-top: 3px; text-align: center; }
-      .lbl.q {
-        font-size: 15px; font-weight: 800; background: var(--panel); backdrop-filter: blur(4px);
-        border: 1px solid var(--line); border-radius: 9px; padding: 3px 9px;
-        box-shadow: 0 6px 18px -8px rgba(0,0,0,.6);
-      }
+      html, body { margin: 0; background: #010208; }
+      body { color: var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; }
 
-      #chrome { position: fixed; top: 18px; right: 18px; z-index: 10; display: flex; gap: 8px; }
-      #chrome button {
-        font-size: 13px; padding: 7px 11px; border-radius: 11px; cursor: pointer;
-        background: var(--panel); backdrop-filter: blur(10px); border: 1px solid var(--line); color: var(--ink);
-      }
-      #brand { position: fixed; top: 18px; left: 20px; z-index: 10; font: 700 14px/1 ui-monospace, monospace;
-        letter-spacing: .5px; color: var(--ink); opacity: .8; text-decoration: none; }
+      #c { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; cursor: grab; }
+      #c.grabbing { cursor: grabbing; }
+      #c.pointing { cursor: pointer; }
+
+      .vign { position: fixed; inset: 0; z-index: 4; pointer-events: none;
+        background: radial-gradient(125% 105% at 50% 40%, transparent 44%, rgba(0,0,2,0.9) 100%); }
+      .grain { position: fixed; inset: 0; z-index: 4; pointer-events: none; opacity: .035; mix-blend-mode: screen;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); }
+
+      #brand { position: fixed; top: 18px; left: 22px; z-index: 12; font: 700 13px/1 var(--term);
+        letter-spacing: 3px; color: var(--cyan); text-decoration: none; text-shadow: 0 0 6px rgba(34,211,238,.4); opacity: .9; }
       #brand:hover { opacity: 1; }
-      #brand span { color: #8b5cf6; }
+      #brand b { color: var(--pink); }
+      #chrome { position: fixed; top: 16px; right: 18px; z-index: 12; display: flex; gap: 8px; }
+      #chrome button { font: 700 12px/1 var(--term); letter-spacing: 2px; padding: 8px 12px; border-radius: 9px; cursor: pointer;
+        background: var(--panel); backdrop-filter: blur(8px); border: 1px solid var(--line); color: var(--ink); }
 
-      /* scrolling narrative steps over the fixed stage.
-         pointer-events:none lets clicks/drags reach the 3D canvas underneath;
-         the cards re-enable pointer events for their own controls. */
+      #hero { position: fixed; inset: 0; z-index: 7; pointer-events: none; }
+      #hero .kicker { position: absolute; left: 32px; bottom: calc(13vh + 210px);
+        font: 700 13px/1 var(--term); letter-spacing: 6px; color: var(--purple); text-shadow: 0 0 8px rgba(139,92,246,.5); }
+      #hero h1 { position: absolute; left: 30px; bottom: calc(13vh + 40px); margin: 0; font-family: var(--disp); font-weight: 900;
+        line-height: .98; font-size: clamp(38px, 8vw, 82px); letter-spacing: 1px; color: var(--ink);
+        text-shadow: 0 0 6px rgba(34,211,238,.4), 0 0 22px rgba(34,211,238,.2), 2px 0 0 rgba(168,85,247,.28); }
+      #hero h1 .p { color: var(--pink); text-shadow: 0 0 8px rgba(168,85,247,.5), 0 0 24px rgba(168,85,247,.3); }
+      #hero .sub { position: absolute; left: 32px; bottom: 13vh; margin: 0; max-width: min(46ch, 84vw);
+        font: 400 clamp(15px,2.2vw,20px)/1.45 var(--term); color: var(--dim); letter-spacing: .5px; }
+      #hero .hint2 { position: absolute; left: 32px; bottom: calc(13vh - 34px); font: 700 12px/1 var(--term);
+        letter-spacing: 3px; color: var(--blue); opacity: .82; text-shadow: 0 0 8px rgba(139,214,255,.35); }
+
       #scroll { position: relative; z-index: 2; pointer-events: none; }
       section { min-height: 100vh; display: flex; align-items: center; }
-      .card {
-        pointer-events: auto; margin: 0 0 0 clamp(16px, 5vw, 90px); max-width: min(400px, 84vw);
-        background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--line);
-        border-radius: 18px; padding: 20px 22px; box-shadow: 0 24px 60px -30px rgba(0,0,0,.7);
-        opacity: .35; transform: translateY(12px); transition: opacity .4s, transform .4s;
-      }
+      .card { pointer-events: auto; margin: 0 0 0 clamp(16px, 5vw, 84px); max-width: min(410px, 86vw);
+        background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 16px;
+        padding: 20px 22px; box-shadow: 0 24px 60px -30px rgba(0,0,0,.8);
+        opacity: 0; transform: translateY(16px); transition: opacity .5s, transform .5s; }
       section.active .card { opacity: 1; transform: none; }
-      .eyebrow { font: 600 11px/1 ui-monospace, monospace; letter-spacing: 2px; text-transform: uppercase;
-        color: #8b5cf6; margin-bottom: 9px; }
-      .card h2 { font-size: 21px; line-height: 1.15; margin: 0 0 10px; font-weight: 780; letter-spacing: -.01em; }
-      .card h2 em { font-style: normal; background: linear-gradient(100deg,#8b5cf6,#22d3ee);
-        -webkit-background-clip: text; background-clip: text; color: transparent; }
-      body.light .eyebrow { color: #7c3aed; }
-      body.light .card h2 em { background: linear-gradient(100deg,#7c3aed,#0891b2); -webkit-background-clip: text; background-clip: text; }
-      .card p { font-size: 13.5px; line-height: 1.55; color: var(--muted); margin: 0; }
+      .eyebrow { font: 700 11px/1 var(--term); letter-spacing: 4px; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; }
+      .card h2 { font-size: 22px; line-height: 1.14; margin: 0 0 10px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+      .card h2 em { font-style: normal; color: var(--pink); }
+      .card p { font-size: 13.5px; line-height: 1.6; color: var(--dim); margin: 0; }
       .card p b { color: var(--ink); font-weight: 650; }
-      .heads { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
-      .head { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 12px;
-        padding: 5px 10px; border-radius: 999px; background: var(--chip); border: 1px solid var(--line);
+
+      .heads { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+      .head { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font: 600 12px/1 ui-sans-serif, system-ui;
+        padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid var(--line);
         color: var(--ink); user-select: none; transition: opacity .15s; }
       .head .dot { width: 9px; height: 9px; border-radius: 999px; box-shadow: 0 0 8px currentColor; }
-      .head.off { opacity: .38; } .head small { color: var(--muted); }
-      .hint { font-size: 11.5px; color: var(--muted); margin-top: 10px; }
-      .cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-      .cta a { font-size: 12.5px; font-weight: 600; text-decoration: none; padding: 8px 12px; border-radius: 10px;
-        color: #fff; background: linear-gradient(100deg, #7c3aed, #0891b2); }
-      body.dark .cta a { color: #0a0f1b; background: linear-gradient(100deg, #a78bfa, #22d3ee); }
-      .plabel { position: absolute; transform: translate(-50%, 0); text-align: center; white-space: nowrap;
-        font-weight: 650; font-size: 12.5px; color: var(--ink); text-shadow: 0 1px 8px rgba(0,0,0,.5); }
-      body.light .plabel { text-shadow: 0 1px 5px rgba(255,255,255,.8); }
-      .plabel span { display: block; font: 600 10px/1 ui-monospace, monospace; color: var(--muted); margin-top: 3px; }
-      .plabel.top { color: #22d3ee; } body.light .plabel.top { color: #0891b2; }
+      .head.off { opacity: .35; }
+      .hint { font-size: 11.5px; color: var(--dim); margin-top: 11px; font-family: var(--term); letter-spacing: 1px; }
 
-      #scrollhint { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 10;
-        font-size: 12px; color: var(--muted); animation: bob 1.8s ease-in-out infinite; }
-      @keyframes bob { 0%,100% { transform: translate(-50%, 0); opacity: .6; } 50% { transform: translate(-50%, 6px); opacity: 1; } }
+      .cta { display: inline-flex; margin-top: 15px; font: 700 13px/1 var(--term); letter-spacing: 2px; text-decoration: none;
+        padding: 11px 16px; border-radius: 10px; color: #04060e; background: linear-gradient(100deg, var(--cyan), var(--purple));
+        box-shadow: 0 0 14px -2px rgba(34,211,238,.5); }
+
+      #bars { position: fixed; right: clamp(16px, 6vw, 90px); top: 50%; transform: translateY(-50%); z-index: 6;
+        width: min(300px, 42vw); pointer-events: none; opacity: 0; transition: opacity .5s; }
+      #bars.show { opacity: 1; }
+      #bars .brow { margin: 7px 0; }
+      #bars .btop { display: flex; justify-content: space-between; font: 700 12px/1 var(--term); letter-spacing: 1px; margin-bottom: 4px; }
+      #bars .btop .w { color: var(--ink); } #bars .btop .pct { color: var(--blue); }
+      #bars .track { height: 8px; border-radius: 6px; background: rgba(255,255,255,.06); overflow: hidden; }
+      #bars .fill { height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--cyan), var(--purple)); transition: width .8s cubic-bezier(.2,.7,.2,1); }
+      #bars .brow.win .w { color: var(--cyan); } #bars .brow.win .fill { background: linear-gradient(90deg, var(--cyan), var(--pink)); box-shadow: 0 0 12px -2px var(--cyan); }
+
+      #scrollhint { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
+        font: 700 11px/1 var(--term); letter-spacing: 3px; color: var(--dim); animation: bob 1.8s ease-in-out infinite; }
+      @keyframes bob { 0%,100% { transform: translate(-50%,0); opacity: .55; } 50% { transform: translate(-50%,6px); opacity: 1; } }
       @media (prefers-reduced-motion: reduce) { #scrollhint { animation: none; } }
-      @media (max-width: 620px) { .card { margin: 0 12px; max-width: none; } .card h2 { font-size: 19px; } }
+      @media (max-width: 620px) { .card { margin: 0 12px; } #bars { display: none; } }
     </style>
-    <script type="module" crossorigin src="/LLMScale/assets/learn-DMbnobOO.js"></script>
+    <script type="module" crossorigin src="/LLMScale/assets/learn-fEp1tUsX.js"></script>
     <link rel="modulepreload" crossorigin href="/LLMScale/assets/modulepreload-polyfill-B5Qt9EMX.js">
   </head>
-  <body class="dark">
-    <script>try{if(localStorage.getItem("theme")==="light")document.body.className="light";}catch(e){}</script>
+  <body>
     <canvas id="c"></canvas>
-    <div id="labels"></div>
-    <a id="brand" href="index.html" title="LLMScale">← LLM<span>101</span></a>
-    <div id="chrome"><button id="theme">☀️</button><button id="lang">EN</button></div>
+    <div class="grain"></div>
+    <div class="vign"></div>
+
+    <a id="brand" href="index.html">← <b>LLMScale</b></a>
+    <div id="chrome"><button id="lang">EN</button></div>
+
+    <div id="hero">
+      <div class="kicker" data-tr="// BİR DİL MODELİ, TAKIMYILDIZ OLARAK" data-en="// A LANGUAGE MODEL, AS A CONSTELLATION"></div>
+      <h1>A MACHINE<br />READS YOUR <span class="p">WORDS</span></h1>
+      <p class="sub" data-tr="Bir cümle, düğümlerden oluşan bir takımyıldıza dönüşür. Sürükle, dokun, ateşle — sonra kaydırıp içine gir." data-en="A sentence becomes a constellation of nodes. Drag, touch, fire — then scroll inside."></p>
+      <div class="hint2" data-tr="⊹ SÜRÜKLE · ÜZERİNE GEL · TIKLA · KAYDIR" data-en="⊹ DRAG · HOVER · CLICK · SCROLL"></div>
+    </div>
+
     <div id="scroll"></div>
-    <div id="scrollhint"></div>
+    <div id="bars"></div>
+    <div id="scrollhint" data-tr="KAYDIR ↓" data-en="SCROLL ↓"></div>
+
   </body>
 </html>
