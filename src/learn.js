@@ -83,9 +83,9 @@ const nodes = TOKENS.map((w,i) => {
   const el = document.createElement("div");
   el.innerHTML = `<span class="w">${w}</span><span class="id"></span>`;
   el.style.cssText = `position:absolute;transform:translate(-50%,-50%);text-align:center;white-space:nowrap;transition:opacity .2s`;
-  el.querySelector(".w").style.cssText = `font:700 14px/1 var(--disp,sans-serif);letter-spacing:1.5px;color:${hex};text-shadow:0 0 8px ${hex},0 0 20px ${hex}88`;
+  el.querySelector(".w").style.cssText = `font:800 16px/1 var(--disp,sans-serif);letter-spacing:2px;color:${hex};text-shadow:0 0 7px ${hex},0 0 16px ${hex}aa,0 1px 5px rgba(0,0,0,.92),0 0 3px rgba(0,0,0,.9)`;
   const ids = el.querySelector(".id");
-  ids.textContent = "#"+TOKID[i]; ids.style.cssText = `display:block;font:600 10px/1 var(--term,monospace);color:#8ba6cc;letter-spacing:1px;margin-top:4px;opacity:0;transition:opacity .3s`;
+  ids.textContent = "#"+TOKID[i]; ids.style.cssText = `display:block;font:700 11px/1 var(--term,monospace);color:#b6c6df;letter-spacing:1px;margin-top:5px;opacity:0;transition:opacity .3s;text-shadow:0 1px 4px rgba(0,0,0,.9)`;
   labelWrap.appendChild(el);
   return { grp, core, glow, halo, el, idEl: ids, col, target: new THREE.Vector3(...SCAT[i]), phase: i*1.3 };
 });
@@ -339,7 +339,7 @@ function tick() {
     n.grp.getWorldPosition(wp); wp.project(camera);
     const vis = wp.z < 1;
     n.el.style.opacity = vis ? (n===nodes[hovered] ? "1" : "0.82") : "0";
-    n.el.querySelector(".w").style.fontSize = n===nodes[hovered] ? "17px" : "14px";
+    n.el.querySelector(".w").style.fontSize = n===nodes[hovered] ? "19px" : "16px";
     n.el.style.left = (wp.x*0.5+0.5)*innerWidth + "px";
     n.el.style.top = (-wp.y*0.5+0.5)*innerHeight - 30 + "px";
   });
