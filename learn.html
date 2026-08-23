@@ -15,7 +15,7 @@
       :root {
         --cyan: #22d3ee; --pink: #a855f7; --purple: #8b5cf6; --indigo: #6366f1;
         --blue: #8bd6ff; --ink: #e6ebf5; --dim: #93a1bd;
-        --panel: rgba(10, 14, 26, 0.66); --line: rgba(120, 140, 190, 0.18);
+        --panel: rgba(9, 12, 24, 0.88); --line: rgba(130, 150, 200, 0.28);
         --disp: "Orbitron", ui-sans-serif, system-ui, sans-serif;
         --term: "VT323", ui-monospace, "Courier New", monospace;
       }
@@ -48,7 +48,7 @@
         text-shadow: 0 0 6px rgba(34,211,238,.4), 0 0 22px rgba(34,211,238,.2), 2px 0 0 rgba(168,85,247,.28); }
       #hero h1 .p { color: var(--pink); text-shadow: 0 0 8px rgba(168,85,247,.5), 0 0 24px rgba(168,85,247,.3); }
       #hero .sub { position: absolute; left: 32px; bottom: 13vh; margin: 0; max-width: min(46ch, 84vw);
-        font: 400 clamp(15px,2.2vw,20px)/1.45 var(--term); color: var(--dim); letter-spacing: .5px; }
+        font: 400 clamp(17px,2.4vw,23px)/1.45 var(--term); color: #cfdaee; letter-spacing: .5px; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
       #hero .hint2 { position: absolute; left: 32px; bottom: calc(13vh - 34px); font: 700 12px/1 var(--term);
         letter-spacing: 3px; color: var(--blue); opacity: .82; text-shadow: 0 0 8px rgba(139,214,255,.35); }
 
@@ -59,11 +59,11 @@
         padding: 20px 22px; box-shadow: 0 24px 60px -30px rgba(0,0,0,.8);
         opacity: 0; transform: translateY(16px); transition: opacity .5s, transform .5s; }
       section.active .card { opacity: 1; transform: none; }
-      .eyebrow { font: 700 11px/1 var(--term); letter-spacing: 4px; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; }
-      .card h2 { font-size: 22px; line-height: 1.14; margin: 0 0 10px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
-      .card h2 em { font-style: normal; color: var(--pink); }
-      .card p { font-size: 13.5px; line-height: 1.6; color: var(--dim); margin: 0; }
-      .card p b { color: var(--ink); font-weight: 650; }
+      .eyebrow { font: 700 12px/1 var(--term); letter-spacing: 4px; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; text-shadow: 0 0 10px rgba(34,211,238,.4); }
+      .card h2 { font-size: 24px; line-height: 1.16; margin: 0 0 11px; font-weight: 800; letter-spacing: -.01em; color: #f2f6ff; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+      .card h2 em { font-style: normal; color: #c084fc; }
+      .card p { font-size: 15px; line-height: 1.62; color: #c8d3e8; margin: 0; text-shadow: 0 1px 8px rgba(0,0,0,.5); }
+      .card p b { color: #ffffff; font-weight: 700; }
 
       .heads { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
       .head { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font: 600 12px/1 ui-sans-serif, system-ui;
@@ -71,7 +71,7 @@
         color: var(--ink); user-select: none; transition: opacity .15s; }
       .head .dot { width: 9px; height: 9px; border-radius: 999px; box-shadow: 0 0 8px currentColor; }
       .head.off { opacity: .35; }
-      .hint { font-size: 11.5px; color: var(--dim); margin-top: 11px; font-family: var(--term); letter-spacing: 1px; }
+      .hint { font-size: 12.5px; color: #b0bcd6; margin-top: 11px; font-family: var(--term); letter-spacing: 1px; }
 
       .cta { display: inline-flex; margin-top: 15px; font: 700 13px/1 var(--term); letter-spacing: 2px; text-decoration: none;
         padding: 11px 16px; border-radius: 10px; color: #04060e; background: linear-gradient(100deg, var(--cyan), var(--purple));
@@ -81,7 +81,7 @@
         width: min(300px, 42vw); pointer-events: none; opacity: 0; transition: opacity .5s; }
       #bars.show { opacity: 1; }
       #bars .brow { margin: 7px 0; }
-      #bars .btop { display: flex; justify-content: space-between; font: 700 12px/1 var(--term); letter-spacing: 1px; margin-bottom: 4px; }
+      #bars .btop { display: flex; justify-content: space-between; font: 700 15px/1 var(--term); letter-spacing: 1px; margin-bottom: 5px; }
       #bars .btop .w { color: var(--ink); } #bars .btop .pct { color: var(--blue); }
       #bars .track { height: 8px; border-radius: 6px; background: rgba(255,255,255,.06); overflow: hidden; }
       #bars .fill { height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--cyan), var(--purple)); transition: width .8s cubic-bezier(.2,.7,.2,1); }
@@ -93,7 +93,7 @@
       @media (prefers-reduced-motion: reduce) { #scrollhint { animation: none; } }
       @media (max-width: 620px) { .card { margin: 0 12px; } #bars { display: none; } }
     </style>
-    <script type="module" crossorigin src="/LLMScale/assets/learn-fEp1tUsX.js"></script>
+    <script type="module" crossorigin src="/LLMScale/assets/learn-Fp6FYEXO.js"></script>
     <link rel="modulepreload" crossorigin href="/LLMScale/assets/modulepreload-polyfill-B5Qt9EMX.js">
   </head>
   <body>
