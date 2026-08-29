@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="tr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>LLMScale — tasarım örnekleri</title>
+<style>
+:root{--indigo:#5d5fef;--ink:#151d48;--mut:#737791;--line:#e8ebf3}
+*{box-sizing:border-box}body{margin:0;background:#f7f9fb;color:var(--ink);font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",sans-serif}
+a{color:inherit;text-decoration:none}
+main{max-width:900px;margin:0 auto;padding:52px 24px 70px}
+h1{font-size:26px;letter-spacing:-.4px;margin:0 0 6px}
+.lede{color:var(--mut);margin:0 0 30px;max-width:60ch}
+.grid{display:grid;gap:16px}
+.card{display:block;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;transition:border-color .15s,transform .1s}
+.card:hover{border-color:var(--indigo);transform:translateY(-1px)}
+.tag{display:inline-block;background:#eceafe;color:var(--indigo);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:.6px;margin-bottom:9px}
+h2{font-size:17px;margin:0 0 6px}
+p{margin:0;color:var(--mut);font-size:14px}
+.go{display:inline-block;margin-top:12px;font-size:13px;font-weight:600;color:var(--indigo)}
+.foot{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);color:var(--mut);font-size:13px}
+</style></head><body>
+<main>
+  <h1>Tasarım örnekleri</h1>
+  <p class="lede">Üçü de aynı gerçek veriyle (Llama 3.1 8B &middot; 18.30 GiB &middot; RTX 4090) ve aynı renk paletiyle hazırlandı. Sadece <b>yapı</b> farklı. Birini seç, gerçek uygulamaya onu kurayım.</p>
+  <div class="grid">
+    <a class="card" href="a.html">
+      <span class="tag">A &middot; KOYU</span>
+      <h2>Sonuç Rayı</h2>
+      <p>Üç kolon: solda model, ortada yük ve donanım, sağda <b>sabit sonuç rayı</b> — gösterge, büyük sayı, dökümü. Ayarları kurcalarken cevap hep ekranda. Teknik araç hissi (APXML deseni).</p>
+      <span class="go">Örneği aç &rarr;</span>
+    </a>
+    <a class="card" href="b.html">
+      <span class="tag">B &middot; AYDINLIK</span>
+      <h2>Sidebar Pano</h2>
+      <p>Solda dikey menü, üstte dört <b>pastel özet kutusu</b> (ağırlık / KV / aktivasyon / toplam), altında iki kart: girdiler ve GPU uyumu. Tanıdık, düzenli SaaS panosu (shadcn dili).</p>
+      <span class="go">Örneği aç &rarr;</span>
+    </a>
+    <a class="card" href="c.html">
+      <span class="tag">C &middot; AYDINLIK</span>
+      <h2>Sakin Tek Kolon</h2>
+      <p>Kutu yok. Ortada dev sonuç, altında ince çizgilerle ayrılmış bölümler; ayarlar <b>solda etiket / sağda kontrol</b> satırları hâlinde. GPU listesi tek tek çubuklar. En ferah, en sade.</p>
+      <span class="go">Örneği aç &rarr;</span>
+    </a>
+  </div>
+  <p class="foot">Bunlar statik örnek (mockup) — mevcut uygulamaya dokunulmadı, hiçbiri çalışmıyor. Seçtiğin yapıyı gerçek, çalışan sayfaya çeviririm.</p>
+</main>
+</body></html>
