@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="tr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>B · Aydınlık Pano — LLMScale tasarım örneği</title>
+<style>
+:root{--indigo:#5d5fef;--indigo-d:#4a4cd4;--green:#00e096;--amber:#f5c33b;--red:#fa5a7d;--purple:#bf83ff;
+--bg:#f7f9fb;--card:#fff;--line:#e8ebf3;--ink:#151d48;--mut:#737791}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 ui-sans-serif,system-ui,"Segoe UI",sans-serif}
+a{color:inherit;text-decoration:none}
+.app{display:flex;min-height:100vh}
+aside{width:236px;flex:none;background:var(--card);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;padding:0 8px 20px;letter-spacing:-.2px}
+.logo em{width:26px;height:26px;border-radius:8px;background:var(--indigo);display:grid;place-items:center;color:#fff;font-style:normal;font-size:13px}
+nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:13.5px;color:var(--mut);margin-bottom:2px}
+nav a.on{background:var(--indigo);color:#fff;font-weight:500}
+nav a i{font-style:normal;width:16px;text-align:center;opacity:.85}
+.side-b{margin-top:auto;border-top:1px solid var(--line);padding-top:14px}
+.seg{display:flex;background:#f1f3f9;border-radius:9px;padding:3px;margin-bottom:10px}
+.seg span{flex:1;text-align:center;padding:5px;border-radius:7px;font-size:12px;color:var(--mut)}
+.seg span.on{background:var(--indigo);color:#fff}
+.btn{display:block;text-align:center;background:var(--indigo);color:#fff;border-radius:9px;padding:9px;font-size:13px;font-weight:500}
+main{flex:1;padding:26px 30px;max-width:1180px}
+h1{font-size:22px;margin:0 0 4px;letter-spacing:-.3px}
+.lede{color:var(--mut);font-size:13.5px;margin:0 0 22px;max-width:58ch}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:900px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{border-radius:14px;padding:15px}
+.tile em{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-style:normal;font-size:15px;margin-bottom:10px}
+.tile b{display:block;font-size:23px;letter-spacing:-.5px}
+.tile small{color:#5c6480;font-size:12px}
+.t1{background:#eceafe}.t1 em{background:var(--indigo);color:#fff}
+.t2{background:#dcfce7}.t2 em{background:#3cd856;color:#fff}
+.t3{background:#fff4de}.t3 em{background:var(--amber);color:#fff}
+.t4{background:#f3e8ff}.t4 em{background:var(--purple);color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.ch{display:flex;align-items:baseline;gap:8px;margin-bottom:14px}
+.ch h2{font-size:15px;margin:0;font-weight:600}
+.ch span{font-size:12px;color:var(--mut)}
+label{display:block;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);margin:14px 0 6px;font-weight:600}
+.inp{width:100%;background:#f8f9fc;border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--ink);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.chip{padding:5px 10px;border-radius:8px;background:#f5f6fa;border:1px solid var(--line);font-size:12px;color:var(--mut);cursor:pointer}
+.chip.on{background:var(--indigo);border-color:var(--indigo);color:#fff;font-weight:500}
+.rng{width:100%;accent-color:var(--indigo);margin-top:6px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:11px;color:var(--mut)}
+.tag{background:#f5f6fa;border:1px solid var(--line);border-radius:999px;padding:3px 8px}
+.result{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.result b{font-size:34px;letter-spacing:-1px;line-height:1}
+.pill{background:#dcfce7;color:#0a7a52;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600}
+.stack{height:11px;border-radius:6px;overflow:hidden;display:flex;margin:14px 0 10px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mut)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:5px}
+.bar{height:9px;border-radius:5px;background:#eef0f6;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;width:76%;background:var(--green)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.two div{background:#f8f9fc;border:1px solid var(--line);border-radius:10px;padding:11px}
+.two small{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut)}
+.two b{font-size:18px;display:block;margin-top:2px}
+.gcards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.g{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff}
+.g.on{border-color:var(--indigo);background:#f4f4ff}
+.g u{text-decoration:none;font-size:12px;font-weight:500;display:flex;justify-content:space-between}
+.g u i{font-style:normal;color:var(--mut);font-size:10px}
+.mini{height:5px;border-radius:3px;background:#eef0f6;margin-top:7px;overflow:hidden}
+.mini i{display:block;height:100%;background:var(--green)}
+.note{font-size:11.5px;color:var(--mut);margin-top:9px}
+.back{position:fixed;right:12px;bottom:12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:12px;color:var(--mut)}
+</style></head><body>
+<div class="app">
+<aside>
+  <div class="logo"><em>◧</em> LLMScale</div>
+  <nav>
+    <a class="on"><i>▤</i>VRAM Hesabı</a>
+    <a><i>◎</i>Görev Uygunluğu</a>
+    <a><i>⚙</i>vLLM Parametreleri</a>
+    <a><i>⌘</i>İsim Çözücü</a>
+    <a><i>◱</i>Model Anatomisi</a>
+    <a><i>⇄</i>Karşılaştırma</a>
+    <a><i>✦</i>LLM 101</a>
+  </nav>
+  <div class="side-b">
+    <div class="seg"><span>EN</span><span class="on">TR</span></div>
+    <a class="btn">Bu tahmini paylaş</a>
+  </div>
+</aside>
+
+<main>
+  <h1>VRAM Hesabı</h1>
+  <p class="lede">Bir model gerçekte ne kadar GPU belleği ister? Ağırlıklar, KV cache, context penceresi ve eşzamanlı kullanıcı ile birlikte ölçeklenir.</p>
+
+  <div class="tiles">
+    <div class="tile t1"><em>▦</em><b>14.96 GiB</b><small>Ağırlıklar &middot; BF16</small></div>
+    <div class="tile t2"><em>▤</em><b>1.00 GiB</b><small>KV cache &middot; 8k ctx</small></div>
+    <div class="tile t3"><em>◈</em><b>1.60 GiB</b><small>Aktivasyon &middot; %10</small></div>
+    <div class="tile t4"><em>Σ</em><b>18.30 GiB</b><small>Toplam gerekli</small></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="ch"><h2>Model &amp; yük</h2><span>canlı Hugging Face verisi</span></div>
+      <label>Model</label>
+      <input class="inp" value="meta-llama/Llama-3.1-8B-Instruct">
+      <div class="meta"><span class="tag">8.03B</span><span class="tag">32 katman</span><span class="tag">4096d</span><span class="tag">32/8 head</span><span class="tag">GQA</span></div>
+      <label>Ağırlık hassasiyeti</label>
+      <div class="chips"><span class="chip">FP16</span><span class="chip on">BF16</span><span class="chip">FP8</span><span class="chip">INT8</span><span class="chip">INT4</span><span class="chip">FP32</span></div>
+      <label>KV cache hassasiyeti</label>
+      <div class="chips"><span class="chip on">FP16</span><span class="chip">BF16</span><span class="chip">FP8</span></div>
+      <label>Context penceresi &mdash; 8.192 token</label>
+      <input class="rng" type="range" min="0" max="9" value="2">
+      <div class="chips"><span class="chip">2k</span><span class="chip">4k</span><span class="chip on">8k</span><span class="chip">16k</span><span class="chip">32k</span><span class="chip">64k</span><span class="chip">128k</span><span class="chip">256k</span><span class="chip">512k</span><span class="chip">1M</span></div>
+      <label>Eşzamanlı kullanıcı &mdash; 1</label>
+      <div class="chips"><span class="chip on">1</span><span class="chip">4</span><span class="chip">8</span><span class="chip">16</span><span class="chip">32</span><span class="chip">64</span><span class="chip">128</span></div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h2>GPU uyumu</h2><span>VRAM&rsquo;in %95&rsquo;i kullanılabilir</span></div>
+      <div class="result"><b>18.30 GiB</b><span class="pill">SIĞAR &check;</span></div>
+      <div class="stack">
+        <i style="width:81.7%;background:#5d5fef"></i><i style="width:5.5%;background:#00e096"></i><i style="width:8.7%;background:#f5c33b"></i><i style="width:4.1%;background:#737791"></i>
+      </div>
+      <div class="legend">
+        <span><i style="background:#5d5fef"></i>Ağırlıklar</span><span><i style="background:#00e096"></i>KV cache</span><span><i style="background:#f5c33b"></i>Aktivasyon</span><span><i style="background:#737791"></i>Ek yük</span>
+      </div>
+      <label>Donanım</label>
+      <div class="chips"><span class="chip on">Tüketici 10</span><span class="chip">İş ist. 6</span><span class="chip">Veri mrk. 16</span><span class="chip">Apple 7</span><span class="chip">AI PC 4</span></div>
+      <input class="inp" style="margin-top:8px" value="RTX 4090 — 24 GB">
+      <div class="bar"><i></i></div>
+      <p class="note">18.30 GiB / 24 GB (kullanılabilirin %80&rsquo;i) &middot; 1008 GB/s</p>
+      <div class="two">
+        <div><small>Maks kullanıcı</small><b style="color:#0a7a52">5</b><small>8k ctx</small></div>
+        <div><small>Maks context</small><b>41.684</b><small>token</small></div>
+      </div>
+      <div class="gcards">
+        <div class="g"><u>RTX 3090/Ti <i>24GB</i></u><div class="mini"><i style="width:80%"></i></div></div>
+        <div class="g on"><u>RTX 4090 <i>24GB</i></u><div class="mini"><i style="width:80%"></i></div></div>
+        <div class="g"><u>RTX 5090 <i>32GB</i></u><div class="mini"><i style="width:60%"></i></div></div>
+      </div>
+      <p class="note">&#9656; Uymayanları göster (6)</p>
+    </div>
+  </div>
+</main>
+</div>
+<a class="back" href="index.html">&larr; örnekler</a>
+</body></html>
