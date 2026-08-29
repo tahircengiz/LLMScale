@@ -18,6 +18,7 @@ export default defineConfig({
         anatomy: fileURLToPath(new URL("./anatomy.html", import.meta.url)),
         compare: fileURLToPath(new URL("./compare.html", import.meta.url)),
         learn: fileURLToPath(new URL("./learn.html", import.meta.url)),
+        redesign: fileURLToPath(new URL("./redesign.html", import.meta.url)),
       },
     },
   },
