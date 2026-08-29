@@ -1,10 +1,12 @@
+import { useEffect, useState } from "react";
 import { maxConcurrency, maxContextLength, type Dtype, type ModelArch } from "../lib/calc";
-import { GPUS, migMem, migProfilesFor, type Gpu } from "../lib/gpus";
+import { GPUS, migMem, migProfilesFor, type Gpu, type GpuCategory } from "../lib/gpus";
 import { formatGiB, formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { Badge, SectionTitle, Stat } from "./ui";
 
 const USABLE = 0.95; // fraction of nominal VRAM usable after driver reserve
+const CATS = ["consumer", "workstation", "datacenter", "apple", "apu"] as const;
 
 // Usable memory budget (GiB) for the fit test. A selected MIG slice wins; for a
 // unified-memory device vramGiB is already the usable slice; discrete boards take
@@ -64,6 +66,12 @@ export function GpuFit({
   const maxCtx = maxContextLength({ ...base, concurrency }, effUsable);
   const sorted = [...GPUS].sort((a, b) => (a.totalGiB ?? a.vramGiB) - (b.totalGiB ?? b.vramGiB));
 
+  // Grid category filter — defaults to (and follows) the selected GPU's category
+  // so the browsable card grid shows one tier at a time instead of every device.
+  const [gridCat, setGridCat] = useState<GpuCategory>(selected.category);
+  useEffect(() => setGridCat(selected.category), [selected.category]);
+  const gridGpus = sorted.filter((g) => g.category === gridCat);
+
   return (
     <div>
       <SectionTitle step="3" title={t("gpu.step")} hint={t("gpu.usableHint", { p: Math.round(USABLE * 100) })} />
@@ -77,7 +85,7 @@ export function GpuFit({
               onChange={(e) => onGpu(e.target.value)}
               className="min-w-0 flex-1 rounded-lg bg-ink-800 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-white/10 outline-none focus:ring-brand-500/60"
             >
-              {(["consumer", "workstation", "datacenter", "apple", "apu"] as const).map((cat) => (
+              {CATS.map((cat) => (
                 <optgroup key={cat} label={t(`cat.${cat}`)}>
                   {GPUS.filter((g) => g.category === cat).map((g) => (
                     <option key={g.id} value={g.id}>
@@ -145,9 +153,26 @@ export function GpuFit({
         </div>
       </div>
 
-      {/* All GPUs grid (full cards, MIG disabled) */}
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {sorted.map((g) => {
+      {/* Category tabs + filtered card grid (full cards, MIG disabled) */}
+      <div className="mt-4 flex flex-wrap gap-1.5">
+        {CATS.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setGridCat(cat)}
+            className={
+              "rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 transition " +
+              (gridCat === cat
+                ? "bg-brand-600/20 text-white ring-brand-500/60"
+                : "bg-ink-850/40 text-slate-400 ring-white/10 hover:text-slate-200")
+            }
+          >
+            {t(`cat.${cat}`)}
+          </button>
+        ))}
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {gridGpus.map((g) => {
           const u = usage(usableGiB(g, ""));
           return (
             <button
