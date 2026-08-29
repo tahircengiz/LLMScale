@@ -19,7 +19,7 @@ function usableGiB(g: Gpu, mig: string): number {
 }
 
 function ctxLabel(n: number): string {
-  return n >= 1024 ? `${n / 1024}k` : String(n);
+  return n >= 1048576 ? `${n / 1048576}M` : n >= 1024 ? `${n / 1024}k` : String(n);
 }
 
 export function GpuFit({
@@ -64,19 +64,73 @@ export function GpuFit({
   const selUsage = usage(effUsable);
   const maxUsers = maxConcurrency({ ...base, contextLength }, effUsable);
   const maxCtx = maxContextLength({ ...base, concurrency }, effUsable);
-  const sorted = [...GPUS].sort((a, b) => (a.totalGiB ?? a.vramGiB) - (b.totalGiB ?? b.vramGiB));
+  // Stage 2: devices within the selected category, split by whether they fit the model.
+  const catGpus = GPUS.filter((g) => g.category === selected.category).sort(
+    (a, b) => (a.totalGiB ?? a.vramGiB) - (b.totalGiB ?? b.vramGiB)
+  );
+  const fitting = catGpus.filter((g) => totalGiB <= usableGiB(g, ""));
+  const nonFitting = catGpus.filter((g) => totalGiB > usableGiB(g, ""));
 
-  // Grid category filter — defaults to (and follows) the selected GPU's category
-  // so the browsable card grid shows one tier at a time instead of every device.
-  const [gridCat, setGridCat] = useState<GpuCategory>(selected.category);
-  useEffect(() => setGridCat(selected.category), [selected.category]);
-  const gridGpus = sorted.filter((g) => g.category === gridCat);
+  const [showNonFit, setShowNonFit] = useState(false);
+  useEffect(() => setShowNonFit(false), [selected.category]);
+
+  // Stage 1: jump to a category — pick its smallest fitting device, else its largest.
+  function pickForCat(cat: GpuCategory) {
+    const inCat = [...GPUS].filter((g) => g.category === cat).sort((a, b) => usableGiB(a, "") - usableGiB(b, ""));
+    const fit = inCat.find((g) => totalGiB <= usableGiB(g, ""));
+    return (fit ?? inCat[inCat.length - 1]).id;
+  }
+
+  const renderCard = (g: Gpu) => {
+    const u = usage(usableGiB(g, ""));
+    return (
+      <button
+        key={g.id}
+        type="button"
+        onClick={() => onGpu(g.id)}
+        className={
+          "rounded-xl p-2.5 text-left ring-1 transition " +
+          (g.id === gpuId ? "ring-brand-500/60 bg-brand-600/10" : "ring-white/10 bg-ink-850/40 hover:bg-white/5")
+        }
+      >
+        <div className="flex items-center justify-between">
+          <span className="truncate text-xs font-medium text-slate-200">{g.name}</span>
+          <span className="ml-1 shrink-0 text-[10px] text-slate-500">{g.totalGiB ?? g.vramGiB}GB</span>
+        </div>
+        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
+          <div className="h-full rounded-full" style={{ width: `${Math.min(100, u.pct * 100)}%`, backgroundColor: u.fits ? "#10b981" : "#f43f5e" }} />
+        </div>
+        <div className="mt-1 text-[10px] text-slate-500">
+          {u.fits ? t("gpu.cardFits", { p: Math.round(u.pct * 100) }) : t("gpu.cardNeeds", { n: u.needed })}
+        </div>
+      </button>
+    );
+  };
 
   return (
     <div>
       <SectionTitle step="3" title={t("gpu.step")} hint={t("gpu.usableHint", { p: Math.round(USABLE * 100) })} />
 
-      {/* Selected GPU panel */}
+      {/* Stage 1: category */}
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {CATS.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => onGpu(pickForCat(cat))}
+            className={
+              "rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition " +
+              (selected.category === cat
+                ? "bg-brand-600/20 text-white ring-brand-500/60"
+                : "bg-ink-850/40 text-slate-400 ring-white/10 hover:text-slate-200")
+            }
+          >
+            {t(`cat.${cat}`)}
+          </button>
+        ))}
+      </div>
+
+      {/* Selected GPU panel — Stage 2: device within category */}
       <div className="rounded-2xl bg-ink-850/60 p-4 ring-1 ring-white/10">
         <div className="mb-2 space-y-2">
           <div className="flex items-center justify-between gap-2">
@@ -85,14 +139,10 @@ export function GpuFit({
               onChange={(e) => onGpu(e.target.value)}
               className="min-w-0 flex-1 rounded-lg bg-ink-800 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-white/10 outline-none focus:ring-brand-500/60"
             >
-              {CATS.map((cat) => (
-                <optgroup key={cat} label={t(`cat.${cat}`)}>
-                  {GPUS.filter((g) => g.category === cat).map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name} — {g.totalGiB ?? g.vramGiB} GB
-                    </option>
-                  ))}
-                </optgroup>
+              {catGpus.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name} — {g.totalGiB ?? g.vramGiB} GB
+                </option>
               ))}
             </select>
             {selUsage.fits ? (
@@ -153,56 +203,25 @@ export function GpuFit({
         </div>
       </div>
 
-      {/* Category tabs + filtered card grid (full cards, MIG disabled) */}
-      <div className="mt-4 flex flex-wrap gap-1.5">
-        {CATS.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => setGridCat(cat)}
-            className={
-              "rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 transition " +
-              (gridCat === cat
-                ? "bg-brand-600/20 text-white ring-brand-500/60"
-                : "bg-ink-850/40 text-slate-400 ring-white/10 hover:text-slate-200")
-            }
-          >
-            {t(`cat.${cat}`)}
-          </button>
-        ))}
-      </div>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {gridGpus.map((g) => {
-          const u = usage(usableGiB(g, ""));
-          return (
+      {/* Devices in this category that fit the model (non-fitting behind a toggle) */}
+      <div className="mt-4">
+        {fitting.length > 0 ? (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{fitting.map(renderCard)}</div>
+        ) : (
+          <p className="text-xs text-slate-500">{t("gpu.noneFit")}</p>
+        )}
+        {nonFitting.length > 0 && (
+          <>
             <button
-              key={g.id}
               type="button"
-              onClick={() => onGpu(g.id)}
-              className={
-                "rounded-xl p-2.5 text-left ring-1 transition " +
-                (g.id === gpuId ? "ring-brand-500/60 bg-brand-600/10" : "ring-white/10 bg-ink-850/40 hover:bg-white/5")
-              }
+              onClick={() => setShowNonFit((v) => !v)}
+              className="mt-2.5 text-[11px] font-medium text-slate-400 transition hover:text-slate-200"
             >
-              <div className="flex items-center justify-between">
-                <span className="truncate text-xs font-medium text-slate-200">{g.name}</span>
-                <span className="ml-1 shrink-0 text-[10px] text-slate-500">{g.totalGiB ?? g.vramGiB}GB</span>
-              </div>
-              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${Math.min(100, u.pct * 100)}%`,
-                    backgroundColor: u.fits ? "#10b981" : "#f43f5e",
-                  }}
-                />
-              </div>
-              <div className="mt-1 text-[10px] text-slate-500">
-                {u.fits ? t("gpu.cardFits", { p: Math.round(u.pct * 100) }) : t("gpu.cardNeeds", { n: u.needed })}
-              </div>
+              {showNonFit ? `▾ ${t("gpu.hideNonFit")}` : `▸ ${t("gpu.showNonFit", { n: nonFitting.length })}`}
             </button>
-          );
-        })}
+            {showNonFit && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">{nonFitting.map(renderCard)}</div>}
+          </>
+        )}
       </div>
     </div>
   );

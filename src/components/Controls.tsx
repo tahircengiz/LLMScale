@@ -18,7 +18,7 @@ const KV_DTYPES: { value: Dtype; label: string }[] = [
   { value: "fp8", label: "FP8" },
 ];
 
-const CTX_PRESETS = [2048, 4096, 8192, 16384, 32768, 65536, 131072];
+const CTX_PRESETS = [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576];
 const USER_PRESETS = [1, 4, 8, 16, 32, 64, 128];
 
 export function Controls({
@@ -92,7 +92,7 @@ export function Controls({
                   : "bg-ink-850 text-slate-300 ring-white/10 hover:bg-white/5")
               }
             >
-              {c >= 1024 ? `${c / 1024}k` : c}
+              {c >= 1048576 ? `${c / 1048576}M` : c >= 1024 ? `${c / 1024}k` : c}
             </button>
           ))}
         </div>
