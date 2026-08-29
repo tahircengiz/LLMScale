@@ -5,6 +5,7 @@ import { fetchAnatomy, type Anatomy } from "../lib/anatomy";
 import { extractCaps, scoreFit, TASKS, type Caps } from "../lib/fit";
 import { searchModels, type HfSearchResult } from "../lib/hf";
 import { useLang } from "../lib/i18n";
+import { AMBER, GREEN, GREEN_DEEP, RED } from "../lib/palette";
 import { formatBytes, formatGiB, formatInt, formatParams } from "../lib/format";
 import { Badge, Card, SectionTitle } from "../components/ui";
 
@@ -28,7 +29,7 @@ function initialIds(): string[] {
 }
 
 function scoreColor(o: number): string {
-  return o >= 80 ? "#10b981" : o >= 60 ? "#34d399" : o >= 40 ? "#f59e0b" : "#f43f5e";
+  return o >= 80 ? GREEN : o >= 60 ? GREEN_DEEP : o >= 40 ? AMBER : RED;
 }
 
 /** Indices that hold the best value; empty when all equal or <2 comparable. */

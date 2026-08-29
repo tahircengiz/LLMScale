@@ -1,13 +1,14 @@
 import type { CalcResult } from "../lib/calc";
 import { formatBytes, formatGiB } from "../lib/format";
 import { useLang } from "../lib/i18n";
+import { AMBER, GREEN, GREY, INDIGO } from "../lib/palette";
 import { SectionTitle, Stat } from "./ui";
 
 const SEGMENTS = [
-  { key: "weights", i18n: "seg.weights", color: "#6366f1" },
-  { key: "kv", i18n: "seg.kv", color: "#10b981" },
-  { key: "act", i18n: "seg.act", color: "#f59e0b" },
-  { key: "cuda", i18n: "seg.cuda", color: "#64748b" },
+  { key: "weights", i18n: "seg.weights", color: INDIGO },
+  { key: "kv", i18n: "seg.kv", color: GREEN },
+  { key: "act", i18n: "seg.act", color: AMBER },
+  { key: "cuda", i18n: "seg.cuda", color: GREY },
 ] as const;
 
 export function Results({ result }: { result: CalcResult }) {

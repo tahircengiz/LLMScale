@@ -4,16 +4,17 @@
 // real dimensions. Data flows bottom → top, matching the reference style.
 
 import { useLang } from "../lib/i18n";
+import { AMBER, BLUE, GREEN, GREY, INDIGO } from "../lib/palette";
 import { formatInt, formatParams } from "../lib/format";
 import type { Anatomy } from "../lib/anatomy";
 
 const COL = {
-  io: "#64748b",
-  embed: "#10b981",
-  norm: "#64748b",
-  attn: "#6366f1",
-  ffn: "#f59e0b",
-  out: "#06b6d4",
+  io: GREY,
+  embed: GREEN,
+  norm: GREY,
+  attn: INDIGO,
+  ffn: AMBER,
+  out: BLUE,
 } as const;
 
 /** 1024-based short label for context lengths (128k = 131072, 1M = 1048576). */

@@ -3,6 +3,7 @@
 // utilities so they flip with the light/dark CSS variables.
 
 import type { ReactNode } from "react";
+import { CATEGORICAL } from "../lib/palette";
 
 export interface DonutSeg {
   label: string;
@@ -201,7 +202,7 @@ export function LineChart({
 
 /** Group Ah query heads into Kh KV groups (GQA visual). Caps drawn heads. */
 export function GqaDiagram({ attnHeads, kvHeads }: { attnHeads: number; kvHeads: number }) {
-  const GROUP_COLORS = ["#6366f1", "#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#f43f5e", "#14b8a6", "#ec4899"];
+  const GROUP_COLORS = CATEGORICAL;
   const perGroup = Math.max(1, Math.round(attnHeads / Math.max(1, kvHeads)));
   const maxGroups = Math.min(kvHeads, 8);
   const capped = kvHeads > maxGroups;

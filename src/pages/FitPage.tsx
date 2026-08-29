@@ -4,15 +4,16 @@ import { resolveModel } from "../lib/hf";
 import { findKnownByHfId } from "../lib/models";
 import { extractCaps, scoreFit, TASKS, type Status, type TaskId } from "../lib/fit";
 import { useLang } from "../lib/i18n";
+import { AMBER, GREEN, GREEN_DEEP, RED } from "../lib/palette";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, SectionTitle } from "../components/ui";
 
 const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
 
-const STATUS_COLOR: Record<Status, string> = { good: "#10b981", ok: "#f59e0b", bad: "#f43f5e" };
+const STATUS_COLOR: Record<Status, string> = { good: GREEN, ok: AMBER, bad: RED };
 
 function scoreColor(o: number): string {
-  return o >= 80 ? "#10b981" : o >= 60 ? "#34d399" : o >= 40 ? "#f59e0b" : "#f43f5e";
+  return o >= 80 ? GREEN : o >= 60 ? GREEN_DEEP : o >= 40 ? AMBER : RED;
 }
 function verdictTone(v: string): "good" | "warn" | "bad" {
   return v === "great" || v === "good" ? "good" : v === "weak" ? "warn" : "bad";

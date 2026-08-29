@@ -1,18 +1,21 @@
 @import "tailwindcss";
 
+/* Palette reference: the "Dabang" dashboard — vivid indigo/violet primary,
+ * navy ink, grey-blue muted text, soft pastel status hues. Data-viz colours
+ * that must be inlined live in `src/lib/palette.ts`. */
 @theme {
-  --color-ink-950: #070a14;
-  --color-ink-900: #0b1020;
-  --color-ink-850: #111831;
-  --color-ink-800: #1a2240;
-  --color-ink-700: #283154;
-  --color-brand-400: #8b9bff;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-accent-400: #34d399;
-  --color-accent-500: #10b981;
+  --color-ink-950: #0b1030;
+  --color-ink-900: #151d48;
+  --color-ink-850: #1d2755;
+  --color-ink-800: #273165;
+  --color-ink-700: #37427d;
+  --color-brand-400: #8b8cf5;
+  --color-brand-500: #5d5fef;
+  --color-brand-600: #4a4cd4;
+  --color-accent-400: #00e096;
+  --color-accent-500: #00c886;
   /* Primary foreground (headings/body) — flips with the theme. */
-  --color-fg: #e7ebf5;
+  --color-fg: #e8eaf6;
   /* Always-white text that sits on a solid brand button. */
   --color-onbrand: #ffffff;
 }
@@ -27,20 +30,20 @@
  * goes dark in light mode; solid brand buttons use --color-onbrand instead. */
 .light {
   color-scheme: light;
-  --color-ink-950: #eef1f7;
+  --color-ink-950: #f7f9fb;
   --color-ink-900: #ffffff;
-  --color-ink-850: #eef2f8;
-  --color-ink-800: #e4e9f2;
-  --color-ink-700: #d2dae7;
-  --color-white: #0f172a;
-  --color-fg: #0f172a;
-  --color-slate-100: #0f172a;
-  --color-slate-200: #1e293b;
-  --color-slate-300: #334155;
-  --color-slate-400: #475569;
-  --color-slate-500: #64748b;
-  --color-brand-400: #4f46e5;
-  --color-accent-400: #059669;
+  --color-ink-850: #f4f6fa;
+  --color-ink-800: #edeff6;
+  --color-ink-700: #e2e5ef;
+  --color-white: #151d48;
+  --color-fg: #151d48;
+  --color-slate-100: #151d48;
+  --color-slate-200: #26306b;
+  --color-slate-300: #4a5183;
+  --color-slate-400: #737791;
+  --color-slate-500: #9ba0b5;
+  --color-brand-400: #4a4cd4;
+  --color-accent-400: #00a97a;
 }
 
 html,
@@ -52,8 +55,8 @@ body,
 body {
   margin: 0;
   background:
-    radial-gradient(900px 500px at 15% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
-    radial-gradient(800px 600px at 110% 10%, rgba(16, 185, 129, 0.12), transparent 55%),
+    radial-gradient(900px 500px at 15% -10%, rgba(93, 95, 239, 0.18), transparent 60%),
+    radial-gradient(800px 600px at 110% 10%, rgba(0, 224, 150, 0.12), transparent 55%),
     var(--color-ink-950);
   color: var(--color-fg);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
@@ -77,7 +80,7 @@ input[type="range"]::-webkit-slider-thumb {
   height: 18px;
   border-radius: 9999px;
   background: var(--color-brand-500);
-  border: 2px solid #c7d2fe;
+  border: 2px solid #c5c6fa;
   cursor: pointer;
 }
 input[type="range"]::-moz-range-thumb {
@@ -85,7 +88,7 @@ input[type="range"]::-moz-range-thumb {
   height: 18px;
   border-radius: 9999px;
   background: var(--color-brand-500);
-  border: 2px solid #c7d2fe;
+  border: 2px solid #c5c6fa;
   cursor: pointer;
 }
 

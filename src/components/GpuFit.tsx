@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { maxConcurrency, maxContextLength, type Dtype, type ModelArch } from "../lib/calc";
 import { GPUS, migMem, migProfilesFor, type Gpu, type GpuCategory } from "../lib/gpus";
 import { formatGiB, formatInt } from "../lib/format";
+import { GREEN, RED } from "../lib/palette";
 import { useLang } from "../lib/i18n";
 import { Badge, SectionTitle, Stat } from "./ui";
 
@@ -98,7 +99,7 @@ export function GpuFit({
           <span className="ml-1 shrink-0 text-[10px] text-slate-500">{g.totalGiB ?? g.vramGiB}GB</span>
         </div>
         <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
-          <div className="h-full rounded-full" style={{ width: `${Math.min(100, u.pct * 100)}%`, backgroundColor: u.fits ? "#10b981" : "#f43f5e" }} />
+          <div className="h-full rounded-full" style={{ width: `${Math.min(100, u.pct * 100)}%`, backgroundColor: u.fits ? GREEN : RED }} />
         </div>
         <div className="mt-1 text-[10px] text-slate-500">
           {u.fits ? t("gpu.cardFits", { p: Math.round(u.pct * 100) }) : t("gpu.cardNeeds", { n: u.needed })}
@@ -174,7 +175,7 @@ export function GpuFit({
             className="h-full rounded-full transition-all"
             style={{
               width: `${Math.min(100, selUsage.pct * 100)}%`,
-              backgroundColor: selUsage.fits ? "#10b981" : "#f43f5e",
+              backgroundColor: selUsage.fits ? GREEN : RED,
             }}
           />
         </div>
