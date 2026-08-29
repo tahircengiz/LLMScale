@@ -113,21 +113,23 @@ export function GpuFit({
 
       {/* Stage 1: category */}
       <div className="mb-3 flex flex-wrap gap-1.5">
-        {CATS.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => onGpu(pickForCat(cat))}
-            className={
-              "rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition " +
-              (selected.category === cat
-                ? "bg-brand-600/20 text-white ring-brand-500/60"
-                : "bg-ink-850/40 text-slate-400 ring-white/10 hover:text-slate-200")
-            }
-          >
-            {t(`cat.${cat}`)}
-          </button>
-        ))}
+        {CATS.map((cat) => {
+          const n = GPUS.filter((g) => g.category === cat).length;
+          const active = selected.category === cat;
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => onGpu(pickForCat(cat))}
+              className={
+                "rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition " +
+                (active ? "bg-brand-600/20 text-white ring-brand-500/60" : "bg-ink-850/40 text-slate-400 ring-white/10 hover:text-slate-200")
+              }
+            >
+              {t(`cat.${cat}`)} <span className={active ? "opacity-70" : "opacity-50"}>{n}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Selected GPU panel — Stage 2: device within category */}

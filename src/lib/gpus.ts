@@ -27,6 +27,9 @@ export const GPUS: Gpu[] = [
   { id: "rtx4080-16", name: "RTX 4080 / Super", vramGiB: 16, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 717 },
   { id: "rtx3090-24", name: "RTX 3090 / Ti", vramGiB: 24, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 936 },
   { id: "rtx4090-24", name: "RTX 4090", vramGiB: 24, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 1008 },
+  { id: "rtx5070ti-16", name: "RTX 5070 Ti", vramGiB: 16, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 896 },
+  { id: "rtx5080-16", name: "RTX 5080", vramGiB: 16, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 960 },
+  { id: "rx7900xtx-24", name: "AMD RX 7900 XTX", vramGiB: 24, category: "consumer", vendor: "AMD", bandwidthGBs: 960 },
   { id: "rtx5090-32", name: "RTX 5090", vramGiB: 32, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 1792 },
 
   // Workstation / pro
@@ -35,7 +38,7 @@ export const GPUS: Gpu[] = [
   { id: "a6000-48", name: "RTX A6000", vramGiB: 48, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 768 },
   { id: "rtx6000ada-48", name: "RTX 6000 Ada", vramGiB: 48, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 960 },
   { id: "l40s-48", name: "NVIDIA L40S", vramGiB: 48, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 864 },
-  { id: "rtxpro6000-96", name: "RTX PRO 6000 Blackwell", vramGiB: 96, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 1792 },
+  { id: "rtxpro5000-72", name: "RTX PRO 5000 Blackwell (72GB)", vramGiB: 72, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 1344 },
 
   // Datacenter
   { id: "t4-16", name: "NVIDIA T4", vramGiB: 16, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 320 },
@@ -47,10 +50,15 @@ export const GPUS: Gpu[] = [
   { id: "h200-141", name: "H200 141GB", vramGiB: 141, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 4800 },
   { id: "b200-192", name: "B200 192GB", vramGiB: 192, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 8000 },
   { id: "gh200-96", name: "GH200 96GB", vramGiB: 96, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 4000 },
+  { id: "h100nvl-94", name: "H100 NVL 94GB", vramGiB: 94, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 3938 },
+  { id: "rtxpro6000-96", name: "RTX PRO 6000 Blackwell", vramGiB: 96, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 1792 },
+  { id: "b300-288", name: "B300 (Blackwell Ultra) 288GB", vramGiB: 288, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 8000 },
 
   // AMD
   { id: "mi210-64", name: "AMD MI210", vramGiB: 64, category: "datacenter", vendor: "AMD", bandwidthGBs: 1638 },
   { id: "mi300x-192", name: "AMD MI300X", vramGiB: 192, category: "datacenter", vendor: "AMD", bandwidthGBs: 5300 },
+  { id: "mi325x-256", name: "AMD MI325X", vramGiB: 256, category: "datacenter", vendor: "AMD", bandwidthGBs: 6000 },
+  { id: "mi355x-288", name: "AMD MI355X", vramGiB: 288, category: "datacenter", vendor: "AMD", bandwidthGBs: 8000 },
 
   // Apple Silicon — unified memory (shared CPU/GPU). vramGiB is the ~75% the GPU can
   // address by default; totalGiB is the full pool. Raise the cap via iogpu.wired_limit_mb.
