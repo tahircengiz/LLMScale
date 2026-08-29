@@ -155,7 +155,7 @@ export function VllmPage() {
                     <optgroup key={cat} label={t(`cat.${cat}`)}>
                       {GPUS.filter((g) => g.category === cat).map((g) => (
                         <option key={g.id} value={g.id}>
-                          {g.name} — {g.vramGiB} GB
+                          {g.name} — {g.totalGiB ?? g.vramGiB} GB
                         </option>
                       ))}
                     </optgroup>

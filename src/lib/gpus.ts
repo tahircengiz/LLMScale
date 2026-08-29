@@ -1,15 +1,21 @@
 // Curated GPU database. `vramGiB` is the nominal on-board memory treated as GiB.
 
-export type GpuCategory = "consumer" | "workstation" | "datacenter" | "apple";
+export type GpuCategory = "consumer" | "workstation" | "datacenter" | "apple" | "apu";
 
 export interface Gpu {
   id: string;
   name: string;
+  /** Memory budget usable for the model (GiB). For unified-memory devices this is
+   *  the realistic slice the GPU can address by default, not the full pool (see totalGiB). */
   vramGiB: number;
   category: GpuCategory;
   vendor: "NVIDIA" | "AMD" | "Apple" | "Intel";
-  /** Memory bandwidth in GB/s (informational). */
+  /** Memory bandwidth in GB/s. */
   bandwidthGBs?: number;
+  /** Unified-memory device (RAM shared between CPU and GPU). */
+  unified?: boolean;
+  /** Total on-package unified memory (GiB). When set, vramGiB is the usable slice. */
+  totalGiB?: number;
   note?: string;
 }
 
@@ -46,11 +52,21 @@ export const GPUS: Gpu[] = [
   { id: "mi210-64", name: "AMD MI210", vramGiB: 64, category: "datacenter", vendor: "AMD", bandwidthGBs: 1638 },
   { id: "mi300x-192", name: "AMD MI300X", vramGiB: 192, category: "datacenter", vendor: "AMD", bandwidthGBs: 5300 },
 
-  // Apple unified memory (shared CPU/GPU). Treated as available VRAM budget.
-  { id: "apple-m-32", name: "Apple Silicon 32GB (unified)", vramGiB: 32, category: "apple", vendor: "Apple", note: "Unified memory shared with the OS" },
-  { id: "apple-m-64", name: "Apple Silicon 64GB (unified)", vramGiB: 64, category: "apple", vendor: "Apple", note: "Unified memory shared with the OS" },
-  { id: "apple-m-128", name: "Apple Silicon 128GB (unified)", vramGiB: 128, category: "apple", vendor: "Apple", note: "Unified memory shared with the OS" },
-  { id: "apple-m-192", name: "Apple Silicon 192GB (unified)", vramGiB: 192, category: "apple", vendor: "Apple", note: "Unified memory shared with the OS" },
+  // Apple Silicon — unified memory (shared CPU/GPU). vramGiB is the ~75% the GPU can
+  // address by default; totalGiB is the full pool. Raise the cap via iogpu.wired_limit_mb.
+  { id: "apple-m4-32", name: "Apple M4", vramGiB: 24, totalGiB: 32, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 120, note: "Unified memory; ~75% usable by the GPU by default" },
+  { id: "apple-m4pro-48", name: "Apple M4 Pro", vramGiB: 36, totalGiB: 48, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 273, note: "Unified memory; ~75% usable by the GPU by default" },
+  { id: "apple-m4max-64", name: "Apple M4 Max (64GB)", vramGiB: 48, totalGiB: 64, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 410, note: "Unified memory; ~75% usable by the GPU by default" },
+  { id: "apple-m4max-128", name: "Apple M4 Max (128GB)", vramGiB: 96, totalGiB: 128, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 546, note: "Unified memory; ~75% usable by the GPU by default" },
+  { id: "apple-m2ultra-192", name: "Apple M2 Ultra", vramGiB: 144, totalGiB: 192, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 800, note: "Unified memory; ~75% usable by the GPU by default" },
+  { id: "apple-m3ultra-256", name: "Apple M3 Ultra (256GB)", vramGiB: 192, totalGiB: 256, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 819, note: "Unified memory; ~75% usable by the GPU by default" },
+  { id: "apple-m3ultra-512", name: "Apple M3 Ultra (512GB)", vramGiB: 384, totalGiB: 512, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 819, note: "Unified memory; ~75% usable by the GPU by default" },
+
+  // Unified-memory AI PCs / APUs — system RAM assigned to the SoC's GPU.
+  { id: "amd-strixhalo-64", name: "AMD Ryzen AI Max+ 395 (64GB)", vramGiB: 48, totalGiB: 64, category: "apu", vendor: "AMD", unified: true, bandwidthGBs: 256, note: "Strix Halo · LPDDR5X; ~75% to the iGPU via Variable Graphics Memory" },
+  { id: "amd-strixhalo-128", name: "AMD Ryzen AI Max+ 395 (128GB)", vramGiB: 96, totalGiB: 128, category: "apu", vendor: "AMD", unified: true, bandwidthGBs: 256, note: "Strix Halo · LPDDR5X; up to 96 GB to the iGPU (Variable Graphics Memory)" },
+  { id: "nv-dgxspark-128", name: "NVIDIA DGX Spark (GB10)", vramGiB: 120, totalGiB: 128, category: "apu", vendor: "NVIDIA", unified: true, bandwidthGBs: 273, note: "Grace-Blackwell GB10 · LPDDR5X; full pool shared CPU/GPU" },
+  { id: "nv-jetson-orin-64", name: "NVIDIA Jetson AGX Orin (64GB)", vramGiB: 56, totalGiB: 64, category: "apu", vendor: "NVIDIA", unified: true, bandwidthGBs: 204, note: "Edge module · unified LPDDR5" },
 ];
 
 export const CATEGORY_LABELS: Record<GpuCategory, string> = {
@@ -58,6 +74,7 @@ export const CATEGORY_LABELS: Record<GpuCategory, string> = {
   workstation: "Workstation",
   datacenter: "Data center",
   apple: "Apple",
+  apu: "AI PC (unified)",
 };
 
 // Multi-Instance GPU (MIG) profiles per GPU. A MIG instance gets an isolated
