@@ -43,39 +43,6 @@
   --color-accent-400: #059669;
 }
 
-/* Ollama-style theme: clean white, neutral grays, near-black as the "brand"
- * accent, restrained green kept for good/live status. Scoped to redesign.html
- * (a live preview); promotes to the default on approval. Declared after .light
- * so it wins even if the theme toggle adds .light on top. */
-.theme-ollama {
-  color-scheme: light;
-  --color-ink-950: #ffffff;
-  --color-ink-900: #ffffff;
-  --color-ink-850: #f5f5f5;
-  --color-ink-800: #ededed;
-  --color-ink-700: #e0e0e0;
-  --color-white: #171717;
-  --color-fg: #0a0a0a;
-  --color-slate-100: #171717;
-  --color-slate-200: #262626;
-  --color-slate-300: #404040;
-  --color-slate-400: #525252;
-  --color-slate-500: #737373;
-  --color-brand-400: #404040;
-  --color-brand-500: #262626;
-  --color-brand-600: #171717;
-  --color-accent-400: #059669;
-  --color-accent-500: #10b981;
-  --color-onbrand: #ffffff;
-}
-.theme-ollama body {
-  background: #ffffff;
-}
-.theme-ollama input[type="range"]::-webkit-slider-thumb,
-.theme-ollama input[type="range"]::-moz-range-thumb {
-  border-color: #d4d4d4;
-}
-
 html,
 body,
 #root {
