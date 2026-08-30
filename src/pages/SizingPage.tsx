@@ -121,6 +121,7 @@ export function SizingPage() {
           {result && state.arch && (
             <Card className="p-5">
               <GpuFit
+                hfId={state.hfId}
                 arch={state.arch}
                 weightDtype={state.weightDtype}
                 kvDtype={state.kvDtype}

@@ -22,7 +22,20 @@ function ctxLabel(n: number): string {
   return n >= 1048576 ? `${n / 1048576}M` : n >= 1024 ? `${n / 1024}k` : String(n);
 }
 
+/** vLLM shards the KV heads across the tensor-parallel ranks, so the TP size has
+ *  to divide the head count (or be a multiple of it, where heads are replicated). */
+function tpValid(n: number, kvHeads: number): boolean {
+  return kvHeads % n === 0 || n % kvHeads === 0;
+}
+
+/** The smallest workable TP size at or above the raw card count. */
+function nearestTp(needed: number, kvHeads: number): number {
+  for (let n = needed; n <= kvHeads * 8; n++) if (tpValid(n, kvHeads)) return n;
+  return needed;
+}
+
 export function GpuFit({
+  hfId,
   arch,
   weightDtype,
   kvDtype,
@@ -36,6 +49,7 @@ export function GpuFit({
   onGpu,
   onMig,
 }: {
+  hfId: string;
   arch: ModelArch;
   weightDtype: Dtype;
   kvDtype: Dtype;
@@ -62,6 +76,7 @@ export function GpuFit({
   }
 
   const selUsage = usage(effUsable);
+  const kvHeads = arch.numKeyValueHeads ?? arch.numAttentionHeads;
   const maxUsers = maxConcurrency({ ...base, contextLength }, effUsable);
   const maxCtx = maxContextLength({ ...base, concurrency }, effUsable);
   // Stage 2: devices within the selected category, split by whether they fit the model.
@@ -150,7 +165,7 @@ export function GpuFit({
             {selUsage.fits ? (
               <Badge tone="good">{t("gpu.fits")}</Badge>
             ) : (
-              <Badge tone="bad">{t("gpu.needs", { n: selUsage.needed })}</Badge>
+              <Badge tone="bad">{selected.unified ? t("gpu.noFitSingle") : t("gpu.needs", { n: selUsage.needed })}</Badge>
             )}
           </div>
           {migProfiles.length > 0 && (
@@ -211,6 +226,36 @@ export function GpuFit({
             }
           />
         </div>
+
+        {/* "needs N x GPUs" is only a memory ratio. Say what running one model
+            across N cards actually requires, and hand the setup to the vLLM page. */}
+        {!selUsage.fits &&
+          (selected.unified ? (
+            <p className="mt-3 rounded-xl bg-ink-800/60 p-3 text-[11.5px] leading-relaxed text-slate-300">
+              {t("gpu.unifiedSingle")}
+            </p>
+          ) : (
+            <div className="mt-3 rounded-xl bg-ink-800/60 p-3">
+              <div className="mb-1.5 text-[11.5px] font-semibold text-white">
+                {t("gpu.tpTitle", { n: selUsage.needed })}
+              </div>
+              <ul className="space-y-1 text-[11.5px] leading-relaxed text-slate-400">
+                <li>
+                  {tpValid(selUsage.needed, kvHeads)
+                    ? t("gpu.tpHeadsOk", { n: selUsage.needed, kv: kvHeads })
+                    : t("gpu.tpHeads", { kv: kvHeads, ok: nearestTp(selUsage.needed, kvHeads) })}
+                </li>
+                {selected.category === "consumer" && <li>{t("gpu.tpNvlink")}</li>}
+                <li>{t("gpu.tpOverhead")}</li>
+              </ul>
+              <a
+                href={`${import.meta.env.BASE_URL}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${nearestTp(selUsage.needed, kvHeads)}&ctx=${contextLength}`}
+                className="mt-2 inline-block text-[11.5px] font-medium text-brand-400 hover:underline"
+              >
+                {t("gpu.tpLink")}
+              </a>
+            </div>
+          ))}
       </div>
 
       {/* Devices in this category that fit the model (non-fitting behind a toggle) */}
