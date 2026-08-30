@@ -116,6 +116,7 @@ export function FitPage() {
                       {result.overall}
                       <span className="text-base font-normal text-slate-500">/100</span>
                     </div>
+                    <div className="mt-0.5 text-[11px] text-slate-500">{t("fit.scoreUnit")}</div>
                     <div className="mt-1">
                       <Badge tone={verdictTone(result.verdict)}>{t(`fit.verdict.${result.verdict}`)}</Badge>
                     </div>
@@ -128,6 +129,11 @@ export function FitPage() {
                     style={{ width: `${result.overall}%`, backgroundColor: scoreColor(result.overall) }}
                   />
                 </div>
+
+                {/* The number is a rule set over declared characteristics, not a
+                    measurement — say so next to it rather than letting it read
+                    as a verdict on the model's quality. */}
+                <p className="mt-2 text-[11.5px] leading-relaxed text-slate-400">{t("fit.methodNote")}</p>
 
                 <div className="mt-4 text-[11px] uppercase tracking-wide text-slate-400">{t("fit.criteriaTitle")}</div>
                 <ul className="mt-2 space-y-2">

@@ -127,16 +127,18 @@ const en: Dict = {
 
   "fit.title": "Model ↔ Task Fit",
   "fit.subtitle":
-    "Will this model actually do the job? Pick a model and your use-case — LLMScale scores the fit from the model's real characteristics (size, context, tuning, modality) and explains every criterion.",
+    "Is this model built for the job? Pick a model and your use-case — LLMScale matches the characteristics the model declares (size, context, tuning, modality) against what the task needs, and shows every criterion it used.",
   "fit.pickTask": "Choose your task",
-  "fit.scoreLabel": "Fit score",
+  "fit.scoreLabel": "Capability match",
   "fit.empty": "Pick a model and a task to check the fit.",
+  "fit.scoreUnit": "of the criteria checked",
+  "fit.methodNote": "Read from what the model declares — size, context, tuning, modality. It cannot see answer quality, grounding or hallucination rate, so a high match means \u201Cbuilt for this\u201D, not \u201Cgood at this\u201D. Only your own evaluation settles that.",
   "fit.criteriaTitle": "Why this score",
 
-  "fit.verdict.great": "Great fit",
+  "fit.verdict.great": "Built for this",
   "fit.verdict.good": "Workable",
-  "fit.verdict.weak": "Weak fit",
-  "fit.verdict.poor": "Poor fit",
+  "fit.verdict.weak": "Thin on paper",
+  "fit.verdict.poor": "Wrong tool",
 
   "fit.task.chat": "Chatbot / assistant",
   "fit.task.code": "Code generation",
@@ -505,14 +507,16 @@ const tr: Dict = {
   "fit.subtitle":
     "Bu model işi gerçekten yapar mı? Bir model ve kullanım amacını seç — LLMScale, modelin gerçek özelliklerinden (boyut, context, ayar, kip) uygunluğu skorlar ve her kriteri açıklar.",
   "fit.pickTask": "Görevini seç",
-  "fit.scoreLabel": "Uygunluk skoru",
+  "fit.scoreLabel": "Yetenek eşleşmesi",
   "fit.empty": "Uygunluğu görmek için bir model ve görev seç.",
+  "fit.scoreUnit": "kontrol edilen kriterlerin",
+  "fit.methodNote": "Modelin beyan ettiklerinden okunur — boyut, context, ince ayar, modalite. Cevap kalitesini, kaynağa bağlılığı ya da halüsinasyon oranını göremez; yüksek eşleşme “bu iş için tasarlanmış” demektir, “bu işte iyi” demek değil. Onu ancak kendi değerlendirmen söyler.",
   "fit.criteriaTitle": "Bu skorun nedeni",
 
-  "fit.verdict.great": "Çok uygun",
+  "fit.verdict.great": "Bu iş için tasarlanmış",
   "fit.verdict.good": "Kullanılabilir",
-  "fit.verdict.weak": "Zayıf uyum",
-  "fit.verdict.poor": "Uygun değil",
+  "fit.verdict.weak": "Kâğıt üstünde zayıf",
+  "fit.verdict.poor": "Yanlış araç",
 
   "fit.task.chat": "Sohbet / asistan",
   "fit.task.code": "Kod üretimi",
