@@ -176,7 +176,7 @@ export function ModelPicker({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={t("model.search.placeholder")}
-        className="w-full rounded-xl bg-ink-850 px-3 py-2.5 text-sm text-white ring-1 ring-white/10 outline-none placeholder:text-slate-500 focus:ring-brand-500/60"
+        className="w-full rounded-xl bg-ink-850 px-3 py-2.5 text-sm text-white ring-1 ring-control outline-none placeholder:text-slate-500 focus:ring-brand-500/60"
       />
       {searching && (
         <span className="absolute right-3 top-3 text-xs text-slate-500">{t("model.search.searching")}</span>

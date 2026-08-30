@@ -140,7 +140,7 @@ export function GpuFit({
             <select
               value={gpuId}
               onChange={(e) => onGpu(e.target.value)}
-              className="min-w-0 flex-1 rounded-lg bg-ink-800 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-white/10 outline-none focus:ring-brand-500/60"
+              className="min-w-0 flex-1 rounded-lg bg-ink-800 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-control outline-none focus:ring-brand-500/60"
             >
               {catGpus.map((g) => (
                 <option key={g.id} value={g.id}>
@@ -158,7 +158,7 @@ export function GpuFit({
             <select
               value={migId}
               onChange={(e) => onMig(e.target.value)}
-              className="w-full rounded-lg bg-ink-800 px-3 py-1.5 text-sm text-slate-200 ring-1 ring-white/10 outline-none focus:ring-brand-500/60"
+              className="w-full rounded-lg bg-ink-800 px-3 py-1.5 text-sm text-slate-200 ring-1 ring-control outline-none focus:ring-brand-500/60"
             >
               <option value="">{t("gpu.migOff")}</option>
               {migProfiles.map((m) => (

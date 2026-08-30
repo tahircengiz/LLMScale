@@ -29,7 +29,7 @@ export function DecodePage() {
           onChange={(e) => setHfId(e.target.value)}
           spellCheck={false}
           placeholder="org/Model-Name-7B-Instruct-AWQ"
-          className="w-full rounded-xl bg-ink-850 px-3 py-2.5 font-mono text-sm text-white ring-1 ring-white/10 outline-none placeholder:text-slate-500 focus:ring-brand-500/60"
+          className="w-full rounded-xl bg-ink-850 px-3 py-2.5 font-mono text-sm text-white ring-1 ring-control outline-none placeholder:text-slate-500 focus:ring-brand-500/60"
         />
         <div className="mt-3 flex flex-wrap gap-1.5">
           {EXAMPLES.map((ex) => (

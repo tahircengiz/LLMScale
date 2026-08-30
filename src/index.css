@@ -17,6 +17,9 @@
   /* Semantic warn / bad text — flip with the theme so badges stay readable. */
   --color-warn: #fcd34d;
   --color-bad: #fda4af;
+  /* Boundary of an interactive control — WCAG 1.4.11 asks for 3:1 against the
+   * control's own fill and the surface behind it. Card edges stay subtle. */
+  --color-control: #646d82;
   /* Muted text ramp — lifted so sub-labels clear 4.5:1 on a card surface. */
   --color-slate-300: #c3c8d4;
   --color-slate-400: #a1a8b8;
@@ -58,6 +61,7 @@
   --color-accent-400: #0b7d57;
   --color-warn: #8a5a06;
   --color-bad: #b3123c;
+  --color-control: #7d8494;
 }
 
 html,

@@ -110,7 +110,7 @@ export function NumberInput({
   suffix?: string;
 }) {
   return (
-    <div className="flex items-center rounded-xl bg-ink-850 ring-1 ring-white/10 focus-within:ring-brand-500/60">
+    <div className="flex items-center rounded-xl bg-ink-850 ring-1 ring-control focus-within:ring-brand-500/60">
       <input
         type="number"
         value={Number.isFinite(value) ? value : ""}

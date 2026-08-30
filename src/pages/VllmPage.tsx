@@ -149,7 +149,7 @@ export function VllmPage() {
                     setGpuId(e.target.value);
                     setMigId("");
                   }}
-                  className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-brand-500/60"
+                  className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-control outline-none focus:ring-brand-500/60"
                 >
                   {(["consumer", "workstation", "datacenter", "apple"] as const).map((cat) => (
                     <optgroup key={cat} label={t(`cat.${cat}`)}>
@@ -179,7 +179,7 @@ export function VllmPage() {
                 <select
                   value={migId}
                   onChange={(e) => setMigId(e.target.value)}
-                  className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-slate-200 ring-1 ring-white/10 outline-none focus:ring-brand-500/60"
+                  className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-slate-200 ring-1 ring-control outline-none focus:ring-brand-500/60"
                 >
                   <option value="">{t("gpu.migOff")}</option>
                   {migProfiles.map((m) => (

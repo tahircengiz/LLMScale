@@ -372,7 +372,7 @@ function AddSearch({ onPick, disabled }: { onPick: (id: string) => void; disable
         onChange={(e) => setQ(e.target.value)}
         disabled={disabled}
         placeholder={disabled ? t("compare.max") : t("compare.search")}
-        className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none placeholder:text-slate-500 focus:ring-brand-500/60 disabled:opacity-50"
+        className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-control outline-none placeholder:text-slate-500 focus:ring-brand-500/60 disabled:opacity-50"
       />
       {results.length > 0 && (
         <ul className="absolute right-0 z-30 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-white/10 bg-ink-850 shadow-2xl">
