@@ -77,6 +77,13 @@ export const GPUS: Gpu[] = [
   { id: "nv-jetson-orin-64", name: "NVIDIA Jetson AGX Orin (64GB)", vramGiB: 56, totalGiB: 64, category: "apu", vendor: "NVIDIA", unified: true, bandwidthGBs: 204, note: "Edge module · unified LPDDR5" },
 ];
 
+/** vLLM ships CUDA and ROCm backends but nothing for Metal, so Apple Silicon
+ * cannot serve with it. The memory maths still applies everywhere — only the
+ * command builder has to exclude these devices. */
+export function runsVllm(g: Gpu): boolean {
+  return g.vendor !== "Apple";
+}
+
 /** Display order of the hardware tiers. Kept here so every picker stays in
  * step — the vLLM page once drifted out of sync and silently hid a tier. */
 export const GPU_CATEGORIES: readonly GpuCategory[] = [

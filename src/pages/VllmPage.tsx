@@ -4,7 +4,7 @@ import { resolveModel } from "../lib/hf";
 import { findKnownByHfId } from "../lib/models";
 import { extractCaps } from "../lib/fit";
 import { recommend, PRIORITIES, VLLM_TASKS, type Priority, type VllmTask } from "../lib/vllm";
-import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor } from "../lib/gpus";
+import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor, runsVllm } from "../lib/gpus";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Card, Field, NumberInput, SectionTitle, Segmented } from "../components/ui";
@@ -15,11 +15,17 @@ function initial() {
   const p = new URLSearchParams(window.location.search);
   const prio = p.get("prio") as Priority | null;
   const task = p.get("task") as VllmTask | null;
+  // A shared link can carry a device this page cannot serve on (e.g. an Apple
+  // one picked on the sizing page); fall back and say so rather than showing an
+  // empty picker.
+  const wanted = p.get("gpu") || "h100-80";
+  const usable = GPUS.some((g) => g.id === wanted && runsVllm(g));
   return {
     hfId: p.get("m") || HERO.hfId,
     prio: prio && PRIORITIES.includes(prio) ? prio : "balanced",
     task: task && VLLM_TASKS.includes(task) ? task : "chat",
-    gpuId: p.get("gpu") || "h100-80",
+    swappedFrom: usable ? null : GPUS.find((g) => g.id === wanted)?.name ?? null,
+    gpuId: usable ? wanted : "h100-80",
     gpuCount: Number(p.get("n")) || 1,
     ctx: Number(p.get("ctx")) || 8192,
     mig: p.get("mig") || "",
@@ -67,7 +73,7 @@ export function VllmPage() {
     window.history.replaceState(null, "", `${window.location.pathname}?${p.toString()}`);
   }, [hfId, priority, task, gpuId, gpuCount, migId, maxLen]);
 
-  const gpu = GPUS.find((g) => g.id === gpuId) ?? GPUS[0];
+  const gpu = GPUS.find((g) => g.id === gpuId) ?? GPUS.find((g) => g.id === "h100-80")!;
   const migProfiles = migProfilesFor(gpu.id);
   const effVram = (migId && migMem(gpu.id, migId)) || gpu.vramGiB;
   const effCount = migId ? 1 : gpuCount;
@@ -151,9 +157,9 @@ export function VllmPage() {
                   }}
                   className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-control outline-none focus:ring-brand-500/60"
                 >
-                  {GPU_CATEGORIES.map((cat) => (
+                  {GPU_CATEGORIES.filter((cat) => GPUS.some((g) => g.category === cat && runsVllm(g))).map((cat) => (
                     <optgroup key={cat} label={t(`cat.${cat}`)}>
-                      {GPUS.filter((g) => g.category === cat).map((g) => (
+                      {GPUS.filter((g) => g.category === cat && runsVllm(g)).map((g) => (
                         <option key={g.id} value={g.id}>
                           {g.name} — {g.totalGiB ?? g.vramGiB} GB
                         </option>
@@ -161,6 +167,11 @@ export function VllmPage() {
                     </optgroup>
                   ))}
                 </select>
+                {init.swappedFrom && (
+                  <p className="mt-1 text-[11px] text-warn">
+                    {t("vllm.noMetal", { gpu: init.swappedFrom })}
+                  </p>
+                )}
               </Field>
               <Field label={t("vllm.gpuCount")} hint={migId ? "MIG = 1" : undefined}>
                 <NumberInput
