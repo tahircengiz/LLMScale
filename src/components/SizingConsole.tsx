@@ -86,29 +86,160 @@ const SCENARIOS = [
   { key: "batch", ctx: 4096, users: 128 },
 ] as const;
 
-export function ScenarioTabs({ m }: { m: ConsoleModel }) {
-  const { t } = useLang();
+/* ───────────────────────────── config card ─────────────────────────── */
+
+const W_CHOICES: Dtype[] = ["fp16", "bf16", "fp8", "int8", "int4"];
+const KV_CHOICES: Dtype[] = ["fp16", "bf16", "fp8"];
+const CTX_CHOICES = [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576];
+const USER_CHOICES = [1, 2, 4, 8, 16, 32, 64, 128];
+const OVERHEAD_CHOICES = [0, 5, 10, 15, 20, 25, 30];
+
+/** One option. A dot marks a choice that would not fit the selected card. */
+function Chip({ label, on, warn, onClick }: { label: string; on: boolean; warn: boolean; onClick: () => void }) {
   return (
-    <div className="flex flex-wrap gap-1">
-      {SCENARIOS.map((s) => {
-        const on = m.contextLength === s.ctx && m.concurrency === s.users;
-        return (
-          <button
-            key={s.key}
-            type="button"
-            onClick={() => m.patch({ contextLength: s.ctx, concurrency: s.users })}
-            className={
-              "rounded-[9px] border px-3.5 py-1.5 text-[12.5px] transition " +
-              (on
-                ? "border-ink-700 bg-ink-900 font-semibold text-white shadow-sm"
-                : "border-transparent text-slate-400 hover:text-slate-200")
-            }
-          >
-            {t(`scen.${s.key}`)}
-          </button>
-        );
-      })}
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        "flex items-center gap-1.5 rounded-md px-2 py-1 text-[11.5px] font-medium transition " +
+        (on ? "bg-brand-500 text-onbrand" : "bg-ink-850 text-slate-400 hover:bg-ink-800 hover:text-slate-200")
+      }
+    >
+      {label}
+      {warn && !on && <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: RED }} />}
+    </button>
+  );
+}
+
+function Group({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline gap-2">
+        <span className="text-[11px] font-semibold text-slate-500">{label}</span>
+        {hint && <span className="truncate text-[11px] text-slate-500 opacity-75">{hint}</span>}
+      </div>
+      <div className="flex flex-wrap gap-1">{children}</div>
     </div>
+  );
+}
+
+/** Every choice the user makes, in one place. */
+export function ConfigCard({
+  m,
+  modelName,
+  modelMeta,
+  pickerOpen,
+  onTogglePicker,
+  picker,
+}: {
+  m: ConsoleModel;
+  modelName: string;
+  modelMeta: ReactNode;
+  pickerOpen: boolean;
+  onTogglePicker: () => void;
+  picker: ReactNode;
+}) {
+  const { t } = useLang();
+  const wontFit = (over: Partial<AppState>) => totalFor(m, over) > m.usable;
+
+  return (
+    <Card className="p-4 px-4.5">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,.9fr)_minmax(0,1.3fr)]">
+        <div className="space-y-4">
+          <div>
+            <div className="mb-1.5 text-[11px] font-semibold text-slate-500">{t("con.model")}</div>
+            <div className="flex items-center gap-2">
+              <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-white">{modelName}</span>
+              <button
+                type="button"
+                onClick={onTogglePicker}
+                className="shrink-0 rounded-md border border-ink-700 px-2 py-1 text-[11.5px] font-medium text-slate-300 transition hover:bg-white/5"
+              >
+                {pickerOpen ? t("con.close") : t("con.changeModel")}
+              </button>
+            </div>
+            <div className="mt-1">{modelMeta}</div>
+          </div>
+
+          <Group label={t("con.scenario")}>
+            {SCENARIOS.map((sc) => (
+              <Chip
+                key={sc.key}
+                label={t(`scen.${sc.key}`)}
+                on={m.contextLength === sc.ctx && m.concurrency === sc.users}
+                warn={wontFit({ contextLength: sc.ctx, concurrency: sc.users })}
+                onClick={() => m.patch({ contextLength: sc.ctx, concurrency: sc.users })}
+              />
+            ))}
+          </Group>
+        </div>
+
+        <div className="space-y-4">
+          <Group label={t("con.col.weight")}>
+            {W_CHOICES.map((d) => (
+              <Chip
+                key={d}
+                label={SHORT_DTYPE[d]}
+                on={d === m.weightDtype}
+                warn={wontFit({ weightDtype: d })}
+                onClick={() => m.patch({ weightDtype: d })}
+              />
+            ))}
+          </Group>
+          <Group label={t("con.col.kv")} hint={t("controls.kvHint")}>
+            {KV_CHOICES.map((d) => (
+              <Chip
+                key={d}
+                label={SHORT_DTYPE[d]}
+                on={d === m.kvDtype}
+                warn={wontFit({ kvDtype: d })}
+                onClick={() => m.patch({ kvDtype: d })}
+              />
+            ))}
+          </Group>
+        </div>
+
+        <div className="space-y-4">
+          <Group label={t("con.col.ctx")}>
+            {CTX_CHOICES.map((c) => (
+              <Chip
+                key={c}
+                label={ctxLabel(c)}
+                on={c === m.contextLength}
+                warn={wontFit({ contextLength: c })}
+                onClick={() => m.patch({ contextLength: c })}
+              />
+            ))}
+          </Group>
+          <Group label={t("con.col.users")}>
+            {USER_CHOICES.map((u) => (
+              <Chip
+                key={u}
+                label={String(u)}
+                on={u === m.concurrency}
+                warn={wontFit({ concurrency: u })}
+                onClick={() => m.patch({ concurrency: u })}
+              />
+            ))}
+          </Group>
+          <Group label={t("con.col.overhead")}>
+            {OVERHEAD_CHOICES.map((o) => (
+              <Chip
+                key={o}
+                label={`%${o}`}
+                on={o === Math.round(m.overheadPct * 100)}
+                warn={false}
+                onClick={() => m.patch({ overheadPct: o / 100 })}
+              />
+            ))}
+          </Group>
+        </div>
+      </div>
+
+      {pickerOpen && <div className="relative z-30 mt-4 border-t border-ink-700 pt-4">{picker}</div>}
+
+      <p className="mt-3.5 border-t border-ink-700 pt-3 text-[11.5px] text-slate-500">{t("con.warnHint")}</p>
+    </Card>
   );
 }
 
