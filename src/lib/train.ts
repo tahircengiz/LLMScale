@@ -32,8 +32,12 @@ const ADAM_BYTES = 12;
 const GRAD_BYTES = 2;
 /** Bytes per resident parameter in the compute dtype (bf16). */
 const COMPUTE_BYTES = 2;
-/** Bytes per resident parameter when the base is kept in 4-bit (NF4 + quant constants). */
-const NF4_BYTES = 0.55;
+/**
+ * Bytes per resident parameter with a 4-bit NF4 base. QLoRA reports ~4.127 bits
+ * per parameter once the quantization constants are themselves quantized
+ * (double quantization), which is 0.516 bytes — not the naive 0.5.
+ */
+const NF4_BYTES = 0.516;
 /** Activation bytes per token per layer per hidden unit, flash-attention assumed. */
 const ACT_BYTES = 34;
 /** With full recomputation only each layer's input is kept. */
@@ -80,9 +84,10 @@ export function loraParams(arch: ModelArch, rank: number, target: LoraTarget): n
   const attn = rank * (h + h) * 2 + rank * (h + kvDim) * 2;
   if (target === "attn") return arch.numLayers * attn;
 
-  // Gated MLP: two h x ffn projections up and one ffn x h down. The FFN width
-  // is not always in the config, so fall back to the usual 3.5x hidden.
-  const ffn = Math.round(h * 3.5);
+  // Gated MLP: two h x ffn projections up and one ffn x h down. Use the real
+  // FFN width when the config gave us one — the ratio to hidden runs from ~2.7x
+  // (Llama-65B) to ~5.3x (Qwen2.5), so the 3.5x fallback is a last resort.
+  const ffn = arch.intermediateSize ?? Math.round(h * 3.5);
   const mlp = rank * (h + ffn) * 2 + rank * (ffn + h);
   return arch.numLayers * (attn + mlp);
 }

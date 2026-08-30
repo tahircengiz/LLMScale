@@ -46,6 +46,28 @@ check("activations scale with sequence length", estimateTraining(base({ seqLengt
 // A frozen base does not make the backward pass cheaper — the common surprise.
 check("LoRA does not reduce activation memory", Math.abs(lora.activationsGiB - full.activationsGiB) < 1e-9);
 
+console.log("\n--- against a published result ---");
+// QLoRA (Dettmers et al. 2023) fine-tunes a 65B model on ONE 48 GB card, with
+// r=64 adapters on every linear layer, gradient checkpointing and a paged
+// 32-bit Adam. A 48 GB card is 44.7 GiB, so the estimate has to land under that.
+const llama65b: ModelArch = { numParams: 65e9, numLayers: 80, hiddenSize: 8192, intermediateSize: 22016, numAttentionHeads: 64, numKeyValueHeads: 64, headDim: 128 };
+const qlora65 = estimateTraining({
+  arch: llama65b, mode: "qlora", batchSize: 1, seqLength: 512,
+  gradientCheckpointing: true, loraRank: 64, loraTarget: "all", overheadGiB: 1,
+});
+check("QLoRA 65B fits one 48 GB card", qlora65.totalGiB < 44.7, `${qlora65.totalGiB.toFixed(1)} GiB`);
+// ...but only just: a model that said it fits with room to spare would be wrong too.
+check("QLoRA 65B is not implausibly cheap", qlora65.totalGiB > 35, `${qlora65.totalGiB.toFixed(1)} GiB`);
+// The same model in bf16 cannot be full fine-tuned on anything reasonable.
+const full65 = estimateTraining({ ...{ arch: llama65b, mode: "full" as const, batchSize: 1, seqLength: 512, gradientCheckpointing: true, loraRank: 64, loraTarget: "all" as const, overheadGiB: 1 } });
+check("full 65B needs ~1 TB", full65.totalGiB > 900 && full65.totalGiB < 1100, `${full65.totalGiB.toFixed(0)} GiB`);
+
+console.log("\n--- the FFN width comes from the config, not a guess ---");
+const guessed = loraParams({ ...llama65b, intermediateSize: undefined }, 64, "all");
+const real = loraParams(llama65b, 64, "all");
+check("a missing FFN width falls back", guessed > 0);
+check("the real width changes the adapter materially", Math.abs(guessed - real) / real > 0.1, `${((guessed - real) / real * 100).toFixed(0)}%`);
+
 console.log("\n--- parts add up ---");
 const sum = full.baseWeightsGiB + full.gradientsGiB + full.optimizerGiB + full.activationsGiB + full.overheadGiB;
 check("breakdown sums to the total", Math.abs(sum - full.totalGiB) < 1e-9);

@@ -163,6 +163,7 @@ function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     numParams,
     numLayers,
     hiddenSize,
+    intermediateSize: c.intermediate_size ?? c.ffn_dim ?? c.n_inner ?? undefined,
     numAttentionHeads,
     numKeyValueHeads,
     headDim: c.head_dim,

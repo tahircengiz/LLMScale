@@ -24,6 +24,22 @@ function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "comp
   return "sizing";
 }
 
+/** Grouped so the header reads as four intents rather than eight links. */
+const NAV_GROUPS: { page: string; href: string }[][] = [
+  [
+    { page: "sizing", href: "" },
+    { page: "train", href: "train.html" },
+  ],
+  [
+    { page: "fit", href: "fit.html" },
+    { page: "anatomy", href: "anatomy.html" },
+    { page: "compare", href: "compare.html" },
+    { page: "decode", href: "decode.html" },
+  ],
+  [{ page: "vllm", href: "vllm.html" }],
+  [{ page: "learn", href: "learn.html" }],
+];
+
 export default function App() {
   const { t, lang, setLang } = useLang();
   const page = currentPage();
@@ -102,15 +118,26 @@ export default function App() {
               </button>
             </div>
           </div>
-          <nav className="mt-2 inline-flex max-w-full flex-wrap gap-1 overflow-x-auto rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
-            <a href={base} className={tabCls(page === "sizing")}>{t("nav.sizing")}</a>
-            <a href={`${base}fit.html`} className={tabCls(page === "fit")}>{t("nav.fit")}</a>
-            <a href={`${base}vllm.html`} className={tabCls(page === "vllm")}>{t("nav.vllm")}</a>
-            <a href={`${base}decode.html`} className={tabCls(page === "decode")}>{t("nav.decode")}</a>
-            <a href={`${base}anatomy.html`} className={tabCls(page === "anatomy")}>{t("nav.anatomy")}</a>
-            <a href={`${base}compare.html`} className={tabCls(page === "compare")}>{t("nav.compare")}</a>
-            <a href={`${base}train.html`} className={tabCls(page === "train")}>{t("nav.train")}</a>
-            <a href={`${base}learn.html`} className={tabCls(false)}>{t("nav.learn")}</a>
+          {/* Eight destinations is too many to read as one run, so they sit in
+              four groups — plan the memory, choose the model, serve it, learn
+              how it works — divided by a hairline and centred under the brand. */}
+          <nav className="mt-2 flex justify-center">
+            <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-1 overflow-x-auto rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
+              {NAV_GROUPS.map((group, gi) => (
+                <div key={gi} className="flex items-center gap-1">
+                  {gi > 0 && <span aria-hidden="true" className="mx-1 h-4 w-px bg-white/15" />}
+                  {group.map((item) => (
+                    <a
+                      key={item.page}
+                      href={`${base}${item.href}`}
+                      className={tabCls(page === item.page)}
+                    >
+                      {t(`nav.${item.page}`)}
+                    </a>
+                  ))}
+                </div>
+              ))}
+            </div>
           </nav>
         </div>
       </header>

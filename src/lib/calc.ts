@@ -42,6 +42,10 @@ export interface ModelArch {
   vocabSize?: number;
   /** max_position_embeddings */
   maxContext?: number;
+  /** intermediate_size — the FFN width. Only used by the fine-tuning model, which
+   *  needs it to size adapters on the MLP projections; ratios to hiddenSize run
+   *  from ~2.7x to ~5.3x across families, so guessing it is not good enough. */
+  intermediateSize?: number;
   /** Mixture-of-Experts active params (informational only; VRAM uses total). */
   activeParams?: number;
 }
