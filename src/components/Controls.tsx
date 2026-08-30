@@ -57,6 +57,10 @@ export function Controls({
             onChange={(v) => onChange({ weightDtype: v })}
             size="sm"
           />
+          {/* The bar shrinks the moment a lighter precision is picked. Name the
+              counterweight next to it — the sizes here are exact, the quality
+              cost is not something this page can measure. */}
+          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">{t(`quality.wd.${weightDtype}`)}</p>
         </Field>
         <Field label={t("controls.kvPrecision")} hint={t("controls.kvHint")}>
           <Segmented<Dtype>
@@ -65,6 +69,7 @@ export function Controls({
             onChange={(v) => onChange({ kvDtype: v })}
             size="sm"
           />
+          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">{t(`quality.kv.${kvDtype}`)}</p>
         </Field>
       </div>
 
