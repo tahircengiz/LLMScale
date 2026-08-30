@@ -38,9 +38,22 @@ check("chat/tool → prefix caching", has(tool.command, "--enable-prefix-caching
 check("always → seed", has(tool.command, "--seed 0"));
 
 const thru = recommend(base({ priority: "throughput" }));
-check("throughput → max-num-seqs 512", has(thru.command, "--max-num-seqs 512"));
 check("throughput → batched 8192", has(thru.command, "--max-num-batched-tokens 8192"));
 check("throughput → gpu-util 0.95", has(thru.command, "--gpu-memory-utilization 0.95"));
+
+// --max-num-seqs is a preset capped by what the KV cache can actually hold, so
+// the flag must never promise more concurrency than the memory allows.
+const seqsOf = (cmd: string) => Number(/--max-num-seqs (\d+)/.exec(cmd)?.[1] ?? 0);
+// 8B on one 80 GB card at 8k: ~53 GiB of KV budget over a 1 GiB/sequence cost.
+check("throughput → seqs clamped to the KV budget", seqsOf(thru.command) === 53, String(seqsOf(thru.command)));
+check("throughput → says why it was capped", thru.warnings.some((w) => w.key === "vllm.w.seqcap"));
+// Eight cards leave room for the whole preset, so nothing is capped.
+const roomy = recommend(base({ priority: "throughput", gpuCount: 8 }));
+check("throughput → preset kept when memory allows", seqsOf(roomy.command) === 512, String(seqsOf(roomy.command)));
+check("throughput → no cap warning when it fits", !roomy.warnings.some((w) => w.key === "vllm.w.seqcap"));
+// Regression for the reported case: a 32k context on 2x A100 cannot hold 512.
+const long = recommend(base({ priority: "throughput", maxModelLen: 32768, gpuVramGiB: 80, gpuCount: 2 }));
+check("throughput → 32k on 2x80GB is far below the preset", seqsOf(long.command) < 200, String(seqsOf(long.command)));
 
 const acc = recommend(base({ priority: "accuracy" }));
 check("accuracy → dtype bfloat16", has(acc.command, "--dtype bfloat16"));

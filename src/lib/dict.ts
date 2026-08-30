@@ -367,6 +367,7 @@ const en: Dict = {
   "vllm.w.trust": "Many multimodal models also need --trust-remote-code.",
   "vllm.w.quant": "Pre-quantized model ({q}) — vLLM auto-detects it; no --quantization needed.",
   "vllm.w.gguf": "GGUF support in vLLM is experimental — a safetensors/native repo is recommended.",
+  "vllm.w.seqcap": "--max-num-seqs capped at {fit}: that is all the KV cache holds at {ctx} tokens. Raising it only lengthens the queue.",
   "vllm.w.fit": "~{need} GiB needed vs ~{have} GiB available — add GPUs (≈{gpus}), quantize, shorten context, or use FP8 KV.",
   "vllm.w.mig": "MIG = one isolated GPU slice; tensor-parallel across MIG isn't supported. Pin the instance with CUDA_VISIBLE_DEVICES=MIG-…",
 };
@@ -733,6 +734,7 @@ const tr: Dict = {
   "vllm.w.trust": "Çoğu çok kipli model ayrıca --trust-remote-code ister.",
   "vllm.w.quant": "Önceden quantize edilmiş model ({q}) — vLLM otomatik algılar; --quantization gerekmez.",
   "vllm.w.gguf": "vLLM'de GGUF desteği deneyseldir — safetensors/native repo önerilir.",
+  "vllm.w.seqcap": "--max-num-seqs {fit} ile sınırlandı: {ctx} token bağlamda KV cache ancak bu kadarını tutuyor. Artırmak yalnızca kuyruğu uzatır.",
   "vllm.w.fit": "~{need} GiB gerekiyor, ~{have} GiB var — GPU ekle (≈{gpus}), quantize et, context'i kısalt ya da FP8 KV kullan.",
   "vllm.w.mig": "MIG = tek izole GPU dilimi; MIG'ler arası tensor-parallel desteklenmez. Instance'ı CUDA_VISIBLE_DEVICES=MIG-… ile sabitle.",
 };

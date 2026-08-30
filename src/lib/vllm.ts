@@ -120,15 +120,42 @@ export function recommend(i: VllmInput): VllmRec {
     kvDtype = "fp8";
   }
 
+  // --- memory budget ---
+  // Sized before the scheduler flags, because the KV cache is what decides how
+  // many sequences can actually be resident. Same model as the sizing engine:
+  // (weights + KV) x 1.1 overhead + 1 GiB CUDA context, against util x VRAM.
+  // Prefer the config-detected precision (handles MXFP4 / config-only FP8 that
+  // the name-based detectQuant misses); fall back to the name-based guess.
+  const wDtype = i.weightDtype ?? quantToDtype(quant);
+  const weightsGiB = weightsBytes(i.arch, wDtype) / BYTES_PER_GIB;
+  const kvSeqGiB = (kvBytesPerToken(i.arch, kvDtype) * i.maxModelLen) / BYTES_PER_GIB;
+  const budgetGiB = i.gpuCount * i.gpuVramGiB * util;
+  /** Full-length sequences the KV cache can hold once the weights are resident. */
+  const seqCap = Math.max(1, Math.floor(((budgetGiB - 1) / 1.1 - weightsGiB) / kvSeqGiB));
+
+  /** A preset is an upper bound — clamp it to what the KV cache can hold. */
+  let seqsClamped = false;
+  function seqs(preset: number): string {
+    const v = Math.min(preset, seqCap);
+    if (v < preset) seqsClamped = true;
+    return String(v);
+  }
+
   // --- batching / scheduling ---
   if (i.priority === "throughput") {
     flags.push({ flag: "--max-num-batched-tokens", value: "8192", reasonKey: "vllm.r.maxbatched" });
-    flags.push({ flag: "--max-num-seqs", value: "512", reasonKey: "vllm.r.maxseqs" });
+    flags.push({ flag: "--max-num-seqs", value: seqs(512), reasonKey: "vllm.r.maxseqs" });
   } else if (i.priority === "latency") {
     flags.push({ flag: "--max-num-batched-tokens", value: "2048", reasonKey: "vllm.r.maxbatchedLat" });
-    flags.push({ flag: "--max-num-seqs", value: "32", reasonKey: "vllm.r.maxseqsLat" });
+    flags.push({ flag: "--max-num-seqs", value: seqs(32), reasonKey: "vllm.r.maxseqsLat" });
   } else if (i.priority === "memory") {
-    flags.push({ flag: "--max-num-seqs", value: "64", reasonKey: "vllm.r.maxseqsMem" });
+    flags.push({ flag: "--max-num-seqs", value: seqs(64), reasonKey: "vllm.r.maxseqsMem" });
+  }
+  if (seqsClamped) {
+    warnings.push({
+      key: "vllm.w.seqcap",
+      vars: { fit: seqCap, ctx: i.maxModelLen.toLocaleString("en-US") },
+    });
   }
 
   // --- prefill / caching ---
@@ -165,18 +192,12 @@ export function recommend(i: VllmInput): VllmRec {
   if (quant === "gguf") warnings.push({ key: "vllm.w.gguf" });
   else if (quant) warnings.push({ key: "vllm.w.quant", vars: { q: quant.toUpperCase() } });
 
-  // --- VRAM fit sanity (reuses the sizing engine) ---
-  // Prefer the config-detected precision (handles MXFP4 / config-only FP8 that
-  // the name-based detectQuant misses); fall back to the name-based guess.
-  const wDtype = i.weightDtype ?? quantToDtype(quant);
-  const weightsGiB = weightsBytes(i.arch, wDtype) / BYTES_PER_GIB;
-  const kvSeqGiB = (kvBytesPerToken(i.arch, kvDtype) * i.maxModelLen) / BYTES_PER_GIB;
+  // --- VRAM fit sanity (same budget the scheduler caps were sized against) ---
   const required = (weightsGiB + kvSeqGiB) * 1.1 + 1; // +overhead +CUDA ctx
-  const budget = i.gpuCount * i.gpuVramGiB * util;
-  if (required > budget) {
+  if (required > budgetGiB) {
     warnings.push({
       key: "vllm.w.fit",
-      vars: { need: required.toFixed(1), have: budget.toFixed(1), gpus: Math.max(2, Math.ceil(required / (i.gpuVramGiB * util))) },
+      vars: { need: required.toFixed(1), have: budgetGiB.toFixed(1), gpus: Math.max(2, Math.ceil(required / (i.gpuVramGiB * util))) },
     });
   }
 
