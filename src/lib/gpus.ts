@@ -77,6 +77,16 @@ export const GPUS: Gpu[] = [
   { id: "nv-jetson-orin-64", name: "NVIDIA Jetson AGX Orin (64GB)", vramGiB: 56, totalGiB: 64, category: "apu", vendor: "NVIDIA", unified: true, bandwidthGBs: 204, note: "Edge module · unified LPDDR5" },
 ];
 
+/** Display order of the hardware tiers. Kept here so every picker stays in
+ * step — the vLLM page once drifted out of sync and silently hid a tier. */
+export const GPU_CATEGORIES: readonly GpuCategory[] = [
+  "consumer",
+  "workstation",
+  "datacenter",
+  "apple",
+  "apu",
+];
+
 export const CATEGORY_LABELS: Record<GpuCategory, string> = {
   consumer: "Consumer",
   workstation: "Workstation",

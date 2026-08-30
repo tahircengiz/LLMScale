@@ -4,7 +4,7 @@ import { resolveModel } from "../lib/hf";
 import { findKnownByHfId } from "../lib/models";
 import { extractCaps } from "../lib/fit";
 import { recommend, PRIORITIES, VLLM_TASKS, type Priority, type VllmTask } from "../lib/vllm";
-import { GPUS, migMem, migProfilesFor } from "../lib/gpus";
+import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor } from "../lib/gpus";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Card, Field, NumberInput, SectionTitle, Segmented } from "../components/ui";
@@ -151,7 +151,7 @@ export function VllmPage() {
                   }}
                   className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-control outline-none focus:ring-brand-500/60"
                 >
-                  {(["consumer", "workstation", "datacenter", "apple"] as const).map((cat) => (
+                  {GPU_CATEGORIES.map((cat) => (
                     <optgroup key={cat} label={t(`cat.${cat}`)}>
                       {GPUS.filter((g) => g.category === cat).map((g) => (
                         <option key={g.id} value={g.id}>

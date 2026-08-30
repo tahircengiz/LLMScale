@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { maxConcurrency, maxContextLength, type Dtype, type ModelArch } from "../lib/calc";
-import { GPUS, migMem, migProfilesFor, type Gpu, type GpuCategory } from "../lib/gpus";
+import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor, type Gpu, type GpuCategory } from "../lib/gpus";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
 import { useLang } from "../lib/i18n";
 import { Badge, SectionTitle, Stat } from "./ui";
 
 const USABLE = 0.95; // fraction of nominal VRAM usable after driver reserve
-const CATS = ["consumer", "workstation", "datacenter", "apple", "apu"] as const;
 
 // Usable memory budget (GiB) for the fit test. A selected MIG slice wins; for a
 // unified-memory device vramGiB is already the usable slice; discrete boards take
@@ -114,7 +113,7 @@ export function GpuFit({
 
       {/* Stage 1: category */}
       <div className="mb-3 flex flex-wrap gap-1.5">
-        {CATS.map((cat) => {
+        {GPU_CATEGORIES.map((cat) => {
           const n = GPUS.filter((g) => g.category === cat).length;
           const active = selected.category === cat;
           return (
