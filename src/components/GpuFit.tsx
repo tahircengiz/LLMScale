@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { maxConcurrency, maxContextLength, type Dtype, type ModelArch } from "../lib/calc";
+import { calculate, maxConcurrency, maxContextLength, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch } from "../lib/calc";
 import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor, type Gpu, type GpuCategory } from "../lib/gpus";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
@@ -49,6 +49,7 @@ export function GpuFit({
   migId,
   onGpu,
   onMig,
+  onWeightDtype,
 }: {
   hfId: string;
   arch: ModelArch;
@@ -63,6 +64,7 @@ export function GpuFit({
   migId: string;
   onGpu: (id: string) => void;
   onMig: (id: string) => void;
+  onWeightDtype?: (d: Dtype) => void;
 }) {
   const { t } = useLang();
   const selected = GPUS.find((g) => g.id === gpuId) ?? GPUS[0];
@@ -83,7 +85,30 @@ export function GpuFit({
   // A MIG slice gets roughly its share of the memory system, so scale the
   // published bandwidth with it. Only estimate where the model actually fits —
   // a speed for a configuration that cannot run is noise.
+  // The page already scores every device to draw the grid, so answering "then
+  // what should I use?" is a search over the same numbers rather than a chore
+  // the reader has to do by clicking through five tiers.
+  const bySize = [...GPUS].sort((a, b) => usableGiB(a, "") - usableGiB(b, ""));
+  const smallestFit = bySize.find((g) => totalGiB <= usableGiB(g, ""));
+  const smallerAlternative =
+    selUsage.fits && smallestFit && smallestFit.id !== selected.id && usableGiB(smallestFit, "") < effUsable
+      ? smallestFit
+      : null;
+  // Precisions strictly lighter than the current one, best quality first.
+  const lighter = (["bf16", "fp8", "int8", "int4"] as Dtype[]).filter(
+    (d) => DTYPE_BYTES[d] < DTYPE_BYTES[weightDtype]
+  );
+  const quantFix = selUsage.fits
+    ? null
+    : lighter
+        .map((d) => ({ d, total: calculate({ ...base, weightDtype: d, contextLength, concurrency }).totalGiB }))
+        .find((x) => x.total <= effUsable) ?? null;
+
   const bwScale = migSlice ? migSlice / selected.vramGiB : 1;
+  const speedOf = (g: Gpu) =>
+    g.bandwidthGBs
+      ? estimateDecode({ arch, weightDtype, kvDtype, contextLength, concurrency, bandwidthGBs: g.bandwidthGBs })
+      : null;
   const speed =
     selUsage.fits && selected.bandwidthGBs
       ? estimateDecode({
@@ -257,6 +282,62 @@ export function GpuFit({
         {speed && (
           <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
             {t("gpu.speedNote", { p: Math.round(BANDWIDTH_EFFICIENCY * 100) })}
+          </p>
+        )}
+
+        {/* Answer "then what?" before explaining the multi-GPU arithmetic. */}
+        {!selUsage.fits && (smallestFit || quantFix) && (
+          <div className="mt-3 rounded-xl bg-brand-600/10 p-3 ring-1 ring-brand-500/30">
+            <div className="mb-2 text-[11.5px] font-semibold text-white">{t("gpu.recTitle")}</div>
+            <div className="flex flex-wrap gap-2">
+              {smallestFit && (
+                <button
+                  type="button"
+                  onClick={() => onGpu(smallestFit.id)}
+                  className="rounded-lg bg-ink-800 px-2.5 py-1.5 text-left text-[11.5px] ring-1 ring-control transition hover:bg-white/5"
+                >
+                  <span className="block font-medium text-white">{smallestFit.name}</span>
+                  <span className="text-slate-400">
+                    {t("gpu.recSmallest")}
+                    {(() => {
+                      const sp = speedOf(smallestFit);
+                      return sp ? ` · ~${Math.round(sp.perUser)} tok/s` : "";
+                    })()}
+                  </span>
+                </button>
+              )}
+              {quantFix && (
+                <button
+                  type="button"
+                  onClick={() => onWeightDtype?.(quantFix.d)}
+                  disabled={!onWeightDtype}
+                  className="rounded-lg bg-ink-800 px-2.5 py-1.5 text-left text-[11.5px] ring-1 ring-control transition enabled:hover:bg-white/5 disabled:opacity-60"
+                >
+                  <span className="block font-medium text-white">{DTYPE_LABELS[quantFix.d]}</span>
+                  <span className="text-slate-400">
+                    {t("gpu.recQuant", { gpu: selected.name, x: formatGiB(quantFix.total) })}
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        {!selUsage.fits && !smallestFit && !quantFix && (
+          <p className="mt-3 text-[11.5px] text-slate-400">{t("gpu.recNone")}</p>
+        )}
+        {smallerAlternative && (
+          <p className="mt-2 text-[11px] text-slate-500">
+            {t("gpu.recSmaller", {
+              name: smallerAlternative.name,
+              mem: smallerAlternative.totalGiB ?? smallerAlternative.vramGiB,
+            })}{" "}
+            <button
+              type="button"
+              onClick={() => onGpu(smallerAlternative.id)}
+              className="font-medium text-brand-400 hover:underline"
+            >
+              {t("gpu.recSwitch")}
+            </button>
           </p>
         )}
 

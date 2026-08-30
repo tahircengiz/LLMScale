@@ -134,6 +134,7 @@ export function SizingPage() {
                 migId={state.migId}
                 onGpu={(id) => patch({ gpuId: id, migId: "" })}
                 onMig={(id) => patch({ migId: id })}
+                onWeightDtype={(d) => patch({ weightDtype: d })}
               />
             </Card>
           )}
