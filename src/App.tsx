@@ -1,17 +1,26 @@
 import { useState } from "react";
 import { useLang, type Lang } from "./lib/i18n";
-import { currentPage } from "./lib/pages";
 import { SizingPage } from "./pages/SizingPage";
 import { FitPage } from "./pages/FitPage";
 import { VllmPage } from "./pages/VllmPage";
 import { DecodePage } from "./pages/DecodePage";
 import { AnatomyPage } from "./pages/AnatomyPage";
 import { ComparePage } from "./pages/ComparePage";
-import { Sidebar } from "./components/Sidebar";
 import { Badge, Segmented } from "./components/ui";
 
+// Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
+
+function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" {
+  const p = window.location.pathname;
+  if (p.endsWith("fit.html")) return "fit";
+  if (p.endsWith("vllm.html")) return "vllm";
+  if (p.endsWith("decode.html")) return "decode";
+  if (p.endsWith("anatomy.html")) return "anatomy";
+  if (p.endsWith("compare.html")) return "compare";
+  return "sizing";
+}
 
 export default function App() {
   const { t, lang, setLang } = useLang();
@@ -20,6 +29,7 @@ export default function App() {
   const [light, setLight] = useState(
     () => typeof document !== "undefined" && document.documentElement.classList.contains("light")
   );
+  const base = import.meta.env.BASE_URL;
 
   function toggleTheme() {
     setLight((prev) => {
@@ -44,36 +54,31 @@ export default function App() {
     }
   }
 
+  const tabCls = (active: boolean) =>
+    "rounded-lg px-2.5 py-1 text-sm font-medium transition whitespace-nowrap " +
+    (active ? "bg-brand-600 text-onbrand shadow" : "text-slate-300 hover:bg-white/5");
+
+  // "Fit" pages fill exactly one viewport (dashboard, no page scroll); other
+  // pages keep the classic scrolling document inside the content area.
+  const isFit = page === "anatomy";
+
   return (
-    <div className="h-dvh p-3 sm:p-5">
-      <div className="mx-auto flex h-full max-w-[1440px] overflow-hidden rounded-[22px] border border-ink-700 bg-ink-900 shadow-[0_1px_2px_rgba(20,20,30,.05),0_30px_60px_-34px_rgba(20,20,30,.35)]">
-        <div className="hidden md:flex">
-          <Sidebar page={page} />
-        </div>
-
-        <main className="flex min-w-0 flex-1 flex-col bg-ink-850/60">
-          <header className="flex flex-wrap items-start gap-3 px-5 pb-4 pt-5 sm:px-6">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2.5">
-                <h1 className="truncate text-[25px] font-semibold tracking-tight text-white">
-                  {t(`nav.${page}`)}
-                </h1>
-                <Badge tone="good">{t("header.badge")}</Badge>
-              </div>
-              {page === "sizing" && (
-                <p className="mt-1 max-w-2xl text-[12.5px] text-slate-400">
-                  {t("header.subtitle", { ctx: t("header.subtitle.ctx"), users: t("header.subtitle.users") })}
-                </p>
-              )}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <header className="shrink-0 border-b border-white/10 px-4 py-2 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex items-center justify-between gap-3">
+            <a href={base} className="flex items-center gap-2 no-underline">
+              <img src={`${base}favicon.svg`} alt="" className="h-7 w-7" />
+              <span className="text-lg font-bold tracking-tight text-white">LLMScale</span>
+              <Badge tone="good">{t("header.badge")}</Badge>
+            </a>
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={toggleTheme}
                 aria-label="Toggle theme"
                 title="Toggle light / dark"
-                className="rounded-[9px] border border-ink-700 px-2.5 py-1.5 text-sm transition hover:bg-white/5"
+                className="rounded-xl bg-ink-850 px-2.5 py-1.5 text-sm ring-1 ring-white/10 transition hover:bg-white/5"
               >
                 {light ? "🌙" : "☀️"}
               </button>
@@ -89,42 +94,60 @@ export default function App() {
               <button
                 type="button"
                 onClick={share}
-                className="rounded-[9px] bg-brand-600 px-3 py-1.5 text-[12.5px] font-semibold text-onbrand transition hover:bg-brand-500"
+                className="rounded-xl bg-brand-600 px-3 py-1.5 text-sm font-medium text-onbrand shadow-lg shadow-brand-600/30 transition hover:bg-brand-500"
               >
                 {copied ? t("header.shareCopied") : t("header.share")}
               </button>
             </div>
-          </header>
-
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
-            {page === "vllm" ? (
-              <VllmPage />
-            ) : page === "fit" ? (
-              <FitPage />
-            ) : page === "decode" ? (
-              <DecodePage />
-            ) : page === "anatomy" ? (
-              <AnatomyPage />
-            ) : page === "compare" ? (
-              <ComparePage />
-            ) : (
-              <SizingPage />
-            )}
-
-            {page !== "anatomy" && (
-              <footer className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-700 pt-4 text-xs text-slate-500">
-                <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-brand-400">
-                  github.com/tahircengiz
-                </a>
-                <a href={LINKEDIN_URL} target="_blank" rel="noreferrer" className="hover:text-brand-400">
-                  linkedin.com/tahircengiz
-                </a>
-                <span className="ml-auto">{t("footer.privacy")}</span>
-              </footer>
-            )}
           </div>
-        </main>
-      </div>
+          <nav className="mt-2 inline-flex max-w-full flex-wrap gap-1 overflow-x-auto rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
+            <a href={base} className={tabCls(page === "sizing")}>{t("nav.sizing")}</a>
+            <a href={`${base}fit.html`} className={tabCls(page === "fit")}>{t("nav.fit")}</a>
+            <a href={`${base}vllm.html`} className={tabCls(page === "vllm")}>{t("nav.vllm")}</a>
+            <a href={`${base}decode.html`} className={tabCls(page === "decode")}>{t("nav.decode")}</a>
+            <a href={`${base}anatomy.html`} className={tabCls(page === "anatomy")}>{t("nav.anatomy")}</a>
+            <a href={`${base}compare.html`} className={tabCls(page === "compare")}>{t("nav.compare")}</a>
+            <a href={`${base}learn.html`} className={tabCls(false)}>{t("nav.learn")}</a>
+          </nav>
+        </div>
+      </header>
+
+      <main className="min-h-0 flex-1 overflow-y-auto">
+        <div className={"mx-auto max-w-6xl px-4 sm:px-6 " + (isFit ? "flex h-full flex-col py-3" : "py-6")}>
+          {page === "vllm" ? (
+            <VllmPage />
+          ) : page === "fit" ? (
+            <FitPage />
+          ) : page === "decode" ? (
+            <DecodePage />
+          ) : page === "anatomy" ? (
+            <AnatomyPage />
+          ) : page === "compare" ? (
+            <ComparePage />
+          ) : (
+            <SizingPage />
+          )}
+
+          {!isFit && <Footer githubUrl={GITHUB_URL} linkedinUrl={LINKEDIN_URL} />}
+        </div>
+      </main>
     </div>
+  );
+}
+
+function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: string }) {
+  const { t } = useLang();
+  return (
+    <footer className="mt-8 flex flex-col items-center gap-2 border-t border-white/10 pt-6 text-center text-sm text-slate-400">
+      <div className="flex gap-4 text-slate-400">
+        <a href={githubUrl} target="_blank" rel="noreferrer" className="hover:text-brand-400">
+          github.com/tahircengiz
+        </a>
+        <a href={linkedinUrl} target="_blank" rel="noreferrer" className="hover:text-brand-400">
+          linkedin.com/tahircengiz
+        </a>
+      </div>
+      <p className="text-xs text-slate-500">{t("footer.privacy")}</p>
+    </footer>
   );
 }

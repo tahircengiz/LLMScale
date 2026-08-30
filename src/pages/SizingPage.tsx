@@ -2,21 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
 import { findKnownByHfId } from "../lib/models";
-import { GPUS, usableGiB } from "../lib/gpus";
 import { decodeState, encodeState, DEFAULT_STATE, type AppState } from "../lib/urlState";
 import { useLang } from "../lib/i18n";
-import { formatParams } from "../lib/format";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
-import {
-  CapacityRail,
-  ConfigCard,
-  GaugeCard,
-  HardwareRail,
-  InsightBand,
-  PrecisionCard,
-  SavingsCard,
-  type ConsoleModel,
-} from "../components/SizingConsole";
+import { Controls } from "../components/Controls";
+import { Results } from "../components/Results";
+import { GpuFit } from "../components/GpuFit";
+import { Card } from "../components/ui";
 
 const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
 
@@ -36,7 +28,10 @@ export function SizingPage() {
   const [meta, setMeta] = useState<ResolvedMeta | null>(
     state.hfId === HERO.hfId ? { source: "bundled", gated: true, modelType: "llama" } : null
   );
-  const [pickerOpen, setPickerOpen] = useState(false);
+  // Whether the *original* URL pinned precision explicitly. Captured on first
+  // render, before the encode effect rewrites the query string with defaults —
+  // so a bare `?m=<model>` link still gets its detected quant auto-applied,
+  // while a shared estimate that set wd/kd keeps the user's choice.
   const urlPinned = useRef({
     wd: new URLSearchParams(window.location.search).has("wd"),
     kd: new URLSearchParams(window.location.search).has("kd"),
@@ -79,52 +74,14 @@ export function SizingPage() {
     });
   }, [state]);
 
-  const gpu = GPUS.find((g) => g.id === state.gpuId) ?? GPUS[0];
-
-  const model: ConsoleModel | null =
-    state.arch && result
-      ? {
-          arch: state.arch,
-          weightDtype: state.weightDtype,
-          kvDtype: state.kvDtype,
-          contextLength: state.contextLength,
-          concurrency: state.concurrency,
-          overheadPct: state.overheadPct,
-          cudaContextGiB: state.cudaContextGiB,
-          result,
-          gpu,
-          migId: state.migId,
-          usable: usableGiB(gpu, state.migId),
-          patch,
-        }
-      : null;
-
   return (
-    <div className="space-y-3.5">
-      {model && (
-        <ConfigCard
-          m={model}
-          modelName={state.hfId || t("con.noModel")}
-          modelMeta={
-            state.arch && (
-              <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-slate-500">
-                <span>{formatParams(state.arch.numParams)}</span>
-                <span>·</span>
-                <span>{state.arch.numLayers}L</span>
-                <span>·</span>
-                <span>{state.arch.hiddenSize}d</span>
-                {state.arch.numKeyValueHeads && state.arch.numKeyValueHeads < state.arch.numAttentionHeads && (
-                  <>
-                    <span>·</span>
-                    <span>GQA {state.arch.numAttentionHeads}/{state.arch.numKeyValueHeads}</span>
-                  </>
-                )}
-              </span>
-            )
-          }
-          pickerOpen={pickerOpen}
-          onTogglePicker={() => setPickerOpen((v) => !v)}
-          picker={
+    <div>
+      <p className="mb-6 max-w-2xl text-sm text-slate-400">
+        {t("header.subtitle", { ctx: t("header.subtitle.ctx"), users: t("header.subtitle.users") })}
+      </p>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className="space-y-5">
+          <Card className="p-5 relative z-30">
             <ModelPicker
               hfId={state.hfId}
               arch={state.arch}
@@ -139,26 +96,75 @@ export function SizingPage() {
                 setMeta(m ?? null);
               }}
             />
-          }
-        />
-      )}
-
-      {model ? (
-        <div className="grid grid-cols-1 items-start gap-3.5 xl:grid-cols-[294px_minmax(0,1fr)_316px]">
-          <GaugeCard m={model} />
-          <PrecisionCard m={model} />
-          <HardwareRail m={model} />
-          <div className="xl:col-span-2">
-            <SavingsCard m={model} />
-          </div>
-          <CapacityRail m={model} />
-          <div className="xl:col-span-2">
-            <InsightBand m={model} />
-          </div>
+          </Card>
+          <Card className="p-5">
+            <Controls
+              weightDtype={state.weightDtype}
+              kvDtype={state.kvDtype}
+              contextLength={state.contextLength}
+              concurrency={state.concurrency}
+              overheadPct={state.overheadPct}
+              maxContext={state.arch?.maxContext}
+              onChange={patch}
+            />
+          </Card>
         </div>
-      ) : (
-        <p className="py-10 text-center text-sm text-slate-400">{t("results.empty")}</p>
-      )}
+
+        <div className="space-y-5">
+          <Card className="p-5">
+            {result ? (
+              <Results result={result} />
+            ) : (
+              <p className="py-10 text-center text-sm text-slate-400">{t("results.empty")}</p>
+            )}
+          </Card>
+          {result && state.arch && (
+            <Card className="p-5">
+              <GpuFit
+                arch={state.arch}
+                weightDtype={state.weightDtype}
+                kvDtype={state.kvDtype}
+                contextLength={state.contextLength}
+                concurrency={state.concurrency}
+                overheadPct={state.overheadPct}
+                cudaContextGiB={state.cudaContextGiB}
+                totalGiB={result.totalGiB}
+                gpuId={state.gpuId}
+                migId={state.migId}
+                onGpu={(id) => patch({ gpuId: id, migId: "" })}
+                onMig={(id) => patch({ migId: id })}
+              />
+            </Card>
+          )}
+        </div>
+      </div>
+
+      <Methodology />
     </div>
+  );
+}
+
+function Methodology() {
+  const { t } = useLang();
+  const points = [
+    { term: t("method.weightsTerm"), text: t("method.weightsText") },
+    { term: t("method.kvTerm"), text: t("method.kvText") },
+    { term: t("method.overheadTerm"), text: t("method.overheadText") },
+  ];
+  return (
+    <details className="group mt-8 rounded-2xl border border-white/10 bg-ink-900/50 p-5 text-sm text-slate-300">
+      <summary className="cursor-pointer list-none font-semibold text-white">
+        {t("method.summary")} <span className="text-slate-500 group-open:hidden">▸</span>
+        <span className="hidden text-slate-500 group-open:inline">▾</span>
+      </summary>
+      <div className="mt-3 space-y-3 text-slate-400">
+        {points.map((p) => (
+          <p key={p.term}>
+            <strong className="text-slate-200">{p.term}</strong> {p.text}
+          </p>
+        ))}
+        <p className="text-xs text-slate-500">{t("method.disclaimer")}</p>
+      </div>
+    </details>
   );
 }
