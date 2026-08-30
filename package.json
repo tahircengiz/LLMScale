@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "node scripts/test-calc.ts",
+    "test:invariants": "node scripts/test-invariants.ts",
     "deploy": "gh-pages -d dist --dotfiles"
   },
   "dependencies": {
