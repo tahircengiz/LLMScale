@@ -4,11 +4,11 @@
  * navy ink, grey-blue muted text, soft pastel status hues. Data-viz colours
  * that must be inlined live in `src/lib/palette.ts`. */
 @theme {
-  --color-ink-950: #070b1f;
-  --color-ink-900: #161e46;
-  --color-ink-850: #1f2a5c;
-  --color-ink-800: #27336c;
-  --color-ink-700: #3a4789;
+  --color-ink-950: #090b10;
+  --color-ink-900: #14171f;
+  --color-ink-850: #1b1f2a;
+  --color-ink-800: #232834;
+  --color-ink-700: #333a49;
   --color-brand-400: #9698f7;
   --color-brand-500: #5d5fef;
   --color-brand-600: #4a4cd4;
@@ -18,11 +18,11 @@
   --color-warn: #fcd34d;
   --color-bad: #fda4af;
   /* Muted text ramp — lifted so sub-labels clear 4.5:1 on a card surface. */
-  --color-slate-300: #c8cee6;
-  --color-slate-400: #a6aecd;
-  --color-slate-500: #8b93b6;
+  --color-slate-300: #c3c8d4;
+  --color-slate-400: #a1a8b8;
+  --color-slate-500: #868ea0;
   /* Primary foreground (headings/body) — flips with the theme. */
-  --color-fg: #e9ecf7;
+  --color-fg: #e7e9ef;
   /* Always-white text that sits on a solid brand button. */
   --color-onbrand: #ffffff;
 }
@@ -30,6 +30,11 @@
 :root {
   color-scheme: dark;
 }
+
+/* Dark surfaces follow the layering model used by IBM Carbon (g100) and
+ * Material's dark theme: near-neutral greys stepped by luminance, with colour
+ * reserved for accents. Keeping every surface a saturated navy made the whole
+ * UI read as one colour and left no room for the brand indigo to register. */
 
 /* Light theme: override the design tokens. Because every utility references
  * these CSS variables, surfaces, text, borders and insets all flip with no
