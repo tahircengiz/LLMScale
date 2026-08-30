@@ -6,7 +6,8 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <script>
       try {
-        if (localStorage.getItem("theme") === "light") document.documentElement.classList.add("light");
+        var m = localStorage.getItem("theme");
+        if (m === "light" || m === "glass") document.documentElement.classList.add(m);
       } catch (e) {}
     </script>
     <!-- Umami analytics (self-hosted on hoarder, privacy-friendly, cookieless) -->
@@ -33,10 +34,10 @@
       content="Pick a model + workload and get a tuned, copyable vllm serve command."
     />
     <script type="module" crossorigin src="/LLMScale/assets/modulepreload-polyfill-B5Qt9EMX.js"></script>
-    <script type="module" crossorigin src="/LLMScale/assets/main-mXtsXGiI.js"></script>
-    <link rel="stylesheet" crossorigin href="/LLMScale/assets/main-BniAEWQ5.css">
+    <script type="module" crossorigin src="/LLMScale/assets/main-BKAaJ0TL.js"></script>
+    <link rel="stylesheet" crossorigin href="/LLMScale/assets/main-CK1PRMil.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>
