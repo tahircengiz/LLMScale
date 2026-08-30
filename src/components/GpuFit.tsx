@@ -1,23 +1,11 @@
 import { useEffect, useState } from "react";
 import { calculate, maxConcurrency, maxContextLength, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch } from "../lib/calc";
-import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor, type Gpu, type GpuCategory } from "../lib/gpus";
+import { DRIVER_RESERVE, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
 import { BANDWIDTH_EFFICIENCY, estimateDecode } from "../lib/perf";
 import { useLang } from "../lib/i18n";
 import { Badge, SectionTitle, Stat } from "./ui";
-
-const USABLE = 0.95; // fraction of nominal VRAM usable after driver reserve
-
-// Usable memory budget (GiB) for the fit test. A selected MIG slice wins; for a
-// unified-memory device vramGiB is already the usable slice; discrete boards take
-// the driver-reserve haircut.
-function usableGiB(g: Gpu, mig: string): number {
-  const slice = mig ? migMem(g.id, mig) : null;
-  if (slice) return slice * USABLE;
-  if (g.unified) return g.vramGiB;
-  return g.vramGiB * USABLE;
-}
 
 function ctxLabel(n: number): string {
   return n >= 1048576 ? `${n / 1048576}M` : n >= 1024 ? `${n / 1024}k` : String(n);
@@ -165,7 +153,7 @@ export function GpuFit({
 
   return (
     <div>
-      <SectionTitle step="3" title={t("gpu.step")} hint={t("gpu.usableHint", { p: Math.round(USABLE * 100) })} />
+      <SectionTitle step="3" title={t("gpu.step")} hint={t("gpu.usableHint", { p: Math.round(DRIVER_RESERVE * 100) })} />
 
       {/* Stage 1: category */}
       <div className="mb-3 flex flex-wrap gap-1.5">

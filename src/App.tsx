@@ -6,19 +6,21 @@ import { VllmPage } from "./pages/VllmPage";
 import { DecodePage } from "./pages/DecodePage";
 import { AnatomyPage } from "./pages/AnatomyPage";
 import { ComparePage } from "./pages/ComparePage";
+import { TrainPage } from "./pages/TrainPage";
 import { Badge, Segmented } from "./components/ui";
 
 // Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
-function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" {
+function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" {
   const p = window.location.pathname;
   if (p.endsWith("fit.html")) return "fit";
   if (p.endsWith("vllm.html")) return "vllm";
   if (p.endsWith("decode.html")) return "decode";
   if (p.endsWith("anatomy.html")) return "anatomy";
   if (p.endsWith("compare.html")) return "compare";
+  if (p.endsWith("train.html")) return "train";
   return "sizing";
 }
 
@@ -107,6 +109,7 @@ export default function App() {
             <a href={`${base}decode.html`} className={tabCls(page === "decode")}>{t("nav.decode")}</a>
             <a href={`${base}anatomy.html`} className={tabCls(page === "anatomy")}>{t("nav.anatomy")}</a>
             <a href={`${base}compare.html`} className={tabCls(page === "compare")}>{t("nav.compare")}</a>
+            <a href={`${base}train.html`} className={tabCls(page === "train")}>{t("nav.train")}</a>
             <a href={`${base}learn.html`} className={tabCls(false)}>{t("nav.learn")}</a>
           </nav>
         </div>
@@ -124,6 +127,8 @@ export default function App() {
             <AnatomyPage />
           ) : page === "compare" ? (
             <ComparePage />
+          ) : page === "train" ? (
+            <TrainPage />
           ) : (
             <SizingPage />
           )}

@@ -173,6 +173,21 @@ export const MIG_PROFILES: Record<string, MigProfile[]> = {
   ],
 };
 
+/** Fraction of a discrete board's nominal VRAM left after the driver reserve. */
+export const DRIVER_RESERVE = 0.95;
+
+/**
+ * Memory budget (GiB) a model may actually occupy. A selected MIG slice wins; a
+ * unified-memory device already stores its usable slice in vramGiB; a discrete
+ * board takes the driver-reserve haircut.
+ */
+export function usableGiB(g: Gpu, migId?: string): number {
+  const slice = migId ? migMem(g.id, migId) : null;
+  if (slice) return slice * DRIVER_RESERVE;
+  if (g.unified) return g.vramGiB;
+  return g.vramGiB * DRIVER_RESERVE;
+}
+
 export function migProfilesFor(gpuId: string): MigProfile[] {
   return MIG_PROFILES[gpuId] ?? [];
 }
