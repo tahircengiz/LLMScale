@@ -113,7 +113,7 @@ export function ComparePage() {
                           type="button"
                           onClick={() => remove(c.id)}
                           title={t("compare.remove")}
-                          className="shrink-0 rounded-md px-1.5 text-slate-500 ring-1 ring-white/10 transition hover:bg-white/5 hover:text-rose-300"
+                          className="shrink-0 rounded-md px-1.5 text-slate-500 ring-1 ring-white/10 transition hover:bg-white/5 hover:text-bad"
                         >
                           ×
                         </button>

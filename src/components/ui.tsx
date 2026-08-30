@@ -157,8 +157,8 @@ export function Badge({
   const tones = {
     neutral: "bg-white/5 text-slate-300 ring-white/10",
     good: "bg-accent-500/15 text-accent-400 ring-accent-500/30",
-    warn: "bg-amber-500/15 text-amber-300 ring-amber-500/30",
-    bad: "bg-rose-500/15 text-rose-300 ring-rose-500/30",
+    warn: "bg-amber-500/15 text-warn ring-amber-500/30",
+    bad: "bg-rose-500/15 text-bad ring-rose-500/30",
   } as const;
   return (
     <span className={"inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 " + tones[tone]}>

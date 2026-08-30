@@ -207,9 +207,9 @@ export function ModelPicker({
 
   const searchHints = (
     <>
-      {offline && <p className="mt-2 text-xs text-amber-300/80">{t("model.search.offline")}</p>}
+      {offline && <p className="mt-2 text-xs text-warn/90">{t("model.search.offline")}</p>}
       {loadingId && <p className="mt-2 text-xs text-slate-400">{t("model.search.loading", { id: loadingId })}</p>}
-      {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
+      {error && <p className="mt-2 text-xs text-bad">{error}</p>}
     </>
   );
 
@@ -317,7 +317,7 @@ export function ModelPicker({
         </div>
       )}
       {meta?.warningKey && (
-        <p className="mt-2 text-xs text-amber-300/90">{t(`warning.${meta.warningKey}`)}</p>
+        <p className="mt-2 text-xs text-warn">{t(`warning.${meta.warningKey}`)}</p>
       )}
     </div>
   );

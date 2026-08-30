@@ -4,18 +4,25 @@
  * navy ink, grey-blue muted text, soft pastel status hues. Data-viz colours
  * that must be inlined live in `src/lib/palette.ts`. */
 @theme {
-  --color-ink-950: #0b1030;
-  --color-ink-900: #151d48;
-  --color-ink-850: #1d2755;
-  --color-ink-800: #273165;
-  --color-ink-700: #37427d;
-  --color-brand-400: #8b8cf5;
+  --color-ink-950: #070b1f;
+  --color-ink-900: #161e46;
+  --color-ink-850: #1f2a5c;
+  --color-ink-800: #27336c;
+  --color-ink-700: #3a4789;
+  --color-brand-400: #9698f7;
   --color-brand-500: #5d5fef;
   --color-brand-600: #4a4cd4;
   --color-accent-400: #00e096;
   --color-accent-500: #00c886;
+  /* Semantic warn / bad text — flip with the theme so badges stay readable. */
+  --color-warn: #fcd34d;
+  --color-bad: #fda4af;
+  /* Muted text ramp — lifted so sub-labels clear 4.5:1 on a card surface. */
+  --color-slate-300: #c8cee6;
+  --color-slate-400: #a6aecd;
+  --color-slate-500: #8b93b6;
   /* Primary foreground (headings/body) — flips with the theme. */
-  --color-fg: #e8eaf6;
+  --color-fg: #e9ecf7;
   /* Always-white text that sits on a solid brand button. */
   --color-onbrand: #ffffff;
 }
@@ -30,20 +37,22 @@
  * goes dark in light mode; solid brand buttons use --color-onbrand instead. */
 .light {
   color-scheme: light;
-  --color-ink-950: #f7f9fb;
+  --color-ink-950: #eaeef6;
   --color-ink-900: #ffffff;
-  --color-ink-850: #f4f6fa;
-  --color-ink-800: #edeff6;
-  --color-ink-700: #e2e5ef;
+  --color-ink-850: #f4f6fb;
+  --color-ink-800: #e9edf6;
+  --color-ink-700: #dce1ee;
   --color-white: #151d48;
   --color-fg: #151d48;
   --color-slate-100: #151d48;
-  --color-slate-200: #26306b;
-  --color-slate-300: #4a5183;
-  --color-slate-400: #737791;
-  --color-slate-500: #9ba0b5;
+  --color-slate-200: #262e52;
+  --color-slate-300: #39405c;
+  --color-slate-400: #555b73;
+  --color-slate-500: #6b7188;
   --color-brand-400: #4a4cd4;
-  --color-accent-400: #00a97a;
+  --color-accent-400: #0b7d57;
+  --color-warn: #8a5a06;
+  --color-bad: #b3123c;
 }
 
 html,
@@ -54,9 +63,9 @@ body,
 
 body {
   margin: 0;
+  /* One quiet wash, not two competing ones — the cards carry the colour. */
   background:
-    radial-gradient(900px 500px at 15% -10%, rgba(93, 95, 239, 0.18), transparent 60%),
-    radial-gradient(800px 600px at 110% 10%, rgba(0, 224, 150, 0.12), transparent 55%),
+    radial-gradient(1100px 620px at 18% -14%, rgba(93, 95, 239, 0.1), transparent 62%),
     var(--color-ink-950);
   color: var(--color-fg);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
