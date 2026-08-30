@@ -197,10 +197,18 @@ export function GpuFit({
             sub={t("gpu.atCtx", { x: ctxLabel(contextLength) })}
             accent={maxUsers > 0}
           />
+          {/* Mirrors the stat beside it: each holds the other input at its current
+              value — max users at this context, max context at this concurrency. */}
           <Stat
             label={t("gpu.maxContext")}
             value={maxCtx > 0 ? formatInt(maxCtx) : "0"}
-            sub={maxCtx > 0 ? t("gpu.tokens") : t("gpu.weightsNoFit")}
+            sub={
+              maxCtx <= 0
+                ? t("gpu.weightsNoFit")
+                : concurrency === 1
+                  ? t("gpu.tokens")
+                  : `${t("gpu.tokens")} · ${t("gpu.atUsers", { n: concurrency })}`
+            }
           />
         </div>
       </div>
