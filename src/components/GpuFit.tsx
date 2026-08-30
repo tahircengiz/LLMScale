@@ -3,6 +3,7 @@ import { maxConcurrency, maxContextLength, type Dtype, type ModelArch } from "..
 import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor, type Gpu, type GpuCategory } from "../lib/gpus";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
+import { BANDWIDTH_EFFICIENCY, estimateDecode } from "../lib/perf";
 import { useLang } from "../lib/i18n";
 import { Badge, SectionTitle, Stat } from "./ui";
 
@@ -79,6 +80,21 @@ export function GpuFit({
   const kvHeads = arch.numKeyValueHeads ?? arch.numAttentionHeads;
   const maxUsers = maxConcurrency({ ...base, contextLength }, effUsable);
   const maxCtx = maxContextLength({ ...base, concurrency }, effUsable);
+  // A MIG slice gets roughly its share of the memory system, so scale the
+  // published bandwidth with it. Only estimate where the model actually fits —
+  // a speed for a configuration that cannot run is noise.
+  const bwScale = migSlice ? migSlice / selected.vramGiB : 1;
+  const speed =
+    selUsage.fits && selected.bandwidthGBs
+      ? estimateDecode({
+          arch,
+          weightDtype,
+          kvDtype,
+          contextLength,
+          concurrency,
+          bandwidthGBs: selected.bandwidthGBs * bwScale,
+        })
+      : null;
   // Stage 2: devices within the selected category, split by whether they fit the model.
   const catGpus = GPUS.filter((g) => g.category === selected.category).sort(
     (a, b) => (a.totalGiB ?? a.vramGiB) - (b.totalGiB ?? b.vramGiB)
@@ -205,7 +221,7 @@ export function GpuFit({
           <div className="mt-0.5 text-[11px] text-slate-500">{t("gpu.bw", { bw: selected.bandwidthGBs })}</div>
         ) : null}
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className={"mt-3 grid grid-cols-2 gap-2" + (speed ? " sm:grid-cols-3" : "")}>
           <Stat
             label={t("gpu.maxUsers")}
             value={maxUsers > 0 ? formatInt(maxUsers) : "0"}
@@ -225,7 +241,24 @@ export function GpuFit({
                   : `${t("gpu.tokens")} · ${t("gpu.atUsers", { n: concurrency })}`
             }
           />
+          {speed && (
+            <Stat
+              label={t("gpu.decodeSpeed")}
+              value={`~${Math.round(speed.perUser)}`}
+              sub={
+                concurrency > 1
+                  ? t("gpu.tpsBatch", { total: Math.round(speed.total) })
+                  : t("gpu.tpsSingle")
+              }
+            />
+          )}
         </div>
+
+        {speed && (
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            {t("gpu.speedNote", { p: Math.round(BANDWIDTH_EFFICIENCY * 100) })}
+          </p>
+        )}
 
         {/* "needs N x GPUs" is only a memory ratio. Say what running one model
             across N cards actually requires, and hand the setup to the vLLM page. */}
