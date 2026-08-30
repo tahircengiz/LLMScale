@@ -1,16 +1,32 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { calculate } from "../lib/calc";
+import { calculate, type Dtype } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
 import { findKnownByHfId } from "../lib/models";
+import { GPUS, usableGiB } from "../lib/gpus";
 import { decodeState, encodeState, DEFAULT_STATE, type AppState } from "../lib/urlState";
 import { useLang } from "../lib/i18n";
+import { formatParams } from "../lib/format";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
-import { Controls } from "../components/Controls";
-import { Results } from "../components/Results";
-import { GpuFit } from "../components/GpuFit";
-import { Card } from "../components/ui";
+import {
+  CapacityRail,
+  GaugeCard,
+  HardwareRail,
+  InsightBand,
+  PrecisionCard,
+  SavingsCard,
+  ScenarioTabs,
+  SHORT_DTYPE,
+  type ConsoleModel,
+} from "../components/SizingConsole";
 
 const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
+const CTX_OPTIONS = [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576];
+const USER_OPTIONS = [1, 2, 4, 8, 16, 32, 64, 128];
+const KV_OPTIONS: Dtype[] = ["fp16", "bf16", "fp8"];
+
+function ctxLabel(n: number): string {
+  return n >= 1048576 ? `${n / 1048576}M` : n >= 1024 ? `${n / 1024}k` : String(n);
+}
 
 function initialState(): AppState {
   const fromUrl = decodeState(window.location.search);
@@ -22,16 +38,39 @@ function initialState(): AppState {
   return base;
 }
 
+/** Compact labelled select used across the workload bar. */
+function Pick({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string | number;
+  onChange: (v: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex items-center gap-1.5 rounded-[9px] border border-ink-700 bg-ink-900 px-2.5 py-1.5">
+      <span className="text-[11px] font-semibold text-slate-500">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="cursor-pointer bg-transparent text-[12.5px] font-medium text-white outline-none"
+      >
+        {children}
+      </select>
+    </label>
+  );
+}
+
 export function SizingPage() {
   const { t } = useLang();
   const [state, setState] = useState<AppState>(initialState);
   const [meta, setMeta] = useState<ResolvedMeta | null>(
     state.hfId === HERO.hfId ? { source: "bundled", gated: true, modelType: "llama" } : null
   );
-  // Whether the *original* URL pinned precision explicitly. Captured on first
-  // render, before the encode effect rewrites the query string with defaults —
-  // so a bare `?m=<model>` link still gets its detected quant auto-applied,
-  // while a shared estimate that set wd/kd keeps the user's choice.
+  const [pickerOpen, setPickerOpen] = useState(false);
   const urlPinned = useRef({
     wd: new URLSearchParams(window.location.search).has("wd"),
     kd: new URLSearchParams(window.location.search).has("kd"),
@@ -74,14 +113,62 @@ export function SizingPage() {
     });
   }, [state]);
 
+  const gpu = GPUS.find((g) => g.id === state.gpuId) ?? GPUS[0];
+
+  const model: ConsoleModel | null =
+    state.arch && result
+      ? {
+          arch: state.arch,
+          weightDtype: state.weightDtype,
+          kvDtype: state.kvDtype,
+          contextLength: state.contextLength,
+          concurrency: state.concurrency,
+          overheadPct: state.overheadPct,
+          cudaContextGiB: state.cudaContextGiB,
+          result,
+          gpu,
+          migId: state.migId,
+          usable: usableGiB(gpu, state.migId),
+          patch,
+        }
+      : null;
+
   return (
-    <div>
-      <p className="mb-6 max-w-2xl text-sm text-slate-400">
-        {t("header.subtitle", { ctx: t("header.subtitle.ctx"), users: t("header.subtitle.users") })}
-      </p>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <div className="space-y-5">
-          <Card className="p-5 relative z-30">
+    <div className="space-y-3.5">
+      {/* model bar — collapsed to a summary until you change it */}
+      <div className="rounded-2xl border border-ink-700 bg-ink-900 p-3.5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-lg bg-white text-ink-900">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 1.8l5.6 3.1v6.2L8 14.2 2.4 11.1V4.9z" />
+            </svg>
+          </span>
+          <span className="truncate text-[13.5px] font-semibold text-white">{state.hfId || t("con.noModel")}</span>
+          {state.arch && (
+            <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11.5px] text-slate-500">
+              <span>{formatParams(state.arch.numParams)}</span>
+              <span>·</span>
+              <span>{state.arch.numLayers}L</span>
+              <span>·</span>
+              <span>{state.arch.hiddenSize}d</span>
+              {state.arch.numKeyValueHeads && state.arch.numKeyValueHeads < state.arch.numAttentionHeads && (
+                <>
+                  <span>·</span>
+                  <span>GQA {state.arch.numAttentionHeads}/{state.arch.numKeyValueHeads}</span>
+                </>
+              )}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setPickerOpen((v) => !v)}
+            className="ml-auto rounded-[9px] border border-ink-700 px-3 py-1.5 text-[12.5px] font-medium text-slate-300 transition hover:bg-white/5"
+          >
+            {pickerOpen ? t("con.close") : t("con.changeModel")}
+          </button>
+        </div>
+        {pickerOpen && (
+          <div className="relative z-30 mt-3.5 border-t border-ink-700 pt-3.5">
             <ModelPicker
               hfId={state.hfId}
               arch={state.arch}
@@ -96,75 +183,55 @@ export function SizingPage() {
                 setMeta(m ?? null);
               }}
             />
-          </Card>
-          <Card className="p-5">
-            <Controls
-              weightDtype={state.weightDtype}
-              kvDtype={state.kvDtype}
-              contextLength={state.contextLength}
-              concurrency={state.concurrency}
-              overheadPct={state.overheadPct}
-              maxContext={state.arch?.maxContext}
-              onChange={patch}
-            />
-          </Card>
-        </div>
-
-        <div className="space-y-5">
-          <Card className="p-5">
-            {result ? (
-              <Results result={result} />
-            ) : (
-              <p className="py-10 text-center text-sm text-slate-400">{t("results.empty")}</p>
-            )}
-          </Card>
-          {result && state.arch && (
-            <Card className="p-5">
-              <GpuFit
-                arch={state.arch}
-                weightDtype={state.weightDtype}
-                kvDtype={state.kvDtype}
-                contextLength={state.contextLength}
-                concurrency={state.concurrency}
-                overheadPct={state.overheadPct}
-                cudaContextGiB={state.cudaContextGiB}
-                totalGiB={result.totalGiB}
-                gpuId={state.gpuId}
-                migId={state.migId}
-                onGpu={(id) => patch({ gpuId: id, migId: "" })}
-                onMig={(id) => patch({ migId: id })}
-              />
-            </Card>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      <Methodology />
+      {/* workload bar */}
+      {model && (
+        <div className="flex flex-wrap items-center gap-2">
+          <ScenarioTabs m={model} />
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Pick label={t("con.col.ctx")} value={state.contextLength} onChange={(v) => patch({ contextLength: Number(v) })}>
+              {CTX_OPTIONS.map((c) => (
+                <option key={c} value={c}>{ctxLabel(c)}</option>
+              ))}
+            </Pick>
+            <Pick label={t("con.col.users")} value={state.concurrency} onChange={(v) => patch({ concurrency: Number(v) })}>
+              {USER_OPTIONS.map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </Pick>
+            <Pick label={t("con.col.kv")} value={state.kvDtype} onChange={(v) => patch({ kvDtype: v as Dtype })}>
+              {KV_OPTIONS.map((d) => (
+                <option key={d} value={d}>{SHORT_DTYPE[d]}</option>
+              ))}
+            </Pick>
+            <Pick label={t("con.col.overhead")} value={Math.round(state.overheadPct * 100)} onChange={(v) => patch({ overheadPct: Number(v) / 100 })}>
+              {[0, 5, 10, 15, 20, 25, 30].map((o) => (
+                <option key={o} value={o}>%{o}</option>
+              ))}
+            </Pick>
+          </div>
+        </div>
+      )}
+
+      {model ? (
+        <div className="grid grid-cols-1 items-start gap-3.5 xl:grid-cols-[294px_minmax(0,1fr)_316px]">
+          <GaugeCard m={model} />
+          <PrecisionCard m={model} />
+          <HardwareRail m={model} />
+          <div className="xl:col-span-2">
+            <SavingsCard m={model} />
+          </div>
+          <CapacityRail m={model} />
+          <div className="xl:col-span-2">
+            <InsightBand m={model} />
+          </div>
+        </div>
+      ) : (
+        <p className="py-10 text-center text-sm text-slate-400">{t("results.empty")}</p>
+      )}
     </div>
-  );
-}
-
-function Methodology() {
-  const { t } = useLang();
-  const points = [
-    { term: t("method.weightsTerm"), text: t("method.weightsText") },
-    { term: t("method.kvTerm"), text: t("method.kvText") },
-    { term: t("method.overheadTerm"), text: t("method.overheadText") },
-  ];
-  return (
-    <details className="group mt-8 rounded-2xl border border-white/10 bg-ink-900/50 p-5 text-sm text-slate-300">
-      <summary className="cursor-pointer list-none font-semibold text-white">
-        {t("method.summary")} <span className="text-slate-500 group-open:hidden">▸</span>
-        <span className="hidden text-slate-500 group-open:inline">▾</span>
-      </summary>
-      <div className="mt-3 space-y-3 text-slate-400">
-        {points.map((p) => (
-          <p key={p.term}>
-            <strong className="text-slate-200">{p.term}</strong> {p.text}
-          </p>
-        ))}
-        <p className="text-xs text-slate-500">{t("method.disclaimer")}</p>
-      </div>
-    </details>
   );
 }
