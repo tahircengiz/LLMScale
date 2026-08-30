@@ -6,7 +6,8 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <script>
       try {
-        if (localStorage.getItem("theme") === "light") document.documentElement.classList.add("light");
+        var m = localStorage.getItem("theme");
+        if (m === "light" || m === "glass") document.documentElement.classList.add(m);
       } catch (e) {}
     </script>
     <!-- Umami analytics (self-hosted on hoarder, privacy-friendly, cookieless) -->

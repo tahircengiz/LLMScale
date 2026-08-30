@@ -25,6 +25,10 @@ function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "comp
 }
 
 /** Grouped so the header reads as four intents rather than eight links. */
+/** Dark and light are colour schemes; glass is a material laid over a colour field. */
+type Theme = "dark" | "light" | "glass";
+const THEMES: readonly Theme[] = ["dark", "light", "glass"];
+
 const NAV_GROUPS: { page: string; href: string }[][] = [
   [
     { page: "sizing", href: "" },
@@ -44,22 +48,23 @@ export default function App() {
   const { t, lang, setLang } = useLang();
   const page = currentPage();
   const [copied, setCopied] = useState(false);
-  const [light, setLight] = useState(
-    () => typeof document !== "undefined" && document.documentElement.classList.contains("light")
-  );
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof document === "undefined") return "dark";
+    const c = document.documentElement.classList;
+    return c.contains("glass") ? "glass" : c.contains("light") ? "light" : "dark";
+  });
   const base = import.meta.env.BASE_URL;
 
-  function toggleTheme() {
-    setLight((prev) => {
-      const next = !prev;
-      document.documentElement.classList.toggle("light", next);
-      try {
-        localStorage.setItem("theme", next ? "light" : "dark");
-      } catch {
-        /* localStorage unavailable */
-      }
-      return next;
-    });
+  function applyTheme(next: Theme) {
+    setTheme(next);
+    const c = document.documentElement.classList;
+    c.toggle("light", next === "light");
+    c.toggle("glass", next === "glass");
+    try {
+      localStorage.setItem("theme", next);
+    } catch {
+      /* localStorage unavailable */
+    }
   }
 
   async function share() {
@@ -84,22 +89,19 @@ export default function App() {
     <div className="flex h-dvh flex-col overflow-hidden">
       <header className="shrink-0 border-b border-white/10 px-4 py-2 sm:px-6">
         <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <a href={base} className="flex items-center gap-2 no-underline">
               <img src={`${base}favicon.svg`} alt="" className="h-7 w-7" />
               <span className="text-lg font-bold tracking-tight text-white">LLMScale</span>
               <Badge tone="good">{t("header.badge")}</Badge>
             </a>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label="Toggle theme"
-                title="Toggle light / dark"
-                className="rounded-xl bg-ink-850 px-2.5 py-1.5 text-sm ring-1 ring-white/10 transition hover:bg-white/5"
-              >
-                {light ? "🌙" : "☀️"}
-              </button>
+              <Segmented<Theme>
+                value={theme}
+                onChange={applyTheme}
+                size="sm"
+                options={THEMES.map((v) => ({ value: v, label: t(`theme.${v}`) }))}
+              />
               <Segmented<Lang>
                 value={lang}
                 onChange={setLang}

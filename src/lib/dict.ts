@@ -239,6 +239,9 @@ const en: Dict = {
   "train.gpuFit": "Which GPUs fit",
   "train.shardNote": "Unlike serving, sharding is the norm here: FSDP or DeepSpeed ZeRO-3 splits parameters, gradients and optimizer state across the ranks, so this total divides close to linearly. Activations do not shrink — cut batch size or sequence length for those.",
   "train.method": "Mixed-precision Adam at 16 bytes/parameter (bf16 weights + bf16 gradients + fp32 master, m and v). Activations follow Korthikanti et al. 2022 at ~34 bytes per token per layer per hidden unit, flash-attention assumed, or 2 bytes with full recomputation. Real runs vary with framework and kernel choices; treat this as a planning figure.",
+  "theme.dark": "Dark",
+  "theme.light": "Light",
+  "theme.glass": "Glass",
   "nav.learn": "LLM 101",
   "compare.subtitle":
     "Put 2–4 models side by side — specs, capabilities and per-task fit — to see which one is better for which use, from live Hugging Face data.",
@@ -667,6 +670,9 @@ const tr: Dict = {
   "train.gpuFit": "Hangi GPU'lar yeter",
   "train.shardNote": "Servisin aksine burada parçalama norm: FSDP ya da DeepSpeed ZeRO-3 parametreleri, gradyanları ve optimizer durumunu rank'lara böler, bu yüzden bu toplam neredeyse doğrusal bölünür. Aktivasyonlar küçülmez — onlar için batch ya da dizi uzunluğunu düşür.",
   "train.method": "Karma hassasiyetli Adam, parametre başına 16 bayt (bf16 ağırlık + bf16 gradyan + fp32 ana kopya, m ve v). Aktivasyonlar Korthikanti vd. 2022'ye göre katman ve token başına ~34 bayt (flash-attention varsayılır), tam yeniden hesaplamada 2 bayt. Gerçek koşular framework ve çekirdek seçimlerine göre değişir; bunu planlama rakamı olarak al.",
+  "theme.dark": "Koyu",
+  "theme.light": "Açık",
+  "theme.glass": "Cam",
   "nav.learn": "LLM 101",
   "compare.subtitle":
     "2–4 modeli yan yana koy — spec'ler, yetenekler ve görev-bazlı uygunluk — hangisinin ne için daha iyi olduğunu gör, canlı Hugging Face verisinden.",
