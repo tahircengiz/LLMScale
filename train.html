@@ -7,7 +7,7 @@
     <script>
       try {
         var m = localStorage.getItem("theme");
-        if (m === "light" || m === "glass") document.documentElement.classList.add(m);
+        if (m !== "dark") document.documentElement.classList.add(m === "light" ? "light" : "glass");
       } catch (e) {}
     </script>
     <!-- Umami analytics (self-hosted on hoarder, privacy-friendly, cookieless) -->
@@ -34,10 +34,10 @@
       content="Is this LLM right for your task? Transparent, rule-based fit scoring across chat, code, RAG, agents, reasoning, vision and more."
     />
     <script type="module" crossorigin src="/LLMScale/assets/modulepreload-polyfill-B5Qt9EMX.js"></script>
-    <script type="module" crossorigin src="/LLMScale/assets/main-BKAaJ0TL.js"></script>
+    <script type="module" crossorigin src="/LLMScale/assets/main-yY4yYksc.js"></script>
     <link rel="stylesheet" crossorigin href="/LLMScale/assets/main-CK1PRMil.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>
