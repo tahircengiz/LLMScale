@@ -25,7 +25,9 @@ export const DEFAULT_STATE: AppState = {
   concurrency: 1,
   overheadPct: 0.1,
   cudaContextGiB: 0.75,
-  gpuId: "rtx4090-24",
+  // The active hardware tab follows the selected device, so this also opens the
+  // picker on Data center rather than Consumer.
+  gpuId: "h200-141",
   migId: "",
 };
 

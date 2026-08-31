@@ -241,3 +241,15 @@ input[type="number"] {
 .theme-switching *::after {
   transition: none !important;
 }
+
+/* Selected device card, glass only. The shared ring inverts on a pale pane:
+ * `ring-white/10` resolves to a dark hairline reading 3.40:1, while the selected
+ * `ring-brand-500/60` washes out to 2.07:1 — so every unselected card was
+ * outlined more strongly than the selected one, and the 10% brand fill separated
+ * them by 1.02:1, which is nothing. A 2px opaque ring plus a fill that carries
+ * some of the state fixes both; dark and light are untouched, where the same
+ * classes already read correctly. */
+.glass .gpu-card[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--color-brand-400);
+  background: rgba(59, 57, 186, 0.16);
+}

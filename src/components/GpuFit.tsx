@@ -132,8 +132,11 @@ export function GpuFit({
         key={g.id}
         type="button"
         onClick={() => onGpu(g.id)}
+        // aria-pressed doubles as the styling hook for the glass theme and as the
+        // only thing that tells a screen reader which device is selected.
+        aria-pressed={g.id === gpuId}
         className={
-          "rounded-xl p-2.5 text-left ring-1 transition " +
+          "gpu-card rounded-xl p-2.5 text-left ring-1 transition " +
           (g.id === gpuId ? "ring-brand-500/60 bg-brand-600/10" : "ring-white/10 bg-ink-850/40 hover:bg-white/5")
         }
       >

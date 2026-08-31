@@ -25,6 +25,7 @@ function check(name: string, cond: boolean, detail = "") {
 
 const root = new URL("../", import.meta.url);
 const read = (rel: string) => readFileSync(new URL(rel, root), "utf8");
+const css = read("src/index.css");
 
 // ── 1. the two dictionaries stay in step ──────────────────────────────────
 const en = Object.keys(DICTS.en);
@@ -72,6 +73,18 @@ const badUnified = GPUS.filter((g) => g.totalGiB !== undefined && g.totalGiB < g
 check("unified devices expose at most their total memory", badUnified.length === 0,
   badUnified.map((g) => g.id).join(", "));
 check("the default GPU exists", ids.includes(DEFAULT_STATE.gpuId), DEFAULT_STATE.gpuId);
+// The picker's active tab is derived from the selected device's category, so the
+// default device is also what decides which tab a first-time visitor lands on.
+// Swapping it for a consumer card would silently move that tab back.
+const defaultGpu = GPUS.find((g) => g.id === DEFAULT_STATE.gpuId);
+check("the default GPU opens the Data center tab", defaultGpu?.category === "datacenter", defaultGpu?.category);
+
+// The glass theme styles the selected card through aria-pressed, which only
+// works while GpuFit actually sets it.
+const fit = read("src/components/GpuFit.tsx");
+check("GpuFit marks the selected card with aria-pressed", fit.includes("aria-pressed={g.id === gpuId}"));
+check("the glass rule hangs off that same attribute", css.includes('.gpu-card[aria-pressed="true"]'));
+check("the card carries the gpu-card hook", fit.includes('"gpu-card rounded-xl'));
 
 // ── 5. every precision the engine knows has a label ───────────────────────
 const unlabelled = Object.keys(DTYPE_BYTES).filter((d) => !(d in DTYPE_LABELS));
@@ -112,7 +125,6 @@ check("the two defaults differ, or following the OS is pointless", DEFAULT_THEME
 // acted on in index.css. Nothing links those three at build time, and a rename in
 // one of them fails silently — the switch would just go back to landing in two
 // stages with no error anywhere.
-const css = read("src/index.css");
 const app = read("src/App.tsx");
 check("index.css acts on the switching class", css.includes(`.${SWITCHING_CLASS}`), SWITCHING_CLASS);
 check("the rule actually suppresses transitions", css.includes("transition: none !important"));
