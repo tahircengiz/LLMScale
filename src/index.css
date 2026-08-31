@@ -137,7 +137,12 @@ input[type="number"] {
  * is 9.4:1. The light theme's #6b7188 would read 4.0:1 in that same spot, which
  * is why this ramp is darker. Blur only averages the field, so these are the
  * conservative bounds rather than the typical case. Re-measure before making
- * any pane thinner or any blob stronger. */
+ * any pane thinner or any blob stronger.
+ *
+ * brand-400 is darker here than in the light theme for the same reason: it
+ * paints the numbered step badges at 12px over their own tinted disc, where
+ * the light theme's #4a4cd4 measures 4.47:1 — just under the bar. #3b39ba
+ * reads 4.82:1 on the same badge. */
 .glass {
   color-scheme: light;
   --color-ink-950: #dfe6fa;
@@ -152,7 +157,7 @@ input[type="number"] {
   --color-slate-300: #333c68;
   --color-slate-400: #3e4668;
   --color-slate-500: #434b6e;
-  --color-brand-400: #3f3dc4;
+  --color-brand-400: #3b39ba;
   --color-accent-400: #0a6f4d;
   --color-warn: #7a4f05;
   --color-bad: #a30f36;
