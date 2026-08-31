@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { DARK_QUERY, THEMES, preferredTheme, themeOnSystemChange, type Theme } from "./lib/theme";
+import {
+  DARK_QUERY,
+  SWITCHING_CLASS,
+  THEMES,
+  preferredTheme,
+  themeOnSystemChange,
+  type Theme,
+} from "./lib/theme";
 import { useLang, type Lang } from "./lib/i18n";
 import { SizingPage } from "./pages/SizingPage";
 import { FitPage } from "./pages/FitPage";
@@ -57,9 +64,14 @@ export default function App() {
 
   function showTheme(next: Theme) {
     setTheme(next);
-    const c = document.documentElement.classList;
-    c.toggle("light", next === "light");
-    c.toggle("glass", next === "glass");
+    const root = document.documentElement;
+    root.classList.add(SWITCHING_CLASS);
+    root.classList.toggle("light", next === "light");
+    root.classList.toggle("glass", next === "glass");
+    // Reading a computed style forces the new colours to be resolved while
+    // transitions are still off, so re-enabling them below animates nothing.
+    void getComputedStyle(root).transitionProperty;
+    root.classList.remove(SWITCHING_CLASS);
   }
 
   /** Picking a theme records it, which is also what stops the OS being followed. */

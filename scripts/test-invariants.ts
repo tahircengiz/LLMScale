@@ -9,7 +9,13 @@ import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES } from "../src/lib/gpus.ts";
 import { DTYPE_BYTES, DTYPE_LABELS } from "../src/lib/calc.ts";
 import { DEFAULT_STATE } from "../src/lib/urlState.ts";
-import { DARK_QUERY, DEFAULT_THEME, DEFAULT_THEME_DARK, THEMES } from "../src/lib/theme.ts";
+import {
+  DARK_QUERY,
+  DEFAULT_THEME,
+  DEFAULT_THEME_DARK,
+  SWITCHING_CLASS,
+  THEMES,
+} from "../src/lib/theme.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -101,6 +107,16 @@ check("every theme is reachable from storage", THEMES.every((t) => bootstrap.inc
 check("the bootstrap asks the OS with the same query", bootstrap.includes(DARK_QUERY), DARK_QUERY);
 check("an OS asking for dark wins over the default", bootstrap.includes(`? "${DEFAULT_THEME_DARK}"`), DEFAULT_THEME_DARK);
 check("the two defaults differ, or following the OS is pointless", DEFAULT_THEME !== DEFAULT_THEME_DARK);
+
+// The class that suppresses transitions is named in theme.ts, set in App.tsx and
+// acted on in index.css. Nothing links those three at build time, and a rename in
+// one of them fails silently — the switch would just go back to landing in two
+// stages with no error anywhere.
+const css = read("src/index.css");
+const app = read("src/App.tsx");
+check("index.css acts on the switching class", css.includes(`.${SWITCHING_CLASS}`), SWITCHING_CLASS);
+check("the rule actually suppresses transitions", css.includes("transition: none !important"));
+check("App.tsx sets it by the shared constant, not a literal", app.includes("SWITCHING_CLASS") && !app.includes(`"${SWITCHING_CLASS}"`));
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);

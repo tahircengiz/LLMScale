@@ -56,3 +56,13 @@ export function themeOnSystemChange(stored: string | null, osPrefersDark: boolea
   if (isTheme(stored)) return null;
   return osPrefersDark ? DEFAULT_THEME_DARK : DEFAULT_THEME;
 }
+
+/**
+ * Set on <html> for the instant a theme is applied, to suppress transitions.
+ * Only interactive controls carry a `transition` utility, so without this the
+ * switch lands in two stages: panes, the colour field and every card change at
+ * once, then buttons, links and inputs spend another 150ms catching up. The CSS
+ * rule that acts on this lives in index.css; test-invariants.ts checks they
+ * still agree on the name.
+ */
+export const SWITCHING_CLASS = "theme-switching";

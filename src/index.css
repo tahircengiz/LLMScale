@@ -232,3 +232,12 @@ input[type="number"] {
     backdrop-filter: blur(10px) saturate(130%);
   }
 }
+
+/* Theme changes land in one step. Unlayered and !important because it has to
+ * beat the `transition` utility on every control for the one frame it is on. */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
+}
