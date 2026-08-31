@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
-import { findKnownByHfId } from "../lib/models";
+import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
 import { decodeState, encodeState, DEFAULT_STATE, type AppState } from "../lib/urlState";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
@@ -10,7 +10,7 @@ import { Results } from "../components/Results";
 import { GpuFit } from "../components/GpuFit";
 import { Card } from "../components/ui";
 
-const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
+const HERO = findKnownByHfId(HERO_MODEL_ID)!;
 
 function initialState(): AppState {
   const fromUrl = decodeState(window.location.search);
@@ -26,7 +26,7 @@ export function SizingPage() {
   const { t } = useLang();
   const [state, setState] = useState<AppState>(initialState);
   const [meta, setMeta] = useState<ResolvedMeta | null>(
-    state.hfId === HERO.hfId ? { source: "bundled", gated: true, modelType: "llama" } : null
+    state.hfId === HERO.hfId ? { source: "bundled", gated: HERO.gated ?? false, modelType: HERO_MODEL_TYPE } : null
   );
   // Whether the *original* URL pinned precision explicitly. Captured on first
   // render, before the encode effect rewrites the query string with defaults —

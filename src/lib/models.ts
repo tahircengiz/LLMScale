@@ -100,6 +100,18 @@ export const KNOWN_MODELS: KnownModel[] = [
 
 const byHfId = new Map(KNOWN_MODELS.map((m) => [m.hfId.toLowerCase(), m]));
 
+/**
+ * The model the sizing and task-fit pages open on, and the meta they show for it
+ * without a network round trip.
+ *
+ * It has to fit DEFAULT_STATE's GPU. A device the model does not fit is filed
+ * under "show non-fitting", which is collapsed on load — so pairing a hero that
+ * overflows the default device would hide the selected card behind a toggle on
+ * the very first screen. test-invariants.ts checks the pairing still holds.
+ */
+export const HERO_MODEL_ID = "Qwen/Qwen2.5-32B-Instruct";
+export const HERO_MODEL_TYPE = "qwen2";
+
 export function findKnownByHfId(hfId: string): KnownModel | undefined {
   return byHfId.get(hfId.toLowerCase());
 }

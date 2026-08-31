@@ -6,9 +6,10 @@ import { readFileSync, readdirSync } from "node:fs";
 import { DICTS } from "../src/lib/dict.ts";
 import { TASKS } from "../src/lib/fit.ts";
 import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
-import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES } from "../src/lib/gpus.ts";
-import { DTYPE_BYTES, DTYPE_LABELS } from "../src/lib/calc.ts";
+import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
+import { DTYPE_BYTES, DTYPE_LABELS, calculate } from "../src/lib/calc.ts";
 import { DEFAULT_STATE } from "../src/lib/urlState.ts";
+import { HERO_MODEL_ID, KNOWN_MODELS, findKnownByHfId } from "../src/lib/models.ts";
 import {
   DARK_QUERY,
   DEFAULT_THEME,
@@ -78,6 +79,32 @@ check("the default GPU exists", ids.includes(DEFAULT_STATE.gpuId), DEFAULT_STATE
 // Swapping it for a consumer card would silently move that tab back.
 const defaultGpu = GPUS.find((g) => g.id === DEFAULT_STATE.gpuId);
 check("the default GPU opens the Data center tab", defaultGpu?.category === "datacenter", defaultGpu?.category);
+
+// The two defaults are coupled. A device the hero model does not fit is filed
+// under "show non-fitting", which is collapsed on load — so an oversized hero
+// would hide the selected card behind a toggle on the very first screen.
+const hero = findKnownByHfId(HERO_MODEL_ID);
+check("the hero model is a known model", !!hero, HERO_MODEL_ID);
+if (hero && defaultGpu) {
+  const need = calculate({
+    arch: hero,
+    weightDtype: DEFAULT_STATE.weightDtype,
+    kvDtype: DEFAULT_STATE.kvDtype,
+    contextLength: DEFAULT_STATE.contextLength,
+    concurrency: DEFAULT_STATE.concurrency,
+    overheadPct: DEFAULT_STATE.overheadPct,
+    cudaContextGiB: DEFAULT_STATE.cudaContextGiB,
+  }).totalGiB;
+  const cap = usableGiB(defaultGpu, "");
+  check(
+    "the hero model fits the default GPU, so the selected card is visible",
+    need <= cap,
+    `${need.toFixed(1)} of ${cap.toFixed(1)} GiB (${Math.round((need / cap) * 100)}%)`
+  );
+  // A hero that barely registers makes the default device look pointless.
+  check("the hero actually exercises the default GPU", need / cap > 0.25, `${Math.round((need / cap) * 100)}%`);
+}
+check("the hero is bigger than a single-card 8B", (hero?.numParams ?? 0) > 20e9, `${((hero?.numParams ?? 0) / 1e9).toFixed(0)}B`);
 
 // The glass theme styles the selected card through aria-pressed, which only
 // works while GpuFit actually sets it.

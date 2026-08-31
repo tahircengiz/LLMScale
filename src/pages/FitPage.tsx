@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ModelArch } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
-import { findKnownByHfId } from "../lib/models";
+import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
 import { extractCaps, scoreFit, TASKS, type Status, type TaskId } from "../lib/fit";
 import { useLang } from "../lib/i18n";
 import { AMBER, GREEN, GREEN_DEEP, RED } from "../lib/palette";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, SectionTitle } from "../components/ui";
 
-const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
+const HERO = findKnownByHfId(HERO_MODEL_ID)!;
 
 const STATUS_COLOR: Record<Status, string> = { good: GREEN, ok: AMBER, bad: RED };
 
@@ -32,7 +32,7 @@ export function FitPage() {
   const [hfId, setHfId] = useState(init.hfId);
   const [arch, setArch] = useState<ModelArch | null>(init.hfId === HERO.hfId ? { ...HERO } : null);
   const [meta, setMeta] = useState<ResolvedMeta | null>(
-    init.hfId === HERO.hfId ? { source: "bundled", gated: true, modelType: "llama" } : null
+    init.hfId === HERO.hfId ? { source: "bundled", gated: HERO.gated ?? false, modelType: HERO_MODEL_TYPE } : null
   );
   const [task, setTask] = useState<TaskId>(init.task);
 
