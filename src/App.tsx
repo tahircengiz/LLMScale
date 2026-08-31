@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DEFAULT_THEME, THEMES, type Theme } from "./lib/theme";
 import { useLang, type Lang } from "./lib/i18n";
 import { SizingPage } from "./pages/SizingPage";
 import { FitPage } from "./pages/FitPage";
@@ -25,10 +26,6 @@ function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "comp
 }
 
 /** Grouped so the header reads as four intents rather than eight links. */
-/** Dark and light are colour schemes; glass is a material laid over a colour field. */
-type Theme = "dark" | "light" | "glass";
-const THEMES: readonly Theme[] = ["dark", "light", "glass"];
-
 const NAV_GROUPS: { page: string; href: string }[][] = [
   [
     { page: "sizing", href: "" },
@@ -48,8 +45,11 @@ export default function App() {
   const { t, lang, setLang } = useLang();
   const page = currentPage();
   const [copied, setCopied] = useState(false);
+  // Each entry's inline bootstrap has already put the theme class on <html> before
+  // React ran, so read it back instead of deciding the default a second time here.
+  // Dark alone leaves no class: it is the :root baseline the tokens are defined on.
   const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof document === "undefined") return "dark";
+    if (typeof document === "undefined") return DEFAULT_THEME;
     const c = document.documentElement.classList;
     return c.contains("glass") ? "glass" : c.contains("light") ? "light" : "dark";
   });

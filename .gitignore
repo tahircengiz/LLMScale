@@ -16,3 +16,6 @@ dist-ssr
 !.vscode/extensions.json
 *.log
 npm-debug.log*
+
+# Local plugin/agent scratch state, not part of the project
+.claude/

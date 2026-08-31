@@ -9,6 +9,7 @@ import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES } from "../src/lib/gpus.ts";
 import { DTYPE_BYTES, DTYPE_LABELS } from "../src/lib/calc.ts";
 import { DEFAULT_STATE } from "../src/lib/urlState.ts";
+import { DEFAULT_THEME, THEMES } from "../src/lib/theme.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -78,6 +79,23 @@ const unbuilt = pages.filter((p) => !inputs.includes(p));
 const missingFile = inputs.filter((i) => !pages.includes(i));
 check("every .html is a Vite entry", unbuilt.length === 0, unbuilt.join(", "));
 check("every Vite entry has a file", missingFile.length === 0, missingFile.join(", "));
+
+console.log("\n--- the theme bootstrap is identical in every entry ---");
+// This script cannot be imported from a module: it has to set the theme class
+// before first paint, so every entry carries its own copy. Copies drift — that
+// is the bug this whole file exists to catch — so pin them to each other.
+const themed = pages.filter((p) => read(p).includes('localStorage.getItem("theme")'));
+const bootstraps = new Map<string, string[]>();
+for (const p of themed) {
+  const body = read(p).match(/var m = localStorage[\s\S]*?classList\.add\([^;]+;/)?.[0] ?? "";
+  bootstraps.set(body, [...(bootstraps.get(body) ?? []), p]);
+}
+check("every themed entry bootstraps the same way", bootstraps.size === 1, `${bootstraps.size} variant(s) across ${themed.length} pages`);
+const bootstrap = [...bootstraps.keys()][0] ?? "";
+// A first-time visitor has nothing stored, so the fallback branch is the default.
+check("the bootstrap default matches DEFAULT_THEME", bootstrap.includes(`: "${DEFAULT_THEME}"`), DEFAULT_THEME);
+check("dark is the only theme with no class", !bootstrap.includes('add("dark")'));
+check("every theme is reachable from storage", THEMES.every((t) => bootstrap.includes(`"${t}"`)), THEMES.join(", "));
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);

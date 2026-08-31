@@ -7,7 +7,7 @@
     <script>
       try {
         var m = localStorage.getItem("theme");
-        if (m === "light" || m === "glass") document.documentElement.classList.add(m);
+        if (m !== "dark") document.documentElement.classList.add(m === "light" ? "light" : "glass");
       } catch (e) {}
     </script>
     <!-- Umami analytics (self-hosted on hoarder, privacy-friendly, cookieless) -->
