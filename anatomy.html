@@ -7,7 +7,9 @@
     <script>
       try {
         var m = localStorage.getItem("theme");
-        if (m !== "dark") document.documentElement.classList.add(m === "light" ? "light" : "glass");
+        if (m !== "dark" && m !== "light" && m !== "glass")
+          m = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "glass";
+        if (m !== "dark") document.documentElement.classList.add(m);
       } catch (e) {}
     </script>
     <!-- Umami analytics (self-hosted on hoarder, privacy-friendly, cookieless) -->
@@ -34,7 +36,7 @@
       content="A visual X-ray of any LLM: parameter distribution, precision mix, architecture, GQA and KV-cache growth."
     />
     <script type="module" crossorigin src="/LLMScale/assets/modulepreload-polyfill-B5Qt9EMX.js"></script>
-    <script type="module" crossorigin src="/LLMScale/assets/main-yY4yYksc.js"></script>
+    <script type="module" crossorigin src="/LLMScale/assets/main-C-YTROrk.js"></script>
     <link rel="stylesheet" crossorigin href="/LLMScale/assets/main-CK1PRMil.css">
   </head>
   <body>
