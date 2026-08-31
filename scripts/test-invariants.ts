@@ -9,7 +9,7 @@ import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES } from "../src/lib/gpus.ts";
 import { DTYPE_BYTES, DTYPE_LABELS } from "../src/lib/calc.ts";
 import { DEFAULT_STATE } from "../src/lib/urlState.ts";
-import { DEFAULT_THEME, THEMES } from "../src/lib/theme.ts";
+import { DARK_QUERY, DEFAULT_THEME, DEFAULT_THEME_DARK, THEMES } from "../src/lib/theme.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -96,6 +96,11 @@ const bootstrap = [...bootstraps.keys()][0] ?? "";
 check("the bootstrap default matches DEFAULT_THEME", bootstrap.includes(`: "${DEFAULT_THEME}"`), DEFAULT_THEME);
 check("dark is the only theme with no class", !bootstrap.includes('add("dark")'));
 check("every theme is reachable from storage", THEMES.every((t) => bootstrap.includes(`"${t}"`)), THEMES.join(", "));
+// The bootstrap cannot import preferredTheme() — it runs before any module — so
+// it reimplements it, and these pin the reimplementation to the real thing.
+check("the bootstrap asks the OS with the same query", bootstrap.includes(DARK_QUERY), DARK_QUERY);
+check("an OS asking for dark wins over the default", bootstrap.includes(`? "${DEFAULT_THEME_DARK}"`), DEFAULT_THEME_DARK);
+check("the two defaults differ, or following the OS is pointless", DEFAULT_THEME !== DEFAULT_THEME_DARK);
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { DEFAULT_THEME, THEMES, type Theme } from "./lib/theme";
+import { useEffect, useState } from "react";
+import { DARK_QUERY, THEMES, preferredTheme, themeOnSystemChange, type Theme } from "./lib/theme";
 import { useLang, type Lang } from "./lib/i18n";
 import { SizingPage } from "./pages/SizingPage";
 import { FitPage } from "./pages/FitPage";
@@ -49,23 +49,48 @@ export default function App() {
   // React ran, so read it back instead of deciding the default a second time here.
   // Dark alone leaves no class: it is the :root baseline the tokens are defined on.
   const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof document === "undefined") return DEFAULT_THEME;
+    if (typeof document === "undefined") return preferredTheme();
     const c = document.documentElement.classList;
     return c.contains("glass") ? "glass" : c.contains("light") ? "light" : "dark";
   });
   const base = import.meta.env.BASE_URL;
 
-  function applyTheme(next: Theme) {
+  function showTheme(next: Theme) {
     setTheme(next);
     const c = document.documentElement.classList;
     c.toggle("light", next === "light");
     c.toggle("glass", next === "glass");
+  }
+
+  /** Picking a theme records it, which is also what stops the OS being followed. */
+  function applyTheme(next: Theme) {
+    showTheme(next);
     try {
       localStorage.setItem("theme", next);
     } catch {
       /* localStorage unavailable */
     }
   }
+
+  // Until the visitor picks one, keep following their OS: someone who flips their
+  // machine to dark at sunset expects an open tab to come with them. A stored
+  // choice outranks this, so the listener no-ops from the moment they choose.
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia(DARK_QUERY);
+    const follow = (e: MediaQueryListEvent) => {
+      let chosen: string | null = null;
+      try {
+        chosen = localStorage.getItem("theme");
+      } catch {
+        /* localStorage unavailable */
+      }
+      const next = themeOnSystemChange(chosen, e.matches);
+      if (next) showTheme(next);
+    };
+    mq.addEventListener("change", follow);
+    return () => mq.removeEventListener("change", follow);
+  }, []);
 
   async function share() {
     try {
