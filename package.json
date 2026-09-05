@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Estimate the VRAM an LLM needs — weights, KV cache, context window, concurrent users — and find the right GPU.",
+  "description": "Estimate the VRAM an LLM needs \u2014 weights, KV cache, context window, concurrent users \u2014 and find the right GPU.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -14,7 +14,9 @@
     "test:devicegrid": "node scripts/test-devicegrid.ts",
     "test:perf": "node scripts/test-perf.ts",
     "test:train": "node scripts/test-train.ts",
-    "deploy": "gh-pages -d dist --dotfiles"
+    "deploy": "gh-pages -d dist --dotfiles",
+    "test:traffic": "node scripts/test-traffic.ts",
+    "report": "node scripts/report-traffic.ts"
   },
   "dependencies": {
     "react": "^19.0.0",
