@@ -87,6 +87,31 @@ newest first. A report spanning a change of default must recognise the older one
 too — otherwise every visitor from before the change is counted as arriving on a
 shared link. Add the outgoing pair to that list whenever the default moves.
 
+## The weekly mail
+
+A digest goes out every **Monday 08:00 Europe/Istanbul**, driven by
+`llmscale-report.timer` on GTR9.
+
+- `deploy/llmscale-weekly-report.sh` → installed as
+  `~/projects/infra-llmscale-report/run.sh`. It exports the last 7 days, renders
+  the digest with `--markdown`, and POSTs it to the homelab mailer.
+- The report needs Node and **GTR9 has none**, so it runs in a throwaway
+  `node:22-alpine` container mounted over that directory. Copy the scripts there
+  again whenever `scripts/traffic.ts`, `scripts/report-traffic.ts` or the
+  `src/lib` files they import change — the box holds its own copy.
+- Mail goes through **homelab-mailer** on `127.0.0.1:8091`, the single door for
+  mail on that box. It takes **markdown** and does its own HTML rendering, so
+  never send it HTML, and never add SMTP settings here.
+- The timer is `Persistent=true`: if the box was down on Monday it sends when it
+  comes back. A quiet week is still mailed — the point of a digest is that its
+  *absence* means something broke.
+
+```bash
+sudo systemctl start llmscale-report.service   # send one now
+systemctl list-timers llmscale-report.timer    # when is the next one
+journalctl -u llmscale-report.service -n 20    # did it work
+```
+
 ## What it will not tell you
 
 - **Individuals.** Umami sessions are anonymous and cookieless; there is no way
