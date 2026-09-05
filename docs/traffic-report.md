@@ -33,9 +33,13 @@ the two lists is how much of your traffic is people versus your own defaults.
 
 ## Getting the export
 
-The panel is tailnet-only by design and the public hostname allowlists only the
-two ingest paths, so this runs on the analytics host itself. See the
-`llmscale-analytics` memory for how that box is put together.
+Umami runs on **GTR9** (`~/projects/infra-umami`), containers `umami` and
+`umami-db`. The panel is at `https://stats.lab.delix.dev` behind Traefik, which
+resolves to GTR9's Tailscale address — reachable from the tailnet only. Public
+ingest stays on `stats.delix.dev` via the Cloudflare tunnel, which routes
+straight to the container and never touches Traefik.
+
+Run the export on the host:
 
 ```sql
 COPY (
@@ -58,10 +62,16 @@ COPY (
 ```
 
 ```bash
-docker exec -i umami-db psql -U umami -d umami -f export.sql > rows.json
+ssh gtr9 "docker exec umami-db psql -U umami -d umami -tAc \"<the query above>\"" > rows.json
+node scripts/report-traffic.ts rows.json report.html
 ```
 
-Then copy `rows.json` back and run the report against it.
+## Defaults change, and the report has to know
+
+`report-traffic.ts` carries a list of every configuration the app has opened on,
+newest first. A report spanning a change of default must recognise the older one
+too — otherwise every visitor from before the change is counted as arriving on a
+shared link. Add the outgoing pair to that list whenever the default moves.
 
 ## What it will not tell you
 
@@ -72,6 +82,11 @@ Then copy `rows.json` back and run the report against it.
 - **Bots.** Umami drops obvious bot user agents, but a headless browser that
   does not announce itself lands in the data like anyone else. A sudden spike in
   single-event sessions from one country is usually that, not interest.
+- **Your own testing.** Driving the live site from a browser lands in the data
+  like any other visitor. Filter by date when you have just spent a session on
+  it.
+- **Compare-page rows.** `compare.html` puts several models in one `m` parameter,
+  so those appear as one comma-joined label rather than as separate models.
 
 ## A note on what is collected
 

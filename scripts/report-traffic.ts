@@ -11,7 +11,12 @@ import { buildReport, type Report, type Row, type Tally } from "./traffic.ts";
 import { DEFAULT_STATE } from "../src/lib/urlState.ts";
 import { HERO_MODEL_ID } from "../src/lib/models.ts";
 
-const DEFAULTS = { model: HERO_MODEL_ID, device: DEFAULT_STATE.gpuId };
+// Newest first. A report spanning a change of default must recognise the older
+// one too, or every visitor from before it looks like a shared-link arrival.
+const DEFAULTS = [
+  { model: HERO_MODEL_ID, device: DEFAULT_STATE.gpuId },
+  { model: "meta-llama/Llama-3.1-8B-Instruct", device: "rtx4090-24" }, // until 2026-09-05
+];
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
