@@ -1,0 +1,8 @@
+[Unit]
+Description=Remind me to delete the prj_HomeLab junk archive
+After=homelab-mailer.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/archive-reminder.sh
