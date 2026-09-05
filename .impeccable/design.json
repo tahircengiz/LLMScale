@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-05T00:00:00.000Z",
+  "title": "Design System: LLMScale",
+  "extensions": {
+    "colorMeta": {
+      "signal-indigo": {
+        "role": "primary",
+        "displayName": "Signal Indigo",
+        "canonical": "oklch(56.8% 0.211 276.7)",
+        "tonalRamp": ["#180062", "#200086", "#3115ab", "#4842d0", "#6366f7", "#818aff", "#a7b5ff", "#ccddff"]
+      },
+      "readout-green": {
+        "role": "secondary",
+        "displayName": "Readout Green",
+        "canonical": "oklch(80.0% 0.180 160.5)",
+        "tonalRamp": ["#001a00", "#003800", "#005819", "#007938", "#009b57", "#00bf77", "#26ea9f", "#65ffc5"]
+      },
+      "caution-amber": {
+        "role": "tertiary",
+        "displayName": "Caution Amber",
+        "canonical": "oklch(87.9% 0.153 91.6)",
+        "tonalRamp": ["#210000", "#3e1900", "#5d3700", "#7d5700", "#9f7700", "#c19900", "#ecc339", "#ffeb68"]
+      },
+      "fault-rose": {
+        "role": "tertiary",
+        "displayName": "Fault Rose",
+        "canonical": "oklch(81.0% 0.106 11.6)",
+        "tonalRamp": ["#290002", "#4a0016", "#6c2231", "#8f414e", "#b3616d", "#d7828d", "#ffaab5", "#ffd1dc"]
+      },
+      "control-edge": {
+        "role": "neutral",
+        "displayName": "Control Edge",
+        "canonical": "oklch(53.5% 0.035 266.9)",
+        "tonalRamp": ["#050a1a", "#1c2435", "#373f53", "#555d72", "#747d93", "#959eb5", "#bdc7df", "#e4eeff"]
+      },
+      "ink-void": {
+        "role": "neutral",
+        "displayName": "Ink Void",
+        "canonical": "#090b10",
+        "tonalRamp": ["#090b10", "#14171f", "#1b1f2a", "#232834", "#333a49", "#868ea0", "#c3c8d4", "#e7e9ef"]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Instrument White",
+        "canonical": "oklch(93.4% 0.008 271.3)",
+        "tonalRamp": ["#0a0b0f", "#222428", "#3e4044", "#5c5d62", "#7b7d82", "#9c9ea4", "#c5c7cd", "#eceef4"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The single headline figure a view exists to produce. One per screen." },
+      "headline": { "displayName": "Headline", "purpose": "Stat tile values." },
+      "title": { "displayName": "Title", "purpose": "Section headings, paired with a numbered step marker." },
+      "body": { "displayName": "Body", "purpose": "Controls, descriptions, explanatory prose." },
+      "label": { "displayName": "Label", "purpose": "Uppercase field labels, stat captions, badges, unit suffixes." }
+    },
+    "shadows": [
+      {
+        "name": "card-ambient",
+        "value": "0 20px 25px -5px rgb(0 0 0 / 0.3)",
+        "purpose": "The only resting shadow in dark and light. Reads as separation, never as lift. Never stacked."
+      },
+      {
+        "name": "signal-glow",
+        "value": "0 10px 15px -3px rgb(74 76 212 / 0.3)",
+        "purpose": "Under a solid indigo primary action only, so the committing button sits slightly forward."
+      },
+      {
+        "name": "glass-pane",
+        "value": "inset 0 1px 0 0 rgba(255,255,255,0.85), inset 0 -1px 0 0 rgba(255,255,255,0.25), 0 12px 32px -14px rgba(20,28,66,0.42)",
+        "purpose": "Glass theme only. The inset lines are the specular edges; the outer shadow keeps overlapping panes separable."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-standard",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Every interactive state change — hover, focus, selection. Applied to colour, background, border and outline only."
+      },
+      {
+        "name": "theme-swap",
+        "value": "none",
+        "purpose": "Transitions are suppressed for the instant a theme is applied, so panes, the colour field and every control land in one step instead of the controls trailing 150ms behind."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one committing action on a surface. Solid indigo, white text, soft indigo glow.",
+      "html": "<button class=\"ds-btn-primary\">Share this estimate</button>",
+      "css": ".ds-btn-primary { background: var(--color-brand-600, #4a4cd4); color: var(--color-onbrand, #fff); border: none; border-radius: 0.75rem; padding: 0.375rem 0.75rem; font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; box-shadow: 0 10px 15px -3px rgb(74 76 212 / 0.3); cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: var(--color-brand-500, #5d5fef); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-brand-500, #5d5fef); outline-offset: 2px; }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "custom",
+      "refersTo": "segmented-option-active",
+      "description": "The signature control. Any short mutually-exclusive choice — precision, dtype, language, theme — is this, not a dropdown.",
+      "html": "<div class=\"ds-seg\"><button class=\"ds-seg-opt ds-seg-on\">BF16</button><button class=\"ds-seg-opt\">FP8</button><button class=\"ds-seg-opt\">INT8</button></div>",
+      "css": ".ds-seg { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; border-radius: 0.75rem; background: var(--color-ink-850, #1b1f2a); padding: 0.25rem; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-seg-opt { border: none; background: transparent; color: var(--color-slate-300, #c3c8d4); border-radius: 0.5rem; padding: 0.25rem 0.625rem; font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-seg-opt:hover { background: rgb(255 255 255 / 0.05); } .ds-seg-on, .ds-seg-on:hover { background: var(--color-brand-600, #4a4cd4); color: var(--color-onbrand, #fff); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); } .ds-seg-opt:focus-visible { outline: 2px solid var(--color-brand-500, #5d5fef); outline-offset: 1px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Every major surface. Raised by tone, bounded by a hairline, carrying the one ambient shadow.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\"><span class=\"ds-step\">1</span><h2>Choose a model</h2></div><p class=\"ds-card-body\">Model architecture resolves live from the Hugging Face Hub.</p></div>",
+      "css": ".ds-card { background: color-mix(in srgb, var(--color-ink-900, #14171f) 70%, transparent); border: 1px solid rgb(255 255 255 / 0.1); border-radius: 1rem; padding: 1rem; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3); backdrop-filter: blur(4px); } .ds-card-title { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 1rem; } .ds-card-title h2 { margin: 0; font: 600 1rem/1.5rem ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--color-fg, #e7e9ef); } .ds-step { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; flex-shrink: 0; border-radius: 9999px; background: color-mix(in srgb, var(--color-brand-600, #4a4cd4) 30%, transparent); color: var(--color-brand-400, #9698f7); font: 700 0.75rem/1 ui-sans-serif, system-ui, sans-serif; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500, #5d5fef) 40%, transparent); } .ds-card-body { margin: 0; font: 400 0.875rem/1.5 ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-400, #a1a8b8); }"
+    },
+    {
+      "name": "Stat Tile",
+      "kind": "custom",
+      "refersTo": "stat-tile",
+      "description": "The unit the results side is built from: uppercase caption, headline value, optional quiet sub-line.",
+      "html": "<div class=\"ds-stat\"><div class=\"ds-stat-label\">KV cache (total)</div><div class=\"ds-stat-value ds-stat-accent\">2.00 GiB</div><div class=\"ds-stat-sub\">at 8k ctx</div></div>",
+      "css": ".ds-stat { background: color-mix(in srgb, var(--color-ink-850, #1b1f2a) 60%, transparent); border-radius: 0.75rem; padding: 0.75rem; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05); } .ds-stat-label { font: 400 0.6875rem/1rem ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.025em; color: var(--color-slate-400, #a1a8b8); } .ds-stat-value { margin-top: 0.125rem; font: 600 1.125rem/1.5rem ui-sans-serif, system-ui, sans-serif; color: var(--color-fg, #e7e9ef); } .ds-stat-accent { color: var(--color-accent-400, #00e096); } .ds-stat-sub { font: 400 0.6875rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #868ea0); }"
+    },
+    {
+      "name": "Number Input",
+      "kind": "input",
+      "refersTo": "input-number",
+      "description": "Inset surface with a deliberately more visible edge than a card, because an input must announce that it is operable. Focus lights the whole field, not the text box.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Context window (tokens / sequence)</span><span class=\"ds-input\"><input type=\"text\" value=\"8192\" /><span class=\"ds-input-suffix\">tok</span></span></label>",
+      "css": ".ds-field { display: block; } .ds-field-label { display: block; margin-bottom: 0.25rem; font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.025em; color: var(--color-slate-400, #a1a8b8); } .ds-input { display: flex; align-items: center; border-radius: 0.75rem; background: var(--color-ink-850, #1b1f2a); box-shadow: inset 0 0 0 1px var(--color-control, #646d82); transition: box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-input:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500, #5d5fef) 60%, transparent); } .ds-input input { width: 100%; background: transparent; border: none; outline: none; padding: 0.5rem 0.75rem; font: 400 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; color: var(--color-fg, #e7e9ef); } .ds-input-suffix { padding-right: 0.75rem; font: 400 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #868ea0); }"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge-good",
+      "description": "Fully round, label typography, hairline ring in the tone's own colour. Tone is semantic: the colour states a fact about the thing it labels.",
+      "html": "<span class=\"ds-badge ds-badge-good\">live Hugging Face data</span> <span class=\"ds-badge\">built-in DB</span> <span class=\"ds-badge ds-badge-bad\">doesn't fit</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.125rem 0.5rem; font: 500 0.6875rem/1rem ui-sans-serif, system-ui, sans-serif; background: rgb(255 255 255 / 0.05); color: var(--color-slate-300, #c3c8d4); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-badge-good { background: color-mix(in srgb, var(--color-accent-500, #00c886) 15%, transparent); color: var(--color-accent-400, #00e096); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent-500, #00c886) 30%, transparent); } .ds-badge-bad { background: color-mix(in srgb, #f43f5e 15%, transparent); color: var(--color-bad, #fda4af); box-shadow: inset 0 0 0 1px color-mix(in srgb, #f43f5e 30%, transparent); }"
+    },
+    {
+      "name": "Navigation Pill",
+      "kind": "nav",
+      "refersTo": "segmented-option-active",
+      "description": "A single centred pill holding every destination, split into semantic groups by thin vertical rules: size, choose, serve, learn.",
+      "html": "<nav class=\"ds-nav\"><div class=\"ds-nav-group\"><a class=\"ds-nav-link ds-nav-on\">VRAM Sizing</a><a class=\"ds-nav-link\">Fine-tune</a></div><span class=\"ds-nav-rule\"></span><div class=\"ds-nav-group\"><a class=\"ds-nav-link\">Task Fit</a><a class=\"ds-nav-link\">Model Anatomy</a></div><span class=\"ds-nav-rule\"></span><div class=\"ds-nav-group\"><a class=\"ds-nav-link\">LLM 101</a></div></nav>",
+      "css": ".ds-nav { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; border-radius: 0.75rem; background: var(--color-ink-850, #1b1f2a); padding: 0.25rem; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-nav-group { display: flex; align-items: center; gap: 0.25rem; } .ds-nav-rule { width: 1px; height: 1rem; margin: 0 0.25rem; background: rgb(255 255 255 / 0.15); } .ds-nav-link { border-radius: 0.5rem; padding: 0.25rem 0.625rem; font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; white-space: nowrap; color: var(--color-slate-300, #c3c8d4); text-decoration: none; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-nav-link:hover { background: rgb(255 255 255 / 0.05); } .ds-nav-on, .ds-nav-on:hover { background: var(--color-brand-600, #4a4cd4); color: var(--color-onbrand, #fff); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); }"
+    },
+    {
+      "name": "Device Card",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "The signature component. States its own verdict before you read it: the meter is green when the model fits and rose when it does not. Selection is a ring plus a tinted fill, and aria-pressed announces it.",
+      "html": "<div class=\"ds-devices\"><button class=\"ds-device ds-device-on\" aria-pressed=\"true\"><span class=\"ds-device-head\"><span class=\"ds-device-name\">H200 141GB</span><span class=\"ds-device-mem\">141GB</span></span><span class=\"ds-meter\"><span class=\"ds-meter-fill\" style=\"width:52%\"></span></span><span class=\"ds-device-note\">fits &middot; 52%</span></button><button class=\"ds-device\" aria-pressed=\"false\"><span class=\"ds-device-head\"><span class=\"ds-device-name\">A100 80GB</span><span class=\"ds-device-mem\">80GB</span></span><span class=\"ds-meter\"><span class=\"ds-meter-fill ds-meter-over\" style=\"width:100%\"></span></span><span class=\"ds-device-note\">doesn't fit</span></button></div>",
+      "css": ".ds-devices { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.5rem; } .ds-device { display: block; text-align: left; border: none; cursor: pointer; border-radius: 0.75rem; padding: 0.625rem; background: color-mix(in srgb, var(--color-ink-850, #1b1f2a) 40%, transparent); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); transition: background 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-device:hover { background: rgb(255 255 255 / 0.05); } .ds-device-on { background: color-mix(in srgb, var(--color-brand-600, #4a4cd4) 10%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500, #5d5fef) 60%, transparent); } .ds-device-head { display: flex; align-items: center; justify-content: space-between; } .ds-device-name { font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-200, #e7e9ef); } .ds-device-mem { font: 400 0.625rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #868ea0); } .ds-meter { display: block; height: 0.375rem; margin-top: 0.375rem; border-radius: 9999px; background: var(--color-ink-800, #232834); overflow: hidden; } .ds-meter-fill { display: block; height: 100%; border-radius: 9999px; background: var(--color-accent-400, #00e096); } .ds-meter-over { background: var(--color-bad, #fda4af); } .ds-device-note { display: block; margin-top: 0.25rem; font: 400 0.625rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #868ea0); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Calibrated Instrument",
+    "overview": "This is a panel you trust because it shows its own tolerances. Every figure on screen is traceable to a formula the page will name if asked, and the surface it sits on is deliberately quiet so the figure is the loudest thing in view. The system reads as instrumentation rather than as an app: near-neutral surfaces stepped by luminance, hairline boundaries, and colour spent only where it carries a reading.\n\nThe colour discipline is the whole personality. Surfaces are a five-step near-neutral ink ramp — the layering model behind IBM Carbon's g100 and Material's dark theme — with saturation held near zero. An earlier version made every surface a saturated navy; the result read as one colour and left the brand indigo nowhere to land. Desaturating the surfaces is what gives the indigo and the green their meaning: when something is indigo it is interactive, when something is green it fits, and neither has to compete with the background for attention.\n\nThree themes exist and they are not three skins. Dark is the baseline the tokens are defined on. Light overrides those tokens. Glass is a material, not a colour scheme: translucent panes blurred and saturated over a fixed colour field, so what a pane shows depends on what is behind it. That difference is load-bearing — contrast in glass has to be measured against the composited result, never assumed from a token.",
+    "keyCharacteristics": [
+      "Near-neutral surfaces; colour reserved for signal",
+      "No web fonts — the system UI stack, loaded instantly",
+      "Hairline rings instead of borders; depth from tone, not shadow",
+      "Dense, tabular, reference-grade information layout",
+      "Every accent colour has a fixed meaning and does not float"
+    ],
+    "rules": [
+      {
+        "name": "The Signal Rule",
+        "body": "Indigo means interactive, green means fits, amber means approaching a limit, rose means over budget. A colour never appears for decoration, and never carries a second meaning on another screen.",
+        "section": "colors"
+      },
+      {
+        "name": "The Desaturated Surface Rule",
+        "body": "Surfaces stay near-neutral. The moment a surface takes on saturation, the signals stop reading — this was measured, not guessed, and reverting it is a regression.",
+        "section": "colors"
+      },
+      {
+        "name": "The Composited Contrast Rule",
+        "body": "In glass, a token's contrast is a property of what is behind it, not of the token. Measure against the composited pane over the strongest region of the field; that worst case is the binding one. Re-measure before thinning a pane or strengthening the field.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Answer Rule",
+        "body": "Exactly one display-size figure per view. If a second number wants that size, the view is answering two questions and should be split.",
+        "section": "typography"
+      },
+      {
+        "name": "The Uppercase Label Rule",
+        "body": "Uppercase plus wide tracking is reserved for labels and captions. Never set a sentence, a value, or a heading in uppercase.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline Rule",
+        "body": "Boundaries are 1px rings, not borders, and they are nearly transparent. A visible box drawn around something is almost always the wrong answer; step the surface tone instead.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Shadow Rule",
+        "body": "There is a single shadow level. Elevation is not a scale here — if something needs to feel higher, move it up the ink ramp.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep surfaces near-neutral and spend saturation on signal only.",
+      "Do step the ink ramp to express depth before reaching for a shadow.",
+      "Do use a hairline ring for every boundary, and control-edge specifically when the bounded thing is interactive.",
+      "Do give each accent a single fixed meaning and keep it across every page.",
+      "Do measure contrast against the real composited background — in glass, a pane over the strongest part of the field is the binding case.",
+      "Do reach for a segmented control for any short, mutually-exclusive choice.",
+      "Do put exactly one display-size figure on a view.",
+      "Do route every data-visualisation colour through src/lib/palette.ts."
+    ],
+    "donts": [
+      "Don't saturate a surface. A navy-tinted card ramp was tried, measured, and reverted; it collapses the whole palette into one colour.",
+      "Don't introduce a web font. The system stack is a decision, not an oversight — it renders instantly and identically offline.",
+      "Don't add a second shadow level. Elevation is expressed by tone.",
+      "Don't draw a solid, visible border around a container.",
+      "Don't use uppercase for anything that is not a label or caption.",
+      "Don't treat glass as a light-theme variant. It is a material; its tokens are darker than the light theme's precisely because translucency eats contrast.",
+      "Don't thin a glass pane or strengthen the colour field without re-measuring the muted-text worst case.",
+      "Don't hardcode a chart colour at a call site."
+    ]
+  }
+}
