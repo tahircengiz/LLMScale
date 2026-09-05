@@ -53,8 +53,13 @@ typography:
     lineHeight: 1.5
   label:
     fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "0.6875rem"
+    fontSize: "0.75rem"
     fontWeight: 500
+    letterSpacing: "0.025em"
+  caption:
+    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+    fontSize: "0.6875rem"
+    fontWeight: 400
     letterSpacing: "0.025em"
 rounded:
   lg: "0.5rem"
@@ -241,9 +246,12 @@ whether or not the network cooperated.
 - **Title** (600, 1rem, tracking tight): section headings, paired with a
   numbered step marker.
 - **Body** (400, 0.875rem): controls, descriptions, explanatory paragraphs.
-- **Label** (500, 0.6875rem–0.75rem, tracking wide, uppercase): field labels,
-  stat captions, badges, unit suffixes. Uppercase is what marks a string as a
-  label rather than content.
+- **Label** (500, 0.75rem, tracking wide, uppercase): field labels and the small
+  controls inside segmented groups. Uppercase is what marks a string as a label
+  rather than content.
+- **Caption** (400, 0.6875rem, tracking wide): the quietest step — stat captions,
+  badges, unit suffixes, per-card annotations. Only two sizes below body exist;
+  anything between them is off the ramp.
 
 ### Named Rules
 
