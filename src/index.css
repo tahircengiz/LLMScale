@@ -253,3 +253,11 @@ input[type="number"] {
   box-shadow: 0 0 0 2px var(--color-brand-400);
   background: rgba(59, 57, 186, 0.16);
 }
+
+/* A selected device the model has outgrown stays in the visible grid, so the
+ * brand highlight above would otherwise dress an over-budget card as a healthy
+ * one. Later rule, same specificity — this wins. */
+.glass .gpu-card[data-over-budget="true"] {
+  box-shadow: 0 0 0 2px var(--color-bad);
+  background: rgba(250, 90, 125, 0.14);
+}

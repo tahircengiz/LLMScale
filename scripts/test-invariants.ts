@@ -9,7 +9,7 @@ import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
 import { DTYPE_BYTES, DTYPE_LABELS, calculate } from "../src/lib/calc.ts";
 import { DEFAULT_STATE } from "../src/lib/urlState.ts";
-import { HERO_MODEL_ID, KNOWN_MODELS, findKnownByHfId } from "../src/lib/models.ts";
+import { HERO_MODEL_ID, findKnownByHfId } from "../src/lib/models.ts";
 import {
   DARK_QUERY,
   DEFAULT_THEME,
@@ -80,9 +80,10 @@ check("the default GPU exists", ids.includes(DEFAULT_STATE.gpuId), DEFAULT_STATE
 const defaultGpu = GPUS.find((g) => g.id === DEFAULT_STATE.gpuId);
 check("the default GPU opens the Data center tab", defaultGpu?.category === "datacenter", defaultGpu?.category);
 
-// The two defaults are coupled. A device the hero model does not fit is filed
-// under "show non-fitting", which is collapsed on load — so an oversized hero
-// would hide the selected card behind a toggle on the very first screen.
+// The two defaults are coupled. The selected card no longer vanishes when the
+// model outgrows it — deviceGrid.ts pins it to the visible grid — but a hero the
+// default device cannot hold would still greet a first-time visitor with a red
+// bar and a "needs 2× GPUs" verdict on a page meant to show a working setup.
 const hero = findKnownByHfId(HERO_MODEL_ID);
 check("the hero model is a known model", !!hero, HERO_MODEL_ID);
 if (hero && defaultGpu) {
@@ -97,7 +98,7 @@ if (hero && defaultGpu) {
   }).totalGiB;
   const cap = usableGiB(defaultGpu, "");
   check(
-    "the hero model fits the default GPU, so the selected card is visible",
+    "the hero model fits the default GPU, so the page opens on a working setup",
     need <= cap,
     `${need.toFixed(1)} of ${cap.toFixed(1)} GiB (${Math.round((need / cap) * 100)}%)`
   );
@@ -112,6 +113,17 @@ const fit = read("src/components/GpuFit.tsx");
 check("GpuFit marks the selected card with aria-pressed", fit.includes("aria-pressed={g.id === gpuId}"));
 check("the glass rule hangs off that same attribute", css.includes('.gpu-card[aria-pressed="true"]'));
 check("the card carries the gpu-card hook", fit.includes('"gpu-card rounded-xl'));
+
+// A selected device the model has outgrown stays in the visible grid instead of
+// sliding into the collapsed group, where the fit summary would go on describing
+// a card nobody can see. The split lives in lib/deviceGrid.ts so it can be tested
+// without React (scripts/test-devicegrid.ts); these pin the component to it.
+check("GpuFit splits the grid with splitDevices", fit.includes("splitDevices("));
+check("the toggle counts only what is still hidden", fit.includes("n: grid.hidden.length"));
+check("the over-budget card is marked", fit.includes('data-over-budget={overBudget ? "true" : undefined}'));
+// Without this the glass theme would repaint that card in brand colours from
+// aria-pressed alone and dress an over-budget device as a healthy one.
+check("the glass theme overrides the selection highlight for it", css.includes('.gpu-card[data-over-budget="true"]'));
 
 // ── 5. every precision the engine knows has a label ───────────────────────
 const unlabelled = Object.keys(DTYPE_BYTES).filter((d) => !(d in DTYPE_LABELS));

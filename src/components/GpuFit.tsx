@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { calculate, maxConcurrency, maxContextLength, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch } from "../lib/calc";
 import { DRIVER_RESERVE, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
+import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
 import { BANDWIDTH_EFFICIENCY, estimateDecode } from "../lib/perf";
@@ -112,8 +113,13 @@ export function GpuFit({
   const catGpus = GPUS.filter((g) => g.category === selected.category).sort(
     (a, b) => (a.totalGiB ?? a.vramGiB) - (b.totalGiB ?? b.vramGiB)
   );
-  const fitting = catGpus.filter((g) => totalGiB <= usableGiB(g, ""));
-  const nonFitting = catGpus.filter((g) => totalGiB > usableGiB(g, ""));
+  // The selected device rides along in the visible group even when the model has
+  // outgrown it, so the card the panel above is describing never leaves the page.
+  const grid = splitDevices(
+    catGpus,
+    (g) => totalGiB <= usableGiB(g, ""),
+    (g) => g.id === gpuId
+  );
 
   const [showNonFit, setShowNonFit] = useState(false);
   useEffect(() => setShowNonFit(false), [selected.category]);
@@ -127,6 +133,9 @@ export function GpuFit({
 
   const renderCard = (g: Gpu) => {
     const u = usage(usableGiB(g, ""));
+    // Sitting in the visible group no longer implies "fits", so a selected card
+    // that is over budget has to say so on its own — in red and in words.
+    const overBudget = g.id === gpuId && !u.fits;
     return (
       <button
         key={g.id}
@@ -135,9 +144,16 @@ export function GpuFit({
         // aria-pressed doubles as the styling hook for the glass theme and as the
         // only thing that tells a screen reader which device is selected.
         aria-pressed={g.id === gpuId}
+        // The glass theme paints the selection from aria-pressed alone, which
+        // would repaint an over-budget card in brand colours; this overrides it.
+        data-over-budget={overBudget ? "true" : undefined}
         className={
           "gpu-card rounded-xl p-2.5 text-left ring-1 transition " +
-          (g.id === gpuId ? "ring-brand-500/60 bg-brand-600/10" : "ring-white/10 bg-ink-850/40 hover:bg-white/5")
+          (overBudget
+            ? "ring-rose-500/50 bg-rose-500/10"
+            : g.id === gpuId
+              ? "ring-brand-500/60 bg-brand-600/10"
+              : "ring-white/10 bg-ink-850/40 hover:bg-white/5")
         }
       >
         <div className="flex items-center justify-between">
@@ -147,8 +163,12 @@ export function GpuFit({
         <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
           <div className="h-full rounded-full" style={{ width: `${Math.min(100, u.pct * 100)}%`, backgroundColor: u.fits ? GREEN : RED }} />
         </div>
-        <div className="mt-1 text-[10px] text-slate-500">
-          {u.fits ? t("gpu.cardFits", { p: Math.round(u.pct * 100) }) : t("gpu.cardNeeds", { n: u.needed })}
+        <div className={"mt-1 text-[10px] " + (overBudget ? "text-bad" : "text-slate-500")}>
+          {u.fits
+            ? t("gpu.cardFits", { p: Math.round(u.pct * 100) })
+            : overBudget
+              ? `${t("gpu.cardOverBudget")} · ${t("gpu.cardNeeds", { n: u.needed })}`
+              : t("gpu.cardNeeds", { n: u.needed })}
         </div>
       </button>
     );
@@ -363,23 +383,25 @@ export function GpuFit({
           ))}
       </div>
 
-      {/* Devices in this category that fit the model (non-fitting behind a toggle) */}
+      {/* Devices in this category that fit the model, plus the selected one even
+          when it does not (the rest of the non-fitting devices stay behind a toggle) */}
       <div className="mt-4">
-        {fitting.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{fitting.map(renderCard)}</div>
-        ) : (
-          <p className="text-xs text-slate-500">{t("gpu.noneFit")}</p>
+        {grid.visible.length > 0 && (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{grid.visible.map(renderCard)}</div>
         )}
-        {nonFitting.length > 0 && (
+        {!grid.anyFits && (
+          <p className={"text-xs text-slate-500" + (grid.visible.length > 0 ? " mt-2" : "")}>{t("gpu.noneFit")}</p>
+        )}
+        {grid.hidden.length > 0 && (
           <>
             <button
               type="button"
               onClick={() => setShowNonFit((v) => !v)}
               className="mt-2.5 text-[11px] font-medium text-slate-400 transition hover:text-slate-200"
             >
-              {showNonFit ? `▾ ${t("gpu.hideNonFit")}` : `▸ ${t("gpu.showNonFit", { n: nonFitting.length })}`}
+              {showNonFit ? `▾ ${t("gpu.hideNonFit")}` : `▸ ${t("gpu.showNonFit", { n: grid.hidden.length })}`}
             </button>
-            {showNonFit && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">{nonFitting.map(renderCard)}</div>}
+            {showNonFit && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">{grid.hidden.map(renderCard)}</div>}
           </>
         )}
       </div>

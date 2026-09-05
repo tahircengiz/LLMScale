@@ -111,6 +111,9 @@ const en: Dict = {
   "gpu.migOff": "Full GPU (no MIG)",
   "gpu.cardFits": "fits · {p}%",
   "gpu.cardNeeds": "{n}× needed",
+  // Marks the selected card when it is shown among the fitting ones despite
+  // being over budget — the group it sits in no longer implies it fits.
+  "gpu.cardOverBudget": "selected",
   "gpu.unified": "{total} GB unified → ~{usable} GB usable · {bw} GB/s",
   "gpu.bw": "{bw} GB/s",
   "gpu.showNonFit": "Show non-fitting ({n})",
@@ -542,6 +545,7 @@ const tr: Dict = {
   "gpu.migOff": "Tam GPU (MIG yok)",
   "gpu.cardFits": "sığar · %{p}",
   "gpu.cardNeeds": "{n}× gerekir",
+  "gpu.cardOverBudget": "seçili",
   "gpu.unified": "{total} GB unified → ~{usable} GB kullanılabilir · {bw} GB/s",
   "gpu.bw": "{bw} GB/s",
   "gpu.showNonFit": "Uymayanları göster ({n})",

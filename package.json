@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "test": "node scripts/test-calc.ts",
     "test:invariants": "node scripts/test-invariants.ts",
+    "test:devicegrid": "node scripts/test-devicegrid.ts",
     "test:perf": "node scripts/test-perf.ts",
     "test:train": "node scripts/test-train.ts",
     "deploy": "gh-pages -d dist --dotfiles"
