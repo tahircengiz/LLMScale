@@ -25,11 +25,25 @@ Two events in a session matter, and they mean different things:
 
 A session with a single event never touched a control.
 
-**Defaults are the trap.** A visitor who does nothing still emits the default
-model and device, indistinguishable from someone who picked them deliberately.
-So a value is credited under "chose" only when it *differs from what they arrived
-with*. "Models seen" keeps the unfiltered view for comparison — the gap between
-the two lists is how much of your traffic is people versus your own defaults.
+**Defaults are the trap, and it is bigger than it looks.** Measured over the
+first two weeks: **36 of 60 sessions ended on a model the app had chosen for
+them**, and only 8 ended on something that was never a default. A "top models"
+chart built naively is mostly a picture of our own landing state.
+
+Worse, the trap moves. Before 2026-09-05 the default was Llama 3.1 8B; picking
+Qwen2.5 32B was then a real choice and was counted as one. The moment Qwen2.5
+32B *became* the default, the identical behaviour stopped counting — so the same
+metric measured different things either side of that date, and the two periods
+were not comparable.
+
+So the rule is deliberately strict: **a model or device the app has ever opened
+on is never credited as a choice**, past defaults included. A deliberate pick of
+the value we put in front of someone cannot be distinguished from inertia, and
+excluding all of them keeps the metric stable when the default moves.
+
+These lists therefore **undercount on purpose**. The honest engagement figures
+are the tiles: how many sessions moved off the model we showed (16 of 60), off
+the device (14), and how many simply took what they were given (36).
 
 ## Getting the export
 

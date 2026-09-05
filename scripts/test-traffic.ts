@@ -102,6 +102,30 @@ const bareThenPick: Row[] = [
 const r8 = buildReport(bareThenPick, DEFAULTS);
 check("a change after the empty row is still a choice", find(r8.modelsChosen, "Llama 3.3 70B Instruct") === 1);
 
+console.log("\n--- a value we put in front of people is never a choice ---");
+// Switching from the outgoing default to the current one is the exact behaviour
+// that used to be credited, and it is why the metric changed meaning the day the
+// default moved. Neither end of that switch is a choice we can claim.
+const OLD = { model: "meta-llama/Llama-3.1-8B-Instruct", device: "rtx4090-24" };
+const BOTH = [DEFAULTS, OLD];
+const switched: Row[] = [
+  row("I", q(OLD.model, OLD.device)),
+  row("I", q(DEFAULTS.model, DEFAULTS.device)),
+];
+const r9 = buildReport(switched, BOTH);
+check("moving between two defaults is not a choice", r9.modelsChosen.length === 0, JSON.stringify(r9.modelsChosen));
+check("but the move itself is still counted", r9.changedModel === 1 && r9.changedDevice === 1);
+check("and it is reported as ending on a default", r9.endedOnDefault === 1);
+check("the old default is not a shared link", r9.fromSharedLink === 0);
+// A genuine departure still lands.
+const real: Row[] = [
+  row("J", q(OLD.model, OLD.device)),
+  row("J", q("Qwen/Qwen2.5-72B-Instruct", "mi300x-192")),
+];
+const r10 = buildReport(real, BOTH);
+check("a real departure is still credited", find(r10.modelsChosen, "Qwen2.5 72B Instruct") === 1);
+check("and does not count as ending on a default", r10.endedOnDefault === 0);
+
 console.log("\n--- degenerate input ---");
 const r5 = buildReport([], DEFAULTS);
 check("an empty export produces an empty report", r5.sessions === 0 && r5.modelsChosen.length === 0);
