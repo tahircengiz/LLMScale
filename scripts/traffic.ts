@@ -46,6 +46,12 @@ export interface Report {
   events: number;
   /** Sessions that changed at least one setting. */
   engaged: number;
+  /** Sessions that moved off whatever model was put in front of them. */
+  changedModel: number;
+  /** Sessions that moved off the device that was put in front of them. */
+  changedDevice: number;
+  /** Sessions that ended on a model we had chosen for them. */
+  endedOnDefault: number;
   /** Sessions that arrived on a link carrying someone else's configuration. */
   fromSharedLink: number;
   countries: Tally[];
@@ -187,6 +193,9 @@ export function buildReport(rows: readonly Row[], defaults: DefaultState | Defau
   const concurrency = counter();
 
   let engaged = 0;
+  let changedModel = 0;
+  let changedDevice = 0;
+  let endedOnDefault = 0;
   let fromSharedLink = 0;
   let earliest = "";
   let latest = "";
@@ -217,9 +226,24 @@ export function buildReport(rows: readonly Row[], defaults: DefaultState | Defau
 
 
     modelsSeen.add(modelLabel(final.model), sessionId);
-    // A choice is a departure from what they walked in with.
-    if (final.model && final.model !== entry.model) modelsChosen.add(modelLabel(final.model), sessionId);
-    if (final.device && final.device !== entry.device) devicesChosen.add(deviceLabel(final.device), sessionId);
+    if (final.model && final.model !== entry.model) changedModel++;
+    if (final.device && final.device !== entry.device) changedDevice++;
+
+    // A value we put in front of people is never credited as a choice, even when
+    // the session technically moved onto it. 60% of sessions end on whatever the
+    // app opened with, and a deliberate pick of that value is indistinguishable
+    // from inertia. Excluding every default — past ones too — also keeps the
+    // metric stable when the default moves: otherwise changing it silently
+    // reclassifies the same visitor behaviour and makes periods incomparable.
+    const modelIsOurs = knownDefaults.some((d) => d.model === final.model);
+    const deviceIsOurs = knownDefaults.some((d) => d.device === final.device);
+    if (final.model && modelIsOurs) endedOnDefault++;
+    if (final.model && final.model !== entry.model && !modelIsOurs) {
+      modelsChosen.add(modelLabel(final.model), sessionId);
+    }
+    if (final.device && final.device !== entry.device && !deviceIsOurs) {
+      devicesChosen.add(deviceLabel(final.device), sessionId);
+    }
 
     if (final.weightDtype) {
       precision.add(DTYPE_LABELS[final.weightDtype as Dtype] ?? final.weightDtype, sessionId);
@@ -234,6 +258,9 @@ export function buildReport(rows: readonly Row[], defaults: DefaultState | Defau
     sessions: bySession.size,
     events: rows.length,
     engaged,
+    changedModel,
+    changedDevice,
+    endedOnDefault,
     fromSharedLink,
     countries: countries.tally(),
     referrers: referrers.tally(),

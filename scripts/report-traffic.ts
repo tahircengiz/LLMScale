@@ -87,6 +87,10 @@ function render(r: Report, note: string): string {
       <div class="sub2">${r.events} events recorded</div></div>
     <div class="tile"><div class="lab">Engaged</div><div class="num ok">${r.engaged}</div>
       <div class="sub2">${pct(r.engaged, s)}% changed a setting</div></div>
+    <div class="tile"><div class="lab">Changed the model</div><div class="num">${r.changedModel}</div>
+      <div class="sub2">${pct(r.changedModel, s)}% moved off what we showed</div></div>
+    <div class="tile"><div class="lab">Took our default</div><div class="num">${r.endedOnDefault}</div>
+      <div class="sub2">${pct(r.endedOnDefault, s)}% ended on a model we picked</div></div>
     <div class="tile"><div class="lab">From a shared link</div><div class="num">${r.fromSharedLink}</div>
       <div class="sub2">arrived on someone's config</div></div>
     <div class="tile"><div class="lab">Countries</div><div class="num">${r.countries.length}</div>
@@ -115,7 +119,9 @@ function render(r: Report, note: string): string {
   </div>
 
   <footer>Counted per session, not per event — one visitor tuning settings emits many rows.<br>
-  "Chosen" means it differs from what the visitor arrived with, so defaults and shared links are not counted as choices.</footer>
+  "Chosen" excludes every model and device the app has ever opened on: most sessions end on whatever we put in front of them,
+  and a deliberate pick of that value cannot be told apart from inertia.<br>
+  So these lists undercount on purpose. "Changed the model" above is the honest measure of engagement.</footer>
 </main>`;
 }
 
