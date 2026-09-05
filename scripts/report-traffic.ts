@@ -125,6 +125,59 @@ function render(r: Report, note: string): string {
 </main>`;
 }
 
+/**
+ * The weekly digest, as markdown — the homelab mailer renders markdown itself,
+ * so this must not be HTML. Shorter than the full page on purpose: a digest is
+ * read on a phone, and the numbers that survive that are the ones that matter.
+ */
+export function renderMarkdown(r: Report): string {
+  const s = r.sessions;
+  const list = (rows: Tally[], empty: string, limit = 5) =>
+    rows.length
+      ? rows.slice(0, limit).map((x) => `- **${x.label}** — ${x.sessions}`).join("\n")
+      : `_${empty}_`;
+  const inline = (rows: Tally[], limit = 6) =>
+    rows.slice(0, limit).map((x) => `${x.label} (${x.sessions})`).join(" · ") || "—";
+
+  return `**${s} sessions** over ${day(r.from)} → ${day(r.to)}, from ${r.countries.length} countries.
+
+| | |
+|---|---|
+| Moved off the model we showed | **${r.changedModel}** (${pct(r.changedModel, s)}%) |
+| Moved off the device we showed | **${r.changedDevice}** (${pct(r.changedDevice, s)}%) |
+| Took our default | ${r.endedOnDefault} (${pct(r.endedOnDefault, s)}%) |
+| Arrived on a shared link | ${r.fromSharedLink} |
+
+### Models people went looking for
+
+${list(r.modelsChosen, "Nobody moved off our default model this week.")}
+
+### Hardware people went looking for
+
+${list(r.devicesChosen, "Nobody moved off our default device this week.")}
+
+### Where they came from
+
+${inline(r.countries, 8)}
+
+### Which tools they used
+
+${inline(r.surfaces, 8)}
+
+### How they configured it
+
+Context: ${inline(r.contextBuckets, 4)}
+Concurrency: ${inline(r.concurrencyBuckets, 4)}
+Precision: ${inline(r.precision, 4)}
+
+---
+
+The two "went looking for" lists exclude every model and device the app has ever
+opened on. Most sessions end on whatever we put in front of them, and a
+deliberate pick of that cannot be told apart from inertia — so these undercount
+on purpose. The percentages above are the honest engagement measure.`;
+}
+
 /** Synthetic rows, so the layout can be judged before the real export exists. */
 function demoRows(): Row[] {
   const models = [
@@ -162,6 +215,7 @@ function demoRows(): Row[] {
 
 const args = process.argv.slice(2);
 const demo = args.includes("--demo");
+const asMarkdown = args.includes("--markdown");
 const inPath = args.find((a) => !a.startsWith("--") && a.endsWith(".json"));
 const outPath = args.find((a) => a.endsWith(".html")) ?? "traffic-report.html";
 
@@ -172,6 +226,12 @@ if (!demo && !inPath) {
 
 const rows: Row[] = demo ? demoRows() : JSON.parse(readFileSync(inPath!, "utf8"));
 const report = buildReport(rows, DEFAULTS);
+
+// Markdown goes to stdout so the weekly job can pipe it straight at the mailer.
+if (asMarkdown) {
+  process.stdout.write(renderMarkdown(report));
+  process.exit(0);
+}
 const note = demo
   ? "Sample data — these numbers are synthetic, generated to show the report's shape. Re-run against a real export to replace them."
   : "";
