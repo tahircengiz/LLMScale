@@ -56,9 +56,10 @@ itself: the ZeRO paper's 16 bytes-per-parameter identity for mixed-precision
 Adam, and QLoRA's fine-tuning of a 65B model on a single 48 GB card. Both are
 permanent tests, so the constants cannot drift quietly.
 
-It computes entirely in the browser. There is no backend and no account, and
-the inputs never leave the machine — which is what makes it usable on an
-unreleased model name.
+It computes entirely in the browser. There is no backend and no account, so the
+sizing itself is never sent anywhere to be performed. (The chosen model and
+settings do travel, in the page URL, to the analytics tracker — see Brand
+Commitments.)
 
 ## Operating Context
 
@@ -81,8 +82,11 @@ the dictionary.
   Vite `base` is the repo path. Multi-page build, one HTML entry per surface.
 - **Cost and pricing are deliberately out of scope.** The purpose is technical
   help. No prices, no cost-per-token, no purchasing advice.
-- **Analytics are anonymous and cookieless** (self-hosted Umami). The privacy
-  line shown in the footer is a standing promise, not marketing copy.
+- **Analytics are anonymous and cookieless** (self-hosted Umami), but not
+  contentless: the app keeps its state in the URL, so the tracker receives the
+  model, precision, context, concurrency and device on every pageview. This is
+  what the traffic report is built from, and the footer must keep saying only
+  what is true of it.
 - **Tests run through Node's type stripping**, which executes `.ts` but not
   `.tsx`, and a React import breaks it outright. Anything a test must read has
   to live in a React-free module under `src/lib/`. This has already forced two
@@ -99,9 +103,15 @@ the dictionary.
 - Name: **LLMScale**. Built by Tahir Cengiz; MIT licensed.
 - Bilingual English/Turkish is a product commitment, not a feature — new copy
   ships in both.
-- The privacy promise ("your inputs never leave your browser") is binding on
-  future work: nothing may introduce a backend round-trip for user input
-  without the user deciding to change this.
+- **The computation stays client-side.** No backend performs the sizing and no
+  account is required; nothing may introduce a server round-trip for the
+  calculation itself without the user deciding to change that.
+  Note this is narrower than it once read. The footer previously claimed inputs
+  never leave the browser, which was not true: the app encodes its full state in
+  the URL and the analytics tracker transmits that URL, model and settings
+  included. The copy was corrected rather than the collection stopped — the
+  traffic report is built on exactly that data — so the accurate promise is
+  about where the work happens, not about what is counted.
 - Existing assets: `public/favicon.svg`, `public/og.png`.
 
 ## Evidence on Hand
@@ -130,8 +140,10 @@ endorsements. Future work must not fabricate any of these.
    This applies to the memory model and to the interface alike.
 3. **Technical help only.** Cost, pricing, and purchasing advice stay out, so the
    tool stays trustworthy on the one thing it does.
-4. **Nothing leaves the browser.** Client-side computation is a promise to the
-   user, not an implementation detail to optimize away.
+4. **The calculation stays in the browser.** No backend performs the sizing;
+   that is a promise to the user, not an implementation detail to optimize away.
+   It is a claim about where the work happens — keep it stated that precisely,
+   because what a visitor calculates is counted.
 5. **Professional depth wins ties, but the newcomer keeps a path in.** Defaults
    and vocabulary serve the practitioner; the explainer surfaces exist so the
    depth does not become a wall.
