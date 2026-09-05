@@ -36,20 +36,34 @@ if [ "$rows" -lt 10 ]; then
   exit 1
 fi
 
-# 2. Render the digest. Markdown, not HTML: the mailer does its own conversion.
+# 2. Render it twice. The mailer prints `html` when given one and converts `body`
+#    when not, so the markdown doubles as the plain-text alternative.
 cp "$work/rows.json" "$DIR/rows.json"
-docker run --rm -v "$DIR:/app" -w /app node:22-alpine \
-  node scripts/report-traffic.ts rows.json --markdown > "$work/body.md"
+render() {
+  docker run --rm -v "$DIR:/app" -w /app node:22-alpine \
+    node scripts/report-traffic.ts rows.json "$1"
+}
+render --email > "$work/body.html"
+render --markdown > "$work/body.md"
 rm -f "$DIR/rows.json"
+
+# An empty render must not become an empty e-mail.
+for f in body.html body.md; do
+  if [ ! -s "$work/$f" ]; then
+    echo "renderer produced no $f — not mailing" >&2
+    exit 1
+  fi
+done
 
 # 3. Hand it to the one door. A quiet week is still worth sending; the point of
 #    a digest is that its absence means something is broken, not that nothing
 #    happened.
 subject="LLMScale · son ${DAYS} gün"
-python3 - "$work/body.md" "$subject" "$MAILER" "$ENV_FILE" <<'PY'
+python3 - "$work/body.md" "$subject" "$MAILER" "$ENV_FILE" "$work/body.html" <<'PY'
 import json, sys, urllib.request, pathlib
-body_path, subject, mailer, env_file = sys.argv[1:5]
+body_path, subject, mailer, env_file, html_path = sys.argv[1:6]
 body = pathlib.Path(body_path).read_text(encoding="utf-8")
+html = pathlib.Path(html_path).read_text(encoding="utf-8")
 
 token = ""
 p = pathlib.Path(env_file)
@@ -61,7 +75,8 @@ if p.exists():
 
 payload = json.dumps({
     "subject": subject,
-    "body": body,
+    "body": body,   # plain-text alternative
+    "html": html,   # what actually gets read
     "status": "NORMAL",
     "source": "llmscale-report",
 }).encode("utf-8")
