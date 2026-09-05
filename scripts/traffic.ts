@@ -155,7 +155,20 @@ function counter() {
   };
 }
 
-export function buildReport(rows: readonly Row[], defaults: { model: string; device: string }): Report {
+/**
+ * Every configuration the app has ever opened on, newest first. A report can
+ * span a change of default — this one already does — so "did they arrive on
+ * someone else's link?" has to be asked against all of them, not just today's.
+ * Otherwise every visitor from before the change is counted as a shared link.
+ */
+export interface DefaultState {
+  model: string;
+  device: string;
+}
+
+export function buildReport(rows: readonly Row[], defaults: DefaultState | DefaultState[]): Report {
+  const knownDefaults = Array.isArray(defaults) ? defaults : [defaults];
+
   const bySession = new Map<string, Row[]>();
   for (const r of rows) {
     const list = bySession.get(r.session_id) ?? [];
@@ -189,12 +202,19 @@ export function buildReport(rows: readonly Row[], defaults: { model: string; dev
     referrers.add(first.referrer_domain ?? "", sessionId);
     for (const e of events) surfaces.add(surfaceOf(e.url_path), sessionId);
 
-    const entry = snapshot(first.url_query);
+    // The very first pageview fires before the app has written its state, so its
+    // query is empty. Taking it as the baseline made every session look like it
+    // had chosen whatever it ended on — including visitors who touched nothing.
+    // The baseline is the first event that actually carries state: either the
+    // defaults the app just wrote, or the configuration a shared link arrived on.
+    const baseline = events.find((e) => (e.url_query ?? "").length > 0) ?? first;
+    const entry = snapshot(baseline.url_query);
     const final = snapshot(last.url_query);
     if (events.length > 1) engaged++;
-    // Arriving on a configuration that is not the app's own default means the
-    // link came from someone else.
-    if (entry.model && entry.model !== defaults.model) fromSharedLink++;
+    // Arriving on a configuration that matches none of the app's own defaults
+    // means the link came from someone else.
+    if (entry.model && !knownDefaults.some((d) => d.model === entry.model)) fromSharedLink++;
+
 
     modelsSeen.add(modelLabel(final.model), sessionId);
     // A choice is a departure from what they walked in with.

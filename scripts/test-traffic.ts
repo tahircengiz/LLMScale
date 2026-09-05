@@ -85,6 +85,23 @@ check("the bare path is the sizing page", surfaceOf("/LLMScale/") === "VRAM Sizi
 check("train.html is Fine-tune", surfaceOf("/LLMScale/train.html") === "Fine-tune");
 check("an unknown path does not throw", surfaceOf("/LLMScale/nope.html") === "Other");
 
+console.log("\n--- the first pageview carries no state ---");
+// This is what the real export looks like: the tracker fires once before the app
+// has written the URL, so the opening row has an empty query. Treating that as
+// the baseline credited every visitor with whatever they ended on.
+const bare: Row[] = [row("G", ""), row("G", q(DEFAULTS.model, DEFAULTS.device))];
+const r7 = buildReport(bare, DEFAULTS);
+check("an empty opening row is not the baseline", r7.modelsChosen.length === 0, JSON.stringify(r7.modelsChosen));
+check("the default is still counted as seen", find(r7.modelsSeen, "Qwen2.5 32B Instruct") === 1);
+// ...but a real change after that empty row must still register.
+const bareThenPick: Row[] = [
+  row("H", ""),
+  row("H", q(DEFAULTS.model, DEFAULTS.device)),
+  row("H", q("meta-llama/Llama-3.3-70B-Instruct", "b200-192")),
+];
+const r8 = buildReport(bareThenPick, DEFAULTS);
+check("a change after the empty row is still a choice", find(r8.modelsChosen, "Llama 3.3 70B Instruct") === 1);
+
 console.log("\n--- degenerate input ---");
 const r5 = buildReport([], DEFAULTS);
 check("an empty export produces an empty report", r5.sessions === 0 && r5.modelsChosen.length === 0);
