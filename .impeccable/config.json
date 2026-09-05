@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "scripts/emailReport.ts"
+        ],
+        "createdAt": "2026-09-05T07:28:54.571Z",
+        "reason": "Email HTML, not site UI: renders inside the homelab mailer's own 600px card and must match that template's 14px/px scale, not DESIGN.md. Mail clients handle rem unreliably. The page renderer in report-traffic.ts still follows DESIGN.md and is not covered."
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "scripts/emailReport.ts"
+        ],
+        "createdAt": "2026-09-05T07:28:54.723Z",
+        "reason": "Email HTML, not site UI: renders inside the homelab mailer's own 600px card and must match that template's 14px/px scale, not DESIGN.md. Mail clients handle rem unreliably. The page renderer in report-traffic.ts still follows DESIGN.md and is not covered."
+      }
+    ]
+  }
+}

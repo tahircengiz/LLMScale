@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-05T00:00:00.000Z",
+  "generatedAt": "2026-09-05T07:30:00.000Z",
   "title": "Design System: LLMScale",
   "extensions": {
     "colorMeta": {
@@ -8,51 +8,133 @@
         "role": "primary",
         "displayName": "Signal Indigo",
         "canonical": "oklch(56.8% 0.211 276.7)",
-        "tonalRamp": ["#180062", "#200086", "#3115ab", "#4842d0", "#6366f7", "#818aff", "#a7b5ff", "#ccddff"]
+        "tonalRamp": [
+          "#180062",
+          "#200086",
+          "#3115ab",
+          "#4842d0",
+          "#6366f7",
+          "#818aff",
+          "#a7b5ff",
+          "#ccddff"
+        ]
       },
       "readout-green": {
         "role": "secondary",
         "displayName": "Readout Green",
         "canonical": "oklch(80.0% 0.180 160.5)",
-        "tonalRamp": ["#001a00", "#003800", "#005819", "#007938", "#009b57", "#00bf77", "#26ea9f", "#65ffc5"]
+        "tonalRamp": [
+          "#001a00",
+          "#003800",
+          "#005819",
+          "#007938",
+          "#009b57",
+          "#00bf77",
+          "#26ea9f",
+          "#65ffc5"
+        ]
       },
       "caution-amber": {
         "role": "tertiary",
         "displayName": "Caution Amber",
         "canonical": "oklch(87.9% 0.153 91.6)",
-        "tonalRamp": ["#210000", "#3e1900", "#5d3700", "#7d5700", "#9f7700", "#c19900", "#ecc339", "#ffeb68"]
+        "tonalRamp": [
+          "#210000",
+          "#3e1900",
+          "#5d3700",
+          "#7d5700",
+          "#9f7700",
+          "#c19900",
+          "#ecc339",
+          "#ffeb68"
+        ]
       },
       "fault-rose": {
         "role": "tertiary",
         "displayName": "Fault Rose",
         "canonical": "oklch(81.0% 0.106 11.6)",
-        "tonalRamp": ["#290002", "#4a0016", "#6c2231", "#8f414e", "#b3616d", "#d7828d", "#ffaab5", "#ffd1dc"]
+        "tonalRamp": [
+          "#290002",
+          "#4a0016",
+          "#6c2231",
+          "#8f414e",
+          "#b3616d",
+          "#d7828d",
+          "#ffaab5",
+          "#ffd1dc"
+        ]
       },
       "control-edge": {
         "role": "neutral",
         "displayName": "Control Edge",
         "canonical": "oklch(53.5% 0.035 266.9)",
-        "tonalRamp": ["#050a1a", "#1c2435", "#373f53", "#555d72", "#747d93", "#959eb5", "#bdc7df", "#e4eeff"]
+        "tonalRamp": [
+          "#050a1a",
+          "#1c2435",
+          "#373f53",
+          "#555d72",
+          "#747d93",
+          "#959eb5",
+          "#bdc7df",
+          "#e4eeff"
+        ]
       },
       "ink-void": {
         "role": "neutral",
         "displayName": "Ink Void",
         "canonical": "#090b10",
-        "tonalRamp": ["#090b10", "#14171f", "#1b1f2a", "#232834", "#333a49", "#868ea0", "#c3c8d4", "#e7e9ef"]
+        "tonalRamp": [
+          "#090b10",
+          "#14171f",
+          "#1b1f2a",
+          "#232834",
+          "#333a49",
+          "#868ea0",
+          "#c3c8d4",
+          "#e7e9ef"
+        ]
       },
       "text-primary": {
         "role": "neutral",
         "displayName": "Instrument White",
         "canonical": "oklch(93.4% 0.008 271.3)",
-        "tonalRamp": ["#0a0b0f", "#222428", "#3e4044", "#5c5d62", "#7b7d82", "#9c9ea4", "#c5c7cd", "#eceef4"]
+        "tonalRamp": [
+          "#0a0b0f",
+          "#222428",
+          "#3e4044",
+          "#5c5d62",
+          "#7b7d82",
+          "#9c9ea4",
+          "#c5c7cd",
+          "#eceef4"
+        ]
       }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "The single headline figure a view exists to produce. One per screen." },
-      "headline": { "displayName": "Headline", "purpose": "Stat tile values." },
-      "title": { "displayName": "Title", "purpose": "Section headings, paired with a numbered step marker." },
-      "body": { "displayName": "Body", "purpose": "Controls, descriptions, explanatory prose." },
-      "label": { "displayName": "Label", "purpose": "Uppercase field labels, stat captions, badges, unit suffixes." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "The single headline figure a view exists to produce. One per screen."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Stat tile values."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings, paired with a numbered step marker."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Controls, descriptions, explanatory prose."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase field labels and the small controls inside segmented groups."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "The quietest step — stat captions, badges, unit suffixes, per-card annotations."
+      }
     },
     "shadows": [
       {
@@ -84,8 +166,14 @@
       }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "640px" },
-      { "name": "lg", "value": "1024px" }
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
     ]
   },
   "components": [
