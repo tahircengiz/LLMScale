@@ -1,0 +1,6 @@
+# Shell scripts and systemd units run on Linux. Windows checkouts must not turn
+# their line endings into CRLF: a shebang of "#!/usr/bin/env bash\r" fails with
+# "bash\r: No such file or directory", which is what happened once already.
+*.sh      text eol=lf
+*.service text eol=lf
+*.timer   text eol=lf
