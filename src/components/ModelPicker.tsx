@@ -11,6 +11,7 @@ import { KNOWN_MODELS } from "../lib/models";
 import { formatParams } from "../lib/format";
 import { track } from "../lib/analytics";
 import { useLang } from "../lib/i18n";
+import { usesMla } from "../lib/calc";
 import { Badge, Field, NumberInput, SectionTitle, Segmented } from "./ui";
 
 type Tab = "search" | "presets" | "custom";
@@ -313,7 +314,14 @@ export function ModelPicker({
             {arch.numLayers}L · {arch.hiddenSize}d · {arch.numAttentionHeads}/{arch.numKeyValueHeads}{" "}
             {t("model.heads")}
           </span>
-          {arch.numKeyValueHeads < arch.numAttentionHeads && <Badge tone="good">{t("common.gqa")}</Badge>}
+          {/* MLA replaces the K/V pair with one shared latent, so the head counts
+              printed above no longer drive the cache. Say so rather than quietly
+              returning a number 25x smaller than the same config would imply. */}
+          {usesMla(arch) ? (
+            <Badge tone="good">{t("common.mla")}</Badge>
+          ) : (
+            arch.numKeyValueHeads < arch.numAttentionHeads && <Badge tone="good">{t("common.gqa")}</Badge>
+          )}
         </div>
       )}
       {meta?.warningKey && (

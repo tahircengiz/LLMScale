@@ -48,6 +48,21 @@ export interface ModelArch {
   intermediateSize?: number;
   /** Mixture-of-Experts active params (informational only; VRAM uses total). */
   activeParams?: number;
+  /**
+   * Multi-head latent attention (DeepSeek V2/V3 and friends). When both are
+   * present the KV cache is NOT the usual per-head tensor pair: MLA caches one
+   * compressed latent per token per layer, shared across every head, so the
+   * head count drops out of the formula entirely.
+   *  - kvLoraRank    = config `kv_lora_rank`     (d_c, the compression dim)
+   *  - qkRopeHeadDim = config `qk_rope_head_dim` (d_h^R, the decoupled RoPE key)
+   */
+  kvLoraRank?: number;
+  qkRopeHeadDim?: number;
+}
+
+/** Does this architecture cache a compressed latent instead of K and V tensors? */
+export function usesMla(arch: ModelArch): boolean {
+  return !!(arch.kvLoraRank && arch.qkRopeHeadDim);
 }
 
 export interface CalcInput {
@@ -89,6 +104,14 @@ export function weightsBytes(arch: ModelArch, dtype: Dtype): number {
 
 /** KV cache bytes for ONE token of ONE sequence. */
 export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
+  // MLA caches a single compressed latent per token per layer — (d_c + d_h^R) —
+  // shared across all heads, so neither the head count nor the head dim appears.
+  // DeepSeek-V2 §2.1.3: "KV cache per token is (d_c + d_h^R)·l". Applying the
+  // ordinary formula to these models overstates the cache badly: DeepSeek-V3 came
+  // out 25x too large — 13.34 GiB at 8k context where the true figure is 0.54.
+  if (usesMla(arch)) {
+    return arch.numLayers * (arch.kvLoraRank! + arch.qkRopeHeadDim!) * DTYPE_BYTES[kvDtype];
+  }
   const hd = resolveHeadDim(arch);
   // 2 = one tensor for K and one for V.
   return 2 * arch.numLayers * arch.numKeyValueHeads * hd * DTYPE_BYTES[kvDtype];

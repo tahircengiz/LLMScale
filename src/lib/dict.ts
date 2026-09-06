@@ -38,6 +38,10 @@ const en: Dict = {
   "field.headDim": "Head dim",
   "common.optional": "optional",
   "common.gqa": "GQA",
+  "common.mla": "MLA",
+  // Shown under the KV cache figure when the model compresses its cache, so the
+  // number is explained rather than merely different.
+  "kv.mlaNote": "This model uses multi-head latent attention: it caches one compressed latent per token per layer ({d} values) instead of a key and value tensor per head, so the cache is far smaller than its head counts suggest.",
 
   "warning.gatedBundled": "Gated model — architecture loaded from the built-in database.",
   "warning.gatedUnknown":
@@ -484,6 +488,8 @@ const tr: Dict = {
   "field.headDim": "Head dim",
   "common.optional": "opsiyonel",
   "common.gqa": "GQA",
+  "common.mla": "MLA",
+  "kv.mlaNote": "Bu model multi-head latent attention kullanıyor: her head için ayrı key ve value tensörü yerine, katman ve token başına tek bir sıkıştırılmış latent ({d} değer) tutuyor — yani cache, head sayılarının ima ettiğinden çok daha küçük.",
 
   "warning.gatedBundled": "Gated model — mimari gömülü veri tabanından yüklendi.",
   "warning.gatedUnknown":
