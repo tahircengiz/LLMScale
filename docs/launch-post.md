@@ -2,14 +2,19 @@
 
 Not published by anyone but you. The traffic data says the bottleneck is that
 nobody knows the tool exists — two weeks, 60 sessions, two of them from a search
-engine and essentially no referrers. The product itself holds up (it resolves
-multimodal configs, follows `base_model` on GGUF repos, and now models MLA), so
-this is a distribution problem, not a product one.
+engine and essentially no referrers. The product holds up: it resolves
+multimodal configs, follows `base_model` on GGUF repos, and models MLA.
 
-**Before posting:** these communities punish self-promotion that arrives without
-substance and reward a specific, checkable claim. Every draft below leads with
-what the tool gets *right that others get wrong*, because that is the only part
-worth someone's attention.
+**The source is not published, and these drafts are written for that.** They
+never say open source, never mention a licence, and never invite anyone to read
+the code — an invitation nobody can accept reads as a bluff and would be the one
+thing to discredit the rest.
+
+That costs less than it sounds like. The claim worth making is checkable without
+the source: the formula is in a public paper, and the tool's own output either
+matches it or does not. A reader can do the arithmetic in their head. That is a
+stronger position than "trust my tests", which is what an open repo would have
+offered anyway.
 
 ---
 
@@ -17,37 +22,35 @@ worth someone's attention.
 
 Title:
 
-> I built a VRAM calculator that models MLA, MoE and real GQA layouts — and it found a 25× error in its own numbers
+> Most VRAM calculators get DeepSeek wrong by 25× — here's the formula, and a tool that uses it
 
 Body:
 
-> Most VRAM calculators are `params × 2` plus a fudge factor. I wanted one that
-> models the parts that actually decide the answer, so I built LLMScale:
+> Standard KV-cache arithmetic is `2 × layers × kv_heads × head_dim × bytes`.
+> Apply it to DeepSeek-V3 and you get 13.34 GiB at 8k context for one user.
+>
+> The real figure is 0.54 GiB, because DeepSeek uses multi-head latent attention:
+> it caches **one compressed latent per token per layer**, shared across every
+> head, so the head count drops out of the formula entirely. DeepSeek-V2 §2.1.3
+> gives it as `(d_c + d_h^R) · l` — that is `kv_lora_rank + qk_rope_head_dim`,
+> both of which are sitting in the config:
+>
+>     61 layers × (512 + 64) × 2 bytes = 68.6 KiB per token
+>
+> The paper also notes this equals "GQA with only 2.25 groups", which checks out:
+> 512 + 64 = 4.5 × 128, and 4.5 / 2 = 2.25.
+>
+> I had this wrong in my own calculator until last week. It is fixed now, along
+> with the rest of what a rule of thumb misses — real GQA layouts read from the
+> Hub, MoE with every expert resident for memory but only the active ones for
+> decode speed, and fine-tuning memory for LoRA/QLoRA/full:
+>
 > https://tahircengiz.github.io/LLMScale/
 >
-> What it does differently:
->
-> - **Reads the real config** from the HF Hub — the actual GQA layout, not an
->   assumption. Handles multimodal configs where the LLM dims are nested under
->   `text_config`, and follows `base_model` for GGUF repos that ship no config.
-> - **Models MLA.** DeepSeek caches one compressed latent per layer instead of a
->   K/V pair per head. Using the ordinary formula puts DeepSeek-V3's cache at
->   13.34 GiB at 8k context; the real figure is 0.54 GiB. My own tool had this
->   wrong until last week — the fix is validated against DeepSeek-V2 §2.1.3,
->   including the paper's own "equal to GQA with 2.25 groups" identity.
-> - **MoE properly**: every expert resident for memory, only the active ones for
->   decode speed. Qwen3-30B-A3B and Qwen3-32B are nearly the same size but ~8×
->   apart in tok/s.
-> - **Fine-tuning too** — LoRA/QLoRA/full, checked against the QLoRA paper's
->   65B-on-one-48GB result (43.3 GiB).
-> - Also: which GPUs fit, how many concurrent users, max context per user, and a
->   `vllm serve` command with the reasoning for each flag.
->
-> Entirely client-side, no account, no backend. MIT.
->
-> Happy to be told where the numbers are wrong — that is genuinely the useful
-> feedback. Two of the errors above were found by checking against published
-> results rather than by me being clever.
+> Free, runs entirely in your browser, no account. Try it on a model you already
+> know the numbers for — if it disagrees with you, I want to hear about it, since
+> two of the errors I have fixed came from checking against published results
+> rather than from being clever.
 
 ---
 
@@ -55,48 +58,60 @@ Body:
 
 Title:
 
-> Show HN: LLMScale – a VRAM calculator that models MLA, MoE and real GQA layouts
+> Show HN: A VRAM calculator that models MLA, MoE and real GQA layouts
 
 Body:
 
 > I kept doing LLM memory arithmetic on napkins and getting it wrong, so I built
 > the tool I wanted: https://tahircengiz.github.io/LLMScale/
 >
-> The interesting part was not the arithmetic, it was discovering how much the
-> usual shortcut misses. Applying the standard KV-cache formula to DeepSeek-V3
-> overstates its cache 25× — it uses multi-head latent attention, which caches
-> one compressed latent per layer rather than a key/value tensor per head. My own
-> tool shipped that error until I checked it against the DeepSeek-V2 paper.
+> The interesting part was not the arithmetic, it was how much the usual shortcut
+> misses. The standard KV-cache formula overstates DeepSeek-V3's cache by 25× —
+> it uses multi-head latent attention, caching one compressed latent per layer
+> rather than a key/value tensor per head. DeepSeek-V2 §2.1.3 gives the real
+> expression as `(d_c + d_h^R)·l`, and both terms are in the model's config.
+> My own tool shipped the wrong number until I checked it against the paper.
 >
-> So every behavioural claim in it is now validated against a published result
-> and pinned as a test: ZeRO's 16 bytes/parameter for mixed-precision Adam,
-> QLoRA's 65B-on-a-single-48GB-card, MLA's `(d_c + d_h^R)·l`, and gpt-oss-120b
-> fitting one 80GB card. Two real bugs in my fine-tuning model surfaced that way
-> — an FFN width I had guessed instead of read, and an NF4 constant that was off.
+> So the working rule became: no behavioural claim ships until it reproduces a
+> published result. ZeRO's 16 bytes/parameter for mixed-precision Adam. QLoRA
+> fine-tuning a 65B model on a single 48GB card — the tool puts it at 43.3 GiB,
+> and getting there surfaced two real bugs in my fine-tuning model, an FFN width
+> I had guessed instead of read and an NF4 constant that was off. gpt-oss-120b
+> fitting one 80GB GPU, as its model card claims.
 >
-> Client-side, no backend, no account. Vite/React/TS, MIT.
+> Free, entirely client-side, no account, no backend. The calculation happens in
+> your browser; visits are counted anonymously with self-hosted Umami, and since
+> the app keeps its state in the URL, the model you pick is part of what that
+> counter sees.
+>
+> Best way to judge it is to run a model whose numbers you already know.
 
 ---
 
-## Hugging Face forum / model-card snippet
+## Hugging Face forum / discussion thread
 
-Short enough to drop in a discussion thread:
+Short enough to drop into a thread about a specific model:
 
 > If you are sizing this for serving, https://tahircengiz.github.io/LLMScale/
 > reads the config straight from the Hub and gives weights + KV cache at your
 > context and concurrency, plus which GPUs fit. It handles GQA, MLA and MoE
-> properly, and the assumptions are stated on the page rather than buried.
+> properly, and every assumption is stated on the page rather than buried.
 
 ---
 
 ## What to expect, honestly
 
-- **It may go nowhere.** These posts mostly do. One that lands is worth more
-  than ten that do not, and the way to land is a claim someone can check.
-- **The MLA finding is the hook.** It is specific, surprising, verifiable, and
-  it makes the tool credible precisely because it is an admission of a bug.
-- **Do not claim adoption.** There is none yet and inventing it would be the one
-  thing that discredits everything else on the page.
-- **Watch what arrives.** The weekly digest already separates search traffic
-  from referrers, so a spike will be attributable. Sessions that move off the
-  default model are the ones that mean something.
+- **It may go nowhere.** Most such posts do. One that lands beats ten that
+  don't, and the way to land is a claim a stranger can check in thirty seconds.
+- **The MLA finding is the hook, and it survives the source being closed** —
+  the evidence is a public paper and a number anyone can recompute. Leading with
+  a bug you fixed is what makes the rest credible.
+- **Do not claim adoption, and do not imply the code is open.** There is no
+  adoption yet, and the repo is private. Either claim would be the thing people
+  seize on.
+- **Expect "why is it closed?"** on HN in particular. The honest answer is that
+  it is a personal project and the source is not published; nothing more is
+  required.
+- **Watch what arrives.** The weekly digest separates search traffic from
+  referrers, so a spike will be attributable. Sessions that move off the default
+  model are the ones that mean something.
