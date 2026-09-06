@@ -100,7 +100,13 @@ the dictionary.
 
 ## Brand Commitments
 
-- Name: **LLMScale**. Built by Tahir Cengiz; MIT licensed.
+- Name: **LLMScale**. Built by Tahir Cengiz.
+- **The repository is private and the source is not published.** The tool itself
+  is free and public. This is a live constraint, not a detail: nothing may claim
+  an open-source licence, invite people to read the code, or promise pull
+  requests, and there is no LICENSE file to point at. Credibility has to rest on
+  what a reader can verify from outside — the published papers the engine is
+  checked against, and the tool's own output.
 - Bilingual English/Turkish is a product commitment, not a feature — new copy
   ships in both.
 - **The computation stays client-side.** No backend performs the sizing and no

@@ -104,6 +104,10 @@ npm run build      # → dist/
 npm run deploy     # → gh-pages branch
 ```
 
-## License
+## Source and use
 
-MIT — built by [Tahir Cengiz](https://github.com/tahircengiz).
+The tool is free to use and always will be. The source is not currently
+published, so there is no licence to grant and no LICENSE file — if that
+changes, this section is the first thing to update.
+
+Built by [Tahir Cengiz](https://github.com/tahircengiz).
