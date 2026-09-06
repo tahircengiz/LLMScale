@@ -246,6 +246,16 @@ const en: Dict = {
   "theme.dark": "Dark",
   "theme.light": "Light",
   "theme.glass": "Glass",
+  // One h1 per surface, visually hidden. Names the page for a screen reader and
+  // for a crawler; the visible design opens straight into its first card.
+  "h1.sizing": "LLM VRAM calculator — model weights, KV cache and GPU fit",
+  "h1.train": "Fine-tuning VRAM — LoRA, QLoRA and full fine-tune memory",
+  "h1.fit": "Task fit — is this LLM right for the job?",
+  "h1.anatomy": "Model anatomy — where an LLM's parameters and memory go",
+  "h1.compare": "Compare LLMs side by side",
+  "h1.decode": "LLM model name decoder",
+  "h1.vllm": "vLLM parameter helper — a tuned vllm serve command",
+  "h1.learn": "LLM 101 — how a language model works",
   "nav.learn": "LLM 101",
   "compare.subtitle":
     "Put 2–4 models side by side — specs, capabilities and per-task fit — to see which one is better for which use, from live Hugging Face data.",
@@ -678,6 +688,14 @@ const tr: Dict = {
   "theme.dark": "Koyu",
   "theme.light": "Açık",
   "theme.glass": "Cam",
+  "h1.sizing": "LLM VRAM hesaplayıcı — model ağırlıkları, KV cache ve GPU uyumu",
+  "h1.train": "İnce ayar VRAM'i — LoRA, QLoRA ve tam ince ayar belleği",
+  "h1.fit": "Görev uyumu — bu LLM bu iş için doğru mu?",
+  "h1.anatomy": "Model anatomisi — bir LLM'in parametreleri ve belleği nereye gidiyor",
+  "h1.compare": "LLM'leri yan yana karşılaştır",
+  "h1.decode": "LLM model adı çözücü",
+  "h1.vllm": "vLLM parametre yardımcısı — ayarlanmış vllm serve komutu",
+  "h1.learn": "LLM 101 — bir dil modeli nasıl çalışır",
   "nav.learn": "LLM 101",
   "compare.subtitle":
     "2–4 modeli yan yana koy — spec'ler, yetenekler ve görev-bazlı uygunluk — hangisinin ne için daha iyi olduğunu gör, canlı Hugging Face verisinden.",
