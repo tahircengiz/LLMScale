@@ -182,6 +182,11 @@ export default function App() {
       </header>
 
       <main className="min-h-0 flex-1 overflow-y-auto">
+        {/* Every page needs one h1 naming what it is. The design has no room for a
+            visible one — the surfaces open straight into their first card — but a
+            document without a top-level heading is a gap for a screen reader as
+            much as for a crawler, and there were none on any of the eight. */}
+        <h1 className="sr-only">{t(`h1.${page}`)}</h1>
         <div className={"mx-auto max-w-6xl px-4 sm:px-6 " + (isFit ? "flex h-full flex-col py-3" : "py-6")}>
           {page === "vllm" ? (
             <VllmPage />
