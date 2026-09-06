@@ -6,6 +6,7 @@
 // head — and that this "is equal to GQA with only 2.25 groups". Both claims are
 // reproducible from the config alone, so both are tests rather than comments.
 import { kvBytesPerToken, usesMla, calculate, type ModelArch } from "../src/lib/calc.ts";
+import { encodeState, decodeState, DEFAULT_STATE } from "../src/lib/urlState.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -82,6 +83,21 @@ console.log("\n--- a partial config stays on the ordinary path ---");
 check("kv_lora_rank alone is not MLA", !usesMla({ ...asIfGqa, kvLoraRank: 512 }));
 check("qk_rope_head_dim alone is not MLA", !usesMla({ ...asIfGqa, qkRopeHeadDim: 64 }));
 check("and such a model keeps the GQA cache", kvBytesPerToken({ ...asIfGqa, kvLoraRank: 512 }, "fp16") === perTokGqa);
+
+console.log("\n--- the state survives a round trip through the URL ---");
+// The app writes its own URL, so an arch that cannot be encoded is an arch that
+// is lost on the next reload — and on every shared estimate. This shipped broken:
+// MLA worked when the model was resolved, then reverted to GQA on refresh.
+const encoded = encodeState({ ...DEFAULT_STATE, hfId: "deepseek-ai/DeepSeek-V3", arch: v3 });
+const back = decodeState(encoded);
+check("the URL carries the MLA fields", /[?&]kl=512/.test("?" + encoded) && /[?&]qr=64/.test("?" + encoded),
+  encoded.split("&").filter((x) => /^(kl|qr)=/.test(x)).join(" ") || "(absent)");
+check("the decoded arch is still MLA", !!back.arch && usesMla(back.arch));
+check("and its cache matches the original", !!back.arch && kvBytesPerToken(back.arch, "fp16") === perTokMla,
+  back.arch ? `${(kvBytesPerToken(back.arch, "fp16") / 1024).toFixed(1)} KiB` : "no arch");
+// A non-MLA model must not pick the fields up from nowhere.
+const plain = decodeState(encodeState({ ...DEFAULT_STATE, hfId: "x", arch: asIfGqa }));
+check("a GQA model round-trips as GQA", !!plain.arch && !usesMla(plain.arch));
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);
