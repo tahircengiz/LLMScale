@@ -41,6 +41,12 @@ export function encodeState(s: AppState): string {
     p.set("a", String(s.arch.numAttentionHeads));
     p.set("k", String(s.arch.numKeyValueHeads));
     if (s.arch.headDim) p.set("d", String(s.arch.headDim));
+    // Without these two an MLA model decodes back as ordinary GQA and its KV
+    // cache comes out ~25x too large. The app writes this URL itself, so leaving
+    // them out broke every reload and every shared estimate, not just links
+    // people typed by hand.
+    if (s.arch.kvLoraRank) p.set("kl", String(s.arch.kvLoraRank));
+    if (s.arch.qkRopeHeadDim) p.set("qr", String(s.arch.qkRopeHeadDim));
   }
   p.set("wd", s.weightDtype);
   p.set("kd", s.kvDtype);
@@ -76,6 +82,8 @@ export function decodeState(search: string): Partial<AppState> {
       numAttentionHeads,
       numKeyValueHeads,
       headDim: num(p.get("d")),
+      kvLoraRank: num(p.get("kl")),
+      qkRopeHeadDim: num(p.get("qr")),
     } as ModelArch;
   }
 
