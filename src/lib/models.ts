@@ -96,6 +96,65 @@ export const KNOWN_MODELS: KnownModel[] = [
     id: "phi-3-mini", displayName: "Phi-3 mini 4k", family: "Phi", hfId: "microsoft/Phi-3-mini-4k-instruct",
     numParams: 3.82e9, numLayers: 32, hiddenSize: 3072, numAttentionHeads: 32, numKeyValueHeads: 32, headDim: 96, vocabSize: 32064, maxContext: 4096,
   },
+  // ── Added 2026-09-06 from Hugging Face's own download ranking ────────────
+  // Criteria: sizing has to be a real question (so nothing under ~7B), a
+  // generative model rather than an embedding or reranker, and the base repo
+  // rather than a GGUF/AWQ fork — those carry no config and the app follows
+  // base_model anyway. Architectures read from config.json, not typed by hand.
+  {
+    id: "qwen3-8b", displayName: "Qwen3 8B", family: "Qwen", hfId: "Qwen/Qwen3-8B",
+    numParams: 8190735360, numLayers: 36, hiddenSize: 4096, intermediateSize: 12288,
+    numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 128, vocabSize: 151936, maxContext: 40960,
+  },
+  {
+    id: "qwen3-32b", displayName: "Qwen3 32B", family: "Qwen", hfId: "Qwen/Qwen3-32B",
+    numParams: 32762123264, numLayers: 64, hiddenSize: 5120, intermediateSize: 25600,
+    numAttentionHeads: 64, numKeyValueHeads: 8, headDim: 128, vocabSize: 151936, maxContext: 40960,
+  },
+  {
+    // "30.5B total, 3.3B activated" — model card. activeParams drives the decode
+    // estimate, which reads only the active experts per token.
+    id: "qwen3-30b-a3b", displayName: "Qwen3 30B A3B", family: "Qwen", hfId: "Qwen/Qwen3-30B-A3B",
+    isMoE: true, numParams: 30532122624, activeParams: 3.3e9,
+    numLayers: 48, hiddenSize: 2048, intermediateSize: 6144,
+    numAttentionHeads: 32, numKeyValueHeads: 4, headDim: 128, vocabSize: 151936, maxContext: 40960,
+  },
+  {
+    id: "qwen3-coder-30b-a3b", displayName: "Qwen3 Coder 30B A3B", family: "Qwen",
+    hfId: "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    isMoE: true, numParams: 30532122624, activeParams: 3.3e9,
+    numLayers: 48, hiddenSize: 2048, intermediateSize: 6144,
+    numAttentionHeads: 32, numKeyValueHeads: 4, headDim: 128, vocabSize: 151936, maxContext: 262144,
+  },
+  {
+    id: "qwen2.5-coder-7b", displayName: "Qwen2.5 Coder 7B", family: "Qwen",
+    hfId: "Qwen/Qwen2.5-Coder-7B-Instruct",
+    numParams: 7615616512, numLayers: 28, hiddenSize: 3584, intermediateSize: 18944,
+    numAttentionHeads: 28, numKeyValueHeads: 4, vocabSize: 152064, maxContext: 32768,
+  },
+  {
+    // "21B parameters with 3.6B active parameters" — model card.
+    id: "gpt-oss-20b", displayName: "gpt-oss 20B", family: "OpenAI", hfId: "openai/gpt-oss-20b",
+    isMoE: true, numParams: 20914757184, activeParams: 3.6e9,
+    numLayers: 24, hiddenSize: 2880, intermediateSize: 2880,
+    numAttentionHeads: 64, numKeyValueHeads: 8, headDim: 64, vocabSize: 201088, maxContext: 131072,
+  },
+  {
+    // "117B parameters with 5.1B active parameters" — model card.
+    id: "gpt-oss-120b", displayName: "gpt-oss 120B", family: "OpenAI", hfId: "openai/gpt-oss-120b",
+    isMoE: true, numParams: 116829156672, activeParams: 5.1e9,
+    numLayers: 36, hiddenSize: 2880, intermediateSize: 2880,
+    numAttentionHeads: 64, numKeyValueHeads: 8, headDim: 64, vocabSize: 201088, maxContext: 131072,
+  },
+  {
+    // Multi-head latent attention: kvLoraRank + qkRopeHeadDim switch the KV
+    // formula. "37B activated for each token" — model card.
+    id: "deepseek-v3", displayName: "DeepSeek V3", family: "DeepSeek", hfId: "deepseek-ai/DeepSeek-V3",
+    isMoE: true, numParams: 684531386000, activeParams: 37e9,
+    numLayers: 61, hiddenSize: 7168, intermediateSize: 18432,
+    numAttentionHeads: 128, numKeyValueHeads: 128,
+    kvLoraRank: 512, qkRopeHeadDim: 64, vocabSize: 129280, maxContext: 163840,
+  },
 ];
 
 const byHfId = new Map(KNOWN_MODELS.map((m) => [m.hfId.toLowerCase(), m]));

@@ -9,7 +9,7 @@ import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
 import { DTYPE_BYTES, DTYPE_LABELS, calculate } from "../src/lib/calc.ts";
 import { DEFAULT_STATE } from "../src/lib/urlState.ts";
-import { HERO_MODEL_ID, findKnownByHfId } from "../src/lib/models.ts";
+import { HERO_MODEL_ID, KNOWN_MODELS, findKnownByHfId } from "../src/lib/models.ts";
 import {
   DARK_QUERY,
   DEFAULT_THEME,
@@ -137,6 +137,39 @@ const unbuilt = pages.filter((p) => !inputs.includes(p));
 const missingFile = inputs.filter((i) => !pages.includes(i));
 check("every .html is a Vite entry", unbuilt.length === 0, unbuilt.join(", "));
 check("every Vite entry has a file", missingFile.length === 0, missingFile.join(", "));
+
+console.log("\n--- the bundled model database ---");
+// Entries are read from config.json when added, but nothing stops a later
+// hand-edit from breaking one, and a wrong preset is worse than no preset.
+const dupIds = KNOWN_MODELS.length - new Set(KNOWN_MODELS.map((m) => m.id)).size;
+const dupHf = KNOWN_MODELS.length - new Set(KNOWN_MODELS.map((m) => m.hfId.toLowerCase())).size;
+check("preset ids are unique", dupIds === 0, `${KNOWN_MODELS.length} models`);
+check("preset Hugging Face ids are unique", dupHf === 0);
+const malformed = KNOWN_MODELS.filter(
+  (m) => !(m.numParams > 0 && m.numLayers > 0 && m.hiddenSize > 0 &&
+           m.numAttentionHeads > 0 && m.numKeyValueHeads > 0 &&
+           m.numKeyValueHeads <= m.numAttentionHeads)
+);
+check("every preset has a usable architecture", malformed.length === 0, malformed.map((m) => m.id).join(", "));
+// Decode speed reads only the active experts, so a MoE entry without
+// activeParams silently reports the dense figure - an 8x error on a 30B-A3B.
+const moeNoActive = KNOWN_MODELS.filter((m) => m.isMoE && !m.activeParams);
+check("every MoE preset declares its active params", moeNoActive.length === 0, moeNoActive.map((m) => m.id).join(", "));
+const overActive = KNOWN_MODELS.filter((m) => m.activeParams && m.activeParams > m.numParams);
+check("active params never exceed total", overActive.length === 0);
+
+// A published claim to hold an entry to: openai/gpt-oss-120b's card says it is
+// "designed to fit into a single 80GB GPU". It ships natively in 4-bit.
+const oss120 = KNOWN_MODELS.find((m) => m.id === "gpt-oss-120b");
+if (oss120) {
+  const h100 = GPUS.find((g) => g.id === "h100-80")!;
+  const need = calculate({
+    arch: oss120, weightDtype: "int4", kvDtype: "fp16", contextLength: 8192,
+    concurrency: 1, overheadPct: 0.1, cudaContextGiB: 0.75,
+  }).totalGiB;
+  check("gpt-oss 120B fits one 80GB card at 4-bit, as its card claims",
+    need <= usableGiB(h100, ""), `${need.toFixed(1)} of ${usableGiB(h100, "").toFixed(1)} GiB`);
+}
 
 console.log("\n--- the theme bootstrap is identical in every entry ---");
 // This script cannot be imported from a module: it has to set the theme class
