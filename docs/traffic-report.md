@@ -47,38 +47,32 @@ the device (14), and how many simply took what they were given (36).
 
 ## Getting the export
 
-Umami runs on **GTR9** (`~/projects/infra-umami`), containers `umami` and
-`umami-db`. The panel is at `https://stats.lab.delix.dev` behind Traefik, which
-resolves to GTR9's Tailscale address — reachable from the tailnet only. Public
-ingest stays on `stats.delix.dev` via the Cloudflare tunnel, which routes
-straight to the container and never touches Traefik.
-
-Run the export on the host:
+The report reads a JSON array of `website_event` rows joined to `session` —
+`session_id`, `created_at`, `url_path`, `url_query`, `referrer_domain`,
+`event_name`, `country`, `device`. Any Umami instance can produce it:
 
 ```sql
-COPY (
-  SELECT json_agg(t) FROM (
-    SELECT e.session_id::text        AS session_id,
-           e.created_at::text        AS created_at,
-           e.url_path,
-           e.url_query,
-           e.referrer_domain,
-           e.event_name,
-           s.country,
-           s.device
-    FROM   website_event e
-    JOIN   session s ON s.session_id = e.session_id
-    WHERE  e.website_id = '22ee565e-f235-43fe-bd5e-3b693cbf86ca'
-      AND  e.created_at >= now() - interval '30 days'
-    ORDER  BY e.created_at
-  ) t
-) TO STDOUT;
+SELECT json_agg(t) FROM (
+  SELECT e.session_id::text AS session_id, e.created_at::text AS created_at,
+         e.url_path, e.url_query, e.referrer_domain, e.event_name,
+         s.country, s.device
+  FROM   website_event e
+  JOIN   session s ON s.session_id = e.session_id
+  WHERE  e.website_id = '<your website id>'
+    AND  e.created_at >= now() - interval '30 days'
+  ORDER  BY e.created_at
+) t;
 ```
 
 ```bash
-ssh gtr9 "docker exec umami-db psql -U umami -d umami -tAc \"<the query above>\"" > rows.json
-node scripts/report-traffic.ts rows.json report.html
+node scripts/report-traffic.ts rows.json report.html      # the full page
+node scripts/report-traffic.ts rows.json --markdown       # a digest
+node scripts/report-traffic.ts rows.json --email          # HTML for e-mail
+node scripts/report-traffic.ts --demo                     # synthetic, to see the shape
 ```
+
+Deployment of the weekly job is environment-specific and lives with the
+infrastructure that runs it, not here.
 
 ## Defaults change, and the report has to know
 
@@ -86,31 +80,6 @@ node scripts/report-traffic.ts rows.json report.html
 newest first. A report spanning a change of default must recognise the older one
 too — otherwise every visitor from before the change is counted as arriving on a
 shared link. Add the outgoing pair to that list whenever the default moves.
-
-## The weekly mail
-
-A digest goes out every **Monday 08:00 Europe/Istanbul**, driven by
-`llmscale-report.timer` on GTR9.
-
-- `deploy/llmscale-weekly-report.sh` → installed as
-  `~/projects/infra-llmscale-report/run.sh`. It exports the last 7 days, renders
-  the digest with `--markdown`, and POSTs it to the homelab mailer.
-- The report needs Node and **GTR9 has none**, so it runs in a throwaway
-  `node:22-alpine` container mounted over that directory. Copy the scripts there
-  again whenever `scripts/traffic.ts`, `scripts/report-traffic.ts` or the
-  `src/lib` files they import change — the box holds its own copy.
-- Mail goes through **homelab-mailer** on `127.0.0.1:8091`, the single door for
-  mail on that box. It takes **markdown** and does its own HTML rendering, so
-  never send it HTML, and never add SMTP settings here.
-- The timer is `Persistent=true`: if the box was down on Monday it sends when it
-  comes back. A quiet week is still mailed — the point of a digest is that its
-  *absence* means something broke.
-
-```bash
-sudo systemctl start llmscale-report.service   # send one now
-systemctl list-timers llmscale-report.timer    # when is the next one
-journalctl -u llmscale-report.service -n 20    # did it work
-```
 
 ## What it will not tell you
 
