@@ -167,6 +167,10 @@ function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     numAttentionHeads,
     numKeyValueHeads,
     headDim: c.head_dim,
+    // Multi-head latent attention. Both are needed before the KV formula
+    // switches, so a config carrying only one is left on the ordinary path.
+    kvLoraRank: c.kv_lora_rank,
+    qkRopeHeadDim: c.qk_rope_head_dim,
     vocabSize: c.vocab_size,
     maxContext: c.max_position_embeddings ?? c.n_positions ?? c.max_seq_len,
   };
