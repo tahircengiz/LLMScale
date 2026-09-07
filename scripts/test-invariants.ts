@@ -106,6 +106,22 @@ check("picking a device fires device-select", page.includes('track("device-selec
 check("the first interaction is recorded", page.includes('track("activated"'));
 check("every arrival is counted, blank or not", page.includes('track("landed"'));
 
+// The analytics tag is copied into every entry by hand, and an ungated one
+// reports from wherever the file happens to load. A file:// open of a page put a
+// local disk path into the live stats, and `surfaceOf` mapped it to a real
+// surface, so it was indistinguishable from a visit. Every localhost preview
+// landed in production traffic the same way.
+const TRACKER_HOST = "tahircengiz.github.io";
+const entries = readdirSync(".").filter((f) => f.endsWith(".html"));
+const tracked = entries.filter((f) => read(f).includes("stats.delix.dev"));
+const ungated = tracked.filter((f) => !read(f).includes(`data-domains="${TRACKER_HOST}"`));
+check("every page carrying the tracker gates it to the live host", ungated.length === 0, ungated.join(", "));
+check("and the tracker is on every entry", tracked.length === entries.length,
+  `${tracked.length} of ${entries.length}`);
+// The canonical URL is where that host name comes from; if the site moves to a
+// custom domain and this is not moved with it, the stats go silent.
+check("the gated host matches the canonical URL", read("index.html").includes(`https://${TRACKER_HOST}/`));
+
 // The glass theme styles the selected card through aria-pressed, which only
 // works while GpuFit actually sets it.
 const fit = read("src/components/GpuFit.tsx");
