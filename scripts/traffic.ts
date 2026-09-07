@@ -38,6 +38,11 @@ export interface Row {
   country?: string | null;
   device?: string | null;
   event_name?: string | null;
+  /** The host the browser reported. Umami hashes `session_id` without it, so a
+   *  localhost preview and real browsing from the same machine land under the
+   *  SAME session id — filtering has to happen per event, before anything is
+   *  aggregated per session. See `keepHost` in report-traffic.ts. */
+  hostname?: string | null;
 }
 
 export interface Tally {

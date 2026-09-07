@@ -115,16 +115,27 @@ The events are the cross-check, not the source.
 
 The report reads a JSON array of `website_event` rows joined to `session` —
 `session_id`, `created_at`, `url_path`, `url_query`, `referrer_domain`,
-`event_name`, `country`, `device`. Any Umami instance can produce it:
+`event_name`, `hostname`, `country`, `device`. Any Umami instance can produce it.
+
+**Filter on `hostname`, and do it in the query.** The tracker is gated to the
+live host now, but rows collected before that gate are still in the database:
+local previews accounted for 174 events, and one `file://` open put a disk path
+in as a page. It cannot be cleaned up afterwards by dropping sessions, because
+**Umami derives `session_id` without the hostname** — a localhost preview and
+real browsing from the same machine land under the *same* session id, and three
+sessions are blended that way. The filter has to be per event, before anything
+is aggregated per session. `report-traffic.ts` applies the same filter again as
+a backstop and prints what it dropped.
 
 ```sql
 SELECT json_agg(t) FROM (
   SELECT e.session_id::text AS session_id, e.created_at::text AS created_at,
-         e.url_path, e.url_query, e.referrer_domain, e.event_name,
+         e.url_path, e.url_query, e.referrer_domain, e.event_name, e.hostname,
          s.country, s.device
   FROM   website_event e
   JOIN   session s ON s.session_id = e.session_id
   WHERE  e.website_id = '<your website id>'
+    AND  e.hostname = 'tahircengiz.github.io'
     AND  e.created_at >= now() - interval '30 days'
   ORDER  BY e.created_at
 ) t;
