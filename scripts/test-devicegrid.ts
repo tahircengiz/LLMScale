@@ -60,9 +60,14 @@ check("an empty tier splits into nothing", empty.visible.length === 0 && empty.h
 // ── 2. the real regression: crank the load until the selection stops fitting ─
 console.log("\n--- the regression, on real devices ---");
 const hero = findKnownByHfId(HERO_MODEL_ID);
-const selected = GPUS.find((g) => g.id === DEFAULT_STATE.gpuId);
+// The app no longer opens on a device, so this scenario names one explicitly.
+// What is being tested is the grid's behaviour once something IS selected — the
+// device only has to be real and big enough to fit the model before the load is
+// cranked up, which is what makes the regression reproducible.
+const SELECTED_GPU = "h200-141";
+const selected = GPUS.find((g) => g.id === SELECTED_GPU);
 if (!hero || !selected) {
-  check("hero model and default GPU resolve", false, `${HERO_MODEL_ID} / ${DEFAULT_STATE.gpuId}`);
+  check("hero model and the scenario GPU resolve", false, `${HERO_MODEL_ID} / ${SELECTED_GPU}`);
 } else {
   const sizeAt = (contextLength: number, concurrency: number) =>
     calculate({
@@ -81,7 +86,7 @@ if (!hero || !selected) {
   const gridAt = (totalGiB: number) =>
     splitDevices(catGpus, (g) => totalGiB <= usableGiB(g, ""), (g) => g.id === selected.id);
 
-  // The default view: the pairing is chosen so the selection fits.
+  // The starting point: the pairing is chosen so the selection fits.
   const atDefaults = sizeAt(DEFAULT_STATE.contextLength, DEFAULT_STATE.concurrency);
   const gridDefault = gridAt(atDefaults);
   check("on load the selected device is visible and fits",

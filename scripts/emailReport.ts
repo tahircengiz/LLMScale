@@ -83,15 +83,18 @@ export function renderEmailHtml(r: Report): string {
   </td></tr>
 
   <tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-    ${tile("Modeli değiştirdi", r.changedModel, `${pct(r.changedModel, s)}% bizim gösterdiğimizin ötesine geçti`, INDIGO)}
-    ${tile("Cihazı değiştirdi", r.changedDevice, `${pct(r.changedDevice, s)}%`, INDIGO)}
+    ${tile("Model seçti", r.changedModel, `${pct(r.changedModel, s)}% kendi modelini seçti`, INDIGO)}
+    ${tile("Cihaz seçti", r.changedDevice, `${pct(r.changedDevice, s)}%`, INDIGO)}
   </tr><tr>
-    ${tile("Varsayılanı aldı", r.endedOnDefault, `${pct(r.endedOnDefault, s)}% verileni kabul etti`, MUT)}
+    ${tile("Boş sayfayla karşılaştı", r.blankStart, `hesap makinesini açan ${r.sizingSessions} oturumun ${pct(r.blankStart, r.sizingSessions)}%'i`, MUT)}
+    ${tile("Sonra seçim yaptı", r.blankActivated, `bunların ${pct(r.blankActivated, r.blankStart)}%'i`, GREEN)}
+  </tr><tr>
     ${tile("Paylaşılan linkten", r.fromSharedLink, "başkasının ayarıyla geldi", GREEN)}
+    ${tile("Hazır geleni kabul etti", r.endedOnDefault, "vLLM / fine-tune tohumu ya da 7 Eylül öncesi", MUT)}
   </tr></table></td></tr>
 
-  ${section("Aradıkları modeller", r.modelsChosen, "Bu hafta kimse varsayılan modelin dışına çıkmadı.")}
-  ${section("Aradıkları donanım", r.devicesChosen, "Bu hafta kimse varsayılan cihazın dışına çıkmadı.")}
+  ${section("Seçtikleri modeller", r.modelsChosen, "Bu hafta kimse bir model seçmedi.")}
+  ${section("Seçtikleri donanım", r.devicesChosen, "Bu hafta kimse bir cihaz seçmedi.")}
   ${section("Hangi araçlar", r.surfaces, "Sayfa görüntülemesi yok.", GREEN)}
 
   <tr><td style="padding:14px 0 2px;font-size:14px;font-weight:650;color:${INK};

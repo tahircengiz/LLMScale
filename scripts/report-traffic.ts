@@ -7,16 +7,31 @@
 // website_event rows joined to session. Everything is inlined; the file opens
 // offline and sends nothing anywhere.
 import { readFileSync, writeFileSync } from "node:fs";
-import { buildReport, type Report, type Row, type Tally } from "./traffic.ts";
+import { buildReport, surfaceOf, SIZING_SURFACE, type Report, type Row, type Tally } from "./traffic.ts";
 import { renderEmailHtml } from "./emailReport.ts";
-import { DEFAULT_STATE } from "../src/lib/urlState.ts";
 import { HERO_MODEL_ID } from "../src/lib/models.ts";
 
-// Newest first. A report spanning a change of default must recognise the older
-// one too, or every visitor from before it looks like a shared-link arrival.
+// Purely historical, newest first. The app opens on nothing now, so it has no
+// current default to list — but a report spanning the change still has to
+// recognise what it *used* to put in front of people, or every visitor from
+// before it looks like a shared-link arrival and their inertia is counted as a
+// choice. Nothing is ever removed from this list.
+// Every configuration the app has ever opened on, newest first, each tagged
+// with the page that opened on it. Nothing is ever removed.
+//
+// The surface tag is what keeps the filter honest. A seed can only contaminate
+// the page that writes it: `h100-80` is the vLLM helper's own default, but on
+// the sizing page it is an ordinary card a visitor picked, and matching it
+// globally deleted one of the most plausible real answers from the report.
 const DEFAULTS = [
-  { model: HERO_MODEL_ID, device: DEFAULT_STATE.gpuId },
-  { model: "meta-llama/Llama-3.1-8B-Instruct", device: "rtx4090-24" }, // until 2026-09-05
+  // Retired: the sizing page opened on these until it went blank on 2026-09-07.
+  { model: HERO_MODEL_ID, device: "h200-141", surface: SIZING_SURFACE },
+  { model: "meta-llama/Llama-3.1-8B-Instruct", device: "rtx4090-24", surface: SIZING_SURFACE }, // until 2026-09-05
+  // Still live: these two pages produce nothing without a model and a device,
+  // so they still seed one. Their rows are not blank arrivals, and the values
+  // they open on are not choices — on those pages.
+  { model: HERO_MODEL_ID, device: "h100-80", surface: "vLLM Params" },
+  { model: HERO_MODEL_ID, device: "rtx4090-24", surface: "Fine-tune" },
 ];
 
 const esc = (s: string) =>
@@ -88,10 +103,12 @@ function render(r: Report, note: string): string {
       <div class="sub2">${r.events} events recorded</div></div>
     <div class="tile"><div class="lab">Engaged</div><div class="num ok">${r.engaged}</div>
       <div class="sub2">${pct(r.engaged, s)}% changed a setting</div></div>
-    <div class="tile"><div class="lab">Changed the model</div><div class="num">${r.changedModel}</div>
-      <div class="sub2">${pct(r.changedModel, s)}% moved off what we showed</div></div>
-    <div class="tile"><div class="lab">Took our default</div><div class="num">${r.endedOnDefault}</div>
-      <div class="sub2">${pct(r.endedOnDefault, s)}% ended on a model we picked</div></div>
+    <div class="tile"><div class="lab">Landed empty</div><div class="num">${r.blankStart}</div>
+      <div class="sub2">of ${r.sizingSessions} who opened the calculator</div></div>
+    <div class="tile"><div class="lab">Then picked something</div><div class="num ok">${r.blankActivated}</div>
+      <div class="sub2">${pct(r.blankActivated, r.blankStart)}% of those activated</div></div>
+    <div class="tile"><div class="lab">Picked a model</div><div class="num">${r.changedModel}</div>
+      <div class="sub2">${pct(r.changedModel, s)}% chose one themselves</div></div>
     <div class="tile"><div class="lab">From a shared link</div><div class="num">${r.fromSharedLink}</div>
       <div class="sub2">arrived on someone's config</div></div>
     <div class="tile"><div class="lab">Countries</div><div class="num">${r.countries.length}</div>
@@ -120,9 +137,14 @@ function render(r: Report, note: string): string {
   </div>
 
   <footer>Counted per session, not per event — one visitor tuning settings emits many rows.<br>
-  "Chosen" excludes every model and device the app has ever opened on: most sessions end on whatever we put in front of them,
-  and a deliberate pick of that value cannot be told apart from inertia.<br>
-  So these lists undercount on purpose. "Changed the model" above is the honest measure of engagement.</footer>
+  <strong>The calculator</strong> opens on no model and no device, so a session that opens it carrying neither saw the blank
+  page, and whatever it settles on there was chosen by a person. Those are credited in full, and "Landed empty" is counted
+  against calculator visits rather than all traffic — a crawler that runs JavaScript now contributes a blank arrival instead
+  of a model and a device nobody selected.<br>
+  The vLLM and fine-tune pages still open on a seeded model and device, because they produce nothing without one; so did the
+  calculator before 2026-09-07. On those pages, and in that earlier window, no value the app opened on is credited as a choice
+  — inertia and a deliberate pick of it are indistinguishable. ${r.endedOnDefault} session(s) here settled on such a value and
+  are excluded from the lists above. The same card chosen on the calculator still counts.</footer>
 </main>`;
 }
 
@@ -144,18 +166,21 @@ export function renderMarkdown(r: Report): string {
 
 | | |
 |---|---|
-| Moved off the model we showed | **${r.changedModel}** (${pct(r.changedModel, s)}%) |
-| Moved off the device we showed | **${r.changedDevice}** (${pct(r.changedDevice, s)}%) |
-| Took our default | ${r.endedOnDefault} (${pct(r.endedOnDefault, s)}%) |
+| Opened the calculator | ${r.sizingSessions} |
+| ...landing on the blank page | ${r.blankStart} (${pct(r.blankStart, r.sizingSessions)}%) |
+| ...and then picking something | **${r.blankActivated}** (${pct(r.blankActivated, r.blankStart)}%) |
+| Chose a model | **${r.changedModel}** (${pct(r.changedModel, s)}%) |
+| Chose a device | **${r.changedDevice}** (${pct(r.changedDevice, s)}%) |
 | Arrived on a shared link | ${r.fromSharedLink} |
+| Took a default we showed them | ${r.endedOnDefault} (${pct(r.endedOnDefault, s)}%) |
 
-### Models people went looking for
+### Models people chose
 
-${list(r.modelsChosen, "Nobody moved off our default model this week.")}
+${list(r.modelsChosen, "Nobody picked a model this week.")}
 
-### Hardware people went looking for
+### Hardware people chose
 
-${list(r.devicesChosen, "Nobody moved off our default device this week.")}
+${list(r.devicesChosen, "Nobody picked a device this week.")}
 
 ### Where they came from
 
@@ -173,10 +198,13 @@ Precision: ${inline(r.precision, 4)}
 
 ---
 
-The two "went looking for" lists exclude every model and device the app has ever
-opened on. Most sessions end on whatever we put in front of them, and a
-deliberate pick of that cannot be told apart from inertia — so these undercount
-on purpose. The percentages above are the honest engagement measure.`;
+The calculator opens on no model and no device, so anything a blank-start
+session settles on there was chosen by a person and is counted in full. The vLLM
+and fine-tune pages still seed a model and a device — as the calculator did
+before 2026-09-07 — and on those pages nothing the app opened on is credited,
+because inertia and a deliberate pick cannot be told apart. The same card chosen
+on the calculator still counts. Crawlers land in the blank-start denominator, so
+read the activation percentage as a trend rather than an absolute.`;
 }
 
 /** Synthetic rows, so the layout can be judged before the real export exists. */
@@ -190,7 +218,11 @@ function demoRows(): Row[] {
   ];
   const rows: Row[] = [];
   let t = 0;
-  const stamp = () => `2026-09-${String(1 + Math.floor(t / 400)).padStart(2, "0")}T${String(8 + (t++ % 12)).padStart(2, "0")}:00:00Z`;
+  // Must be monotonic: the report sorts a session's events by timestamp to find
+  // its first and last state. The old hour-cycling formula wrapped from 19 back
+  // to 08 mid-session, which reordered the rows and made the synthetic numbers
+  // describe something the generator never wrote.
+  const stamp = () => new Date(Date.UTC(2026, 8, 1, 8, 0, 0) + t++ * 20 * 60000).toISOString();
   const q = (m: string, g: string, ctx: number, n: number, wd = "bf16") =>
     `m=${encodeURIComponent(m)}&wd=${wd}&kd=fp16&ctx=${ctx}&n=${n}&g=${g}`;
   for (let i = 0; i < 46; i++) {
@@ -198,8 +230,25 @@ function demoRows(): Row[] {
     const [m, g, c] = models[i % models.length];
     const path = i % 7 === 0 ? "/LLMScale/train.html" : i % 5 === 0 ? "/LLMScale/vllm.html" : "/LLMScale/";
     const base: Partial<Row> = { country: c, url_path: path, referrer_domain: i % 4 === 0 ? "news.ycombinator.com" : null };
-    rows.push({ session_id: id, created_at: stamp(), url_query: q(DEFAULTS.model, DEFAULTS.device, 8192, 1), url_path: path, ...base } as Row);
-    if (i % 3 === 0) continue; // a third of visitors touch nothing
+    // The first pageview always fires before the app has written anything.
+    rows.push({ session_id: id, created_at: stamp(), url_query: "", url_path: path, ...base } as Row);
+    // What lands next depends on the page. The sizing page writes the workload
+    // settings with no model and no device, because it has no default left to
+    // write; the other two still seed one, and must not look like blank
+    // arrivals in the synthetic report either.
+    // Only the still-live seeds: the sizing entries in DEFAULTS are retired, and
+    // treating one as current would make the synthetic report show no blank
+    // arrivals at all.
+    const surface = surfaceOf(path);
+    const seed = surface === SIZING_SURFACE ? undefined : DEFAULTS.find((d) => d.surface === surface);
+    rows.push({
+      session_id: id,
+      created_at: stamp(),
+      url_query: seed ? q(seed.model, seed.device, 8192, 1) : "wd=bf16&kd=fp16&ctx=8192&n=1&ov=0.1",
+      url_path: path,
+      ...base,
+    } as Row);
+    if (i % 3 === 0) continue; // a third of visitors never pick anything
     const steps = 1 + (i % 5);
     for (let k = 0; k < steps; k++) {
       rows.push({

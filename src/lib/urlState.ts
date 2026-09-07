@@ -16,6 +16,20 @@ export interface AppState {
   migId: string;
 }
 
+/** True when the app opened on nothing of its own — no model, no architecture,
+ *  no device. Every model and device in the analytics data is then a value a
+ *  person picked, so the report no longer has to guess which of them were ours.
+ *
+ *  `arch` counts: the Custom tab produces a shareable link carrying `p`/`L`/…
+ *  and no model id, and its recipient lands on a populated page. The traffic
+ *  report reads the same three things (`scripts/traffic.ts`, `hasArch`), so the
+ *  `landed` event and the report agree on what a blank arrival is — a
+ *  cross-check that classified the same visit two ways would be worse than
+ *  none. Keep the two definitions in step. */
+export function isBlankStart(s: AppState): boolean {
+  return !s.hfId && !s.arch && !s.gpuId;
+}
+
 export const DEFAULT_STATE: AppState = {
   hfId: "",
   arch: null,
@@ -25,9 +39,11 @@ export const DEFAULT_STATE: AppState = {
   concurrency: 1,
   overheadPct: 0.1,
   cudaContextGiB: 0.75,
-  // The active hardware tab follows the selected device, so this also opens the
-  // picker on Data center rather than Consumer.
-  gpuId: "h200-141",
+  // Deliberately empty: the app opens on no model and no device. A default we
+  // put in front of people is indistinguishable from a choice they made, and a
+  // crawler that renders the page used to emit our default as if it were one.
+  // Both problems disappear when there is nothing to emit. See docs/traffic-report.md.
+  gpuId: "",
   migId: "",
 };
 
@@ -53,7 +69,9 @@ export function encodeState(s: AppState): string {
   p.set("ctx", String(s.contextLength));
   p.set("n", String(s.concurrency));
   p.set("ov", String(s.overheadPct));
-  p.set("g", s.gpuId);
+  // Absent, not empty, while no device is chosen — an empty `g=` would still
+  // read as a value and would land in the analytics data as one.
+  if (s.gpuId) p.set("g", s.gpuId);
   if (s.migId) p.set("mig", s.migId);
   return p.toString();
 }

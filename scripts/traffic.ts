@@ -12,9 +12,15 @@
 //   - the LAST is what they settled on, which is the interesting one.
 // A session with a single event never touched a control.
 //
-// Defaults are the trap. A visitor who does nothing still emits the default
-// model and device, indistinguishable from someone who chose them on purpose.
-// So a value is only credited as a CHOICE when it differs from the entry state.
+// Defaults WERE the trap. A visitor who did nothing still emitted the default
+// model and device, indistinguishable from someone who chose them on purpose —
+// and so did every crawler that runs JavaScript. The app now opens on nothing,
+// which removes the ambiguity at the source rather than filtering it out here.
+//
+// Both eras land in the same export, so the rule is decided per session: one
+// that arrived carrying neither a model nor a device saw the empty page, and
+// everything it ends on is a real choice. One that arrived carrying a value the
+// app used to open on is still filtered against the list of past defaults.
 //
 // React-free so `node scripts/test-traffic.ts` can run it directly.
 
@@ -54,6 +60,14 @@ export interface Report {
   endedOnDefault: number;
   /** Sessions that arrived on a link carrying someone else's configuration. */
   fromSharedLink: number;
+  /** Sessions that opened the calculator at all. The honest denominator for the
+   *  two figures below: vllm.html and train.html still seed a model and a
+   *  device, so total sessions mixes surfaces that can never arrive blank. */
+  sizingSessions: number;
+  /** Sessions that arrived on the empty page — no model, no device, nothing ours. */
+  blankStart: number;
+  /** Of those, the ones that went on to pick a model or a device. */
+  blankActivated: number;
   countries: Tally[];
   referrers: Tally[];
   surfaces: Tally[];
@@ -78,6 +92,10 @@ const SURFACES: Record<string, string> = {
   "vllm.html": "vLLM Params",
   "learn.html": "LLM 101",
 };
+
+/** The only surface that opens on nothing. vllm.html and train.html still seed
+ *  a model and a device, so the blank-start metrics do not describe them. */
+export const SIZING_SURFACE = "VRAM Sizing";
 
 export function surfaceOf(urlPath: string): string {
   const file = urlPath.replace(/\/+$/, "").split("/").pop() ?? "";
@@ -117,6 +135,11 @@ interface Snapshot {
   weightDtype: string;
   context: number;
   concurrency: number;
+  /** A hand-entered architecture, shared without a Hugging Face id. The Custom
+   *  tab calls `onModel("", arch, …)`, so such a link carries `p`/`L`/`h`/… and
+   *  no `m` — the recipient still lands on a populated page, which is the
+   *  opposite of a blank arrival even though there is no model id to show. */
+  hasArch: boolean;
 }
 
 function snapshot(query: string | null): Snapshot {
@@ -132,7 +155,21 @@ function snapshot(query: string | null): Snapshot {
     weightDtype: p.get("wd") ?? "",
     context: num(p.get("ctx")),
     concurrency: num(p.get("n")),
+    hasArch: p.has("p") && p.has("L"),
   };
+}
+
+/** Whether a row's query carries any of the state `snapshot` reads.
+ *
+ *  A row that carries none of it describes no configuration: the very first
+ *  pageview before the app has booted, every decode.html and learn.html view
+ *  (they write no query at all), and fit.html, whose `task` parameter snapshot
+ *  does not read. Such a row must not be taken as a session's entry or as what
+ *  it settled on — doing so let a trailing nav click erase a whole session's
+ *  configuration. */
+function carriesState(query: string | null): boolean {
+  const s = snapshot(query);
+  return Boolean(s.model || s.device || s.hasArch || s.weightDtype || s.context || s.concurrency);
 }
 
 function rank(counts: Map<string, number>, limit = 10): Tally[] {
@@ -170,6 +207,11 @@ function counter() {
 export interface DefaultState {
   model: string;
   device: string;
+  /** Which page opened on this pair, as `surfaceOf` names it. A seed can only
+   *  contaminate the page that writes it: `h100-80` is the vLLM helper's own
+   *  default, but on the sizing page it is an ordinary card someone chose.
+   *  Omit to match every surface (only sensible for a value no page seeds). */
+  surface?: string;
 }
 
 export function buildReport(rows: readonly Row[], defaults: DefaultState | DefaultState[]): Report {
@@ -193,6 +235,9 @@ export function buildReport(rows: readonly Row[], defaults: DefaultState | Defau
   const concurrency = counter();
 
   let engaged = 0;
+  let sizingSessions = 0;
+  let blankStart = 0;
+  let blankActivated = 0;
   let changedModel = 0;
   let changedDevice = 0;
   let endedOnDefault = 0;
@@ -211,18 +256,76 @@ export function buildReport(rows: readonly Row[], defaults: DefaultState | Defau
     referrers.add(first.referrer_domain ?? "", sessionId);
     for (const e of events) surfaces.add(surfaceOf(e.url_path), sessionId);
 
-    // The very first pageview fires before the app has written its state, so its
-    // query is empty. Taking it as the baseline made every session look like it
-    // had chosen whatever it ended on — including visitors who touched nothing.
-    // The baseline is the first event that actually carries state: either the
-    // defaults the app just wrote, or the configuration a shared link arrived on.
-    const baseline = events.find((e) => (e.url_query ?? "").length > 0) ?? first;
+    // A session's entry and its settled state are the first and last events that
+    // actually carry configuration — not its first and last rows.
+    //
+    // At the front: the very first pageview fires before the app has written
+    // anything, so its query is empty. Taking it as the baseline made every
+    // session look like it had chosen whatever it ended on, visitors who
+    // touched nothing included.
+    //
+    // At the back: decode.html and learn.html write no query at all and
+    // fit.html writes only `task`, so taking the literal last row threw the
+    // whole configuration away whenever someone finished by clicking a nav
+    // link — and the nav is on every page.
+    const stateful = events.filter((e) => carriesState(e.url_query));
+    const baseline = stateful[0] ?? first;
+    const settled = stateful[stateful.length - 1] ?? last;
     const entry = snapshot(baseline.url_query);
-    const final = snapshot(last.url_query);
-    if (events.length > 1) engaged++;
+    const final = snapshot(settled.url_query);
+    // Which page the settled state came from. It decides whether a seeded
+    // default could be responsible for it — see `isOurs` below.
+    const settledSurface = surfaceOf(settled.url_path);
+    const isOurs = (pick: (d: DefaultState) => string, value: string) =>
+      knownDefaults.some(
+        (d) => pick(d) === value && (!d.surface || d.surface === settledSurface)
+      );
+    // Not "more than one row": the app rewrites the URL as soon as it boots, so
+    // even a visitor who touches nothing produces a second pageview. Engagement
+    // is a state that actually moved.
+    if (
+      final.model !== entry.model ||
+      final.device !== entry.device ||
+      final.weightDtype !== entry.weightDtype ||
+      final.context !== entry.context ||
+      final.concurrency !== entry.concurrency
+    ) {
+      engaged++;
+    }
+
+    // Only the sizing page opens on nothing, so only it can produce a blank
+    // arrival. Scoping this matters: learn.html and decode.html write no query
+    // and fit.html writes only `task`, so without the filter every LLM-101
+    // reader counted as someone who saw the empty calculator and walked away,
+    // and the activation rate — the one number this measurement exists to
+    // produce — was diluted by traffic that never opened the calculator.
+    const onSizing = events.filter((e) => surfaceOf(e.url_path) === SIZING_SURFACE);
+    const sizingStateful = onSizing.filter((e) => carriesState(e.url_query));
+    const sizingEntry = snapshot(sizingStateful[0]?.url_query ?? null);
+    const sizingFinal = snapshot(sizingStateful[sizingStateful.length - 1]?.url_query ?? null);
+    // A crawler that renders the page once and leaves has no stateful row at
+    // all, which is exactly a blank arrival that never activated.
+    if (onSizing.length > 0) sizingSessions++;
+    const blankOnSizing =
+      onSizing.length > 0 && !sizingEntry.model && !sizingEntry.device && !sizingEntry.hasArch;
+    if (blankOnSizing) {
+      blankStart++;
+      if (sizingFinal.model || sizingFinal.device) blankActivated++;
+    }
+
+    // The exclusion list is bypassed only for a value that was settled on the
+    // sizing page by a session that opened it blank: nothing was put in front
+    // of that visitor, so nothing they ended on can be our own default. A
+    // session that drifts on to vllm.html or train.html is settling on a page
+    // that still seeds, so those values stay filtered.
+    const startedBlank = blankOnSizing && settledSurface === SIZING_SURFACE;
     // Arriving on a configuration that matches none of the app's own defaults
-    // means the link came from someone else.
-    if (entry.model && !knownDefaults.some((d) => d.model === entry.model)) fromSharedLink++;
+    // means the link came from someone else. An architecture with no model id
+    // is one too: the app never seeds one, so it can only have been shared.
+    const arrivedOnSomeoneElses = entry.model
+      ? !knownDefaults.some((d) => d.model === entry.model)
+      : entry.hasArch;
+    if (arrivedOnSomeoneElses) fromSharedLink++;
 
 
     modelsSeen.add(modelLabel(final.model), sessionId);
@@ -235,8 +338,12 @@ export function buildReport(rows: readonly Row[], defaults: DefaultState | Defau
     // from inertia. Excluding every default — past ones too — also keeps the
     // metric stable when the default moves: otherwise changing it silently
     // reclassifies the same visitor behaviour and makes periods incomparable.
-    const modelIsOurs = knownDefaults.some((d) => d.model === final.model);
-    const deviceIsOurs = knownDefaults.some((d) => d.device === final.device);
+    // Matched per surface: `h100-80` is the vLLM helper's seed, but a visitor
+    // who picks an H100 80GB on the sizing page chose it, and listing it
+    // globally silently deleted one of the most plausible real answers from
+    // the report.
+    const modelIsOurs = !startedBlank && isOurs((d) => d.model, final.model);
+    const deviceIsOurs = !startedBlank && isOurs((d) => d.device, final.device);
     if (final.model && modelIsOurs) endedOnDefault++;
     if (final.model && final.model !== entry.model && !modelIsOurs) {
       modelsChosen.add(modelLabel(final.model), sessionId);
@@ -262,6 +369,9 @@ export function buildReport(rows: readonly Row[], defaults: DefaultState | Defau
     changedDevice,
     endedOnDefault,
     fromSharedLink,
+    sizingSessions,
+    blankStart,
+    blankActivated,
     countries: countries.tally(),
     referrers: referrers.tally(),
     surfaces: surfaces.tally(),

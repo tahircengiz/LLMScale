@@ -13,6 +13,8 @@ const en: Dict = {
   "header.share": "Share this estimate",
   "header.shareCopied": "Link copied ✓",
   "results.empty": "Pick a model to see the VRAM breakdown.",
+  "results.emptyHint":
+    "Weights, KV cache and overhead are computed in your browser from the model's own config — search Hugging Face above, or start from a preset.",
 
   "model.step": "Choose a model",
   "model.tab.search": "Search Hugging Face",
@@ -83,6 +85,9 @@ const en: Dict = {
   "stat.headDim": "head dim {n}",
 
   "gpu.step": "GPU fit",
+  "gpu.pickPrompt": "Pick a GPU to check it against this model",
+  "gpu.pickHint":
+    "This model needs about {x}. Choose a card below and you get the fit verdict, how many concurrent users it holds, how much context it can carry and the expected decode speed.",
   "gpu.usableHint": "assumes {p}% of VRAM usable",
   "gpu.fits": "fits ✓",
   "gpu.needs": "needs {n}× GPUs",
@@ -463,6 +468,8 @@ const tr: Dict = {
   "header.share": "Bu tahmini paylaş",
   "header.shareCopied": "Link kopyalandı ✓",
   "results.empty": "VRAM kırılımını görmek için bir model seç.",
+  "results.emptyHint":
+    "Ağırlıklar, KV cache ve ek yük modelin kendi config'inden, tarayıcının içinde hesaplanır — yukarıdan Hugging Face'te ara ya da hazır bir modelle başla.",
 
   "model.step": "Model seç",
   "model.tab.search": "Hugging Face'te ara",
@@ -530,6 +537,9 @@ const tr: Dict = {
   "stat.headDim": "head dim {n}",
 
   "gpu.step": "GPU uyumu",
+  "gpu.pickPrompt": "Bu modelle sınamak için bir GPU seç",
+  "gpu.pickHint":
+    "Bu model yaklaşık {x} istiyor. Aşağıdan bir kart seçtiğinde sığıp sığmadığını, kaç eşzamanlı kullanıcı kaldırdığını, ne kadar bağlam taşıyabildiğini ve beklenen üretim hızını görürsün.",
   "gpu.usableHint": "VRAM'in %{p}'i kullanılabilir varsayılır",
   "gpu.fits": "sığar ✓",
   "gpu.needs": "{n}× GPU gerekir",
