@@ -24,7 +24,11 @@
     <meta name="twitter:title" content="LLM 101 — how an LLM works, visualized" />
     <meta name="twitter:description" content="Tokens, embeddings, attention, layers and sampling — an interactive 3D walkthrough." />
     <!-- Umami analytics (self-hosted, privacy-friendly, cookieless) -->
-    <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca"></script>
+    <!-- data-domains gates the tracker to the live site. Without it the script
+         reports from anywhere it loads: a file:// open of this page sent a
+         pageview whose path was a local disk path, and every localhost preview
+         landed in production traffic. -->
+    <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
     <style>
       :root {
         --cyan: #22d3ee; --pink: #a855f7; --purple: #8b5cf6; --indigo: #6366f1;

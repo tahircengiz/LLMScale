@@ -13,7 +13,11 @@
       } catch (e) {}
     </script>
     <!-- Umami analytics (self-hosted on hoarder, privacy-friendly, cookieless) -->
-    <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca"></script>
+    <!-- data-domains gates the tracker to the live site. Without it the script
+         reports from anywhere it loads: a file:// open of this page sent a
+         pageview whose path was a local disk path, and every localhost preview
+         landed in production traffic. -->
+    <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
     <title>LLMScale — LLM VRAM Calculator (weights, KV cache & GPU sizing)</title>
     <meta
       name="description"
@@ -78,8 +82,8 @@
     }
     </script>
     <script type="module" crossorigin src="/LLMScale/assets/modulepreload-polyfill-B5Qt9EMX.js"></script>
-    <script type="module" crossorigin src="/LLMScale/assets/main-DhJqAeva.js"></script>
-    <link rel="stylesheet" crossorigin href="/LLMScale/assets/main-JMJBGOEA.css">
+    <script type="module" crossorigin src="/LLMScale/assets/main-zRMNcN4r.js"></script>
+    <link rel="stylesheet" crossorigin href="/LLMScale/assets/main-D2wfRZEk.css">
   </head>
   <body>
     <div id="root"></div>
