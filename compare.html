@@ -13,7 +13,11 @@
       } catch (e) {}
     </script>
     <!-- Umami analytics (self-hosted on hoarder, privacy-friendly, cookieless) -->
-    <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca"></script>
+    <!-- data-domains gates the tracker to the live site. Without it the script
+         reports from anywhere it loads: a file:// open of this page sent a
+         pageview whose path was a local disk path, and every localhost preview
+         landed in production traffic. -->
+    <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
     <title>LLMScale — Compare Models (side-by-side specs, caps & task fit)</title>
     <meta
       name="description"
