@@ -56,7 +56,21 @@ export function GpuFit({
   onWeightDtype?: (d: Dtype) => void;
 }) {
   const { t } = useLang();
-  const selected = GPUS.find((g) => g.id === gpuId) ?? GPUS[0];
+  // No device is selected until someone picks one — `gpuId` is empty on a bare
+  // visit. The panel describing a device is not rendered while `sel` is null.
+  const sel = GPUS.find((g) => g.id === gpuId) ?? null;
+  // Which tier the grid is browsing. It follows the selection once there is
+  // one; before that it is a view preference, not a choice, and is never
+  // written to the URL or to the analytics.
+  const [viewCat, setViewCat] = useState<GpuCategory>(sel?.category ?? "datacenter");
+  useEffect(() => {
+    if (sel) setViewCat(sel.category);
+  }, [sel?.category]); // eslint-disable-line react-hooks/exhaustive-deps
+  const activeCat: GpuCategory = sel?.category ?? viewCat;
+  // Anchor for the arithmetic below, which always needs some device to describe.
+  // Everything it feeds sits inside the `sel &&` block, so an unselected visitor
+  // never sees a number derived from it.
+  const selected: Gpu = sel ?? GPUS.find((g) => g.category === activeCat) ?? GPUS[0];
   const migProfiles = migProfilesFor(selected.id);
   const migSlice = migId ? migMem(selected.id, migId) : null;
   const capGiB = migSlice ?? (selected.unified ? selected.totalGiB ?? selected.vramGiB : selected.vramGiB);
@@ -110,7 +124,7 @@ export function GpuFit({
         })
       : null;
   // Stage 2: devices within the selected category, split by whether they fit the model.
-  const catGpus = GPUS.filter((g) => g.category === selected.category).sort(
+  const catGpus = GPUS.filter((g) => g.category === activeCat).sort(
     (a, b) => (a.totalGiB ?? a.vramGiB) - (b.totalGiB ?? b.vramGiB)
   );
   // The selected device rides along in the visible group even when the model has
@@ -122,7 +136,7 @@ export function GpuFit({
   );
 
   const [showNonFit, setShowNonFit] = useState(false);
-  useEffect(() => setShowNonFit(false), [selected.category]);
+  useEffect(() => setShowNonFit(false), [activeCat]);
 
   // Stage 1: jump to a category — pick its smallest fitting device, else its largest.
   function pickForCat(cat: GpuCategory) {
@@ -182,12 +196,15 @@ export function GpuFit({
       <div className="mb-3 flex flex-wrap gap-1.5">
         {GPU_CATEGORIES.map((cat) => {
           const n = GPUS.filter((g) => g.category === cat).length;
-          const active = selected.category === cat;
+          const active = activeCat === cat;
           return (
             <button
               key={cat}
               type="button"
-              onClick={() => onGpu(pickForCat(cat))}
+              // Browsing a tier is not choosing a device. Before anything is
+              // selected the chip only moves the grid; jumping straight to a
+              // device would put a card we picked back into the data.
+              onClick={() => (sel ? onGpu(pickForCat(cat)) : setViewCat(cat))}
               className={
                 "rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition " +
                 (active ? "bg-brand-600/20 text-white ring-brand-500/60" : "bg-ink-850/40 text-slate-400 ring-white/10 hover:text-slate-200")
@@ -199,7 +216,20 @@ export function GpuFit({
         })}
       </div>
 
+      {/* Nothing is chosen yet: say what the next click buys, and let the ring
+          carry the emphasis. A standing highlight, not an animation — this is
+          the resting state of the page and it repeats on every visit. */}
+      {!sel && (
+        <div className="rounded-2xl bg-ink-850/60 p-4 ring-1 ring-brand-500/30">
+          <div className="text-sm font-medium text-white">{t("gpu.pickPrompt")}</div>
+          <p className="mt-1 text-[11.5px] leading-relaxed text-slate-400">
+            {t("gpu.pickHint", { x: formatGiB(totalGiB) })}
+          </p>
+        </div>
+      )}
+
       {/* Selected GPU panel — Stage 2: device within category */}
+      {sel && (
       <div className="rounded-2xl bg-ink-850/60 p-4 ring-1 ring-white/10">
         <div className="mb-2 space-y-2">
           <div className="flex items-center justify-between gap-2">
@@ -382,6 +412,7 @@ export function GpuFit({
             </div>
           ))}
       </div>
+      )}
 
       {/* Devices in this category that fit the model, plus the selected one even
           when it does not (the rest of the non-fitting devices stay behind a toggle) */}

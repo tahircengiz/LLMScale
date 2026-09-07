@@ -8,7 +8,7 @@ import { TASKS } from "../src/lib/fit.ts";
 import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
 import { DTYPE_BYTES, DTYPE_LABELS, calculate } from "../src/lib/calc.ts";
-import { DEFAULT_STATE } from "../src/lib/urlState.ts";
+import { DEFAULT_STATE, encodeState, isBlankStart } from "../src/lib/urlState.ts";
 import { HERO_MODEL_ID, KNOWN_MODELS, findKnownByHfId } from "../src/lib/models.ts";
 import {
   DARK_QUERY,
@@ -73,39 +73,38 @@ check("every MIG profile maps to a real GPU", orphanMig.length === 0, orphanMig.
 const badUnified = GPUS.filter((g) => g.totalGiB !== undefined && g.totalGiB < g.vramGiB);
 check("unified devices expose at most their total memory", badUnified.length === 0,
   badUnified.map((g) => g.id).join(", "));
-check("the default GPU exists", ids.includes(DEFAULT_STATE.gpuId), DEFAULT_STATE.gpuId);
-// The picker's active tab is derived from the selected device's category, so the
-// default device is also what decides which tab a first-time visitor lands on.
-// Swapping it for a consumer card would silently move that tab back.
-const defaultGpu = GPUS.find((g) => g.id === DEFAULT_STATE.gpuId);
-check("the default GPU opens the Data center tab", defaultGpu?.category === "datacenter", defaultGpu?.category);
+// The app deliberately opens on nothing. This is the property that keeps the
+// analytics honest: a model or device the app picks itself is emitted by every
+// visitor and every crawler that runs JavaScript, and is then indistinguishable
+// from a deliberate choice. Re-introducing a default here would silently put
+// that contamination back, so it is pinned rather than left to review.
+check("the app opens on no device", DEFAULT_STATE.gpuId === "", DEFAULT_STATE.gpuId);
+check("the app opens on no model", DEFAULT_STATE.hfId === "" && DEFAULT_STATE.arch === null);
+check("a bare start is recognised as blank", isBlankStart({ ...DEFAULT_STATE }));
+// A shared link is the one way state arrives, and it must still be recognised
+// as *not* blank — otherwise every visitor from a link counts as an empty entry.
+check(
+  "a shared link is not a blank start",
+  !isBlankStart({ ...DEFAULT_STATE, hfId: HERO_MODEL_ID }),
+);
 
-// The two defaults are coupled. The selected card no longer vanishes when the
-// model outgrows it — deviceGrid.ts pins it to the visible grid — but a hero the
-// default device cannot hold would still greet a first-time visitor with a red
-// bar and a "needs 2× GPUs" verdict on a page meant to show a working setup.
+// Nothing may re-seed the empty entry behind the state layer's back.
+const sizing = read("src/pages/SizingPage.tsx");
+check("SizingPage does not seed a model on a bare visit", !/base\.hfId\s*=/.test(sizing));
+// An empty `g=` would still read as a value in the event log.
+check("an unset device is left out of the URL entirely", !encodeState({ ...DEFAULT_STATE }).includes("g="));
+
+// The hero is no longer a default, but it is still a real model: the report
+// carries it as a *past* default so periods spanning the change stay readable.
 const hero = findKnownByHfId(HERO_MODEL_ID);
-check("the hero model is a known model", !!hero, HERO_MODEL_ID);
-if (hero && defaultGpu) {
-  const need = calculate({
-    arch: hero,
-    weightDtype: DEFAULT_STATE.weightDtype,
-    kvDtype: DEFAULT_STATE.kvDtype,
-    contextLength: DEFAULT_STATE.contextLength,
-    concurrency: DEFAULT_STATE.concurrency,
-    overheadPct: DEFAULT_STATE.overheadPct,
-    cudaContextGiB: DEFAULT_STATE.cudaContextGiB,
-  }).totalGiB;
-  const cap = usableGiB(defaultGpu, "");
-  check(
-    "the hero model fits the default GPU, so the page opens on a working setup",
-    need <= cap,
-    `${need.toFixed(1)} of ${cap.toFixed(1)} GiB (${Math.round((need / cap) * 100)}%)`
-  );
-  // A hero that barely registers makes the default device look pointless.
-  check("the hero actually exercises the default GPU", need / cap > 0.25, `${Math.round((need / cap) * 100)}%`);
-}
-check("the hero is bigger than a single-card 8B", (hero?.numParams ?? 0) > 20e9, `${((hero?.numParams ?? 0) / 1e9).toFixed(0)}B`);
+check("the retired hero is still a known model", !!hero, HERO_MODEL_ID);
+
+// Choosing a device has to emit an event of its own. The report used to infer
+// device choice from the last URL, which cannot tell inertia from intent.
+const page = read("src/pages/SizingPage.tsx");
+check("picking a device fires device-select", page.includes('track("device-select"'));
+check("the first interaction is recorded", page.includes('track("activated"'));
+check("every arrival is counted, blank or not", page.includes('track("landed"'));
 
 // The glass theme styles the selected card through aria-pressed, which only
 // works while GpuFit actually sets it.

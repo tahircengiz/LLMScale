@@ -14,8 +14,14 @@ const find = (t: { label: string; sessions: number }[], label: string) =>
   t.find((x) => x.label === label)?.sessions ?? 0;
 
 const DEFAULTS = { model: "Qwen/Qwen2.5-32B-Instruct", device: "h200-141" };
-const q = (model: string, device: string, extra = "") =>
-  `m=${encodeURIComponent(model)}&wd=bf16&kd=fp16&ctx=8192&n=1&g=${device}${extra ? "&" + extra : ""}`;
+// `extra` overrides rather than appends: URLSearchParams.get returns the FIRST
+// occurrence, so a trailing `ctx=32768` used to be shadowed by the `ctx=8192`
+// already in the string and the row silently described the wrong state.
+const q = (model: string, device: string, extra = "") => {
+  const p = new URLSearchParams(`m=${encodeURIComponent(model)}&wd=bf16&kd=fp16&ctx=8192&n=1&g=${device}`);
+  for (const [k, v] of new URLSearchParams(extra)) p.set(k, v);
+  return p.toString();
+};
 
 let clock = 0;
 const at = () => `2026-09-05T10:${String(clock++).padStart(2, "0")}:00Z`;
@@ -125,6 +131,118 @@ const real: Row[] = [
 const r10 = buildReport(real, BOTH);
 check("a real departure is still credited", find(r10.modelsChosen, "Qwen2.5 72B Instruct") === 1);
 check("and does not count as ending on a default", r10.endedOnDefault === 0);
+
+console.log("\n--- the empty start needs no filtering ---");
+// What a bare visit looks like now: the app writes its workload settings but no
+// model and no device, because it has none to write.
+const blankQuery = "wd=bf16&kd=fp16&ctx=8192&n=1&ov=0.1";
+const passive: Row[] = [row("K", ""), row("K", blankQuery)];
+const r11 = buildReport(passive, [DEFAULTS]);
+check("a blank arrival is counted", r11.blankStart === 1);
+check("touching nothing is not activation", r11.blankActivated === 0);
+// This is the row a JS-running crawler leaves behind. It used to arrive carrying
+// our hero model and our H200; now it carries no opinion at all.
+check("and it contributes no model", r11.modelsChosen.length === 0 && r11.modelsSeen.length === 0);
+check("nor a device", r11.devicesChosen.length === 0);
+check("a second pageview alone is not engagement", r11.engaged === 0, String(r11.engaged));
+
+// The payoff: picking the model that used to be the default is a real choice
+// again, because there is no longer a default it could be confused with.
+const blankThenHero: Row[] = [
+  row("L", ""),
+  row("L", blankQuery),
+  row("L", q(DEFAULTS.model, DEFAULTS.device)),
+];
+const r12 = buildReport(blankThenHero, [DEFAULTS]);
+check("the retired default is creditable again", find(r12.modelsChosen, "Qwen2.5 32B Instruct") === 1,
+  JSON.stringify(r12.modelsChosen));
+check("its device is too", r12.devicesChosen.length === 1, JSON.stringify(r12.devicesChosen));
+check("a blank start that picks something is activated", r12.blankActivated === 1);
+check("and it is not filed as ending on a default", r12.endedOnDefault === 0);
+
+// A session from before the change still arrives carrying the old default, and
+// must still be filtered — otherwise the two eras are not comparable.
+const legacy: Row[] = [
+  row("M", q(DEFAULTS.model, DEFAULTS.device)),
+  row("M", q(DEFAULTS.model, DEFAULTS.device, "ctx=32768")),
+];
+const r13 = buildReport(legacy, [DEFAULTS]);
+check("an old-style arrival is not a blank start", r13.blankStart === 0);
+check("and its default is still not a choice", r13.modelsChosen.length === 0, JSON.stringify(r13.modelsChosen));
+check("but the visitor did change something", r13.engaged === 1);
+
+// A shared link carries a model on entry, so it is not blank either.
+const sharedLink: Row[] = [row("N", q("google/gemma-2-27b-it", "a100-80"))];
+const r14 = buildReport(sharedLink, [DEFAULTS]);
+check("a shared link is not a blank start", r14.blankStart === 0);
+check("and is still recognised as shared", r14.fromSharedLink === 1);
+
+console.log("\n--- the blank metrics belong to the sizing page alone ---");
+// Every one of these was counted as "saw the empty calculator and walked away"
+// before, which diluted the only number the blank start exists to produce.
+const elsewhere: Row[] = [
+  row("P", "", { url_path: "/LLMScale/learn.html" }),          // writes no query at all
+  row("P", "", { url_path: "/LLMScale/decode.html" }),         // no replaceState anywhere
+  row("P", "task=chat", { url_path: "/LLMScale/fit.html" }),   // a query, but no model or device
+];
+const r15 = buildReport(elsewhere, [DEFAULTS]);
+check("a session that never opened the calculator is not a blank arrival", r15.blankStart === 0);
+// The denominator has to exclude it too, or the activation rate is computed
+// against traffic that could never have activated.
+check("nor does it count as a calculator visit", r15.sizingSessions === 0);
+check("nor does it count against activation", r15.blankActivated === 0);
+check("and reading a page is not engagement", r15.engaged === 0);
+
+// Leaving by the header nav must not erase what the visitor configured. The nav
+// is on every page, so this is ordinary browsing.
+const wandered: Row[] = [
+  row("Q", ""),
+  row("Q", blankQuery),
+  row("Q", q("meta-llama/Llama-3.3-70B-Instruct", "b200-192")),
+  row("Q", "", { url_path: "/LLMScale/decode.html" }),
+];
+const r16 = buildReport(wandered, [DEFAULTS]);
+check("the session counts as a calculator visit", r16.sizingSessions === 1);
+check("the settled state survives a trailing nav click", r16.blankActivated === 1);
+check("and the model is still credited", find(r16.modelsChosen, "Llama 3.3 70B Instruct") === 1,
+  JSON.stringify(r16.modelsChosen));
+check("as is the device", find(r16.devicesChosen, "B200 192GB") === 1, JSON.stringify(r16.devicesChosen));
+
+console.log("\n--- a seed only contaminates the page that writes it ---");
+// h100-80 is the vLLM helper's own default. On the sizing page it is an
+// ordinary card, and listing it globally deleted a very plausible real answer.
+const SURFACED = [
+  { model: DEFAULTS.model, device: "h200-141", surface: "VRAM Sizing" },
+  { model: DEFAULTS.model, device: "h100-80", surface: "vLLM Params" },
+];
+const sharedThenH100: Row[] = [
+  row("R", q("google/gemma-2-27b-it", "b200-192")),
+  row("R", q("google/gemma-2-27b-it", "h100-80")),
+];
+const r17 = buildReport(sharedThenH100, SURFACED);
+check("an H100 picked on the sizing page is a real choice",
+  find(r17.devicesChosen, "H100 (SXM/PCIe) 80GB") === 1, JSON.stringify(r17.devicesChosen));
+// ...but the same value on the page that seeds it is not.
+const onVllm: Row[] = [
+  row("S", q(DEFAULTS.model, "h100-80").replace("g=", "gpu="), { url_path: "/LLMScale/vllm.html" }),
+  row("S", q(DEFAULTS.model, "h100-80").replace("g=", "gpu=") + "&ctx=32768", { url_path: "/LLMScale/vllm.html" }),
+];
+const r18 = buildReport(onVllm, SURFACED);
+check("the vLLM seed is still never a choice", r18.devicesChosen.length === 0,
+  JSON.stringify(r18.devicesChosen));
+check("and a vLLM visit is not a blank arrival", r18.blankStart === 0);
+check("nor a calculator visit", r18.sizingSessions === 0);
+// It is still reported as someone taking what we put in front of them — the
+// vLLM and fine-tune pages keep their seeds on purpose, so this stays non-zero.
+check("it is reported as taking our seed", r18.endedOnDefault === 1);
+
+console.log("\n--- a shared custom architecture is not a blank page ---");
+// The Custom tab shares `p`/`L`/... with no model id. The recipient still lands
+// on a populated page, so the report must agree with isBlankStart() in the app.
+const customLink = "p=7000000000&L=32&h=4096&a=32&k=8&wd=bf16&kd=fp16&ctx=8192&n=1";
+const r19 = buildReport([row("T", customLink)], [DEFAULTS]);
+check("an architecture without a model id is not a blank arrival", r19.blankStart === 0);
+check("it is recognised as someone else's configuration", r19.fromSharedLink === 1);
 
 console.log("\n--- degenerate input ---");
 const r5 = buildReport([], DEFAULTS);

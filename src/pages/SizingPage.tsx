@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
 import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
-import { decodeState, encodeState, DEFAULT_STATE, type AppState } from "../lib/urlState";
+import { decodeState, encodeState, isBlankStart, DEFAULT_STATE, type AppState } from "../lib/urlState";
+import { track } from "../lib/analytics";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Controls } from "../components/Controls";
@@ -14,17 +15,27 @@ const HERO = findKnownByHfId(HERO_MODEL_ID)!;
 
 function initialState(): AppState {
   const fromUrl = decodeState(window.location.search);
-  const base: AppState = { ...DEFAULT_STATE, ...fromUrl };
-  if (!base.arch && !base.hfId) {
-    base.hfId = HERO.hfId;
-    base.arch = { ...HERO };
-  }
-  return base;
+  // No seeding on a bare visit. The page used to open on a hero model and an
+  // H200, which meant every visitor — and every crawler that runs JavaScript —
+  // emitted a model and a device nobody had chosen. Roughly 60% of sessions
+  // ended on those two values, so the analytics could not tell a deliberate
+  // pick of them from someone who never touched a control. A shared link still
+  // arrives fully populated; only the empty entry is empty.
+  return { ...DEFAULT_STATE, ...fromUrl };
 }
 
 export function SizingPage() {
   const { t } = useLang();
   const [state, setState] = useState<AppState>(initialState);
+  // Interaction-sourced telemetry. A value the app writes itself can never
+  // reach these, which is the whole point: the report reads intent instead of
+  // inferring it from whatever state happened to be in the URL last.
+  const activated = useRef(false);
+  function markActivated(what: "model" | "device") {
+    if (activated.current) return;
+    activated.current = true;
+    track("activated", { what });
+  }
   const [meta, setMeta] = useState<ResolvedMeta | null>(
     state.hfId === HERO.hfId ? { source: "bundled", gated: HERO.gated ?? false, modelType: HERO_MODEL_TYPE } : null
   );
@@ -58,6 +69,15 @@ export function SizingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fired once per load, before anything is picked, so the report has an honest
+  // denominator: how many arrivals saw the empty page at all. Without it a drop
+  // in model events is unreadable — fewer crawlers and fewer humans look alike.
+  useEffect(() => {
+    const s0 = initialState();
+    track("landed", { start: isBlankStart(s0) ? "blank" : "shared" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const qs = encodeState(state);
     window.history.replaceState(null, "", `${window.location.pathname}?${qs}`);
@@ -81,12 +101,13 @@ export function SizingPage() {
       </p>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <div className="space-y-5">
-          <Card className="p-5 relative z-30">
+          <Card className={"p-5 relative z-30" + (state.arch ? "" : " ring-1 ring-brand-500/60")}>
             <ModelPicker
               hfId={state.hfId}
               arch={state.arch}
               meta={meta}
               onModel={(hfId, arch, m) => {
+                markActivated("model");
                 patch({
                   hfId,
                   arch,
@@ -111,11 +132,20 @@ export function SizingPage() {
         </div>
 
         <div className="space-y-5">
-          <Card className="p-5">
+          {/* The empty panel is now the first thing a visitor sees, so it says
+              what the tool does rather than only what is missing. The standing
+              ring is the whole of the emphasis — no pulse, no motion: this is a
+              resting state that repeats on every visit and every refresh. */}
+          <Card className={"p-5" + (result ? "" : " ring-1 ring-brand-500/60")}>
             {result ? (
               <Results result={result} />
             ) : (
-              <p className="py-10 text-center text-sm text-slate-400">{t("results.empty")}</p>
+              <div className="py-10 text-center">
+                <p className="text-sm font-medium text-white">{t("results.empty")}</p>
+                <p className="mx-auto mt-2 max-w-sm text-[11.5px] leading-relaxed text-slate-400">
+                  {t("results.emptyHint")}
+                </p>
+              </div>
             )}
           </Card>
           {result && state.arch && (
@@ -132,7 +162,16 @@ export function SizingPage() {
                 totalGiB={result.totalGiB}
                 gpuId={state.gpuId}
                 migId={state.migId}
-                onGpu={(id) => patch({ gpuId: id, migId: "" })}
+                onGpu={(id) => {
+                  markActivated("device");
+                  // The model side has had `model-view` since the beginning; the
+                  // device side had nothing, which is why the report was reduced
+                  // to inferring device choice from the URL. Every path that
+                  // changes the device funnels through here — the grid, the
+                  // dropdown, the category chips and the recommendation buttons.
+                  if (id !== state.gpuId) track("device-select", { device: id });
+                  patch({ gpuId: id, migId: "" });
+                }}
                 onMig={(id) => patch({ migId: id })}
                 onWeightDtype={(d) => patch({ weightDtype: d })}
               />

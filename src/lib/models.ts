@@ -160,13 +160,18 @@ export const KNOWN_MODELS: KnownModel[] = [
 const byHfId = new Map(KNOWN_MODELS.map((m) => [m.hfId.toLowerCase(), m]));
 
 /**
- * The model the sizing and task-fit pages open on, and the meta they show for it
+ * The model the vLLM and fine-tune pages open on, and the meta they show for it
  * without a network round trip.
  *
- * It has to fit DEFAULT_STATE's GPU: the first screen is meant to demonstrate a
- * working setup, not open on a red bar and a "needs 2× GPUs" verdict. (The card
- * itself no longer disappears when the model outgrows the device — lib/deviceGrid.ts
- * keeps it on screen.) test-invariants.ts checks the pairing still holds.
+ * The sizing page no longer opens on it — nor on anything else. A model the app
+ * puts in front of every visitor is emitted by people who never chose it and by
+ * every crawler that runs JavaScript, and the analytics cannot tell that apart
+ * from a deliberate pick. See docs/traffic-report.md; test-invariants.ts pins
+ * the blank start.
+ *
+ * The other two pages still seed it, because they have no useful output without
+ * a model. Their rows are therefore still filtered against the historical
+ * default list in report-traffic.ts.
  */
 export const HERO_MODEL_ID = "Qwen/Qwen2.5-32B-Instruct";
 export const HERO_MODEL_TYPE = "qwen2";
