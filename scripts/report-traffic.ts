@@ -23,6 +23,11 @@ import { HERO_MODEL_ID } from "../src/lib/models.ts";
 // the page that writes it: `h100-80` is the vLLM helper's own default, but on
 // the sizing page it is an ordinary card a visitor picked, and matching it
 // globally deleted one of the most plausible real answers from the report.
+// Where the site actually lives. Anything reporting from somewhere else is a
+// local preview, a file:// open or a fork — never a visitor. Keep in step with
+// the `data-domains` attribute on the pages and with index.html's canonical URL.
+const PRODUCTION_HOST = "tahircengiz.github.io";
+
 const DEFAULTS = [
   // Retired: the sizing page opened on these until it went blank on 2026-09-07.
   { model: HERO_MODEL_ID, device: "h200-141", surface: SIZING_SURFACE },
@@ -276,7 +281,24 @@ if (!demo && !inPath) {
 }
 
 const rows: Row[] = demo ? demoRows() : JSON.parse(readFileSync(inPath!, "utf8"));
-const report = buildReport(rows, DEFAULTS);
+
+// Belt and braces: the documented export already filters on hostname, but an
+// export run by hand may not, and a leak here is invisible in the output.
+//
+// This has to happen per EVENT, not per session. Umami derives `session_id`
+// without the hostname, so a localhost preview and real browsing from the same
+// machine share one session id — three of them did — and dropping whole
+// sessions would throw away the real half. Rows with no hostname at all are
+// kept: an export that does not select the column must still work.
+const kept = rows.filter((r) => r.hostname == null || r.hostname === PRODUCTION_HOST);
+const dropped = rows.length - kept.length;
+const report = buildReport(kept, DEFAULTS);
+
+// Never silently: a rising count here means the tracker is reporting from
+// somewhere it should not, which is worth knowing rather than quietly cleaning.
+if (dropped > 0) {
+  console.error(`note: dropped ${dropped} event(s) not from ${PRODUCTION_HOST} (local previews, file:// opens, forks)`);
+}
 
 // Markdown goes to stdout so the weekly job can pipe it straight at the mailer.
 if (asEmail) {

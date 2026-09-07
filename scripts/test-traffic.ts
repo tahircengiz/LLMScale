@@ -244,6 +244,27 @@ const r19 = buildReport([row("T", customLink)], [DEFAULTS]);
 check("an architecture without a model id is not a blank arrival", r19.blankStart === 0);
 check("it is recognised as someone else's configuration", r19.fromSharedLink === 1);
 
+console.log("\n--- non-production rows are filtered per event, not per session ---");
+// Umami derives session_id without the hostname, so a localhost preview and
+// real browsing from the same machine share one session id. Dropping the whole
+// session would throw away the real half with the noise.
+const PROD = "tahircengiz.github.io";
+const blended: Row[] = [
+  row("U", blankQuery, { hostname: "localhost" }),
+  row("U", q("meta-llama/Llama-3.2-1B-Instruct", "rtx3060-12"), { hostname: "localhost" }),
+  row("U", blankQuery, { hostname: PROD }),
+  row("U", q("google/gemma-2-27b-it", "a100-80"), { hostname: PROD }),
+];
+const keep = (rs: Row[]) => rs.filter((r) => r.hostname == null || r.hostname === PROD);
+const r20 = buildReport(keep(blended), [DEFAULTS]);
+check("the real half of a blended session survives",
+  find(r20.modelsChosen, "Gemma 2 27B IT") === 1, JSON.stringify(r20.modelsChosen));
+check("and the preview half is gone", find(r20.modelsChosen, "Llama 3.2 1B Instruct") === 0);
+check("it is still one calculator visit", r20.sizingSessions === 1);
+// An export that does not select the column must keep working.
+const r21 = buildReport(keep([row("V", blankQuery), row("V", q("google/gemma-2-27b-it", "a100-80"))]), [DEFAULTS]);
+check("rows with no hostname are kept", r21.sizingSessions === 1 && r21.blankActivated === 1);
+
 console.log("\n--- degenerate input ---");
 const r5 = buildReport([], DEFAULTS);
 check("an empty export produces an empty report", r5.sessions === 0 && r5.modelsChosen.length === 0);
