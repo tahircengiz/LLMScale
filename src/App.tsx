@@ -18,7 +18,7 @@ import { TrainPage } from "./pages/TrainPage";
 import { Badge, Segmented } from "./components/ui";
 
 // Footer links.
-const GITHUB_URL = "https://github.com/tahircengiz/";
+const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
 function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" {
@@ -217,7 +217,7 @@ function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: st
     <footer className="mt-8 flex flex-col items-center gap-2 border-t border-white/10 pt-6 text-center text-sm text-slate-400">
       <div className="flex gap-4 text-slate-400">
         <a href={githubUrl} target="_blank" rel="noreferrer" className="hover:text-brand-400">
-          github.com/tahircengiz
+          github.com/tahircengiz/LLMScale
         </a>
         <a href={linkedinUrl} target="_blank" rel="noreferrer" className="hover:text-brand-400">
           linkedin.com/tahircengiz

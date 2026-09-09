@@ -2,6 +2,7 @@
   "name": "llmscale",
   "private": true,
   "version": "1.0.0",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "description": "Estimate the VRAM an LLM needs \u2014 weights, KV cache, context window, concurrent users \u2014 and find the right GPU.",
   "scripts": {

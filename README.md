@@ -104,10 +104,13 @@ npm run build      # → dist/
 npm run deploy     # → gh-pages branch
 ```
 
-## Source and use
+## Licence
 
-The tool is free to use and always will be. The source is not currently
-published, so there is no licence to grant and no LICENSE file — if that
-changes, this section is the first thing to update.
+[GNU AGPL-3.0-only](LICENSE). The tool is free to use and always will be.
+
+AGPL rather than MIT for one reason: LLMScale is a hosted web app, and section 13
+covers exactly that case. Run a modified copy for other people over a network and
+you owe those users the source of your version. Use it, fork it, learn from the
+KV-cache maths — just don't build a closed product on top of it.
 
 Built by [Tahir Cengiz](https://github.com/tahircengiz).
