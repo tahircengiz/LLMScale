@@ -69,15 +69,21 @@
         background: var(--panel); backdrop-filter: blur(8px); border: 1px solid var(--line); color: var(--ink); }
 
       #hero { position: fixed; inset: 0; z-index: 7; pointer-events: none; }
-      #hero .kicker { position: absolute; left: 32px; bottom: calc(13vh + 210px);
+      /* One bottom-anchored column, so each line sits on the one below it. The four
+         used to be placed separately at fixed distances from the bottom, and a
+         subtitle that wrapped to three lines — the Turkish one, on a phone — grew up
+         into the heading. The gaps are the ones those offsets gave on a desktop. */
+      #hero .stack { position: absolute; left: 32px; right: 32px; bottom: calc(13vh - 34px);
+        display: flex; flex-direction: column; align-items: flex-start; }
+      #hero .kicker { margin-bottom: 10px;
         font: 700 13px/1 var(--term); letter-spacing: 6px; color: var(--purple); text-shadow: 0 0 8px rgba(139,92,246,.5); }
-      #hero h1 { position: absolute; left: 30px; bottom: calc(13vh + 40px); margin: 0; font-family: var(--disp); font-weight: 900;
+      #hero h1 { margin: 0 0 7px -2px; font-family: var(--disp); font-weight: 900;
         line-height: .98; font-size: clamp(38px, 8vw, 82px); letter-spacing: 1px; color: var(--ink);
         text-shadow: 0 0 6px rgba(34,211,238,.4), 0 0 22px rgba(34,211,238,.2), 2px 0 0 rgba(168,85,247,.28); }
       #hero h1 .p { color: var(--pink); text-shadow: 0 0 8px rgba(168,85,247,.5), 0 0 24px rgba(168,85,247,.3); }
-      #hero .sub { position: absolute; left: 32px; bottom: 13vh; margin: 0; max-width: min(46ch, 84vw);
+      #hero .sub { margin: 0 0 22px; max-width: min(46ch, 84vw);
         font: 400 clamp(17px,2.4vw,23px)/1.45 var(--term); color: #cfdaee; letter-spacing: .5px; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
-      #hero .hint2 { position: absolute; left: 32px; bottom: calc(13vh - 34px); font: 700 12px/1 var(--term);
+      #hero .hint2 { font: 700 12px/1 var(--term);
         letter-spacing: 3px; color: var(--blue); opacity: .82; text-shadow: 0 0 8px rgba(139,214,255,.35); }
 
       #scroll { position: relative; z-index: 2; pointer-events: none; }
@@ -137,12 +143,12 @@
     <a id="brand" href="index.html">← <b>LLMScale</b></a>
     <div id="chrome"><button id="lang">EN</button></div>
 
-    <div id="hero">
+    <div id="hero"><div class="stack">
       <div class="kicker" data-tr="// BİR DİL MODELİ, TAKIMYILDIZ OLARAK" data-en="// A LANGUAGE MODEL, AS A CONSTELLATION">// A LANGUAGE MODEL, AS A CONSTELLATION</div>
       <h1>A MACHINE<br />READS YOUR <span class="p">WORDS</span></h1>
       <p class="sub" data-tr="Bir cümle, düğümlerden oluşan bir takımyıldıza dönüşür. Sürükle, dokun, ateşle — sonra kaydırıp içine gir." data-en="A sentence becomes a constellation of nodes. Drag, touch, fire — then scroll inside.">A sentence becomes a constellation of nodes. Drag, touch, fire — then scroll inside.</p>
       <div class="hint2" data-tr="⊹ SÜRÜKLE · ÜZERİNE GEL · TIKLA · KAYDIR" data-en="⊹ DRAG · HOVER · CLICK · SCROLL">⊹ DRAG · HOVER · CLICK · SCROLL</div>
-    </div>
+    </div></div>
 
     <div id="scroll"><section data-i="0"></section><section data-i="1"><div class="card"><div class="eyebrow">01 · PROMPT</div><h2>It starts with a <em>sentence</em></h2><p>You hand the model text: <b>“The cat sat on the mat.”</b> It won’t read letters — it prepares to see meaningful pieces.</p></div></section><section data-i="2"><div class="card"><div class="eyebrow">02 · TOKENIZATION</div><h2>Text is split into <em>tokens</em></h2><p>The sentence is chopped into pieces, each mapped to a number (<b>ID</b>). From here the model works in numbers, not words.</p></div></section><section data-i="3"><div class="card"><div class="eyebrow">03 · EMBEDDING</div><h2>Each token becomes a <em>vector</em></h2><p>Every ID turns into a point in a high-dimensional <b>meaning space</b>. Similar meanings land close together.</p></div></section><section data-i="4"><div class="card"><div class="eyebrow">04 · ATTENTION</div><h2>Tokens <em>look at each other</em></h2><p>Each token computes <b>how much to attend</b> to the others. With a causal mask, a token only looks at the ones before it.</p></div></section><section data-i="5"><div class="card"><div class="eyebrow">05 · LAYERS</div><h2>The same block, <em>stacked deep</em></h2><p>Attention + feed-forward repeats, stacked dozens deep (e.g. <b>×32</b>). Every pass refines the representation.</p></div></section><section data-i="6"><div class="card"><div class="eyebrow">06 · PREDICTION</div><h2>The next most <em>likely</em> token</h2><p>The final layer scores the entire vocabulary into a <b>probability distribution</b>. The top token is picked (or sampled).</p></div></section><section data-i="7"><div class="card"><div class="eyebrow">07 · AUTOREGRESSION</div><h2>The prediction <em>feeds back</em></h2><p>The chosen token is appended and the whole process runs <b>again</b>. Word by word, that’s how text is generated.</p></div></section><section data-i="8"><div class="card"><div class="eyebrow">08 · SCALE</div><h2>Now at <em>billions</em>-scale</h2><p>This tiny network is really <b>billions of parameters</b> — which is exactly why VRAM matters. Does your model fit a GPU?</p></div></section></div>
     <div id="bars"></div>
