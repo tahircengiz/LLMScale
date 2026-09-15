@@ -12,7 +12,6 @@
 //   - structured data generated from each page's own title, description and
 //     canonical URL — hand copies drift: train.html once described itself to
 //     search engines as the task-fit page;
-//   - sitemap.xml, listing both versions of every page.
 //
 // Before this, every entry shipped an empty <div id="root">, and Turkish existed
 // only after JavaScript switched a page in place, at an address search engines
@@ -107,7 +106,6 @@ function prerenderLearn(html: string, file: string, lang: Lang): { html: string;
 const entries = readdirSync(outDir)
   .filter((f) => f.endsWith(".html"))
   .sort((a, b) => (a === "index.html" ? -1 : b === "index.html" ? 1 : a.localeCompare(b)));
-const pairs: Record<Lang, string>[] = [];
 let rendered = 0;
 
 for (const file of entries) {
@@ -119,7 +117,6 @@ for (const file of entries) {
   const home: Record<Lang, string> = { en: enUrl.replace(/[^/]*$/, ""), tr: `${enUrl.replace(/[^/]*$/, "")}tr/` };
   const page = file === "index.html" ? "" : file;
   const urls: Record<Lang, string> = { en: home.en + page, tr: home.tr + page };
-  pairs.push(urls);
 
   // The asset URLs already carry the base path Vite built for (/LLMScale/ on
   // GitHub Pages, / elsewhere), so read it back instead of deciding it twice.
@@ -196,18 +193,3 @@ for (const file of entries) {
   }
 }
 if (rendered === 0) throw new Error(`no React entry found in ${outDir}`);
-
-// Both versions of every page, each listing its alternates, so a search engine
-// learns the pairing from the sitemap as well as from the pages.
-const alternates = (u: Record<Lang, string>) =>
-  LANGS.map((l) => `<xhtml:link rel="alternate" hreflang="${l}" href="${u[l]}"/>`).join("") +
-  `<xhtml:link rel="alternate" hreflang="x-default" href="${u.en}"/>`;
-const sitemap = [
-  '<?xml version="1.0" encoding="UTF-8"?>',
-  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
-  ...pairs.flatMap((u) => LANGS.map((l) => `  <url><loc>${u[l]}</loc>${alternates(u)}</url>`)),
-  "</urlset>",
-  "",
-].join("\n");
-writeFileSync(join(outDir, "sitemap.xml"), sitemap);
-console.log(`ok    sitemap.xml  ${pairs.length * LANGS.length} URLs`);

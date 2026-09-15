@@ -5,6 +5,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { DICTS } from "../src/lib/dict.ts";
 import { TR_META } from "../src/lib/pageMeta.ts";
+import { FEATURED_GPU_IDS } from "../src/lib/staticPages.ts";
 import { TASKS } from "../src/lib/fit.ts";
 import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
@@ -276,6 +277,16 @@ check("every title fits in 60 characters", longTitles.length === 0, longTitles.m
 // would hand search engines the wrong version from the Turkish one.
 check("the header links stay in the page's language", read("src/App.tsx").includes("href={`${home}${item.href}`}"));
 check("so does the calculator's link to the vLLM helper", read("src/components/GpuFit.tsx").includes('${lang === "tr" ? "tr/" : ""}vllm.html'));
+
+console.log("\n--- the generated model and GPU guides ---");
+// scripts/genPages.ts builds a page per preset and per featured GPU, and the app
+// links to them by the same ids. A featured id that is not a device would throw in
+// the build; one that was renamed would leave the app linking to a 404.
+const unknownFeatured = FEATURED_GPU_IDS.filter((id) => !GPUS.some((g) => g.id === id));
+check("every featured GPU is a real device", unknownFeatured.length === 0, unknownFeatured.join(", "));
+check("the build writes the guides and then the sitemap", /node scripts\/prerender\.ts[^"]*node scripts\/genPages\.ts[^"]*node scripts\/sitemap\.ts/.test(read("package.json")));
+check("the footer links to both hubs", read("src/App.tsx").includes("{MODELS_HUB}") && read("src/App.tsx").includes("{GPUS_HUB}"));
+check("a preset links to its page from the calculator", read("src/pages/SizingPage.tsx").includes("modelPageFile(known.id)"));
 
 // The class that suppresses transitions is named in theme.ts, set in App.tsx and
 // acted on in index.css. Nothing links those three at build time, and a rename in

@@ -93,6 +93,9 @@ check("an unknown path does not throw", surfaceOf("/LLMScale/nope.html") === "Ot
 // Turkish pages are the same surfaces under /tr/; they must not fall into "Other".
 check("the Turkish home is the sizing page", surfaceOf("/LLMScale/tr/") === "VRAM Sizing");
 check("a Turkish page is its own surface", surfaceOf("/LLMScale/tr/train.html") === "Fine-tune");
+check("a model page is a model page", surfaceOf("/LLMScale/models/llama-3.3-70b.html") === "Model pages");
+check("the models hub is not the calculator", surfaceOf("/LLMScale/models/") === "Model pages");
+check("a Turkish GPU page is a GPU page", surfaceOf("/LLMScale/tr/gpus/rtx4090-24.html") === "GPU pages");
 
 console.log("\n--- the first pageview carries no state ---");
 // This is what the real export looks like: the tracker fires once before the app

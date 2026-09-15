@@ -1,3 +1,5 @@
+import { FEATURED_GPU_IDS, gpuPageFile } from "../lib/staticPages";
+import { StaticPageLink } from "./StaticPageLink";
 import { useEffect, useState } from "react";
 import { calculate, maxConcurrency, maxContextLength, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch } from "../lib/calc";
 import { DRIVER_RESERVE, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
@@ -250,6 +252,9 @@ export function GpuFit({
               <Badge tone="bad">{selected.unified ? t("gpu.noFitSingle") : t("gpu.needs", { n: selUsage.needed })}</Badge>
             )}
           </div>
+          {FEATURED_GPU_IDS.includes(selected.id) && (
+            <StaticPageLink file={gpuPageFile(selected.id)}>{t("gpu.page", { name: selected.name })}</StaticPageLink>
+          )}
           {migProfiles.length > 0 && (
             <select
               value={migId}

@@ -1,3 +1,5 @@
+import { modelPageFile } from "../lib/staticPages";
+import { StaticPageLink } from "../components/StaticPageLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
@@ -94,6 +96,9 @@ export function SizingPage() {
     });
   }, [state]);
 
+  // A preset has a static page of its own (scripts/genPages.ts); point to it.
+  const known = state.hfId ? findKnownByHfId(state.hfId) : undefined;
+
   return (
     <div>
       <p className="mb-6 max-w-2xl text-sm text-slate-400">
@@ -117,6 +122,11 @@ export function SizingPage() {
                 setMeta(m ?? null);
               }}
             />
+            {known && (
+              <div className="mt-3">
+                <StaticPageLink file={modelPageFile(known.id)}>{t("model.page", { name: known.displayName })}</StaticPageLink>
+              </div>
+            )}
           </Card>
           <Card className="p-5">
             <Controls

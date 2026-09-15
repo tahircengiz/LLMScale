@@ -103,6 +103,10 @@ const SURFACES: Record<string, string> = {
 export const SIZING_SURFACE = "VRAM Sizing";
 
 export function surfaceOf(urlPath: string): string {
+  // The generated guides live in folders of their own (scripts/genPages.ts). Their
+  // hubs end in a slash, which the filename rule below would read as the calculator.
+  if (/\/models\/[^/]*$/.test(urlPath)) return "Model pages";
+  if (/\/gpus\/[^/]*$/.test(urlPath)) return "GPU pages";
   const file = urlPath.replace(/\/+$/, "").split("/").pop() ?? "";
   return SURFACES[file.endsWith(".html") ? file : ""] ?? "Other";
 }

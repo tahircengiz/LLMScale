@@ -150,6 +150,11 @@ const en: Dict = {
 
   "footer.builtBy": "Built by",
   "footer.privacy": "Sizing runs in your browser — no account, no backend. Visits are counted anonymously, without cookies.",
+  "footer.guides": "Guides",
+  "footer.models": "VRAM requirements by model",
+  "footer.gpus": "Which LLMs fit on which GPU",
+  "model.page": "{name}: memory by precision and context, GPUs and fine-tuning →",
+  "gpu.page": "Which LLMs fit on {name} →",
   "link.github": "GitHub",
   "link.linkedin": "LinkedIn",
   "link.hf": "Hugging Face",
@@ -694,6 +699,11 @@ const tr: Dict = {
 
   "footer.builtBy": "Yapan:",
   "footer.privacy": "Hesaplama tarayıcında yapılır — hesap yok, sunucu yok. Ziyaretler anonim ve çerezsiz sayılır.",
+  "footer.guides": "Rehberler",
+  "footer.models": "Modele göre VRAM gereksinimleri",
+  "footer.gpus": "Hangi GPU'ya hangi LLM sığar",
+  "model.page": "{name}: hassasiyet ve context'e göre bellek, GPU'lar ve ince ayar →",
+  "gpu.page": "{name}: hangi LLM'ler sığar →",
   "link.github": "GitHub",
   "link.linkedin": "LinkedIn",
   "link.hf": "Hugging Face",
