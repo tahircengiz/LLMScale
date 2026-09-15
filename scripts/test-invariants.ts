@@ -285,6 +285,7 @@ console.log("\n--- the generated model and GPU guides ---");
 const unknownFeatured = FEATURED_GPU_IDS.filter((id) => !GPUS.some((g) => g.id === id));
 check("every featured GPU is a real device", unknownFeatured.length === 0, unknownFeatured.join(", "));
 check("the build writes the guides and then the sitemap", /node scripts\/prerender\.ts[^"]*node scripts\/genPages\.ts[^"]*node scripts\/sitemap\.ts/.test(read("package.json")));
+check("the build writes llms.txt after the sitemap", /node scripts\/sitemap\.ts[^"]*node scripts\/llmsTxt\.ts/.test(read("package.json")));
 check("the footer links to both hubs", read("src/App.tsx").includes("{MODELS_HUB}") && read("src/App.tsx").includes("{GPUS_HUB}"));
 check("a preset links to its page from the calculator", read("src/pages/SizingPage.tsx").includes("modelPageFile(known.id)"));
 // The explainers under each tool link to the concept guides by name. A name with
