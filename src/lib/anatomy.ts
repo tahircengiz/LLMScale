@@ -4,6 +4,7 @@
 
 import { resolveHeadDim, type Dtype, type ModelArch } from "./calc.ts";
 import { resolveModel, type WarningKey } from "./hf.ts";
+import { expertCount, expertsPerToken } from "./moe.ts";
 
 // ---- parameter distribution ----------------------------------------------
 
@@ -153,10 +154,9 @@ export async function fetchAnatomy(hfId: string): Promise<Anatomy> {
   const headDim = resolveHeadDim(arch);
   const c = cfg?.text_config ?? cfg?.llm_config ?? cfg ?? {};
 
-  // Keep the expert-key list in sync with hf.ts isMoEFromConfig.
-  const numExperts =
-    c.num_local_experts ?? c.num_experts ?? c.n_routed_experts ?? c.moe_num_experts ?? undefined;
-  const expertsPerTok = c.num_experts_per_tok ?? undefined;
+  // The config key spellings live in moe.ts, shared with hf.ts.
+  const numExperts = expertCount(c);
+  const expertsPerTok = expertsPerToken(c);
 
   const paramDist = computeParamDist({
     numParams,

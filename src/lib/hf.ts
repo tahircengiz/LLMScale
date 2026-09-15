@@ -5,6 +5,7 @@
 
 import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
+import { activeParamsOf, expertCount } from "./moe.ts";
 
 const HF = "https://huggingface.co";
 
@@ -150,8 +151,9 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
   };
 }
 
-/** Pull various config key spellings into our normalized arch shape. */
-function archFromConfig(cfg: any, numParams: number): ModelArch | null {
+/** Pull various config key spellings into our normalized arch shape. Exported for
+ *  scripts/test-moe.ts. */
+export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   // Multimodal models nest the LLM dims under text_config / llm_config.
   const c = cfg?.text_config ?? cfg?.llm_config ?? cfg;
   const numLayers = c.num_hidden_layers ?? c.n_layer ?? c.num_layers;
@@ -159,7 +161,7 @@ function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   const numAttentionHeads = c.num_attention_heads ?? c.n_head ?? c.num_heads;
   if (!numLayers || !hiddenSize || !numAttentionHeads) return null;
   const numKeyValueHeads = c.num_key_value_heads ?? c.num_kv_heads ?? numAttentionHeads;
-  return {
+  const arch: ModelArch = {
     numParams,
     numLayers,
     hiddenSize,
@@ -174,6 +176,10 @@ function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     vocabSize: c.vocab_size,
     maxContext: c.max_position_embeddings ?? c.n_positions ?? c.max_seq_len,
   };
+  // Decode speed reads the ACTIVE parameters (perf.ts). Nothing set them for a
+  // model resolved from its config, so every live MoE was estimated as if dense.
+  arch.activeParams = activeParamsOf(arch, c);
+  return arch;
 }
 
 /** Try to read config.json directly (public models). Returns null if gated/missing. */
@@ -191,9 +197,7 @@ async function fetchConfig(hfId: string): Promise<any | null> {
  * "moe" substring (e.g. gpt_oss, deepseek_v3, qwen3_moe use expert-count keys). */
 function isMoEFromConfig(cfg: any): boolean {
   const c = cfg?.text_config ?? cfg?.llm_config ?? cfg;
-  const experts =
-    c?.num_local_experts ?? c?.num_experts ?? c?.n_routed_experts ?? c?.moe_num_experts;
-  return typeof experts === "number" && experts > 1;
+  return (expertCount(c) ?? 0) > 1;
 }
 
 /** Map a config.json `quantization_config` to our weight-dtype buckets. */
@@ -285,6 +289,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
   if (cfg) {
     const arch = archFromConfig(cfg, numParams || known?.numParams || 0);
     if (arch && arch.numParams > 0) {
+      // A preset's active count comes from its model card; prefer it to the estimate.
+      if (known?.activeParams) arch.activeParams = known.activeParams;
       const modelType = cfg.text_config?.model_type ?? cfg.model_type ?? info?.modelType;
       return {
         hfId,
@@ -311,6 +317,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     if (baseCfg) {
       const arch = archFromConfig(baseCfg, numParams || 0);
       if (arch && arch.numParams > 0) {
+        const knownBase = findKnownByHfId(info.baseModel);
+        if (knownBase?.activeParams && arch.activeParams) arch.activeParams = knownBase.activeParams;
         const modelType = baseCfg.text_config?.model_type ?? baseCfg.model_type ?? info?.modelType;
         return {
           hfId,

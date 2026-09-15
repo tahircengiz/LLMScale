@@ -63,6 +63,9 @@ export function encodeState(s: AppState): string {
     // people typed by hand.
     if (s.arch.kvLoraRank) p.set("kl", String(s.arch.kvLoraRank));
     if (s.arch.qkRopeHeadDim) p.set("qr", String(s.arch.qkRopeHeadDim));
+    // Without it a MoE model decodes back as dense on every reload and shared link,
+    // and its decode estimate reads every expert instead of the routed few.
+    if (s.arch.activeParams) p.set("ap", String(Math.round(s.arch.activeParams)));
   }
   p.set("wd", s.weightDtype);
   p.set("kd", s.kvDtype);
@@ -102,6 +105,7 @@ export function decodeState(search: string): Partial<AppState> {
       headDim: num(p.get("d")),
       kvLoraRank: num(p.get("kl")),
       qkRopeHeadDim: num(p.get("qr")),
+      activeParams: num(p.get("ap")),
     } as ModelArch;
   }
 

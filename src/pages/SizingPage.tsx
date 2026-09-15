@@ -17,6 +17,12 @@ const HERO = findKnownByHfId(HERO_MODEL_ID)!;
 
 function initialState(): AppState {
   const fromUrl = decodeState(window.location.search);
+  // A link written before the URL carried active parameters decodes a MoE preset
+  // as dense; its bundled entry still knows the count.
+  if (fromUrl.arch && fromUrl.hfId && fromUrl.arch.activeParams === undefined) {
+    const known = findKnownByHfId(fromUrl.hfId);
+    if (known?.activeParams) fromUrl.arch = { ...fromUrl.arch, activeParams: known.activeParams };
+  }
   // No seeding on a bare visit. The page used to open on a hero model and an
   // H200, which meant every visitor — and every crawler that runs JavaScript —
   // emitted a model and a device nobody had chosen. Roughly 60% of sessions
