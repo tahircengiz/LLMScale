@@ -69,15 +69,21 @@
         background: var(--panel); backdrop-filter: blur(8px); border: 1px solid var(--line); color: var(--ink); }
 
       #hero { position: fixed; inset: 0; z-index: 7; pointer-events: none; }
-      #hero .kicker { position: absolute; left: 32px; bottom: calc(13vh + 210px);
+      /* One bottom-anchored column, so each line sits on the one below it. The four
+         used to be placed separately at fixed distances from the bottom, and a
+         subtitle that wrapped to three lines — the Turkish one, on a phone — grew up
+         into the heading. The gaps are the ones those offsets gave on a desktop. */
+      #hero .stack { position: absolute; left: 32px; right: 32px; bottom: calc(13vh - 34px);
+        display: flex; flex-direction: column; align-items: flex-start; }
+      #hero .kicker { margin-bottom: 10px;
         font: 700 13px/1 var(--term); letter-spacing: 6px; color: var(--purple); text-shadow: 0 0 8px rgba(139,92,246,.5); }
-      #hero h1 { position: absolute; left: 30px; bottom: calc(13vh + 40px); margin: 0; font-family: var(--disp); font-weight: 900;
+      #hero h1 { margin: 0 0 7px -2px; font-family: var(--disp); font-weight: 900;
         line-height: .98; font-size: clamp(38px, 8vw, 82px); letter-spacing: 1px; color: var(--ink);
         text-shadow: 0 0 6px rgba(34,211,238,.4), 0 0 22px rgba(34,211,238,.2), 2px 0 0 rgba(168,85,247,.28); }
       #hero h1 .p { color: var(--pink); text-shadow: 0 0 8px rgba(168,85,247,.5), 0 0 24px rgba(168,85,247,.3); }
-      #hero .sub { position: absolute; left: 32px; bottom: 13vh; margin: 0; max-width: min(46ch, 84vw);
+      #hero .sub { margin: 0 0 22px; max-width: min(46ch, 84vw);
         font: 400 clamp(17px,2.4vw,23px)/1.45 var(--term); color: #cfdaee; letter-spacing: .5px; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
-      #hero .hint2 { position: absolute; left: 32px; bottom: calc(13vh - 34px); font: 700 12px/1 var(--term);
+      #hero .hint2 { font: 700 12px/1 var(--term);
         letter-spacing: 3px; color: var(--blue); opacity: .82; text-shadow: 0 0 8px rgba(139,214,255,.35); }
 
       #scroll { position: relative; z-index: 2; pointer-events: none; }
@@ -130,12 +136,12 @@
     <a id="brand" href="index.html">← <b>LLMScale</b></a>
     <div id="chrome"><button id="lang">EN</button></div>
 
-    <div id="hero">
+    <div id="hero"><div class="stack">
       <div class="kicker" data-tr="// BİR DİL MODELİ, TAKIMYILDIZ OLARAK" data-en="// A LANGUAGE MODEL, AS A CONSTELLATION"></div>
       <h1>A MACHINE<br />READS YOUR <span class="p">WORDS</span></h1>
       <p class="sub" data-tr="Bir cümle, düğümlerden oluşan bir takımyıldıza dönüşür. Sürükle, dokun, ateşle — sonra kaydırıp içine gir." data-en="A sentence becomes a constellation of nodes. Drag, touch, fire — then scroll inside."></p>
       <div class="hint2" data-tr="⊹ SÜRÜKLE · ÜZERİNE GEL · TIKLA · KAYDIR" data-en="⊹ DRAG · HOVER · CLICK · SCROLL"></div>
-    </div>
+    </div></div>
 
     <div id="scroll"></div>
     <div id="bars"></div>
