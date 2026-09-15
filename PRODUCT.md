@@ -29,15 +29,18 @@ without the user having to trust a rule of thumb.
 
 The site models the terms that decide the answer — weights at a chosen
 precision, KV cache scaled by context window and concurrent users using each
-model's real grouped-query attention layout, MoE models holding every expert
-resident rather than only the active ones, activation and fragmentation
-overhead, and CUDA context — then reports which devices fit, how many concurrent
-users a card supports, and the maximum context for a single user.
+model's real grouped-query or multi-head latent attention layout, MoE models
+holding every expert resident rather than only the active ones, activation and
+fragmentation overhead, and CUDA context — then reports which devices fit, how
+many concurrent users a card supports, and the maximum context for a single user.
 
 Around that core it also covers fine-tuning memory (LoRA, QLoRA, full),
 decode speed as a bandwidth-bound estimate, vLLM launch parameters, task-to-model
 fit, model anatomy, side-by-side comparison, model-name decoding, and a
-standalone explainer for people meeting the concepts for the first time.
+standalone explainer for people meeting the concepts for the first time. Guides
+generated from the same engine answer the questions people search for: a page
+per preset model, a page per commonly searched GPU, and concept guides to the KV
+cache, attention variants and quantization.
 
 Success is all of: people use it and come back, it stands as evidence of the
 author's expertise, it warms the same audience as the GPU PaaS work under way,
@@ -46,15 +49,19 @@ and it answers the author's own sizing questions first.
 ## Positioning
 
 Most estimates are `params × 2`. This one models what that misses, and says so:
-real per-model GQA layouts read live from the Hugging Face Hub, MoE loading all
-experts, and every assumption named on the page rather than buried — 95% of
-nominal VRAM usable after driver reserve, flash-attention assumed for
-activations, bandwidth efficiency stated for decode estimates.
+real per-model GQA and MLA layouts read live from the Hugging Face Hub, MoE
+loading all experts while decoding through only the active ones, and every
+assumption named on the page rather than buried — 95% of a discrete card's
+memory usable after the driver reserve and a unified-memory device's addressable
+share, flash-attention assumed for activations, bandwidth efficiency stated for
+decode estimates.
 
 The engine is validated against published results rather than only against
 itself: the ZeRO paper's 16 bytes-per-parameter identity for mixed-precision
-Adam, and QLoRA's fine-tuning of a 65B model on a single 48 GB card. Both are
-permanent tests, so the constants cannot drift quietly.
+Adam, QLoRA's fine-tuning of a 65B model on a single 48 GB card, DeepSeek-V2's
+MLA cache formula, gpt-oss-120b fitting one 80 GB GPU, and the active parameter
+counts of MoE model cards. All are permanent tests, so the constants cannot drift
+quietly.
 
 It computes entirely in the browser. There is no backend and no account, so the
 sizing itself is never sent anywhere to be performed. (The chosen model and
@@ -71,44 +78,58 @@ Model architecture resolves live from the Hugging Face Hub (`config.json` plus
 the model API), with a bundled database covering popular gated models — Llama,
 Gemma, Mistral — whose config a browser cannot read.
 
-The interface is bilingual, English and Turkish, with every string going through
-the dictionary.
+The site is bilingual, English and Turkish, and the URL decides the language:
+every page has an English address and a Turkish one under `/tr/`, tied together
+with hreflang. A visitor whose preference differs from the page's is offered the
+other version and never redirected. The app's strings go through the dictionary
+(`src/lib/dict.ts`); the Turkish heads of the entry pages live in
+`src/lib/pageMeta.ts`, and the generated guides carry both languages in their
+generators.
 
 ## Capabilities and Constraints
 
 - **Fully client-side.** Static site, no backend, no server state, no account.
   All computation happens in the browser.
 - **Static hosting.** Published to GitHub Pages from the `gh-pages` branch;
-  Vite `base` is the repo path. Multi-page build, one HTML entry per surface.
+  Vite `base` is the repo path. The build prerenders every entry to HTML in both
+  languages (`scripts/prerender.ts`), generates the model, GPU and concept guides
+  from the engine (`scripts/genPages.ts`, `scripts/concepts.ts`), and reads the
+  sitemap off the built pages (`scripts/sitemap.ts`). The app replaces the
+  prerendered markup rather than hydrating it.
 - **Cost and pricing are deliberately out of scope.** The purpose is technical
   help. No prices, no cost-per-token, no purchasing advice.
 - **Analytics are anonymous and cookieless** (self-hosted Umami), but not
   contentless: the app keeps its state in the URL, so the tracker receives the
   model, precision, context, concurrency and device on every pageview. This is
   what the traffic report is built from, and the footer must keep saying only
-  what is true of it.
+  what is true of it. The guides carry no query, so they add visits but never a
+  model or device.
 - **Tests run through Node's type stripping**, which executes `.ts` but not
-  `.tsx`, and a React import breaks it outright. Anything a test must read has
-  to live in a React-free module under `src/lib/`. This has already forced two
-  splits (`dict.ts` out of `i18n.ts`, `theme.ts` out of `App.tsx`).
+  `.tsx`, and a React import breaks it outright. Anything a test or a build-time
+  generator must read has to live in a React-free module under `src/lib/`. This
+  has already forced several splits (`dict.ts` out of `i18n.ts`, `theme.ts` out of
+  `App.tsx`, `learnChapters.js` out of `learn.js`).
 - **Three themes** — dark, light, and a translucent "glass" material. Glass is
   the default for a first-time visitor unless their OS asks for dark; a stored
   choice outranks both.
-- **Not modeled:** MLA attention (DeepSeek) and engine-specific paged-attention
-  efficiency. Estimates are for capacity planning and are labelled as such, not
-  presented as guarantees.
+- **Not modeled:** engine-specific paged-attention efficiency, prefill (time to
+  first token), and sliding-window layers such as Gemma 2's and gpt-oss's, which
+  cache less than the KV formula counts. Estimates are for capacity planning and
+  are labelled as such, not presented as guarantees.
 
 ## Brand Commitments
 
 - Name: **LLMScale**. Built by Tahir Cengiz.
-- **The repository is private and the source is not published.** The tool itself
-  is free and public. This is a live constraint, not a detail: nothing may claim
-  an open-source licence, invite people to read the code, or promise pull
-  requests, and there is no LICENSE file to point at. Credibility has to rest on
-  what a reader can verify from outside — the published papers the engine is
-  checked against, and the tool's own output.
+- **The source is public under AGPL-3.0-only** (since 2026-09-09). The tool itself
+  is free. LLMScale is a hosted web app, so section 13 is the part that matters:
+  anyone running a modified copy for other people over a network owes those users
+  their source, and the site's footer links the repository to offer it. Credibility
+  still rests first on what a reader can verify without reading any code — the
+  published results the engine is checked against, and the tool's own output.
+  Nothing invites contributions or promises support; say so only once it is
+  actually offered.
 - Bilingual English/Turkish is a product commitment, not a feature — new copy
-  ships in both.
+  ships in both, and each language keeps its own address.
 - **The computation stays client-side.** No backend performs the sizing and no
   account is required; nothing may introduce a server round-trip for the
   calculation itself without the user deciding to change that.
@@ -124,8 +145,10 @@ the dictionary.
 
 **Real, in the repository:**
 - A validated memory engine, with external checks encoded as permanent tests:
-  ZeRO's `2Ψ+2Ψ+12Ψ = 16Ψ` bytes per parameter, and QLoRA's 65B on one 48 GB
-  card (the model reproduces it at 43.3 GiB).
+  ZeRO's `2Ψ+2Ψ+12Ψ = 16Ψ` bytes per parameter, QLoRA's 65B on one 48 GB card
+  (the model reproduces it at 43.3 GiB), DeepSeek-V2's MLA cache per token,
+  gpt-oss-120b on one 80 GB GPU, and MoE active parameters estimated from real
+  configs against their model cards.
 - A bundled model database for gated models, and a device database spanning
   consumer, workstation, data-center, Apple, and unified-memory hardware with
   real bandwidth figures.

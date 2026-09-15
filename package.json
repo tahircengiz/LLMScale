@@ -20,7 +20,13 @@
     "report": "node scripts/report-traffic.ts",
     "test:mla": "node scripts/test-mla.ts",
     "test:langpath": "node scripts/test-langpath.ts",
-    "test:moe": "node scripts/test-moe.ts"
+    "test:moe": "node scripts/test-moe.ts",
+    "test:fit": "node scripts/test-fit.ts",
+    "test:vllm": "node scripts/test-vllm.ts",
+    "test:anatomy": "node scripts/test-anatomy.ts",
+    "test:modelname": "node scripts/test-modelname.ts",
+    "test:theme": "node scripts/test-theme.ts",
+    "test:all": "for f in scripts/test-*.ts; do echo \"== $f\"; node \"$f\" > /dev/null || { node \"$f\" | grep FAIL; exit 1; }; done && echo \"ALL SUITES PASS\""
   },
   "dependencies": {
     "react": "^19.0.0",
