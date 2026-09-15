@@ -55,7 +55,7 @@ export function GpuFit({
   onMig: (id: string) => void;
   onWeightDtype?: (d: Dtype) => void;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   // No device is selected until someone picks one — `gpuId` is empty on a bare
   // visit. The panel describing a device is not rendered while `sel` is null.
   const sel = GPUS.find((g) => g.id === gpuId) ?? null;
@@ -404,7 +404,7 @@ export function GpuFit({
                 <li>{t("gpu.tpOverhead")}</li>
               </ul>
               <a
-                href={`${import.meta.env.BASE_URL}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${nearestTp(selUsage.needed, kvHeads)}&ctx=${contextLength}`}
+                href={`${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${nearestTp(selUsage.needed, kvHeads)}&ctx=${contextLength}`}
                 className="mt-2 inline-block text-[11.5px] font-medium text-brand-400 hover:underline"
               >
                 {t("gpu.tpLink")}

@@ -18,7 +18,8 @@
     "deploy": "gh-pages -d dist --dotfiles",
     "test:traffic": "node scripts/test-traffic.ts",
     "report": "node scripts/report-traffic.ts",
-    "test:mla": "node scripts/test-mla.ts"
+    "test:mla": "node scripts/test-mla.ts",
+    "test:langpath": "node scripts/test-langpath.ts"
   },
   "dependencies": {
     "react": "^19.0.0",

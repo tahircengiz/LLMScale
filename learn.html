@@ -29,15 +29,6 @@
          pageview whose path was a local disk path, and every localhost preview
          landed in production traffic. -->
     <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
-    <script>
-      // The hero and cards arrive prerendered in English (scripts/prerender.ts). A
-      // visitor about to read Turkish should not watch it swap, so that text stays
-      // hidden until learn.js applies the language. Same rule as detectLang().
-      var l = null;
-      try { l = localStorage.getItem("lang"); } catch (e) {}
-      if (l !== "en" && l !== "tr") l = /^tr/.test(navigator.language || "") ? "tr" : "en";
-      if (l !== "en") document.documentElement.classList.add("prerender-stale");
-    </script>
     <style>
       :root {
         --cyan: #22d3ee; --pink: #a855f7; --purple: #8b5cf6; --indigo: #6366f1;
@@ -53,7 +44,16 @@
       #c { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; cursor: grab; }
       #c.grabbing { cursor: grabbing; }
       #c.pointing { cursor: pointer; }
-      .prerender-stale [data-en], .prerender-stale #scroll .card { visibility: hidden; }
+      /* Under the language button it offers the alternative to, where the scene is
+         empty sky; lower down it would cover the hero text on a phone. */
+      #langsuggest { position: fixed; top: 60px; right: 18px; z-index: 13;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; max-width: min(360px, calc(100vw - 36px));
+        padding: 9px 10px 9px 14px; border-radius: 10px; background: var(--panel); backdrop-filter: blur(8px);
+        border: 1px solid var(--line); color: var(--ink); font: 13px/1.35 ui-sans-serif, system-ui, sans-serif; }
+      #langsuggest a { color: var(--cyan); font-weight: 700; text-decoration: none; }
+      #langsuggest a:hover, #langsuggest a:focus-visible { text-decoration: underline; }
+      #langsuggest button { background: none; border: 0; color: var(--dim); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 6px; }
+      #langsuggest button:hover, #langsuggest button:focus-visible { color: var(--ink); }
 
       .vign { position: fixed; inset: 0; z-index: 4; pointer-events: none;
         background: radial-gradient(125% 105% at 50% 40%, transparent 44%, rgba(0,0,2,0.9) 100%); }

@@ -4,6 +4,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { CH } from "./learnChapters.js";
+import { langOfPath, pathFor, preferredLang, rememberLang, SUGGEST } from "./lib/langPath.ts";
 
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -157,11 +158,9 @@ composer.addPass(new OutputPass());
 // ---------- chapters: src/learnChapters.js ----------
 
 // ---------- build DOM (sections, cards, bars) ----------
-// Same rule as the app's detectLang(): a stored choice, else the browser's language.
-// This used to default to Turkish for everyone, so a crawler with no stored choice
-// indexed a Turkish body under this page's English title and lang="en".
-let lang = navigator.language?.startsWith("tr") ? "tr" : "en";
-try { const s = localStorage.getItem("lang"); if (s === "en" || s === "tr") lang = s; } catch (e) {}
+// The URL decides: /tr/learn.html is Turkish. This page used to pick a language
+// per visitor, so search engines only ever saw one version of it.
+const lang = langOfPath(location.pathname);
 const scrollEl = document.getElementById("scroll");
 // learn.html may already hold these sections: scripts/prerender.ts writes the
 // English cards in at build time so the text is readable without JavaScript.
@@ -213,12 +212,36 @@ function applyLang() {
   });
   document.getElementById("lang").textContent = lang==="tr" ? "EN" : "TR";
   document.documentElement.lang = lang;
-  // Set by the bootstrap in learn.html for a visitor who would otherwise see the
-  // prerendered English text before this ran.
-  document.documentElement.classList.remove("prerender-stale");
 }
-document.getElementById("lang").onclick = () => { lang = lang==="tr" ? "en" : "tr"; try { localStorage.setItem("lang", lang); } catch (e) {} applyLang(); };
+// Switching language is going to the other version's address; the choice is
+// remembered so that version is not offered back.
+document.getElementById("lang").onclick = () => {
+  const other = lang === "tr" ? "en" : "tr";
+  rememberLang(other);
+  location.assign(pathFor(location.pathname, other) + location.search + location.hash);
+};
 applyLang();
+
+// Offer the other version to a visitor who prefers it; never switch for them.
+// Same rule and wording as the app's LangSuggest.
+(function suggestOtherLang() {
+  const offer = preferredLang();
+  if (offer === lang) return;
+  const s = SUGGEST[offer];
+  const bar = document.createElement("div");
+  bar.id = "langsuggest"; bar.lang = offer;
+  bar.setAttribute("role", "region"); bar.setAttribute("aria-label", s.text);
+  const text = document.createElement("span"); text.textContent = s.text;
+  const go = document.createElement("a");
+  go.href = pathFor(location.pathname, offer) + location.search + location.hash;
+  go.hreflang = offer; go.textContent = s.go;
+  go.onclick = () => rememberLang(offer);
+  const close = document.createElement("button");
+  close.type = "button"; close.textContent = "✕"; close.setAttribute("aria-label", s.dismiss);
+  close.onclick = () => { rememberLang(lang); bar.remove(); };
+  bar.append(text, go, close);
+  document.body.appendChild(bar);
+})();
 
 // analytics: CTA click back into the calculator
 const ctaEl = document.querySelector(".cta");

@@ -90,6 +90,9 @@ console.log("\n--- surfaces map to their page names ---");
 check("the bare path is the sizing page", surfaceOf("/LLMScale/") === "VRAM Sizing");
 check("train.html is Fine-tune", surfaceOf("/LLMScale/train.html") === "Fine-tune");
 check("an unknown path does not throw", surfaceOf("/LLMScale/nope.html") === "Other");
+// Turkish pages are the same surfaces under /tr/; they must not fall into "Other".
+check("the Turkish home is the sizing page", surfaceOf("/LLMScale/tr/") === "VRAM Sizing");
+check("a Turkish page is its own surface", surfaceOf("/LLMScale/tr/train.html") === "Fine-tune");
 
 console.log("\n--- the first pageview carries no state ---");
 // This is what the real export looks like: the tracker fires once before the app

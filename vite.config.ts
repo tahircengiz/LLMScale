@@ -1,13 +1,31 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 // `base` must match the GitHub Pages sub-path (https://<user>.github.io/<repo>/).
 // Override with VITE_BASE for a custom domain (set VITE_BASE=/ for the root).
+const base = process.env.VITE_BASE ?? "/LLMScale/";
+
+// /tr/… pages exist only in the build: scripts/prerender.ts writes them from the
+// English entries. The dev server serves the English entry for them instead, and
+// the app still takes its language from the address bar.
+function turkishPagesInDev(): Plugin {
+  const trTree = new RegExp("^" + base.replace(/[.*+?^$()|[\]\\{}]/g, "\\$&") + "tr/");
+  return {
+    name: "turkish-pages-in-dev",
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        if (req.url) req.url = req.url.replace(trTree, base);
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  base: process.env.VITE_BASE ?? "/LLMScale/",
-  plugins: [react(), tailwindcss()],
+  base,
+  plugins: [react(), tailwindcss(), turkishPagesInDev()],
   build: {
     rollupOptions: {
       input: {

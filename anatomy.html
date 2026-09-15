@@ -11,14 +11,10 @@
           m = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "glass";
         if (m !== "dark") document.documentElement.classList.add(m);
       } catch (e) {}
-      // #root holds the English page with nothing chosen, prerendered at build time.
-      // Someone about to see a different one - Turkish, or a shared link's own
-      // state - should not watch it swap, so it stays hidden until React has rendered
-      // (Root lifts the class). The language rule mirrors detectLang() in dict.ts.
-      var l = null;
-      try { l = localStorage.getItem("lang"); } catch (e) {}
-      if (l !== "en" && l !== "tr") l = /^tr/.test(navigator.language || "") ? "tr" : "en";
-      if (l !== "en" || location.search) document.documentElement.classList.add("prerender-stale");
+      // #root holds this page prerendered at build time, in its URL's language with
+      // nothing chosen. A link carrying its own state (?m=...) renders something else,
+      // so it stays hidden until React has rendered (Root lifts the class).
+      if (location.search) document.documentElement.classList.add("prerender-stale");
     </script>
     <!-- Umami analytics (self-hosted on hoarder, privacy-friendly, cookieless) -->
     <!-- data-domains gates the tracker to the live site. Without it the script

@@ -17,6 +17,7 @@ import { ComparePage } from "./pages/ComparePage";
 import { TrainPage } from "./pages/TrainPage";
 import { Badge, Segmented } from "./components/ui";
 import { About } from "./components/About";
+import { LANG_NAME, pathFor } from "./lib/langPath";
 
 // Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
@@ -62,6 +63,8 @@ export default function App() {
     return c.contains("glass") ? "glass" : c.contains("light") ? "light" : "dark";
   });
   const base = import.meta.env.BASE_URL;
+  // Links stay in the language the page is in: /tr/ pages link to /tr/ pages.
+  const home = base + (lang === "tr" ? "tr/" : "");
 
   function showTheme(next: Theme) {
     setTheme(next);
@@ -128,7 +131,7 @@ export default function App() {
       <header className="shrink-0 border-b border-white/10 px-4 py-2 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <a href={base} className="flex items-center gap-2 no-underline">
+            <a href={home} className="flex items-center gap-2 no-underline">
               <img src={`${base}favicon.svg`} alt="" className="h-7 w-7" />
               <span className="text-lg font-bold tracking-tight text-white">LLMScale</span>
               <Badge tone="good">{t("header.badge")}</Badge>
@@ -169,7 +172,7 @@ export default function App() {
                   {group.map((item) => (
                     <a
                       key={item.page}
-                      href={`${base}${item.href}`}
+                      href={`${home}${item.href}`}
                       className={tabCls(page === item.page)}
                     >
                       {t(`nav.${item.page}`)}
@@ -221,15 +224,21 @@ export default function App() {
 }
 
 function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: string }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const other: Lang = lang === "tr" ? "en" : "tr";
   return (
     <footer className="mt-8 flex flex-col items-center gap-2 border-t border-white/10 pt-6 text-center text-sm text-slate-400">
-      <div className="flex gap-4 text-slate-400">
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-slate-400">
         <a href={githubUrl} target="_blank" rel="noreferrer" className="hover:text-brand-400">
           github.com/tahircengiz/LLMScale
         </a>
         <a href={linkedinUrl} target="_blank" rel="noreferrer" className="hover:text-brand-400">
           linkedin.com/tahircengiz
+        </a>
+        {/* A plain link to this page in the other language, so the two versions
+            link to each other in the HTML itself, not only through hreflang. */}
+        <a href={pathFor(window.location.pathname, other)} hrefLang={other} lang={other} className="hover:text-brand-400">
+          {LANG_NAME[other]}
         </a>
       </div>
       <p className="text-xs text-slate-500">{t("footer.privacy")}</p>

@@ -34,8 +34,8 @@
   color-scheme: dark;
 }
 
-/* #root arrives holding the English page prerendered at build time. For a visitor
- * about to see a different one (Turkish, or a shared link's own state) the entry's
+/* #root arrives holding the page prerendered at build time, in its URL's language
+ * with nothing chosen. For a link carrying its own state (?m=…) the entry's
  * bootstrap sets this class, and Root removes it once React has rendered. */
 .prerender-stale #root {
   visibility: hidden;

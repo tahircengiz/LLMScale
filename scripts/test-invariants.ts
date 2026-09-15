@@ -4,6 +4,7 @@
 // nothing failed. Run: node scripts/test-invariants.ts
 import { readFileSync, readdirSync } from "node:fs";
 import { DICTS } from "../src/lib/dict.ts";
+import { TR_META } from "../src/lib/pageMeta.ts";
 import { TASKS } from "../src/lib/fit.ts";
 import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
@@ -219,7 +220,7 @@ check("Root names the class", staleClass.length > 0, staleClass);
 const reactEntries = pages.filter((p) => read(p).includes('<div id="root"></div>'));
 const staleBoots = new Map<string, string[]>();
 for (const p of reactEntries) {
-  const body = read(p).match(/var l = null;[\s\S]*?classList\.add\("[^"]+"\);/)?.[0] ?? "";
+  const body = read(p).match(/if \(location\.search\) document\.documentElement\.classList\.add\("[^"]+"\);/)?.[0] ?? "";
   staleBoots.set(body, [...(staleBoots.get(body) ?? []), p]);
 }
 const staleBoot = [...staleBoots.keys()][0] ?? "";
@@ -227,19 +228,13 @@ check("every React entry carries the same bootstrap", staleBoots.size === 1 && s
   `${staleBoots.size} variant(s) across ${reactEntries.length} pages`);
 check("the bootstrap sets the class Root lifts", staleBoot.includes(`classList.add("${staleClass}")`));
 check("index.css hides #root under that class", css.includes(`.${staleClass} #root`));
-// The bootstrap reimplements detectLang(); if the two disagree about a visitor's
-// language, that visitor either sees the wrong page flash or is hidden for nothing.
-const dict = read("src/lib/dict.ts");
-check("the bootstrap reads the same storage key as detectLang", staleBoot.includes('localStorage.getItem("lang")') && dict.includes('localStorage.getItem("lang")'));
-check("and falls back to the browser language the same way", staleBoot.includes("navigator.language") && dict.includes('navigator.language?.startsWith("tr")'));
+// The prerender is in the URL's language, so language is no reason to hide it. A
+// bootstrap that still guessed one would hide pages from Turkish browsers for nothing.
+check("no entry decides language before React does", reactEntries.every((p) => !read(p).includes("navigator.language")));
 check("the build runs the prerender", /vite build --ssr src\/entry-server\.tsx[^"]*node scripts\/prerender\.ts/.test(read("package.json")));
-// LLM 101 is not React, so it carries its own copy: learn.html hides its hero text
-// and cards, and learn.js lifts the class once it has applied the language.
-const learnHtml = read("learn.html");
-const learnJs = read("src/learn.js");
-check("learn.html hides its prerendered text under the same class", learnHtml.includes(`classList.add("${staleClass}")`) && learnHtml.includes(`.${staleClass} [data-en]`));
-check("learn.js lifts it", learnJs.includes(`classList.remove("${staleClass}")`));
-check("learn.html uses the same language rule", learnHtml.includes('localStorage.getItem("lang")') && learnHtml.includes("navigator.language"));
+// LLM 101 keeps no state in its URL and takes its language from the path, so what
+// the build wrote into it is always what the visitor sees.
+check("LLM 101 takes its language from the URL", read("src/learn.js").includes("langOfPath(location.pathname)"));
 
 console.log("\n--- every tool explains itself ---");
 // About.tsx counts numbered keys (p1, p2…, f1…, q1…) on the English dictionary,
@@ -261,6 +256,26 @@ check("each has a title, text and at least three answered questions", aboutGaps.
 // modelling it. Copy is where the engine's changes are easiest to leave behind.
 const allCopy = Object.values(DICTS.en).join(" ") + Object.values(DICTS.tr).join(" ");
 check("no copy still says MLA is not modelled", !/MLA[^.]*(not yet capture|henüz modellenmemiş)/.test(allCopy));
+
+console.log("\n--- both languages have pages of their own ---");
+// scripts/prerender.ts builds tr/<entry> from each entry and the head in
+// src/lib/pageMeta.ts. An entry with no Turkish head fails the build; catch it here
+// first, along with a head for a page that no longer exists.
+const untranslated = pages.filter((p) => !(p in TR_META));
+check("every entry has a Turkish head", untranslated.length === 0, untranslated.join(", "));
+const orphaned = Object.keys(TR_META).filter((f) => !pages.includes(f));
+check("and no Turkish head outlives its page", orphaned.length === 0, orphaned.join(", "));
+// Search results cut titles around 60 characters; the cut falls on the brand if it
+// falls anywhere, but past that it eats the words people searched for.
+const longTitles = [
+  ...pages.map((p) => [p, read(p).match(/<title>([^<]*)<\/title>/)?.[1] ?? ""]),
+  ...Object.entries(TR_META).map(([f, m]) => [`tr/${f}`, m.title]),
+].filter(([, title]) => [...title].length > 60);
+check("every title fits in 60 characters", longTitles.length === 0, longTitles.map(([f, t]) => `${f} (${[...t].length})`).join(", "));
+// Links inside a page stay in its language; a /tr/ page linking to English pages
+// would hand search engines the wrong version from the Turkish one.
+check("the header links stay in the page's language", read("src/App.tsx").includes("href={`${home}${item.href}`}"));
+check("so does the calculator's link to the vLLM helper", read("src/components/GpuFit.tsx").includes('${lang === "tr" ? "tr/" : ""}vllm.html'));
 
 // The class that suppresses transitions is named in theme.ts, set in App.tsx and
 // acted on in index.css. Nothing links those three at build time, and a rename in

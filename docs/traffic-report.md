@@ -103,7 +103,7 @@ them" rather than in any of the choice lists.
 The app also emits interaction events that a default can never produce:
 `model-view` and `device-select` (fired only from a click), `activated` (the
 first pick of a session) and `landed` (every arrival, tagged blank or shared).
-They are readable directly in Umami.
+They are readable directly in Umami. Two more come from the language versions: `lang-switch` (the header toggle, with the language chosen) and `lang-suggest` (the banner offering the other version, `switch` or `dismiss`). Turkish pages live under `/tr/`, and `surfaceOf` maps them to the same surfaces, so a page is counted as one surface whatever its language.
 
 The report does **not** use them. Umami keeps event properties in a separate
 `event_data` table, and the export below is a single flat query over

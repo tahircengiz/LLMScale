@@ -1109,12 +1109,3 @@ export function translate(lang: Lang, key: string, vars?: Record<string, string 
   return s;
 }
 
-export function detectLang(): Lang {
-  try {
-    const stored = localStorage.getItem("lang");
-    if (stored === "en" || stored === "tr") return stored;
-  } catch {
-    /* localStorage unavailable */
-  }
-  return typeof navigator !== "undefined" && navigator.language?.startsWith("tr") ? "tr" : "en";
-}
