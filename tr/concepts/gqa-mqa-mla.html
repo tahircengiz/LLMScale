@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GQA, MQA ve MLA: Attention ve KV Cache Boyutu | LLMScale</title>
+<meta name="description" content="Multi-head, multi-query, grouped-query ve multi-head latent attention bir LLM'in KV cache'ini nasıl değiştirir; Llama 3.3 70B Instruct ve DeepSeek V3 üzerinden hesaplanmış, 10 model yan yana.">
+<link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/concepts/gqa-mqa-mla.html">
+<link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/concepts/gqa-mqa-mla.html">
+<link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/concepts/gqa-mqa-mla.html">
+<link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/concepts/gqa-mqa-mla.html">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Tahir Cengiz">
+<link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GQA, MQA ve MLA: attention KV cache'i nasıl belirler">
+<meta property="og:description" content="Multi-head, multi-query, grouped-query ve multi-head latent attention bir LLM'in KV cache'ini nasıl değiştirir; Llama 3.3 70B Instruct ve DeepSeek V3 üzerinden hesaplanmış, 10 model yan yana.">
+<meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/concepts/gqa-mqa-mla.html">
+<meta property="og:site_name" content="LLMScale">
+<meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GQA, MQA ve MLA: attention KV cache'i nasıl belirler">
+<meta name="twitter:description" content="Multi-head, multi-query, grouped-query ve multi-head latent attention bir LLM'in KV cache'ini nasıl değiştirir; Llama 3.3 70B Instruct ve DeepSeek V3 üzerinden hesaplanmış, 10 model yan yana.">
+<meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<script>try{var t=localStorage.getItem("theme");if(t!=="dark"&&t!=="light"&&t!=="glass")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch(e){}</script>
+<script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+<style>:root{--bg:#eef1f8;--card:#fff;--inset:#f4f6fb;--line:#dce1ee;--text:#151d48;--muted:#39405c;--faint:#555b73;--brand:#4a4cd4;--good:#0b7d57;--bad:#b3123c;--button:#4a4cd4;color-scheme:light}
+:root[data-theme=dark]{--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 1rem/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;padding-inline:1.25rem}
+a{color:var(--brand);text-underline-offset:2px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.top{background:var(--card);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem 1.25rem;padding-block:.65rem}
+.brand{display:inline-flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);text-decoration:none}
+.top nav{display:flex;flex-wrap:wrap;gap:.2rem 1rem;font-size:.875rem}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover,.top nav a[aria-current=page]{color:var(--brand)}
+main{padding-block:1.5rem 3rem}
+.crumbs{font-size:.8125rem;color:var(--faint);margin:0 0 .6rem}
+.crumbs a{color:var(--faint)}
+h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
+h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
+p{margin:0 0 .9rem;max-width:68ch}
+.lede{color:var(--muted)}
+.answer{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
+.cap{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.big{font-size:2.1rem;font-weight:700;line-height:1.1;margin:.25rem 0 .45rem;font-variant-numeric:tabular-nums}
+.answer p{margin:0;color:var(--muted);font-size:.9375rem}
+.spec{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;padding:0;margin:.85rem 0 0}
+.spec li{background:var(--inset);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.875rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+tbody tr:last-child>*{border-bottom:0}
+thead th{background:var(--inset);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+th[scope=row]{font-weight:600}
+td small{display:block;color:var(--faint);font-size:.75rem}
+.ok{color:var(--good);font-weight:600}
+.no{color:var(--bad)}
+.note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
+ul.plain{padding-left:1.1rem;margin:0 0 .9rem}
+ul.plain li{margin:.3rem 0}
+.links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
+.links a{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
+.links a.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+pre{background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.75rem 1rem;overflow-x:auto;margin:0 0 .9rem;line-height:1.55}
+pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
+footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.8125rem;color:var(--faint)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--muted)}
+.langsuggest a{background:#4a4cd4;color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
+.langsuggest button{background:none;border:0;color:var(--faint);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/tr/"},{"@type":"ListItem","position":2,"name":"Kavramlar","item":"https://tahircengiz.github.io/LLMScale/tr/concepts/"},{"@type":"ListItem","position":3,"name":"GQA, MQA ve MLA","item":"https://tahircengiz.github.io/LLMScale/tr/concepts/gqa-mqa-mla.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"GQA, MQA ve MLA: attention KV cache'i nasıl belirler","description":"Multi-head, multi-query, grouped-query ve multi-head latent attention bir LLM'in KV cache'ini nasıl değiştirir; Llama 3.3 70B Instruct ve DeepSeek V3 üzerinden hesaplanmış, 10 model yan yana.","inLanguage":"tr","url":"https://tahircengiz.github.io/LLMScale/tr/concepts/gqa-mqa-mla.html","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/tr/"},"author":{"@type":"Person","name":"Tahir Cengiz","url":"https://github.com/tahircengiz"}}</script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/LLMScale/tr/"><img src="/LLMScale/favicon.svg" alt="" width="24" height="24">LLMScale</a>
+  <nav aria-label="Site">
+    <a href="/LLMScale/tr/">VRAM hesaplayıcı</a>
+    <a href="/LLMScale/tr/models/">Modeller</a>
+    <a href="/LLMScale/tr/gpus/">GPU'lar</a>
+    <a href="/LLMScale/tr/concepts/" aria-current="page">Kavramlar</a>
+    <a href="/LLMScale/concepts/gqa-mqa-mla.html" hreflang="en" lang="en" onclick="try{localStorage.setItem('lang','en')}catch(e){}">English</a>
+  </nav>
+</div></header>
+<main class="wrap">
+  <nav class="crumbs" aria-label="Konum"><a href="/LLMScale/tr/">LLMScale</a> › <a href="/LLMScale/tr/concepts/">Kavramlar</a> › GQA, MQA ve MLA</nav>
+  <h1>GQA, MQA ve MLA: attention KV cache'i nasıl belirler</h1>
+<p class="lede">KV cache attention'dan doğar ve bir modelin attention head'lerini nasıl düzenlediği, aynı parametre sayısında önbelleği on kat değiştirebilir. Bugünün açık modellerini dört düzen kapsar.</p>
+<h2>Multi-head attention (MHA)</h2>
+<p>Her query head'in kendi key ve value head'leri vardır ve önbellek hepsini saklar: token başına 2 × katman × head × head boyutu × byte. Özgün Transformer tasarımıdır ve önbelleği en pahalı olandır. <a href="/LLMScale/tr/models/phi-3-mini.html">Phi-3 mini 4k</a> hâlâ bunu kullanır — 32 katmanda 32 head, token başına 384,0 KiB.</p>
+<h2>Multi-query attention (MQA)</h2>
+<p>Tüm query head'ler tek bir key head'ini ve tek bir value head'ini paylaşır (Shazeer, 2019, “Fast Transformer Decoding: One Write-Head is All You Need”). Önbellek head sayısının tamamı kadar küçülür — mümkün olan en büyük kazanç — ama tek bir key ve value takımını her head'e paylaştırmak kaliteye mal olabilir.</p>
+<h2>Grouped-query attention (GQA)</h2>
+<p>Query head'ler gruplara ayrılır ve her grup bir key-value head'i paylaşır: birden fazla, ama query head sayısından az. Ainslie ve arkadaşları (2023) bunu orta yol olarak önerdi — multi-head attention'a yakın kalite, multi-query'ye yakın hız — ve LLMScale'in yerleşik 25 modelinden 23 tanesi bunu kullanır. <a href="/LLMScale/tr/models/llama-3.3-70b.html">Llama 3.3 70B Instruct</a>, 64 query head'i 8 key-value head'e toplar; bu yüzden multi-head attention'ın 2560,0 KiB isteyeceği yerde token başına 320,0 KiB saklar: 8× daha az.</p>
+<h2>Multi-head latent attention (MLA)</h2>
+<p>DeepSeek-V2 başka bir yol izledi. Head başına key ve value yerine her katman, token başına tek bir sıkıştırılmış latent vektör ve rotary konum kodlamasını taşıyan küçük, ayrık bir key saklar. Token başına önbellek <code>katman × (kv_lora_rank + qk_rope_head_dim) × byte</code> olur ve head sayısı formülden düşer. DeepSeek-V2 makalesi (§2.1.3), kendi boyutları için bunu yalnızca 2,25 gruplu bir GQA'nın boyutuna eşitler.</p>
+<p><a href="/LLMScale/tr/models/deepseek-v3.html">DeepSeek V3</a>, 61 katmanın her birinde 512 + 64 = 576 değer saklar: token başına 68,6 KiB, head başına formülün verdiğinden 24,9× az. 8k context'te bu, 13,34 GiB yerine 549 MiB eder. DeepSeek modellerine head başına formülü uygulayan bir hesaplayıcı önbelleği bu oranda abartır; LLMScale, bir config iki alanı da taşıdığında formül değiştirir.</p>
+<h2>Yan yana</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">Model</th><th scope="col">Query head</th><th scope="col">KV head</th><th scope="col">Attention</th><th scope="col">Token başına</th><th scope="col">MHA'ya göre</th></tr></thead>
+<tbody><tr><th scope="row"><a href="/LLMScale/tr/models/phi-3-mini.html">Phi-3 mini 4k</a></th><td>32</td><td>32</td><td>MHA</td><td>384,0 KiB</td><td>1×</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.2-1b.html">Llama 3.2 1B Instruct</a></th><td>32</td><td>8</td><td>GQA</td><td>32,0 KiB</td><td>4×</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-7b.html">Qwen2.5 7B Instruct</a></th><td>28</td><td>4</td><td>GQA</td><td>56,0 KiB</td><td>7×</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.1-8b.html">Llama 3.1 8B Instruct</a></th><td>32</td><td>8</td><td>GQA</td><td>128,0 KiB</td><td>4×</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/mistral-nemo-12b.html">Mistral Nemo 12B Instruct</a></th><td>32</td><td>8</td><td>GQA</td><td>160,0 KiB</td><td>4×</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/mixtral-8x7b.html">Mixtral 8x7B Instruct</a></th><td>32</td><td>8</td><td>GQA</td><td>128,0 KiB</td><td>4×</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen3-32b.html">Qwen3 32B</a></th><td>64</td><td>8</td><td>GQA</td><td>256,0 KiB</td><td>8×</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.3-70b.html">Llama 3.3 70B Instruct</a></th><td>64</td><td>8</td><td>GQA</td><td>320,0 KiB</td><td>8×</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-72b.html">Qwen2.5 72B Instruct</a></th><td>64</td><td>8</td><td>GQA</td><td>320,0 KiB</td><td>8×</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/deepseek-v3.html">DeepSeek V3</a></th><td>128</td><td>—</td><td>MLA</td><td>68,6 KiB</td><td>24,9×</td></tr></tbody>
+</table></div>
+<p class="note">FP16. “MHA'ya göre”: aynı modelin multi-head bir sürümünün kaç kat fazla önbellek tutacağı.</p>
+<h2>Model seçerken ne anlama gelir</h2>
+<ul class="plain">
+<li><strong>Parametre sayısından önce key-value head'lere bak.</strong> <a href="/LLMScale/tr/models/qwen2.5-7b.html">Qwen2.5 7B Instruct</a> ile <a href="/LLMScale/tr/models/llama-3.1-8b.html">Llama 3.1 8B Instruct</a> parametrede %5, token başına önbellekte 2,3× fark eder.</li>
+<li><strong>Attention düzeni modelle birlikte gelir.</strong> Servis edilen bir modelin önbelleğini küçültmek için FP8 KV cache, daha kısa context ya da daha az dizi kalır — bkz. <a href="/LLMScale/tr/concepts/kv-cache.html">KV cache boyutu</a>.</li>
+<li><strong>Tensor parallel key-value head'leri GPU'lar arasında böler;</strong> bu yüzden hesaplayıcı onları eşit bölen GPU sayıları önerir.</li>
+</ul>
+<ul class="links">
+  <li><a class="primary" href="/LLMScale/tr/anatomy.html">Bir modelin attention düzenini gör</a></li>
+  <li><a href="/LLMScale/tr/concepts/kv-cache.html">KV cache boyutu</a></li>
+  <li><a href="/LLMScale/tr/concepts/quantization.html">Quantization ve VRAM</a></li>
+</ul>
+</main>
+<footer class="wrap">LLMScale bir LLM'in ihtiyaç duyduğu GPU belleğini — ağırlıklar, KV cache, context ve eşzamanlı kullanıcılar — her modelin kendi mimarisinden, tarayıcında hesaplar.</footer>
+<script>(function(d){var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(p!=="en"&&p!=="tr")p=/^tr/.test(navigator.language||"")?"tr":"en";if(p===d.L)return;var b=document.createElement("div");b.className="langsuggest";b.lang=d.O;b.setAttribute("role","region");b.setAttribute("aria-label",d.S.text);var s=document.createElement("span");s.textContent=d.S.text;var a=document.createElement("a");a.href=d.H;a.hreflang=d.O;a.textContent=d.S.go;a.onclick=function(){try{localStorage.setItem("lang",d.O)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\u2715";c.setAttribute("aria-label",d.S.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})({"L":"tr","O":"en","S":{"text":"This page is also available in English.","go":"Switch to English","dismiss":"Dismiss"},"H":"/LLMScale/concepts/gqa-mqa-mla.html"});</script>
+</body>
+</html>

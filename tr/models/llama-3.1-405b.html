@@ -69,6 +69,8 @@ ul.plain li{margin:.3rem 0}
 .links a{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
 .links a.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+pre{background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.75rem 1rem;overflow-x:auto;margin:0 0 .9rem;line-height:1.55}
+pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.8125rem;color:var(--faint)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--muted)}
@@ -84,6 +86,7 @@ footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.81
     <a href="/LLMScale/tr/">VRAM hesaplayıcı</a>
     <a href="/LLMScale/tr/models/" aria-current="page">Modeller</a>
     <a href="/LLMScale/tr/gpus/">GPU'lar</a>
+    <a href="/LLMScale/tr/concepts/">Kavramlar</a>
     <a href="/LLMScale/models/llama-3.1-405b.html" hreflang="en" lang="en" onclick="try{localStorage.setItem('lang','en')}catch(e){}">English</a>
   </nav>
 </div></header>
@@ -116,6 +119,7 @@ footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.81
 <p class="note">Dizi uzunluğu 2.048, batch 1, gradient checkpointing açık, Adam. Tam ince ayar aktivasyonlardan önce parametre başına 16 byte tutar; QLoRA dondurulmuş temel modeli 4-bit NF4 olarak saklar.</p>
 <h2>Sayılar nereden geliyor</h2>
 <p>Ağırlıklar <code>parametre × parametre başına byte</code> olur. KV cache <code>2 × katman × key-value head × head boyutu × byte × context × kullanıcı</code> olur. Llama 3.1 405B Instruct için bu, FP16'da token başına 504,0 KiB eder. Bunlar kapasite planlama sayılarıdır: servis motoru — vLLM, TGI, llama.cpp — ve paged-attention verimliliği gerçek değeri yine değiştirir.</p>
+<p>Daha fazlası: <a href="/LLMScale/tr/concepts/kv-cache.html">KV cache boyutu</a> ve <a href="/LLMScale/tr/concepts/gqa-mqa-mla.html">GQA, MQA ve MLA</a>.</p>
 <h2>Llama 3.1 405B Instruct ile çalış</h2>
 <ul class="links">
   <li><a class="primary" href="/LLMScale/tr/?m=meta-llama%2FLlama-3.1-405B-Instruct">Kendi iş yüküne göre hesapla</a></li>

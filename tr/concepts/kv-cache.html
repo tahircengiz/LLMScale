@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KV Cache Boyutu: Formül ve Örnekler | LLMScale</title>
+<meta name="description" content="Bir LLM'in KV cache'i ne kadar büyür: formül, Llama 3.1 8B Instruct ile çözümlü örnek, popüler modellerde token başına değerler; eşzamanlılık, FP8 ve grouped-query attention'ın ona etkisi.">
+<link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/concepts/kv-cache.html">
+<link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/concepts/kv-cache.html">
+<link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/concepts/kv-cache.html">
+<link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/concepts/kv-cache.html">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Tahir Cengiz">
+<link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KV cache boyutu: formül ve gerçek modellerle örnekler">
+<meta property="og:description" content="Bir LLM'in KV cache'i ne kadar büyür: formül, Llama 3.1 8B Instruct ile çözümlü örnek, popüler modellerde token başına değerler; eşzamanlılık, FP8 ve grouped-query attention'ın ona etkisi.">
+<meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/concepts/kv-cache.html">
+<meta property="og:site_name" content="LLMScale">
+<meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="KV cache boyutu: formül ve gerçek modellerle örnekler">
+<meta name="twitter:description" content="Bir LLM'in KV cache'i ne kadar büyür: formül, Llama 3.1 8B Instruct ile çözümlü örnek, popüler modellerde token başına değerler; eşzamanlılık, FP8 ve grouped-query attention'ın ona etkisi.">
+<meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<script>try{var t=localStorage.getItem("theme");if(t!=="dark"&&t!=="light"&&t!=="glass")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch(e){}</script>
+<script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+<style>:root{--bg:#eef1f8;--card:#fff;--inset:#f4f6fb;--line:#dce1ee;--text:#151d48;--muted:#39405c;--faint:#555b73;--brand:#4a4cd4;--good:#0b7d57;--bad:#b3123c;--button:#4a4cd4;color-scheme:light}
+:root[data-theme=dark]{--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 1rem/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;padding-inline:1.25rem}
+a{color:var(--brand);text-underline-offset:2px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.top{background:var(--card);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem 1.25rem;padding-block:.65rem}
+.brand{display:inline-flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);text-decoration:none}
+.top nav{display:flex;flex-wrap:wrap;gap:.2rem 1rem;font-size:.875rem}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover,.top nav a[aria-current=page]{color:var(--brand)}
+main{padding-block:1.5rem 3rem}
+.crumbs{font-size:.8125rem;color:var(--faint);margin:0 0 .6rem}
+.crumbs a{color:var(--faint)}
+h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
+h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
+p{margin:0 0 .9rem;max-width:68ch}
+.lede{color:var(--muted)}
+.answer{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
+.cap{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.big{font-size:2.1rem;font-weight:700;line-height:1.1;margin:.25rem 0 .45rem;font-variant-numeric:tabular-nums}
+.answer p{margin:0;color:var(--muted);font-size:.9375rem}
+.spec{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;padding:0;margin:.85rem 0 0}
+.spec li{background:var(--inset);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.875rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+tbody tr:last-child>*{border-bottom:0}
+thead th{background:var(--inset);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+th[scope=row]{font-weight:600}
+td small{display:block;color:var(--faint);font-size:.75rem}
+.ok{color:var(--good);font-weight:600}
+.no{color:var(--bad)}
+.note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
+ul.plain{padding-left:1.1rem;margin:0 0 .9rem}
+ul.plain li{margin:.3rem 0}
+.links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
+.links a{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
+.links a.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+pre{background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.75rem 1rem;overflow-x:auto;margin:0 0 .9rem;line-height:1.55}
+pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
+footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.8125rem;color:var(--faint)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--muted)}
+.langsuggest a{background:#4a4cd4;color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
+.langsuggest button{background:none;border:0;color:var(--faint);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/tr/"},{"@type":"ListItem","position":2,"name":"Kavramlar","item":"https://tahircengiz.github.io/LLMScale/tr/concepts/"},{"@type":"ListItem","position":3,"name":"KV cache","item":"https://tahircengiz.github.io/LLMScale/tr/concepts/kv-cache.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"KV cache boyutu: formül ve gerçek modellerle örnekler","description":"Bir LLM'in KV cache'i ne kadar büyür: formül, Llama 3.1 8B Instruct ile çözümlü örnek, popüler modellerde token başına değerler; eşzamanlılık, FP8 ve grouped-query attention'ın ona etkisi.","inLanguage":"tr","url":"https://tahircengiz.github.io/LLMScale/tr/concepts/kv-cache.html","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/tr/"},"author":{"@type":"Person","name":"Tahir Cengiz","url":"https://github.com/tahircengiz"}}</script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/LLMScale/tr/"><img src="/LLMScale/favicon.svg" alt="" width="24" height="24">LLMScale</a>
+  <nav aria-label="Site">
+    <a href="/LLMScale/tr/">VRAM hesaplayıcı</a>
+    <a href="/LLMScale/tr/models/">Modeller</a>
+    <a href="/LLMScale/tr/gpus/">GPU'lar</a>
+    <a href="/LLMScale/tr/concepts/" aria-current="page">Kavramlar</a>
+    <a href="/LLMScale/concepts/kv-cache.html" hreflang="en" lang="en" onclick="try{localStorage.setItem('lang','en')}catch(e){}">English</a>
+  </nav>
+</div></header>
+<main class="wrap">
+  <nav class="crumbs" aria-label="Konum"><a href="/LLMScale/tr/">LLMScale</a> › <a href="/LLMScale/tr/concepts/">Kavramlar</a> › KV cache</nav>
+  <h1>KV cache boyutu: formül ve gerçek modellerle örnekler</h1>
+<p class="lede">Bir dil modeli metin üretirken, önceki her token için her katmanda hesapladığı key ve value'ları saklar; böylece bir sonraki token için onları yeniden hesaplamaz. Bu depo KV cache'tir. Kaba hesapların atladığı GPU belleği kısmıdır ve uzun context'te ya da çok kullanıcıyla modelin ağırlıklarını geçer.</p>
+<h2>Formül</h2>
+<p>Her token için her katman, her key-value head başına bir key ve bir value vektörü saklar:</p>
+<pre><code>token başına KV byte = 2 × katman × key-value head × head boyutu × değer başına byte
+KV cache             = token başına KV byte × context uzunluğu × eşzamanlı dizi</code></pre>
+<p>2, key ile value'yu sayar. Bir değer FP16 ya da BF16'da 2 byte, FP8'de 1 byte tutar. Katman, key-value head ve head boyutu mimariyle sabittir — modelin config.json dosyasında <code>num_hidden_layers</code>, <code>num_key_value_heads</code> ve <code>head_dim</code> — aynı boyuttaki iki modelin çok farklı önbellek istemesinin nedeni budur. Multi-head latent attention kullanan modellerde formülün ortası değişir; bkz. <a href="/LLMScale/tr/concepts/gqa-mqa-mla.html">GQA, MQA ve MLA</a>.</p>
+<h2>Çözümlü örnek: Llama 3.1 8B Instruct</h2>
+<p><a href="/LLMScale/tr/models/llama-3.1-8b.html">Llama 3.1 8B Instruct</a> 32 katmana, 8 key-value head'e ve 128 boyutlu head'lere sahiptir. FP16'da bu, token başına 2 × 32 × 8 × 128 × 2 = 131.072 byte, yani 128,0 KiB eder. Tek kullanıcı 8k token'da 1,00 GiB önbellek ister; 131.072 token'lık tam context'te 16,00 GiB — 14,96 GiB tutan BF16 ağırlıklarından fazla.</p>
+<p>Bunu belirleyen parametre sayısı değildir. <a href="/LLMScale/tr/models/qwen2.5-7b.html">Qwen2.5 7B Instruct</a> ile <a href="/LLMScale/tr/models/llama-3.1-8b.html">Llama 3.1 8B Instruct</a> boyut olarak birbirine yakındır — 7,62B ve 8,03B parametre — ama Llama 3.1 8B Instruct token başına 128,0 KiB saklar, Qwen2.5 7B Instruct ise 56,0 KiB. Aradaki 2,3× fark katman ve key-value head sayısından gelir.</p>
+<h2>Popüler modellerde token başına önbellek</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">Model</th><th scope="col">Katman</th><th scope="col">KV head × head boyutu</th><th scope="col">Token başına</th><th scope="col">8k</th><th scope="col">32k</th><th scope="col">128k</th></tr></thead>
+<tbody><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.2-3b.html">Llama 3.2 3B Instruct</a></th><td>28</td><td>8 × 128</td><td>112,0 KiB</td><td>896 MiB</td><td>3,50 GiB</td><td>14,00 GiB</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-7b.html">Qwen2.5 7B Instruct</a></th><td>28</td><td>4 × 128</td><td>56,0 KiB</td><td>448 MiB</td><td>1,75 GiB</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.1-8b.html">Llama 3.1 8B Instruct</a></th><td>32</td><td>8 × 128</td><td>128,0 KiB</td><td>1,00 GiB</td><td>4,00 GiB</td><td>16,00 GiB</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/mistral-nemo-12b.html">Mistral Nemo 12B Instruct</a></th><td>40</td><td>8 × 128</td><td>160,0 KiB</td><td>1,25 GiB</td><td>5,00 GiB</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen3-32b.html">Qwen3 32B</a></th><td>64</td><td>8 × 128</td><td>256,0 KiB</td><td>2,00 GiB</td><td>8,00 GiB</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.3-70b.html">Llama 3.3 70B Instruct</a></th><td>80</td><td>8 × 128</td><td>320,0 KiB</td><td>2,50 GiB</td><td>10,00 GiB</td><td>40,00 GiB</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-72b.html">Qwen2.5 72B Instruct</a></th><td>80</td><td>8 × 128</td><td>320,0 KiB</td><td>2,50 GiB</td><td>10,00 GiB</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/deepseek-v3.html">DeepSeek V3</a></th><td>61</td><td>MLA</td><td>68,6 KiB</td><td>549 MiB</td><td>2,14 GiB</td><td>8,58 GiB</td></tr></tbody>
+</table></div>
+<p class="note">FP16, tek dizi. —: modelin maksimum context'inin ötesi. DeepSeek V3, head başına key ve value yerine sıkıştırılmış bir latent saklar. Gemma 2 ve gpt-oss dahil edilmedi: sliding-window katmanlarıyla dönüşümlü çalışırlar ve bu katmanlar formülün saydığından az önbellek tutar.</p>
+<h2>Eşzamanlılık onu çarpar</h2>
+<p>Her eşzamanlı dizinin kendi önbelleği vardır. 76,00 GiB kullanılabilir belleğiyle tek bir <a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a> üzerinde Llama 3.1 8B Instruct, BF16'da kullanıcı başına 8k token ile 53, 32k ile 13, 128k ile 3 kullanıcıya yer bırakır. Ağırlıklar tabanı belirler; önbellek, üstüne kaç kişinin sığacağına karar verir.</p>
+<h2>Onu ne küçültür, ne küçültmez</h2>
+<ul class="plain">
+<li><strong>Daha az key-value head.</strong> Grouped-query ve multi-query attention key-value head'leri query head'ler arasında paylaştırır; multi-head latent attention sıkıştırılmış bir latent saklar. Bu, seçtiğin modelle birlikte gelir.</li>
+<li><strong>FP8 KV cache.</strong> Değer başına iki yerine bir byte, önbelleği yarıya indirir. vLLM bunu <code>--kv-cache-dtype fp8</code> olarak sunar; uzun context'li işlerde doğruluğa mal olabilir, önce doğrula.</li>
+<li><strong>Daha düşük context sınırı.</strong> Önbellek bir dizinin tuttuğu her token'la büyür; dizi uzunluğunu sınırlamak — vLLM'de <code>--max-model-len</code> — en kötü durumu sınırlar.</li>
+<li><strong>Ağırlık quantization'ı değil.</strong> INT4 ya da FP8 ağırlıklar yalnızca ağırlıkları küçültür; önbellek kendi hassasiyetinde kalır, bu yüzden context büyüdükçe kazanç daralır. Bkz. <a href="/LLMScale/tr/concepts/quantization.html">quantization ve VRAM</a>.</li>
+<li><strong>Paged attention ve prefix caching</strong> önbelleği küçültmez, daha iyi kullanır: bellek, baştan ayrılmak yerine diziler büyüdükçe bloklar hâlinde verilir ve aynı ön eki paylaşan istekler o blokları ortak kullanabilir. LLMScale bu verimliliği modellemez; sayıları ihtiyacın tamamıdır.</li>
+</ul>
+<ul class="links">
+  <li><a class="primary" href="/LLMScale/tr/">Modelin için KV cache'i hesapla</a></li>
+  <li><a href="/LLMScale/tr/concepts/gqa-mqa-mla.html">GQA, MQA ve MLA</a></li>
+  <li><a href="/LLMScale/tr/concepts/quantization.html">Quantization ve VRAM</a></li>
+  <li><a href="/LLMScale/tr/models/">Modele göre VRAM</a></li>
+</ul>
+</main>
+<footer class="wrap">LLMScale bir LLM'in ihtiyaç duyduğu GPU belleğini — ağırlıklar, KV cache, context ve eşzamanlı kullanıcılar — her modelin kendi mimarisinden, tarayıcında hesaplar.</footer>
+<script>(function(d){var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(p!=="en"&&p!=="tr")p=/^tr/.test(navigator.language||"")?"tr":"en";if(p===d.L)return;var b=document.createElement("div");b.className="langsuggest";b.lang=d.O;b.setAttribute("role","region");b.setAttribute("aria-label",d.S.text);var s=document.createElement("span");s.textContent=d.S.text;var a=document.createElement("a");a.href=d.H;a.hreflang=d.O;a.textContent=d.S.go;a.onclick=function(){try{localStorage.setItem("lang",d.O)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\u2715";c.setAttribute("aria-label",d.S.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})({"L":"tr","O":"en","S":{"text":"This page is also available in English.","go":"Switch to English","dismiss":"Dismiss"},"H":"/LLMScale/concepts/kv-cache.html"});</script>
+</body>
+</html>

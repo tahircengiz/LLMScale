@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Quantization ve VRAM: BF16, FP8, INT4 | LLMScale</title>
+<meta name="description" content="BF16, FP8, INT8 ve INT4 ağırlıklar 8B'den 405B'ye modellerde ne kadar GPU belleği tutar; AWQ, GPTQ, GGUF, MXFP4 ve NF4 nedir ve ağırlıkları quantize etmek neden KV cache'i değiştirmez.">
+<link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/concepts/quantization.html">
+<link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/concepts/quantization.html">
+<link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/concepts/quantization.html">
+<link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/concepts/quantization.html">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Tahir Cengiz">
+<link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Quantization ve VRAM: BF16, FP8, INT8 ve INT4">
+<meta property="og:description" content="BF16, FP8, INT8 ve INT4 ağırlıklar 8B'den 405B'ye modellerde ne kadar GPU belleği tutar; AWQ, GPTQ, GGUF, MXFP4 ve NF4 nedir ve ağırlıkları quantize etmek neden KV cache'i değiştirmez.">
+<meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/concepts/quantization.html">
+<meta property="og:site_name" content="LLMScale">
+<meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Quantization ve VRAM: BF16, FP8, INT8 ve INT4">
+<meta name="twitter:description" content="BF16, FP8, INT8 ve INT4 ağırlıklar 8B'den 405B'ye modellerde ne kadar GPU belleği tutar; AWQ, GPTQ, GGUF, MXFP4 ve NF4 nedir ve ağırlıkları quantize etmek neden KV cache'i değiştirmez.">
+<meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<script>try{var t=localStorage.getItem("theme");if(t!=="dark"&&t!=="light"&&t!=="glass")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch(e){}</script>
+<script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+<style>:root{--bg:#eef1f8;--card:#fff;--inset:#f4f6fb;--line:#dce1ee;--text:#151d48;--muted:#39405c;--faint:#555b73;--brand:#4a4cd4;--good:#0b7d57;--bad:#b3123c;--button:#4a4cd4;color-scheme:light}
+:root[data-theme=dark]{--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 1rem/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;padding-inline:1.25rem}
+a{color:var(--brand);text-underline-offset:2px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.top{background:var(--card);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem 1.25rem;padding-block:.65rem}
+.brand{display:inline-flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);text-decoration:none}
+.top nav{display:flex;flex-wrap:wrap;gap:.2rem 1rem;font-size:.875rem}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover,.top nav a[aria-current=page]{color:var(--brand)}
+main{padding-block:1.5rem 3rem}
+.crumbs{font-size:.8125rem;color:var(--faint);margin:0 0 .6rem}
+.crumbs a{color:var(--faint)}
+h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
+h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
+p{margin:0 0 .9rem;max-width:68ch}
+.lede{color:var(--muted)}
+.answer{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
+.cap{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.big{font-size:2.1rem;font-weight:700;line-height:1.1;margin:.25rem 0 .45rem;font-variant-numeric:tabular-nums}
+.answer p{margin:0;color:var(--muted);font-size:.9375rem}
+.spec{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;padding:0;margin:.85rem 0 0}
+.spec li{background:var(--inset);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.875rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+tbody tr:last-child>*{border-bottom:0}
+thead th{background:var(--inset);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+th[scope=row]{font-weight:600}
+td small{display:block;color:var(--faint);font-size:.75rem}
+.ok{color:var(--good);font-weight:600}
+.no{color:var(--bad)}
+.note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
+ul.plain{padding-left:1.1rem;margin:0 0 .9rem}
+ul.plain li{margin:.3rem 0}
+.links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
+.links a{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
+.links a.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+pre{background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.75rem 1rem;overflow-x:auto;margin:0 0 .9rem;line-height:1.55}
+pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
+footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.8125rem;color:var(--faint)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--muted)}
+.langsuggest a{background:#4a4cd4;color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
+.langsuggest button{background:none;border:0;color:var(--faint);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/tr/"},{"@type":"ListItem","position":2,"name":"Kavramlar","item":"https://tahircengiz.github.io/LLMScale/tr/concepts/"},{"@type":"ListItem","position":3,"name":"Quantization","item":"https://tahircengiz.github.io/LLMScale/tr/concepts/quantization.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Quantization ve VRAM: BF16, FP8, INT8 ve INT4","description":"BF16, FP8, INT8 ve INT4 ağırlıklar 8B'den 405B'ye modellerde ne kadar GPU belleği tutar; AWQ, GPTQ, GGUF, MXFP4 ve NF4 nedir ve ağırlıkları quantize etmek neden KV cache'i değiştirmez.","inLanguage":"tr","url":"https://tahircengiz.github.io/LLMScale/tr/concepts/quantization.html","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/tr/"},"author":{"@type":"Person","name":"Tahir Cengiz","url":"https://github.com/tahircengiz"}}</script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/LLMScale/tr/"><img src="/LLMScale/favicon.svg" alt="" width="24" height="24">LLMScale</a>
+  <nav aria-label="Site">
+    <a href="/LLMScale/tr/">VRAM hesaplayıcı</a>
+    <a href="/LLMScale/tr/models/">Modeller</a>
+    <a href="/LLMScale/tr/gpus/">GPU'lar</a>
+    <a href="/LLMScale/tr/concepts/" aria-current="page">Kavramlar</a>
+    <a href="/LLMScale/concepts/quantization.html" hreflang="en" lang="en" onclick="try{localStorage.setItem('lang','en')}catch(e){}">English</a>
+  </nav>
+</div></header>
+<main class="wrap">
+  <nav class="crumbs" aria-label="Konum"><a href="/LLMScale/tr/">LLMScale</a> › <a href="/LLMScale/tr/concepts/">Kavramlar</a> › Quantization</nav>
+  <h1>Quantization ve VRAM: BF16, FP8, INT8 ve INT4</h1>
+<p class="lede">Quantization, bir modelin ağırlıklarını daha az bitle saklar. Ağırlıklar genelde GPU belleğinin en büyük kısmıdır, bu yüzden ilk başvurulan araçtır — ama yalnızca ağırlıkları küçültür ve her adım biraz doğruluktan feragat eder.</p>
+<h2>Parametre başına byte</h2>
+<p>Ağırlıklar <code>parametre × parametre başına byte</code> yer tutar. Referans BF16 ve FP16'dır — çoğu model bunlardan biriyle yayımlanır — ve diğer her hassasiyet bunun bir katıdır.</p>
+<div class="scroll"><table>
+<thead><tr><th scope="col">Hassasiyet</th><th scope="col">Byte / parametre</th><th scope="col"><a href="/LLMScale/tr/models/llama-3.1-8b.html">Llama 3.1 8B Instruct</a></th><th scope="col"><a href="/LLMScale/tr/models/qwen2.5-32b.html">Qwen2.5 32B Instruct</a></th><th scope="col"><a href="/LLMScale/tr/models/llama-3.3-70b.html">Llama 3.3 70B Instruct</a></th><th scope="col"><a href="/LLMScale/tr/models/llama-3.1-405b.html">Llama 3.1 405B Instruct</a></th></tr></thead>
+<tbody><tr><th scope="row">FP32</th><td>4</td><td>29,91 GiB</td><td>122,0 GiB</td><td>262,8 GiB</td><td>1511,9 GiB</td></tr><tr><th scope="row">BF16 / FP16</th><td>2</td><td>14,96 GiB</td><td>61,02 GiB</td><td>131,4 GiB</td><td>756,0 GiB</td></tr><tr><th scope="row">FP8</th><td>1</td><td>7,48 GiB</td><td>30,51 GiB</td><td>65,70 GiB</td><td>378,0 GiB</td></tr><tr><th scope="row">INT8</th><td>1</td><td>7,48 GiB</td><td>30,51 GiB</td><td>65,70 GiB</td><td>378,0 GiB</td></tr><tr><th scope="row">INT4</th><td>0,5</td><td>3,74 GiB</td><td>15,26 GiB</td><td>32,85 GiB</td><td>189,0 GiB</td></tr></tbody>
+</table></div>
+<p class="note">Yalnızca ağırlıklar; KV cache ve ek yük hariç.</p>
+<h2>Karşılaşacağın formatlar</h2>
+<ul class="plain">
+<li><strong>BF16 ve FP16</strong> — 16-bit kayan nokta. BF16, FP32'nin aralığını daha düşük hassasiyetle korur; eğitimin ve yayımlanan çoğu checkpoint'in onu kullanmasının nedeni budur.</li>
+<li><strong>FP8</strong> — 8-bit kayan nokta, ağırlık başına bir byte; yeni NVIDIA GPU'larında (Ada Lovelace, Hopper ve sonrası) donanım desteği vardır. Bazı modeller FP8 checkpoint'leriyle gelir.</li>
+<li><strong>INT8</strong> — ölçek katsayılarıyla 8-bit tam sayılar, ağırlık başına bir byte.</li>
+<li><strong>AWQ ve GPTQ</strong> — 4-bit, yalnızca ağırlık yöntemleri: ağırlıklar 4 bitte saklanır, 16 bitte hesaplanır. safetensors olarak gelirler ve vLLM gibi GPU servis motorlarını hedeflerler.</li>
+<li><strong>GGUF</strong> — llama.cpp'nin dosya formatı; quantization seviyeleri bit sayısıyla adlandırılır (Q4, Q5, Q8…) ve CPU, Apple Silicon ve tüketici GPU'larında kullanılır.</li>
+<li><strong>NVFP4 ve MXFP4</strong> — ortak ölçekli 4-bit kayan nokta formatları. gpt-oss uzman ağırlıklarını MXFP4 ile yayımlar; <a href="/LLMScale/tr/models/gpt-oss-120b.html">gpt-oss 120B</a> modelinin tek bir 80 GB GPU'ya sığması bu sayededir: 8k context ve tek kullanıcıyla 61,21 GiB, <a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a> üzerindeki 76,00 GiB kullanılabilir belleğe karşı.</li>
+<li><strong>NF4</strong> — QLoRA'nın 4-bit NormalFloat'ı; dondurulmuş, quantize edilmiş bir temel model üzerinde adaptör eğitmek için.</li>
+</ul>
+<h2>4-bit neden tam yarım byte değil</h2>
+<p>LLMScale 4-bit ağırlıkları 0,5 byte sayar. Gerçek 4-bit formatlar ölçek katsayılarını da saklar ve çoğu bazı tensörleri — embedding'ler, çıkış katmanı — daha yüksek hassasiyette tutar; bu yüzden checkpoint'ler BF16'nın yarısından biraz büyük çıkar. QLoRA'nın çift quantization'lı NF4'ü parametre başına 4,127 bit, yani 0,516 byte ölçülür ve ince ayar hesaplayıcısının kullandığı sayı budur.</p>
+<h2>KV cache'i küçültmez</h2>
+<p>KV cache'in kendi hassasiyeti vardır; bunu ağırlıkların formatı değil, servis motoru belirler. Tek kullanıcı ve 128k context'le <a href="/LLMScale/tr/models/llama-3.3-70b.html">Llama 3.3 70B Instruct</a>: ağırlıkları BF16'da 131,4 GiB, INT4'te 32,85 GiB tutar, KV cache ise FP16'da 40,00 GiB olarak kalır — INT4 ağırlıklardan fazla. Önbelleği FP8'de saklamak onu yarıya indiren ayrı bir tercihtir; bkz. <a href="/LLMScale/tr/concepts/kv-cache.html">KV cache boyutu</a>.</p>
+<h2>Mixture-of-Experts modeller</h2>
+<p>Her uzman quantize edilir ve her uzmanın yine bellekte olması gerekir. <a href="/LLMScale/tr/models/mixtral-8x7b.html">Mixtral 8x7B Instruct</a> 46,70B parametre tutar: BF16'da 86,99 GiB, INT4'te 21,75 GiB ağırlık. 12,90B aktif parametresi her token'ın ne kadar iş yaptığını belirler, modelin ne kadar bellek tuttuğunu değil.</p>
+<h2>Hassasiyet seçmek</h2>
+<ul class="plain">
+<li><strong>Sığandan başla.</strong> Bir model kartı aştığında hesaplayıcı, sığan ilk hafif hassasiyeti gösterir.</li>
+<li><strong>Bedelini ölç.</strong> Her adım bellek için doğruluktan feragat eder ve ne kadar olduğu modele ve yönteme bağlıdır; servis etmeden önce kendi görevinde dene.</li>
+<li><strong>Önceden quantize edilmiş checkpoint kendini anlatsın.</strong> LLMScale hassasiyetini <code>quantization_config</code>'ten, depo adından ya da safetensors başlığından okur; vLLM de AWQ, GPTQ ve FP8 checkpoint'lerini <code>--quantization</code> bayrağı olmadan yükler.</li>
+</ul>
+<ul class="links">
+  <li><a class="primary" href="/LLMScale/tr/">Modelin için hassasiyetleri karşılaştır</a></li>
+  <li><a href="/LLMScale/tr/concepts/kv-cache.html">KV cache boyutu</a></li>
+  <li><a href="/LLMScale/tr/concepts/gqa-mqa-mla.html">GQA, MQA ve MLA</a></li>
+  <li><a href="/LLMScale/tr/gpus/">Hangi GPU'ya hangi LLM sığar</a></li>
+</ul>
+</main>
+<footer class="wrap">LLMScale bir LLM'in ihtiyaç duyduğu GPU belleğini — ağırlıklar, KV cache, context ve eşzamanlı kullanıcılar — her modelin kendi mimarisinden, tarayıcında hesaplar.</footer>
+<script>(function(d){var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(p!=="en"&&p!=="tr")p=/^tr/.test(navigator.language||"")?"tr":"en";if(p===d.L)return;var b=document.createElement("div");b.className="langsuggest";b.lang=d.O;b.setAttribute("role","region");b.setAttribute("aria-label",d.S.text);var s=document.createElement("span");s.textContent=d.S.text;var a=document.createElement("a");a.href=d.H;a.hreflang=d.O;a.textContent=d.S.go;a.onclick=function(){try{localStorage.setItem("lang",d.O)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\u2715";c.setAttribute("aria-label",d.S.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})({"L":"tr","O":"en","S":{"text":"This page is also available in English.","go":"Switch to English","dismiss":"Dismiss"},"H":"/LLMScale/concepts/quantization.html"});</script>
+</body>
+</html>
