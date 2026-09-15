@@ -3,6 +3,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { CH } from "./learnChapters.js";
 
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -153,34 +154,7 @@ const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
-// ---------- chapters ----------
-const CH = [
-  { id:"hero", cam:[0,0,11], look:[0,0,0], layout:"scatter", spin:true, edges:0, axes:0, planes:0, field:0, loop:0, ids:false },
-  { id:"prompt", cam:[0,0,7.6], look:[0,0,0], layout:"row", spin:false, edges:0, axes:0, planes:0, field:0, loop:0, ids:false,
-    tr:{e:"01 · PROMPT", h:'Her şey bir <em>cümleyle</em> başlar', p:'Modele bir metin verirsin: <b>“The cat sat on the mat.”</b> Model harfleri değil, anlam taşıyan parçaları görmek üzere bunu hazırlar.'},
-    en:{e:"01 · PROMPT", h:'It starts with a <em>sentence</em>', p:'You hand the model text: <b>“The cat sat on the mat.”</b> It won’t read letters — it prepares to see meaningful pieces.'} },
-  { id:"token", cam:[0,0,8], look:[0,0,0], layout:"row", spin:false, edges:0, axes:0, planes:0, field:0, loop:0, ids:true,
-    tr:{e:"02 · TOKENIZATION", h:'Metin <em>token</em>’lara bölünür', p:'Cümle küçük parçalara (token) ayrılır ve her biri bir sayıya (<b>ID</b>) eşlenir. Model artık kelimelerle değil, sayılarla çalışır.'},
-    en:{e:"02 · TOKENIZATION", h:'Text is split into <em>tokens</em>', p:'The sentence is chopped into pieces, each mapped to a number (<b>ID</b>). From here the model works in numbers, not words.'} },
-  { id:"embed", cam:[0.4,0.6,9.4], look:[0,0,0], layout:"scatter", spin:true, edges:0, axes:1, planes:0, field:0, loop:0, ids:true,
-    tr:{e:"03 · EMBEDDING", h:'Her token bir <em>vektör</em> olur', p:'Her ID, yüksek boyutlu bir <b>anlam uzayında</b> bir noktaya (vektör) dönüşür. Benzer anlamlar birbirine yakın konumlanır.'},
-    en:{e:"03 · EMBEDDING", h:'Each token becomes a <em>vector</em>', p:'Every ID turns into a point in a high-dimensional <b>meaning space</b>. Similar meanings land close together.'} },
-  { id:"attention", cam:[0,0,9], look:[0,0,0], layout:"scatter", spin:false, edges:1, axes:0, planes:0, field:0, loop:0, ids:false, attn:true,
-    tr:{e:"04 · ATTENTION", h:'Token’lar <em>birbirine bakar</em>', p:'Her token, cümledeki diğerlerine <b>ne kadar dikkat edeceğini</b> hesaplar. Nedensel maske gereği bir token yalnızca kendinden öncekilere bakabilir.'},
-    en:{e:"04 · ATTENTION", h:'Tokens <em>look at each other</em>', p:'Each token computes <b>how much to attend</b> to the others. With a causal mask, a token only looks at the ones before it.'} },
-  { id:"layers", cam:[0,1.7,10.6], look:[0,-0.3,0], layout:"scatter", spin:false, edges:1, axes:0, planes:1, field:0, loop:0, ids:false,
-    tr:{e:"05 · LAYERS", h:'Aynı blok <em>onlarca kez</em>', p:'Attention + ileri-besleme bloğu üst üste yığılır (örn. <b>×32 katman</b>). Her geçişte temsil biraz daha rafine olur.'},
-    en:{e:"05 · LAYERS", h:'The same block, <em>stacked deep</em>', p:'Attention + feed-forward repeats, stacked dozens deep (e.g. <b>×32</b>). Every pass refines the representation.'} },
-  { id:"predict", cam:[-1.6,0.4,7.8], look:[0.4,0,0], layout:"scatter", spin:false, edges:1, axes:0, planes:0, field:0, loop:0, ids:false, bars:true,
-    tr:{e:"06 · PREDICTION", h:'Sıradaki <em>en olası</em> token', p:'Son katman, tüm kelime dağarcığı için bir <b>olasılık dağılımı</b> üretir. En yüksek olasılıklı token seçilir (ya da örneklenir).'},
-    en:{e:"06 · PREDICTION", h:'The next most <em>likely</em> token', p:'The final layer scores the entire vocabulary into a <b>probability distribution</b>. The top token is picked (or sampled).'} },
-  { id:"loop", cam:[0,0.2,10], look:[0,0,0], layout:"scatter", spin:false, edges:1, axes:0, planes:0, field:0, loop:1, ids:false,
-    tr:{e:"07 · AUTOREGRESSION", h:'Tahmin <em>geri beslenir</em>', p:'Seçilen token diziye eklenir ve süreç <b>baştan</b> işler. Kelime kelime, model metni böyle üretir.'},
-    en:{e:"07 · AUTOREGRESSION", h:'The prediction <em>feeds back</em>', p:'The chosen token is appended and the whole process runs <b>again</b>. Word by word, that’s how text is generated.'} },
-  { id:"scale", cam:[0,0,17], look:[0,0,0], layout:"scatter", spin:true, edges:1, axes:0, planes:0, field:1, loop:0, ids:false, cta:true,
-    tr:{e:"08 · SCALE", h:'Bunu <em>milyarlarca</em> kez, dev boyutta', p:'Bu küçük ağ aslında <b>milyarlarca parametre</b>. İşte bu yüzden VRAM önemli — modelin bir GPU’ya sığar mı?'},
-    en:{e:"08 · SCALE", h:'Now at <em>billions</em>-scale', p:'This tiny network is really <b>billions of parameters</b> — which is exactly why VRAM matters. Does your model fit a GPU?'} },
-];
+// ---------- chapters: src/learnChapters.js ----------
 
 // ---------- build DOM (sections, cards, bars) ----------
 // Same rule as the app's detectLang(): a stored choice, else the browser's language.
@@ -189,11 +163,19 @@ const CH = [
 let lang = navigator.language?.startsWith("tr") ? "tr" : "en";
 try { const s = localStorage.getItem("lang"); if (s === "en" || s === "tr") lang = s; } catch (e) {}
 const scrollEl = document.getElementById("scroll");
+// learn.html may already hold these sections: scripts/prerender.ts writes the
+// English cards in at build time so the text is readable without JavaScript.
+// Reuse them instead of building a second set; applyLang() sets the language.
 const sections = CH.map((ch, i) => {
-  const sec = document.createElement("section"); sec.dataset.i = i;
+  let sec = scrollEl.querySelector(`section[data-i="${i}"]`);
+  const prerendered = !!sec;
+  if (!sec) { sec = document.createElement("section"); sec.dataset.i = i; }
   if (ch.tr) {
-    const card = document.createElement("div"); card.className = "card";
-    card.innerHTML = `<div class="eyebrow"></div><h2></h2><p></p>`;
+    let card = sec.querySelector(".card");
+    if (!card) {
+      card = document.createElement("div"); card.className = "card";
+      card.innerHTML = `<div class="eyebrow"></div><h2></h2><p></p>`;
+    }
     if (ch.attn) {
       const heads = document.createElement("div"); heads.className = "heads";
       HEADS.forEach((hd, hi) => {
@@ -207,9 +189,9 @@ const sections = CH.map((ch, i) => {
       card.appendChild(hint);
     }
     if (ch.cta) { const a = document.createElement("a"); a.className = "cta"; a.href = "index.html"; a.dataset.role = "cta"; card.appendChild(a); }
-    sec.appendChild(card);
+    if (!prerendered) sec.appendChild(card);
   }
-  scrollEl.appendChild(sec);
+  if (!prerendered) scrollEl.appendChild(sec);
   return sec;
 });
 
@@ -231,6 +213,9 @@ function applyLang() {
   });
   document.getElementById("lang").textContent = lang==="tr" ? "EN" : "TR";
   document.documentElement.lang = lang;
+  // Set by the bootstrap in learn.html for a visitor who would otherwise see the
+  // prerendered English text before this ran.
+  document.documentElement.classList.remove("prerender-stale");
 }
 document.getElementById("lang").onclick = () => { lang = lang==="tr" ? "en" : "tr"; try { localStorage.setItem("lang", lang); } catch (e) {} applyLang(); };
 applyLang();

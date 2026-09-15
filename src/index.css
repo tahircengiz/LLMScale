@@ -34,6 +34,13 @@
   color-scheme: dark;
 }
 
+/* #root arrives holding the English page prerendered at build time. For a visitor
+ * about to see a different one (Turkish, or a shared link's own state) the entry's
+ * bootstrap sets this class, and Root removes it once React has rendered. */
+.prerender-stale #root {
+  visibility: hidden;
+}
+
 /* Dark surfaces follow the layering model used by IBM Carbon (g100) and
  * Material's dark theme: near-neutral greys stepped by luminance, with colour
  * reserved for accents. Keeping every surface a saturated navy made the whole

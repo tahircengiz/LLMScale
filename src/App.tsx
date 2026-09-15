@@ -16,6 +16,7 @@ import { AnatomyPage } from "./pages/AnatomyPage";
 import { ComparePage } from "./pages/ComparePage";
 import { TrainPage } from "./pages/TrainPage";
 import { Badge, Segmented } from "./components/ui";
+import { About } from "./components/About";
 
 // Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
@@ -204,8 +205,16 @@ export default function App() {
             <SizingPage />
           )}
 
+          {!isFit && <About page={page} />}
           {!isFit && <Footer githubUrl={GITHUB_URL} linkedinUrl={LINKEDIN_URL} />}
         </div>
+        {/* Anatomy fills the first screen as a dashboard, so its explainer sits
+            below the fold instead of squeezing the panels. */}
+        {isFit && (
+          <div className="mx-auto max-w-6xl px-4 pb-6 sm:px-6">
+            <About page={page} />
+          </div>
+        )}
       </main>
     </div>
   );

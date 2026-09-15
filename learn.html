@@ -29,6 +29,15 @@
          pageview whose path was a local disk path, and every localhost preview
          landed in production traffic. -->
     <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+    <script>
+      // The hero and cards arrive prerendered in English (scripts/prerender.ts). A
+      // visitor about to read Turkish should not watch it swap, so that text stays
+      // hidden until learn.js applies the language. Same rule as detectLang().
+      var l = null;
+      try { l = localStorage.getItem("lang"); } catch (e) {}
+      if (l !== "en" && l !== "tr") l = /^tr/.test(navigator.language || "") ? "tr" : "en";
+      if (l !== "en") document.documentElement.classList.add("prerender-stale");
+    </script>
     <style>
       :root {
         --cyan: #22d3ee; --pink: #a855f7; --purple: #8b5cf6; --indigo: #6366f1;
@@ -44,6 +53,7 @@
       #c { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; cursor: grab; }
       #c.grabbing { cursor: grabbing; }
       #c.pointing { cursor: pointer; }
+      .prerender-stale [data-en], .prerender-stale #scroll .card { visibility: hidden; }
 
       .vign { position: fixed; inset: 0; z-index: 4; pointer-events: none;
         background: radial-gradient(125% 105% at 50% 40%, transparent 44%, rgba(0,0,2,0.9) 100%); }

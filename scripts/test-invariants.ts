@@ -208,6 +208,60 @@ check("the bootstrap asks the OS with the same query", bootstrap.includes(DARK_Q
 check("an OS asking for dark wins over the default", bootstrap.includes(`? "${DEFAULT_THEME_DARK}"`), DEFAULT_THEME_DARK);
 check("the two defaults differ, or following the OS is pointless", DEFAULT_THEME !== DEFAULT_THEME_DARK);
 
+console.log("\n--- the prerendered page is hidden from visitors it would mislead ---");
+// Every React entry ships the English, blank-state page in #root (scripts/prerender.ts)
+// and main.tsx replaces it. The class that hides it in the meantime is named in four
+// places that cannot import each other: each entry's bootstrap, index.css, Root.tsx
+// and the build. If any one drifts, a Turkish visitor watches English swap out, or
+// the page never becomes visible at all.
+const staleClass = read("src/Root.tsx").match(/PRERENDER_STALE_CLASS = "([^"]+)"/)?.[1] ?? "";
+check("Root names the class", staleClass.length > 0, staleClass);
+const reactEntries = pages.filter((p) => read(p).includes('<div id="root"></div>'));
+const staleBoots = new Map<string, string[]>();
+for (const p of reactEntries) {
+  const body = read(p).match(/var l = null;[\s\S]*?classList\.add\("[^"]+"\);/)?.[0] ?? "";
+  staleBoots.set(body, [...(staleBoots.get(body) ?? []), p]);
+}
+const staleBoot = [...staleBoots.keys()][0] ?? "";
+check("every React entry carries the same bootstrap", staleBoots.size === 1 && staleBoot !== "",
+  `${staleBoots.size} variant(s) across ${reactEntries.length} pages`);
+check("the bootstrap sets the class Root lifts", staleBoot.includes(`classList.add("${staleClass}")`));
+check("index.css hides #root under that class", css.includes(`.${staleClass} #root`));
+// The bootstrap reimplements detectLang(); if the two disagree about a visitor's
+// language, that visitor either sees the wrong page flash or is hidden for nothing.
+const dict = read("src/lib/dict.ts");
+check("the bootstrap reads the same storage key as detectLang", staleBoot.includes('localStorage.getItem("lang")') && dict.includes('localStorage.getItem("lang")'));
+check("and falls back to the browser language the same way", staleBoot.includes("navigator.language") && dict.includes('navigator.language?.startsWith("tr")'));
+check("the build runs the prerender", /vite build --ssr src\/entry-server\.tsx[^"]*node scripts\/prerender\.ts/.test(read("package.json")));
+// LLM 101 is not React, so it carries its own copy: learn.html hides its hero text
+// and cards, and learn.js lifts the class once it has applied the language.
+const learnHtml = read("learn.html");
+const learnJs = read("src/learn.js");
+check("learn.html hides its prerendered text under the same class", learnHtml.includes(`classList.add("${staleClass}")`) && learnHtml.includes(`.${staleClass} [data-en]`));
+check("learn.js lifts it", learnJs.includes(`classList.remove("${staleClass}")`));
+check("learn.html uses the same language rule", learnHtml.includes('localStorage.getItem("lang")') && learnHtml.includes("navigator.language"));
+
+console.log("\n--- every tool explains itself ---");
+// About.tsx counts numbered keys (p1, p2…, f1…, q1…) on the English dictionary,
+// so a page with no title or no text would render an empty card, and a question
+// without its answer would render a blank <dd>. The en/tr key diff above already
+// guarantees Turkish has whatever English has.
+const aboutPages = [...(read("src/components/About.tsx").match(/export type AboutPage = ([^;]+);/)?.[1] ?? "")
+  .matchAll(/"([a-z]+)"/g)].map((m) => m[1]);
+check("About names the pages", aboutPages.length === 7, aboutPages.join(", "));
+const aboutGaps = aboutPages.filter((pg) => {
+  const has = (k: string) => k in DICTS.en;
+  let q = 0;
+  while (has(`about.${pg}.q${q + 1}`)) q++;
+  const answered = Array.from({ length: q }, (_, i) => has(`about.${pg}.a${i + 1}`)).every(Boolean);
+  return !(has(`about.${pg}.title`) && has(`about.${pg}.p1`) && q >= 3 && answered);
+});
+check("each has a title, text and at least three answered questions", aboutGaps.length === 0, aboutGaps.join(", "));
+// The sizing page claimed MLA was not modelled for two weeks after calc.ts began
+// modelling it. Copy is where the engine's changes are easiest to leave behind.
+const allCopy = Object.values(DICTS.en).join(" ") + Object.values(DICTS.tr).join(" ");
+check("no copy still says MLA is not modelled", !/MLA[^.]*(not yet capture|henüz modellenmemiş)/.test(allCopy));
+
 // The class that suppresses transitions is named in theme.ts, set in App.tsx and
 // acted on in index.css. Nothing links those three at build time, and a rename in
 // one of them fails silently — the switch would just go back to landing in two

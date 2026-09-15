@@ -7,7 +7,7 @@
   "description": "Estimate the VRAM an LLM needs \u2014 weights, KV cache, context window, concurrent users \u2014 and find the right GPU.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr --emptyOutDir && node scripts/prerender.ts dist dist-ssr",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "node scripts/test-calc.ts",

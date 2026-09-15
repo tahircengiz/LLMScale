@@ -1,36 +1,19 @@
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+import Root from "./Root.tsx";
 import "./index.css";
-import { LanguageContext, detectLang, translate, type Lang } from "./lib/i18n";
+import { detectLang } from "./lib/i18n";
 
-function Root() {
-  const [lang, setLangState] = useState<Lang>(detectLang);
-  const setLang = (l: Lang) => {
-    setLangState(l);
-    try {
-      localStorage.setItem("lang", l);
-    } catch {
-      /* localStorage unavailable */
-    }
-  };
-  const t = (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars);
-
-  // The HTML ships lang="en"; keep it in step with what is actually on screen, so
-  // screen readers pronounce Turkish as Turkish and CSS uppercase maps i → İ.
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
-
-  return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
-      <App />
-    </LanguageContext.Provider>
-  );
-}
-
+// #root arrives holding the page prerendered at build time (scripts/prerender.ts),
+// so a crawler that never runs this still has something to read.
+//
+// createRoot, not hydrateRoot. The prerender is the English page with nothing
+// chosen, and plenty of visitors render something else: Turkish, another theme, a
+// shared link with a model in it. Hydrating those would mismatch, and React keeps
+// the server's attributes when it does. Replacing the markup outright cannot
+// mismatch; the inline bootstrap hides it for the visitors it would mislead.
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Root />
+    <Root initialLang={detectLang()} />
   </StrictMode>
 );
