@@ -107,6 +107,7 @@ export function surfaceOf(urlPath: string): string {
   // hubs end in a slash, which the filename rule below would read as the calculator.
   if (/\/models\/[^/]*$/.test(urlPath)) return "Model pages";
   if (/\/gpus\/[^/]*$/.test(urlPath)) return "GPU pages";
+  if (/\/concepts\/[^/]*$/.test(urlPath)) return "Concept pages";
   const file = urlPath.replace(/\/+$/, "").split("/").pop() ?? "";
   return SURFACES[file.endsWith(".html") ? file : ""] ?? "Other";
 }

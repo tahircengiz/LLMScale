@@ -1,7 +1,19 @@
 import { DICTS, useLang } from "../lib/i18n";
 import { Card } from "./ui";
+import { StaticPageLink } from "./StaticPageLink";
+import { CONCEPT_FILES } from "../lib/staticPages";
 
 export type AboutPage = "sizing" | "train" | "fit" | "anatomy" | "compare" | "decode" | "vllm";
+
+/** The concept guides worth reading after each tool (scripts/concepts.ts). */
+const DEEPER: Partial<Record<AboutPage, (keyof typeof CONCEPT_FILES)[]>> = {
+  sizing: ["kvCache", "attention", "quantization"],
+  train: ["quantization"],
+  anatomy: ["attention", "kvCache"],
+  compare: ["quantization"],
+  decode: ["quantization", "attention"],
+  vllm: ["kvCache", "quantization"],
+};
 
 /** How many numbered keys of one kind a page has — about.<page>.p1, p2, … — so a
  *  page's text can grow or shrink in the dictionary without touching this file.
@@ -58,6 +70,18 @@ export function About({ page }: { page: AboutPage }) {
                   </div>
                 ))}
               </dl>
+              {(DEEPER[page] ?? []).length > 0 && (
+                <div className="mt-5">
+                  <h3 className="text-xs font-medium uppercase tracking-wide text-slate-400">{t("about.deeper")}</h3>
+                  <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                    {(DEEPER[page] ?? []).map((k) => (
+                      <li key={k}>
+                        <StaticPageLink file={CONCEPT_FILES[k]}>{t(`concept.${k}`)}</StaticPageLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>

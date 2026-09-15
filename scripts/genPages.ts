@@ -34,7 +34,8 @@ import { DEFAULT_STATE } from "../src/lib/urlState.ts";
 import { DICTS, type Lang } from "../src/lib/dict.ts";
 import { formatGiB, formatParams } from "../src/lib/format.ts";
 import { LANG_NAME, SUGGEST } from "../src/lib/langPath.ts";
-import { FEATURED_GPU_IDS, GPUS_HUB, MODELS_HUB, gpuPageFile, modelPageFile } from "../src/lib/staticPages.ts";
+import { CONCEPT_FILES, CONCEPTS_HUB, FEATURED_GPU_IDS, GPUS_HUB, MODELS_HUB, gpuPageFile, modelPageFile } from "../src/lib/staticPages.ts";
+import { CONCEPTS, type Concept, type Fmt } from "./concepts.ts";
 
 const outDir = process.argv[2] ?? "dist";
 const LANGS: Lang[] = ["en", "tr"];
@@ -141,6 +142,8 @@ ul.plain li{margin:.3rem 0}
 .links a{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
 .links a.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+pre{background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.75rem 1rem;overflow-x:auto;margin:0 0 .9rem;line-height:1.55}
+pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.8125rem;color:var(--faint)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--muted)}
@@ -161,14 +164,14 @@ function suggestScript(lang: Lang, file: string): string {
 }
 
 const CHROME = {
-  en: { nav: "Site", calc: "VRAM calculator", models: "Models", gpus: "GPUs", crumbs: "Breadcrumb", footer: "LLMScale works out the GPU memory an LLM needs — weights, KV cache, context and concurrent users — in your browser, from each model's own architecture." },
-  tr: { nav: "Site", calc: "VRAM hesaplayıcı", models: "Modeller", gpus: "GPU'lar", crumbs: "Konum", footer: "LLMScale bir LLM'in ihtiyaç duyduğu GPU belleğini — ağırlıklar, KV cache, context ve eşzamanlı kullanıcılar — her modelin kendi mimarisinden, tarayıcında hesaplar." },
+  en: { nav: "Site", calc: "VRAM calculator", models: "Models", gpus: "GPUs", concepts: "Concepts", crumbs: "Breadcrumb", footer: "LLMScale works out the GPU memory an LLM needs — weights, KV cache, context and concurrent users — in your browser, from each model's own architecture." },
+  tr: { nav: "Site", calc: "VRAM hesaplayıcı", models: "Modeller", gpus: "GPU'lar", concepts: "Kavramlar", crumbs: "Konum", footer: "LLMScale bir LLM'in ihtiyaç duyduğu GPU belleğini — ağırlıklar, KV cache, context ve eşzamanlı kullanıcılar — her modelin kendi mimarisinden, tarayıcında hesaplar." },
 };
 
 interface PageSpec {
   lang: Lang;
   file: string;
-  section: "models" | "gpus";
+  section: "models" | "gpus" | "concepts";
   title: string;
   description: string;
   h1: string;
@@ -230,6 +233,7 @@ ${ld}
     <a href="${href(p.lang)}">${c.calc}</a>
     <a href="${href(p.lang, MODELS_HUB)}"${current("models")}>${c.models}</a>
     <a href="${href(p.lang, GPUS_HUB)}"${current("gpus")}>${c.gpus}</a>
+    <a href="${href(p.lang, CONCEPTS_HUB)}"${current("concepts")}>${c.concepts}</a>
     <a href="${href(o, p.file)}" hreflang="${o}" lang="${o}" onclick="try{localStorage.setItem('lang','${o}')}catch(e){}">${LANG_NAME[o]}</a>
   </nav>
 </div></header>
@@ -389,6 +393,9 @@ ${usersBlock}
 <p>${en
       ? `Weights are <code>parameters × bytes per parameter</code>. ${kvFormula} For ${esc(name)} that is ${kib} KiB per token at FP16. These are capacity-planning figures: the serving engine — vLLM, TGI, llama.cpp — and its paged-attention efficiency still move the real number.`
       : `Ağırlıklar <code>parametre × parametre başına byte</code> olur. ${kvFormula} ${esc(name)} için bu, FP16'da token başına ${kib} KiB eder. Bunlar kapasite planlama sayılarıdır: servis motoru — vLLM, TGI, llama.cpp — ve paged-attention verimliliği gerçek değeri yine değiştirir.`}</p>
+<p>${en
+      ? `More on <a href="${href(lang, CONCEPT_FILES.kvCache)}">KV cache size</a> and on <a href="${href(lang, CONCEPT_FILES.attention)}">GQA, MQA and MLA</a>.`
+      : `Daha fazlası: <a href="${href(lang, CONCEPT_FILES.kvCache)}">KV cache boyutu</a> ve <a href="${href(lang, CONCEPT_FILES.attention)}">GQA, MQA ve MLA</a>.`}</p>
 <h2>${en ? `Work with ${name}` : `${name} ile çalış`}</h2>
 <ul class="links">
   <li><a class="primary" href="${href(lang)}${q}">${en ? "Size it for your workload" : "Kendi iş yüküne göre hesapla"}</a></li>
@@ -480,6 +487,9 @@ function gpuPage(lang: Lang, g: Gpu): string {
 <h2>${en ? `Which LLMs fit on ${g.name}` : `${g.name}: hangi LLM'ler sığar`}</h2>
 ${table}
 <p>${en
+      ? `What BF16, FP8 and INT4 mean for memory: <a href="${href(lang, CONCEPT_FILES.quantization)}">quantization and VRAM</a>.`
+      : `BF16, FP8 ve INT4'ün bellek için anlamı: <a href="${href(lang, CONCEPT_FILES.quantization)}">quantization ve VRAM</a>.`}</p>
+<p>${en
       ? "A model that does not fit one card can still run across several: tensor parallelism splits its weights and KV cache between them. The calculator works out how many."
       : "Tek karta sığmayan bir model birden çok kartta çalışabilir: tensor parallel, ağırlıklarını ve KV cache'ini kartlar arasında böler. Kaç tane gerektiğini hesaplayıcı bulur."}</p>
 <h2>${en ? `Size a model on ${g.name}` : `${g.name} için bir modeli hesapla`}</h2>
@@ -523,7 +533,7 @@ function modelsHub(lang: Lang): string {
 <tbody>${rows}</tbody>
 </table></div>
 <p class="note">${en ? "One user, FP16 KV cache, 10% overhead and 0.75 GiB of CUDA context; models with a shorter maximum context are shown at that maximum." : "Tek kullanıcı, FP16 KV cache, %10 ek yük ve 0,75 GiB CUDA context; maksimum context'i daha kısa olan modeller o maksimumla gösterilir."}</p>
-<ul class="links"><li><a class="primary" href="${href(lang)}">${en ? "Size any Hugging Face model" : "Herhangi bir Hugging Face modelini hesapla"}</a></li><li><a href="${href(lang, GPUS_HUB)}">${en ? "Which LLMs fit on which GPU" : "Hangi GPU'ya hangi LLM sığar"}</a></li></ul>`;
+<ul class="links"><li><a class="primary" href="${href(lang)}">${en ? "Size any Hugging Face model" : "Herhangi bir Hugging Face modelini hesapla"}</a></li><li><a href="${href(lang, GPUS_HUB)}">${en ? "Which LLMs fit on which GPU" : "Hangi GPU'ya hangi LLM sığar"}</a></li><li><a href="${href(lang, CONCEPTS_HUB)}">${en ? "How LLM memory works" : "LLM belleği nasıl çalışır"}</a></li></ul>`;
   return page({
     lang,
     file: MODELS_HUB,
@@ -554,7 +564,7 @@ function gpusHub(lang: Lang): string {
 <tbody>${rows}</tbody>
 </table></div>
 <p class="note">${en ? `Out of ${KNOWN_MODELS.length} models, at 8k context for one user. Discrete cards are budgeted at 95% of their memory; unified-memory devices at the share their GPU can address.` : `${KNOWN_MODELS.length} model içinden, 8k context ve tek kullanıcı için. Ayrık kartlarda belleğin %95'i, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır.`}</p>
-<ul class="links"><li><a class="primary" href="${href(lang)}">${en ? "Size a model on any GPU" : "Herhangi bir GPU'da model hesapla"}</a></li><li><a href="${href(lang, MODELS_HUB)}">${en ? "VRAM requirements by model" : "Modele göre VRAM gereksinimleri"}</a></li></ul>`;
+<ul class="links"><li><a class="primary" href="${href(lang)}">${en ? "Size a model on any GPU" : "Herhangi bir GPU'da model hesapla"}</a></li><li><a href="${href(lang, MODELS_HUB)}">${en ? "VRAM requirements by model" : "Modele göre VRAM gereksinimleri"}</a></li><li><a href="${href(lang, CONCEPTS_HUB)}">${en ? "How LLM memory works" : "LLM belleği nasıl çalışır"}</a></li></ul>`;
   return page({
     lang,
     file: GPUS_HUB,
@@ -567,6 +577,61 @@ function gpusHub(lang: Lang): string {
     crumbs: [{ name: "LLMScale", file: "" }, { name: en ? "GPUs" : "GPU'lar" }],
     body,
     ld: { "@context": "https://schema.org", "@type": "CollectionPage", name: en ? "Which LLMs fit on which GPU" : "Hangi GPU'ya hangi LLM sığar", inLanguage: lang, url: url(lang, GPUS_HUB), hasPart: FEATURED.map((g) => ({ "@type": "TechArticle", headline: g.name, url: url(lang, gpuPageFile(g.id)) })) },
+  });
+}
+
+// ── concept guides ────────────────────────────────────────────────────────────
+const fmt = (lang: Lang): Fmt => ({
+  lang,
+  gib: (n) => gib(lang, n),
+  int: (n) => int(lang, n),
+  params: (n) => params(lang, n),
+  ratio: (r) => ratio(lang, r),
+  dec: (s) => dec(lang, s),
+  href: (file = "") => href(lang, file),
+  modelLink: (id) => {
+    const m = KNOWN_MODELS.find((x) => x.id === id);
+    if (!m) throw new Error(`no bundled model ${id}`);
+    return modelLink(lang, m);
+  },
+  gpuLink: (id) => gpuLink(lang, gpu(id)),
+});
+
+function conceptPage(lang: Lang, c: Concept): string {
+  const en = lang === "en";
+  return page({
+    lang,
+    file: c.file,
+    section: "concepts",
+    title: c.title,
+    description: c.description,
+    h1: c.h1,
+    crumbs: [{ name: "LLMScale", file: "" }, { name: en ? "Concepts" : "Kavramlar", file: CONCEPTS_HUB }, { name: c.crumb }],
+    body: c.body,
+    ld: { "@context": "https://schema.org", "@type": "TechArticle", headline: c.h1, description: c.description, inLanguage: lang, url: url(lang, c.file), isPartOf: { "@type": "WebSite", name: "LLMScale", url: url(lang) }, author: { "@type": "Person", name: "Tahir Cengiz", url: "https://github.com/tahircengiz" } },
+  });
+}
+
+function conceptsHub(lang: Lang): string {
+  const en = lang === "en";
+  const concepts = CONCEPTS.map((build) => build(fmt(lang)));
+  const body = `<p class="lede">${en
+    ? "Three guides to the terms that decide how much GPU memory a language model needs. Each works through real models, and every number in them is computed by the same engine as the calculator."
+    : "Bir dil modelinin ne kadar GPU belleği istediğini belirleyen kavramlar için üç rehber. Her biri gerçek modeller üzerinden ilerler ve içlerindeki her sayı hesaplayıcıyla aynı motordan hesaplanır."}</p>
+${concepts.map((c) => `<h2><a href="${href(lang, c.file)}">${esc(c.h1)}</a></h2>\n<p>${esc(c.summary)}</p>`).join("\n")}
+<ul class="links"><li><a class="primary" href="${href(lang)}">${en ? "Open the calculator" : "Hesaplayıcıyı aç"}</a></li><li><a href="${href(lang, MODELS_HUB)}">${en ? "VRAM requirements by model" : "Modele göre VRAM gereksinimleri"}</a></li><li><a href="${href(lang, GPUS_HUB)}">${en ? "Which LLMs fit on which GPU" : "Hangi GPU'ya hangi LLM sığar"}</a></li></ul>`;
+  return page({
+    lang,
+    file: CONCEPTS_HUB,
+    section: "concepts",
+    title: en ? "How LLM Memory Works: KV Cache, GQA, Quantization" : "LLM Belleği Nasıl Çalışır: KV Cache, GQA, Quantization",
+    description: en
+      ? "The terms that decide how much GPU memory an LLM needs — the KV cache, grouped-query and latent attention, quantization — explained with real models and computed figures."
+      : "Bir LLM'in ne kadar GPU belleği istediğini belirleyen kavramlar — KV cache, grouped-query ve latent attention, quantization — gerçek modeller ve hesaplanmış sayılarla.",
+    h1: en ? "How LLM memory works" : "LLM belleği nasıl çalışır",
+    crumbs: [{ name: "LLMScale", file: "" }, { name: en ? "Concepts" : "Kavramlar" }],
+    body,
+    ld: { "@context": "https://schema.org", "@type": "CollectionPage", name: en ? "How LLM memory works" : "LLM belleği nasıl çalışır", inLanguage: lang, url: url(lang, CONCEPTS_HUB), hasPart: concepts.map((c) => ({ "@type": "TechArticle", headline: c.h1, url: url(lang, c.file) })) },
   });
 }
 
@@ -584,6 +649,11 @@ for (const lang of LANGS) {
   for (const g of FEATURED) write(lang, gpuPageFile(g.id), gpuPage(lang, g));
   write(lang, MODELS_HUB, modelsHub(lang));
   write(lang, GPUS_HUB, gpusHub(lang));
+  for (const build of CONCEPTS) {
+    const c = build(fmt(lang));
+    write(lang, c.file, conceptPage(lang, c));
+  }
+  write(lang, CONCEPTS_HUB, conceptsHub(lang));
 }
 const fewest = [...written].sort((a, b) => a.words - b.words)[0];
-console.log(`ok    ${written.length} guide pages (${KNOWN_MODELS.length} models, ${FEATURED.length} GPUs, 2 hubs, × ${LANGS.length} languages); fewest words: ${fewest.path} ${fewest.words}`);
+console.log(`ok    ${written.length} guide pages (${KNOWN_MODELS.length} models, ${FEATURED.length} GPUs, ${CONCEPTS.length} concepts, 3 hubs, × ${LANGS.length} languages); fewest words: ${fewest.path} ${fewest.words}`);

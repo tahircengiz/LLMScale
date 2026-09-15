@@ -5,7 +5,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { DICTS } from "../src/lib/dict.ts";
 import { TR_META } from "../src/lib/pageMeta.ts";
-import { FEATURED_GPU_IDS } from "../src/lib/staticPages.ts";
+import { CONCEPT_FILES, FEATURED_GPU_IDS } from "../src/lib/staticPages.ts";
 import { TASKS } from "../src/lib/fit.ts";
 import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
@@ -287,6 +287,13 @@ check("every featured GPU is a real device", unknownFeatured.length === 0, unkno
 check("the build writes the guides and then the sitemap", /node scripts\/prerender\.ts[^"]*node scripts\/genPages\.ts[^"]*node scripts\/sitemap\.ts/.test(read("package.json")));
 check("the footer links to both hubs", read("src/App.tsx").includes("{MODELS_HUB}") && read("src/App.tsx").includes("{GPUS_HUB}"));
 check("a preset links to its page from the calculator", read("src/pages/SizingPage.tsx").includes("modelPageFile(known.id)"));
+// The explainers under each tool link to the concept guides by name. A name with
+// no file, or a file genPages no longer builds, is a link to nothing.
+check("the footer links to the concept guides", read("src/App.tsx").includes("{CONCEPTS_HUB}"));
+const conceptNames = Object.keys(CONCEPT_FILES);
+const linkedConcepts = [...read("src/components/About.tsx").matchAll(/"(kvCache|attention|quantization|[a-zA-Z]+)"(?=[,\]])/g)].map((m) => m[1]).filter((n) => !["sizing","train","fit","anatomy","compare","decode","vllm"].includes(n));
+check("the explainers name only concept guides that exist", linkedConcepts.length > 0 && linkedConcepts.every((n) => conceptNames.includes(n)), [...new Set(linkedConcepts)].join(", "));
+check("every concept guide has its link text in both languages", conceptNames.every((n) => `concept.${n}` in DICTS.en && `concept.${n}` in DICTS.tr));
 
 // The class that suppresses transitions is named in theme.ts, set in App.tsx and
 // acted on in index.css. Nothing links those three at build time, and a rename in

@@ -27,6 +27,13 @@ export const FEATURED_GPU_IDS: readonly string[] = [
 ];
 
 export const MODELS_HUB = "models/";
+export const CONCEPTS_HUB = "concepts/";
+/** The concept guides (scripts/concepts.ts), by the name the app uses to link to them. */
+export const CONCEPT_FILES = {
+  kvCache: "concepts/kv-cache.html",
+  attention: "concepts/gqa-mqa-mla.html",
+  quantization: "concepts/quantization.html",
+} as const;
 export const GPUS_HUB = "gpus/";
 export const modelPageFile = (modelId: string) => `models/${modelId}.html`;
 export const gpuPageFile = (gpuId: string) => `gpus/${gpuId}.html`;

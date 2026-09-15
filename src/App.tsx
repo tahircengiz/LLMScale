@@ -18,7 +18,7 @@ import { TrainPage } from "./pages/TrainPage";
 import { Badge, Segmented } from "./components/ui";
 import { About } from "./components/About";
 import { LANG_NAME, pathFor } from "./lib/langPath";
-import { GPUS_HUB, MODELS_HUB } from "./lib/staticPages";
+import { CONCEPTS_HUB, GPUS_HUB, MODELS_HUB } from "./lib/staticPages";
 import { StaticPageLink } from "./components/StaticPageLink";
 
 // Footer links.
@@ -246,6 +246,7 @@ function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: st
       <nav aria-label={t("footer.guides")} className="flex flex-wrap justify-center gap-x-4 gap-y-1">
         <StaticPageLink file={MODELS_HUB}>{t("footer.models")}</StaticPageLink>
         <StaticPageLink file={GPUS_HUB}>{t("footer.gpus")}</StaticPageLink>
+        <StaticPageLink file={CONCEPTS_HUB}>{t("footer.concepts")}</StaticPageLink>
       </nav>
       <p className="text-xs text-slate-500">{t("footer.privacy")}</p>
     </footer>
