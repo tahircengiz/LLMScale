@@ -29,6 +29,15 @@
          pageview whose path was a local disk path, and every localhost preview
          landed in production traffic. -->
     <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+    <script>
+      // The hero and cards arrive prerendered in English (scripts/prerender.ts). A
+      // visitor about to read Turkish should not watch it swap, so that text stays
+      // hidden until learn.js applies the language. Same rule as detectLang().
+      var l = null;
+      try { l = localStorage.getItem("lang"); } catch (e) {}
+      if (l !== "en" && l !== "tr") l = /^tr/.test(navigator.language || "") ? "tr" : "en";
+      if (l !== "en") document.documentElement.classList.add("prerender-stale");
+    </script>
     <style>
       :root {
         --cyan: #22d3ee; --pink: #a855f7; --purple: #8b5cf6; --indigo: #6366f1;
@@ -44,6 +53,7 @@
       #c { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; cursor: grab; }
       #c.grabbing { cursor: grabbing; }
       #c.pointing { cursor: pointer; }
+      .prerender-stale [data-en], .prerender-stale #scroll .card { visibility: hidden; }
 
       .vign { position: fixed; inset: 0; z-index: 4; pointer-events: none;
         background: radial-gradient(125% 105% at 50% 40%, transparent 44%, rgba(0,0,2,0.9) 100%); }
@@ -111,8 +121,10 @@
       @media (prefers-reduced-motion: reduce) { #scrollhint { animation: none; } }
       @media (max-width: 620px) { .card { margin: 0 12px; } #bars { display: none; } }
     </style>
-    <script type="module" crossorigin src="/LLMScale/assets/learn-B7zqMmIz.js"></script>
+    <script type="module" crossorigin src="/LLMScale/assets/learn-DEdm3IT5.js"></script>
     <link rel="modulepreload" crossorigin href="/LLMScale/assets/modulepreload-polyfill-B5Qt9EMX.js">
+    <!-- prerender: structured data -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/"},{"@type":"ListItem","position":2,"name":"LLM 101 — how an LLM works, visualized","item":"https://tahircengiz.github.io/LLMScale/learn.html"}]}</script>
   </head>
   <body>
     <canvas id="c"></canvas>
@@ -123,15 +135,15 @@
     <div id="chrome"><button id="lang">EN</button></div>
 
     <div id="hero">
-      <div class="kicker" data-tr="// BİR DİL MODELİ, TAKIMYILDIZ OLARAK" data-en="// A LANGUAGE MODEL, AS A CONSTELLATION"></div>
+      <div class="kicker" data-tr="// BİR DİL MODELİ, TAKIMYILDIZ OLARAK" data-en="// A LANGUAGE MODEL, AS A CONSTELLATION">// A LANGUAGE MODEL, AS A CONSTELLATION</div>
       <h1>A MACHINE<br />READS YOUR <span class="p">WORDS</span></h1>
-      <p class="sub" data-tr="Bir cümle, düğümlerden oluşan bir takımyıldıza dönüşür. Sürükle, dokun, ateşle — sonra kaydırıp içine gir." data-en="A sentence becomes a constellation of nodes. Drag, touch, fire — then scroll inside."></p>
-      <div class="hint2" data-tr="⊹ SÜRÜKLE · ÜZERİNE GEL · TIKLA · KAYDIR" data-en="⊹ DRAG · HOVER · CLICK · SCROLL"></div>
+      <p class="sub" data-tr="Bir cümle, düğümlerden oluşan bir takımyıldıza dönüşür. Sürükle, dokun, ateşle — sonra kaydırıp içine gir." data-en="A sentence becomes a constellation of nodes. Drag, touch, fire — then scroll inside.">A sentence becomes a constellation of nodes. Drag, touch, fire — then scroll inside.</p>
+      <div class="hint2" data-tr="⊹ SÜRÜKLE · ÜZERİNE GEL · TIKLA · KAYDIR" data-en="⊹ DRAG · HOVER · CLICK · SCROLL">⊹ DRAG · HOVER · CLICK · SCROLL</div>
     </div>
 
-    <div id="scroll"></div>
+    <div id="scroll"><section data-i="0"></section><section data-i="1"><div class="card"><div class="eyebrow">01 · PROMPT</div><h2>It starts with a <em>sentence</em></h2><p>You hand the model text: <b>“The cat sat on the mat.”</b> It won’t read letters — it prepares to see meaningful pieces.</p></div></section><section data-i="2"><div class="card"><div class="eyebrow">02 · TOKENIZATION</div><h2>Text is split into <em>tokens</em></h2><p>The sentence is chopped into pieces, each mapped to a number (<b>ID</b>). From here the model works in numbers, not words.</p></div></section><section data-i="3"><div class="card"><div class="eyebrow">03 · EMBEDDING</div><h2>Each token becomes a <em>vector</em></h2><p>Every ID turns into a point in a high-dimensional <b>meaning space</b>. Similar meanings land close together.</p></div></section><section data-i="4"><div class="card"><div class="eyebrow">04 · ATTENTION</div><h2>Tokens <em>look at each other</em></h2><p>Each token computes <b>how much to attend</b> to the others. With a causal mask, a token only looks at the ones before it.</p></div></section><section data-i="5"><div class="card"><div class="eyebrow">05 · LAYERS</div><h2>The same block, <em>stacked deep</em></h2><p>Attention + feed-forward repeats, stacked dozens deep (e.g. <b>×32</b>). Every pass refines the representation.</p></div></section><section data-i="6"><div class="card"><div class="eyebrow">06 · PREDICTION</div><h2>The next most <em>likely</em> token</h2><p>The final layer scores the entire vocabulary into a <b>probability distribution</b>. The top token is picked (or sampled).</p></div></section><section data-i="7"><div class="card"><div class="eyebrow">07 · AUTOREGRESSION</div><h2>The prediction <em>feeds back</em></h2><p>The chosen token is appended and the whole process runs <b>again</b>. Word by word, that’s how text is generated.</p></div></section><section data-i="8"><div class="card"><div class="eyebrow">08 · SCALE</div><h2>Now at <em>billions</em>-scale</h2><p>This tiny network is really <b>billions of parameters</b> — which is exactly why VRAM matters. Does your model fit a GPU?</p></div></section></div>
     <div id="bars"></div>
-    <div id="scrollhint" data-tr="KAYDIR ↓" data-en="SCROLL ↓"></div>
+    <div id="scrollhint" data-tr="KAYDIR ↓" data-en="SCROLL ↓">SCROLL ↓</div>
 
   </body>
 </html>
