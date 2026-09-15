@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qwen2.5 32B Instruct VRAM Requirements | LLMScale</title>
+<meta name="description" content="Qwen2.5 32B Instruct needs 70.07 GiB of GPU memory at BF16 and 19.73 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<link rel="canonical" href="https://tahircengiz.github.io/LLMScale/models/qwen2.5-32b.html">
+<link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/qwen2.5-32b.html">
+<link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/qwen2.5-32b.html">
+<link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/models/qwen2.5-32b.html">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Tahir Cengiz">
+<link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Qwen2.5 32B Instruct: how much VRAM does it need?">
+<meta property="og:description" content="Qwen2.5 32B Instruct needs 70.07 GiB of GPU memory at BF16 and 19.73 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta property="og:url" content="https://tahircengiz.github.io/LLMScale/models/qwen2.5-32b.html">
+<meta property="og:site_name" content="LLMScale">
+<meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Qwen2.5 32B Instruct: how much VRAM does it need?">
+<meta name="twitter:description" content="Qwen2.5 32B Instruct needs 70.07 GiB of GPU memory at BF16 and 19.73 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<script>try{var t=localStorage.getItem("theme");if(t!=="dark"&&t!=="light"&&t!=="glass")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch(e){}</script>
+<script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+<style>:root{--bg:#eef1f8;--card:#fff;--inset:#f4f6fb;--line:#dce1ee;--text:#151d48;--muted:#39405c;--faint:#555b73;--brand:#4a4cd4;--good:#0b7d57;--bad:#b3123c;--button:#4a4cd4;color-scheme:light}
+:root[data-theme=dark]{--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 1rem/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;padding-inline:1.25rem}
+a{color:var(--brand);text-underline-offset:2px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.top{background:var(--card);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem 1.25rem;padding-block:.65rem}
+.brand{display:inline-flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);text-decoration:none}
+.top nav{display:flex;flex-wrap:wrap;gap:.2rem 1rem;font-size:.875rem}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover,.top nav a[aria-current=page]{color:var(--brand)}
+main{padding-block:1.5rem 3rem}
+.crumbs{font-size:.8125rem;color:var(--faint);margin:0 0 .6rem}
+.crumbs a{color:var(--faint)}
+h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
+h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
+p{margin:0 0 .9rem;max-width:68ch}
+.lede{color:var(--muted)}
+.answer{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
+.cap{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.big{font-size:2.1rem;font-weight:700;line-height:1.1;margin:.25rem 0 .45rem;font-variant-numeric:tabular-nums}
+.answer p{margin:0;color:var(--muted);font-size:.9375rem}
+.spec{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;padding:0;margin:.85rem 0 0}
+.spec li{background:var(--inset);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.875rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+tbody tr:last-child>*{border-bottom:0}
+thead th{background:var(--inset);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+th[scope=row]{font-weight:600}
+td small{display:block;color:var(--faint);font-size:.75rem}
+.ok{color:var(--good);font-weight:600}
+.no{color:var(--bad)}
+.note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
+ul.plain{padding-left:1.1rem;margin:0 0 .9rem}
+ul.plain li{margin:.3rem 0}
+.links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
+.links a{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
+.links a.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.8125rem;color:var(--faint)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--muted)}
+.langsuggest a{background:#4a4cd4;color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
+.langsuggest button{background:none;border:0;color:var(--faint);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/"},{"@type":"ListItem","position":2,"name":"Models","item":"https://tahircengiz.github.io/LLMScale/models/"},{"@type":"ListItem","position":3,"name":"Qwen2.5 32B Instruct","item":"https://tahircengiz.github.io/LLMScale/models/qwen2.5-32b.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Qwen2.5 32B Instruct: how much VRAM does it need?","inLanguage":"en","url":"https://tahircengiz.github.io/LLMScale/models/qwen2.5-32b.html","about":"Qwen2.5 32B Instruct","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/"},"author":{"@type":"Person","name":"Tahir Cengiz","url":"https://github.com/tahircengiz"}}</script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/LLMScale/"><img src="/LLMScale/favicon.svg" alt="" width="24" height="24">LLMScale</a>
+  <nav aria-label="Site">
+    <a href="/LLMScale/">VRAM calculator</a>
+    <a href="/LLMScale/models/" aria-current="page">Models</a>
+    <a href="/LLMScale/gpus/">GPUs</a>
+    <a href="/LLMScale/tr/models/qwen2.5-32b.html" hreflang="tr" lang="tr" onclick="try{localStorage.setItem('lang','tr')}catch(e){}">Türkçe</a>
+  </nav>
+</div></header>
+<main class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/LLMScale/">LLMScale</a> › <a href="/LLMScale/models/">Models</a> › Qwen2.5 32B Instruct</nav>
+  <h1>Qwen2.5 32B Instruct: how much VRAM does it need?</h1>
+<p class="lede">Qwen2.5 32B Instruct has 32.76B parameters in 64 layers. It uses grouped-query attention: 40 query heads share 8 key-value heads, so its KV cache is 5× smaller than full multi-head attention would need. It takes up to 32,768 tokens of context; one user at that length needs 8.00 GiB of KV cache at FP16 on top of the weights.</p>
+<div class="answer">
+  <div class="cap">BF16 · 8k context · one user</div>
+  <div class="big">70.07 GiB</div>
+  <p>61.02 GiB of weights, 2.00 GiB of KV cache and 7.05 GiB of activations and CUDA context. At INT4 the same workload needs 19.73 GiB.</p>
+  <ul class="spec"><li>64 layers</li><li>hidden 5120</li><li>40/8 heads</li><li>head_dim 128</li><li>32k max context</li></ul>
+</div>
+<h2>Qwen2.5 32B Instruct memory by precision and context</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">Precision</th><th scope="col">8k context</th><th scope="col">32k context</th></tr></thead>
+<tbody><tr><th scope="row">BF16</th><td>70.07 GiB<small>KV cache 2.00 GiB</small></td><td>76.67 GiB<small>KV cache 8.00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>36.51 GiB<small>KV cache 2.00 GiB</small></td><td>43.11 GiB<small>KV cache 8.00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>19.73 GiB<small>KV cache 2.00 GiB</small></td><td>26.33 GiB<small>KV cache 8.00 GiB</small></td></tr></tbody>
+</table></div>
+<p class="note">One user, FP16 KV cache, 10% activation overhead and 0.75 GiB of CUDA context. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
+<h2>Which single GPUs hold it</h2>
+<ul class="plain"><li><strong>BF16</strong> (70.07 GiB): <a href="/LLMScale/gpus/a100-80.html">A100 80GB</a>, <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, H100 NVL 94GB, GH200 96GB</li><li><strong>FP8</strong> (36.51 GiB): A100 40GB, <a href="/LLMScale/gpus/a6000-48.html">RTX A6000</a>, <a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a>, <a href="/LLMScale/gpus/l40s-48.html">NVIDIA L40S</a></li><li><strong>INT4</strong> (19.73 GiB): <a href="/LLMScale/gpus/rtx3090-24.html">RTX 3090 / Ti</a>, <a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a>, <a href="/LLMScale/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a>, NVIDIA L4</li></ul>
+<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at 95% of its memory; a unified-memory device at the share its GPU can address.</p>
+<h2>How many users fit</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
+<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>2</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>5</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>5</td><td>12</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>3</td><td>18</td><td>26</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>10</td><td>25</td><td>33</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>12</td><td>28</td><td>35</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>30</td><td>45</td><td>52</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>52</td><td>67</td><td>74</td></tr></tbody>
+</table></div>
+<p class="note">Users at 8k context each, on one card. ✗: the weights leave no room for even one.</p>
+<h2>Fine-tuning Qwen2.5 32B Instruct</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">Method</th><th scope="col">Memory</th><th scope="col">Smallest GPU</th></tr></thead>
+<tbody><tr><th scope="row">Full fine-tune</th><td>490.4 GiB</td><td>several GPUs, sharded</td></tr><tr><th scope="row">LoRA (rank 16, attention)</th><td>63.71 GiB</td><td>RTX PRO 5000 Blackwell (72GB)</td></tr><tr><th scope="row">QLoRA (rank 16, attention)</th><td>18.43 GiB</td><td><a href="/LLMScale/gpus/rtx3090-24.html">RTX 3090 / Ti</a></td></tr></tbody>
+</table></div>
+<p class="note">Sequence length 2,048, batch size 1, gradient checkpointing on, Adam. Full fine-tuning keeps 16 bytes per parameter before activations; QLoRA stores the frozen base in 4-bit NF4.</p>
+<h2>Where the numbers come from</h2>
+<p>Weights are <code>parameters × bytes per parameter</code>. The KV cache is <code>2 × layers × key-value heads × head dimension × bytes × context × users</code>. For Qwen2.5 32B Instruct that is 256.0 KiB per token at FP16. These are capacity-planning figures: the serving engine — vLLM, TGI, llama.cpp — and its paged-attention efficiency still move the real number.</p>
+<h2>Work with Qwen2.5 32B Instruct</h2>
+<ul class="links">
+  <li><a class="primary" href="/LLMScale/?m=Qwen%2FQwen2.5-32B-Instruct">Size it for your workload</a></li>
+  <li><a href="/LLMScale/train.html?m=Qwen%2FQwen2.5-32B-Instruct">Fine-tuning memory</a></li>
+  <li><a href="/LLMScale/vllm.html?m=Qwen%2FQwen2.5-32B-Instruct">vLLM parameters</a></li>
+  <li><a href="/LLMScale/anatomy.html?m=Qwen%2FQwen2.5-32B-Instruct">Model anatomy</a></li>
+</ul>
+<h2>Other Qwen models</h2>
+<ul class="links"><li><a href="/LLMScale/models/qwen2.5-0.5b.html">Qwen2.5 0.5B Instruct</a></li><li><a href="/LLMScale/models/qwen2.5-coder-7b.html">Qwen2.5 Coder 7B</a></li><li><a href="/LLMScale/models/qwen2.5-7b.html">Qwen2.5 7B Instruct</a></li><li><a href="/LLMScale/models/qwen3-8b.html">Qwen3 8B</a></li><li><a href="/LLMScale/models/qwen2.5-14b.html">Qwen2.5 14B Instruct</a></li><li><a href="/LLMScale/models/qwen3-30b-a3b.html">Qwen3 30B A3B</a></li><li><a href="/LLMScale/models/qwen3-coder-30b-a3b.html">Qwen3 Coder 30B A3B</a></li><li><a href="/LLMScale/models/qwen3-32b.html">Qwen3 32B</a></li><li><a href="/LLMScale/models/qwen2.5-72b.html">Qwen2.5 72B Instruct</a></li></ul>
+</main>
+<footer class="wrap">LLMScale works out the GPU memory an LLM needs — weights, KV cache, context and concurrent users — in your browser, from each model's own architecture.</footer>
+<script>(function(d){var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(p!=="en"&&p!=="tr")p=/^tr/.test(navigator.language||"")?"tr":"en";if(p===d.L)return;var b=document.createElement("div");b.className="langsuggest";b.lang=d.O;b.setAttribute("role","region");b.setAttribute("aria-label",d.S.text);var s=document.createElement("span");s.textContent=d.S.text;var a=document.createElement("a");a.href=d.H;a.hreflang=d.O;a.textContent=d.S.go;a.onclick=function(){try{localStorage.setItem("lang",d.O)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\u2715";c.setAttribute("aria-label",d.S.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})({"L":"en","O":"tr","S":{"text":"Bu sayfa Türkçe olarak da var.","go":"Türkçe'ye geç","dismiss":"Kapat"},"H":"/LLMScale/tr/models/qwen2.5-32b.html"});</script>
+</body>
+</html>

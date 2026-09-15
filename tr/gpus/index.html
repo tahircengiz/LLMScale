@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hangi GPU'ya Hangi LLM Sığar? | LLMScale</title>
+<meta name="description" content="Hangi popüler açık LLM'ler RTX 4090, RTX 5090, H100, H200, B200, Apple M serisi, Strix Halo ve DGX Spark'a sığar — BF16, FP8 ve INT4'te, kullanıcı sayısı ve maksimum context ile.">
+<link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/gpus/">
+<link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/gpus/">
+<link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/gpus/">
+<link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/gpus/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Tahir Cengiz">
+<link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hangi GPU'ya hangi LLM sığar">
+<meta property="og:description" content="Hangi popüler açık LLM'ler RTX 4090, RTX 5090, H100, H200, B200, Apple M serisi, Strix Halo ve DGX Spark'a sığar — BF16, FP8 ve INT4'te, kullanıcı sayısı ve maksimum context ile.">
+<meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/gpus/">
+<meta property="og:site_name" content="LLMScale">
+<meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hangi GPU'ya hangi LLM sığar">
+<meta name="twitter:description" content="Hangi popüler açık LLM'ler RTX 4090, RTX 5090, H100, H200, B200, Apple M serisi, Strix Halo ve DGX Spark'a sığar — BF16, FP8 ve INT4'te, kullanıcı sayısı ve maksimum context ile.">
+<meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<script>try{var t=localStorage.getItem("theme");if(t!=="dark"&&t!=="light"&&t!=="glass")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch(e){}</script>
+<script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+<style>:root{--bg:#eef1f8;--card:#fff;--inset:#f4f6fb;--line:#dce1ee;--text:#151d48;--muted:#39405c;--faint:#555b73;--brand:#4a4cd4;--good:#0b7d57;--bad:#b3123c;--button:#4a4cd4;color-scheme:light}
+:root[data-theme=dark]{--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 1rem/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;padding-inline:1.25rem}
+a{color:var(--brand);text-underline-offset:2px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.top{background:var(--card);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem 1.25rem;padding-block:.65rem}
+.brand{display:inline-flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);text-decoration:none}
+.top nav{display:flex;flex-wrap:wrap;gap:.2rem 1rem;font-size:.875rem}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover,.top nav a[aria-current=page]{color:var(--brand)}
+main{padding-block:1.5rem 3rem}
+.crumbs{font-size:.8125rem;color:var(--faint);margin:0 0 .6rem}
+.crumbs a{color:var(--faint)}
+h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
+h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
+p{margin:0 0 .9rem;max-width:68ch}
+.lede{color:var(--muted)}
+.answer{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
+.cap{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.big{font-size:2.1rem;font-weight:700;line-height:1.1;margin:.25rem 0 .45rem;font-variant-numeric:tabular-nums}
+.answer p{margin:0;color:var(--muted);font-size:.9375rem}
+.spec{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;padding:0;margin:.85rem 0 0}
+.spec li{background:var(--inset);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.875rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+tbody tr:last-child>*{border-bottom:0}
+thead th{background:var(--inset);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+th[scope=row]{font-weight:600}
+td small{display:block;color:var(--faint);font-size:.75rem}
+.ok{color:var(--good);font-weight:600}
+.no{color:var(--bad)}
+.note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
+ul.plain{padding-left:1.1rem;margin:0 0 .9rem}
+ul.plain li{margin:.3rem 0}
+.links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
+.links a{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
+.links a.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.8125rem;color:var(--faint)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--muted)}
+.langsuggest a{background:#4a4cd4;color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
+.langsuggest button{background:none;border:0;color:var(--faint);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/tr/"},{"@type":"ListItem","position":2,"name":"GPU'lar","item":"https://tahircengiz.github.io/LLMScale/tr/gpus/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Hangi GPU'ya hangi LLM sığar","inLanguage":"tr","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/","hasPart":[{"@type":"TechArticle","headline":"RTX 3060","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/rtx3060-12.html"},{"@type":"TechArticle","headline":"RTX 4060 Ti 16GB","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/rtx4060ti-16.html"},{"@type":"TechArticle","headline":"RTX 3090 / Ti","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/rtx3090-24.html"},{"@type":"TechArticle","headline":"RTX 4090","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/rtx4090-24.html"},{"@type":"TechArticle","headline":"AMD RX 7900 XTX","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/rx7900xtx-24.html"},{"@type":"TechArticle","headline":"RTX 5090","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/rtx5090-32.html"},{"@type":"TechArticle","headline":"RTX A6000","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/a6000-48.html"},{"@type":"TechArticle","headline":"RTX 6000 Ada","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/rtx6000ada-48.html"},{"@type":"TechArticle","headline":"NVIDIA L40S","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/l40s-48.html"},{"@type":"TechArticle","headline":"A100 80GB","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/a100-80.html"},{"@type":"TechArticle","headline":"H100 (SXM/PCIe) 80GB","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/h100-80.html"},{"@type":"TechArticle","headline":"RTX PRO 6000 Blackwell","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/rtxpro6000-96.html"},{"@type":"TechArticle","headline":"Apple M4 Max (128GB)","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/apple-m4max-128.html"},{"@type":"TechArticle","headline":"AMD Ryzen AI Max+ 395 (128GB)","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/amd-strixhalo-128.html"},{"@type":"TechArticle","headline":"NVIDIA DGX Spark (GB10)","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/nv-dgxspark-128.html"},{"@type":"TechArticle","headline":"H200 141GB","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/h200-141.html"},{"@type":"TechArticle","headline":"B200 192GB","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/b200-192.html"},{"@type":"TechArticle","headline":"Apple M3 Ultra (512GB)","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/apple-m3ultra-512.html"}]}</script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/LLMScale/tr/"><img src="/LLMScale/favicon.svg" alt="" width="24" height="24">LLMScale</a>
+  <nav aria-label="Site">
+    <a href="/LLMScale/tr/">VRAM hesaplayıcı</a>
+    <a href="/LLMScale/tr/models/">Modeller</a>
+    <a href="/LLMScale/tr/gpus/" aria-current="page">GPU'lar</a>
+    <a href="/LLMScale/gpus/" hreflang="en" lang="en" onclick="try{localStorage.setItem('lang','en')}catch(e){}">English</a>
+  </nav>
+</div></header>
+<main class="wrap">
+  <nav class="crumbs" aria-label="Konum"><a href="/LLMScale/tr/">LLMScale</a> › GPU'lar</nav>
+  <h1>Hangi GPU'ya hangi LLM sığar</h1>
+<p class="lede">25 popüler açık LLM'den hangilerinin, insanların bu modelleri çalıştırdığı 18 GPU'ya sığdığı — tüketici ve iş istasyonu kartları, veri merkezi GPU'ları, Apple Silicon ve unified bellekli yapay zekâ PC'leri. Her sayfa tüm modelleri BF16, FP8 ve INT4 bellekleriyle, kaç kullanıcı sığdığıyla ve taşıyabileceği en uzun context ile listeler.</p>
+<div class="scroll"><table>
+<thead><tr><th scope="col">GPU</th><th scope="col">Tür</th><th scope="col">Kullanılabilir</th><th scope="col">BF16'da model</th><th scope="col">INT4'te model</th></tr></thead>
+<tbody><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a></th><td>Tüketici</td><td>11,40 GiB</td><td>4</td><td>12</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a></th><td>Tüketici</td><td>15,20 GiB</td><td>4</td><td>13</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx3090-24.html">RTX 3090 / Ti</a></th><td>Tüketici</td><td>22,80 GiB</td><td>10</td><td>18</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a></th><td>Tüketici</td><td>22,80 GiB</td><td>10</td><td>18</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a></th><td>Tüketici</td><td>22,80 GiB</td><td>10</td><td>18</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></th><td>Tüketici</td><td>30,40 GiB</td><td>11</td><td>19</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/a6000-48.html">RTX A6000</a></th><td>İş istasyonu</td><td>45,60 GiB</td><td>13</td><td>21</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>İş istasyonu</td><td>45,60 GiB</td><td>13</td><td>21</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/l40s-48.html">NVIDIA L40S</a></th><td>İş istasyonu</td><td>45,60 GiB</td><td>13</td><td>21</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/a100-80.html">A100 80GB</a></th><td>Veri merkezi</td><td>76,00 GiB</td><td>18</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>Veri merkezi</td><td>76,00 GiB</td><td>18</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>Veri merkezi</td><td>91,20 GiB</td><td>18</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/apple-m4max-128.html">Apple M4 Max (128GB)</a></th><td>Apple</td><td>96,00 GiB</td><td>18</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>Yapay zekâ PC (unified)</td><td>96,00 GiB</td><td>18</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/nv-dgxspark-128.html">NVIDIA DGX Spark (GB10)</a></th><td>Yapay zekâ PC (unified)</td><td>120,0 GiB</td><td>19</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a></th><td>Veri merkezi</td><td>133,9 GiB</td><td>19</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/b200-192.html">B200 192GB</a></th><td>Veri merkezi</td><td>182,4 GiB</td><td>21</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/apple-m3ultra-512.html">Apple M3 Ultra (512GB)</a></th><td>Apple</td><td>384,0 GiB</td><td>23</td><td>25</td></tr></tbody>
+</table></div>
+<p class="note">25 model içinden, 8k context ve tek kullanıcı için. Ayrık kartlarda belleğin %95'i, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır.</p>
+<ul class="links"><li><a class="primary" href="/LLMScale/tr/">Herhangi bir GPU'da model hesapla</a></li><li><a href="/LLMScale/tr/models/">Modele göre VRAM gereksinimleri</a></li></ul>
+</main>
+<footer class="wrap">LLMScale bir LLM'in ihtiyaç duyduğu GPU belleğini — ağırlıklar, KV cache, context ve eşzamanlı kullanıcılar — her modelin kendi mimarisinden, tarayıcında hesaplar.</footer>
+<script>(function(d){var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(p!=="en"&&p!=="tr")p=/^tr/.test(navigator.language||"")?"tr":"en";if(p===d.L)return;var b=document.createElement("div");b.className="langsuggest";b.lang=d.O;b.setAttribute("role","region");b.setAttribute("aria-label",d.S.text);var s=document.createElement("span");s.textContent=d.S.text;var a=document.createElement("a");a.href=d.H;a.hreflang=d.O;a.textContent=d.S.go;a.onclick=function(){try{localStorage.setItem("lang",d.O)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\u2715";c.setAttribute("aria-label",d.S.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})({"L":"tr","O":"en","S":{"text":"This page is also available in English.","go":"Switch to English","dismiss":"Dismiss"},"H":"/LLMScale/gpus/"});</script>
+</body>
+</html>

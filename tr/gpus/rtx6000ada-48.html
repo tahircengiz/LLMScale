@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RTX 6000 Ada: Hangi LLM'ler Sığar? | LLMScale</title>
+<meta name="description" content="RTX 6000 Ada (kullanılabilir 45,60 GiB) üzerinde hangi açık LLM'ler çalışır: 25 popüler modelin 21 tanesi INT4'te, 13 tanesi BF16'da sığar; her biri için eşzamanlı kullanıcı ve maksimum context.">
+<link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/gpus/rtx6000ada-48.html">
+<link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/gpus/rtx6000ada-48.html">
+<link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/gpus/rtx6000ada-48.html">
+<link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/gpus/rtx6000ada-48.html">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Tahir Cengiz">
+<link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RTX 6000 Ada: hangi LLM'ler sığar?">
+<meta property="og:description" content="RTX 6000 Ada (kullanılabilir 45,60 GiB) üzerinde hangi açık LLM'ler çalışır: 25 popüler modelin 21 tanesi INT4'te, 13 tanesi BF16'da sığar; her biri için eşzamanlı kullanıcı ve maksimum context.">
+<meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/gpus/rtx6000ada-48.html">
+<meta property="og:site_name" content="LLMScale">
+<meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RTX 6000 Ada: hangi LLM'ler sığar?">
+<meta name="twitter:description" content="RTX 6000 Ada (kullanılabilir 45,60 GiB) üzerinde hangi açık LLM'ler çalışır: 25 popüler modelin 21 tanesi INT4'te, 13 tanesi BF16'da sığar; her biri için eşzamanlı kullanıcı ve maksimum context.">
+<meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<script>try{var t=localStorage.getItem("theme");if(t!=="dark"&&t!=="light"&&t!=="glass")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch(e){}</script>
+<script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+<style>:root{--bg:#eef1f8;--card:#fff;--inset:#f4f6fb;--line:#dce1ee;--text:#151d48;--muted:#39405c;--faint:#555b73;--brand:#4a4cd4;--good:#0b7d57;--bad:#b3123c;--button:#4a4cd4;color-scheme:light}
+:root[data-theme=dark]{--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 1rem/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto;padding-inline:1.25rem}
+a{color:var(--brand);text-underline-offset:2px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.top{background:var(--card);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem 1.25rem;padding-block:.65rem}
+.brand{display:inline-flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);text-decoration:none}
+.top nav{display:flex;flex-wrap:wrap;gap:.2rem 1rem;font-size:.875rem}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover,.top nav a[aria-current=page]{color:var(--brand)}
+main{padding-block:1.5rem 3rem}
+.crumbs{font-size:.8125rem;color:var(--faint);margin:0 0 .6rem}
+.crumbs a{color:var(--faint)}
+h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
+h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
+p{margin:0 0 .9rem;max-width:68ch}
+.lede{color:var(--muted)}
+.answer{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
+.cap{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.big{font-size:2.1rem;font-weight:700;line-height:1.1;margin:.25rem 0 .45rem;font-variant-numeric:tabular-nums}
+.answer p{margin:0;color:var(--muted);font-size:.9375rem}
+.spec{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;padding:0;margin:.85rem 0 0}
+.spec li{background:var(--inset);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.875rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+tbody tr:last-child>*{border-bottom:0}
+thead th{background:var(--inset);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+th[scope=row]{font-weight:600}
+td small{display:block;color:var(--faint);font-size:.75rem}
+.ok{color:var(--good);font-weight:600}
+.no{color:var(--bad)}
+.note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
+ul.plain{padding-left:1.1rem;margin:0 0 .9rem}
+ul.plain li{margin:.3rem 0}
+.links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
+.links a{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
+.links a.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.8125rem;color:var(--faint)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--muted)}
+.langsuggest a{background:#4a4cd4;color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
+.langsuggest button{background:none;border:0;color:var(--faint);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/tr/"},{"@type":"ListItem","position":2,"name":"GPU'lar","item":"https://tahircengiz.github.io/LLMScale/tr/gpus/"},{"@type":"ListItem","position":3,"name":"RTX 6000 Ada","item":"https://tahircengiz.github.io/LLMScale/tr/gpus/rtx6000ada-48.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"RTX 6000 Ada: hangi LLM'ler sığar?","inLanguage":"tr","url":"https://tahircengiz.github.io/LLMScale/tr/gpus/rtx6000ada-48.html","about":"RTX 6000 Ada","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/tr/"},"author":{"@type":"Person","name":"Tahir Cengiz","url":"https://github.com/tahircengiz"}}</script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/LLMScale/tr/"><img src="/LLMScale/favicon.svg" alt="" width="24" height="24">LLMScale</a>
+  <nav aria-label="Site">
+    <a href="/LLMScale/tr/">VRAM hesaplayıcı</a>
+    <a href="/LLMScale/tr/models/">Modeller</a>
+    <a href="/LLMScale/tr/gpus/" aria-current="page">GPU'lar</a>
+    <a href="/LLMScale/gpus/rtx6000ada-48.html" hreflang="en" lang="en" onclick="try{localStorage.setItem('lang','en')}catch(e){}">English</a>
+  </nav>
+</div></header>
+<main class="wrap">
+  <nav class="crumbs" aria-label="Konum"><a href="/LLMScale/tr/">LLMScale</a> › <a href="/LLMScale/tr/gpus/">GPU'lar</a> › RTX 6000 Ada</nav>
+  <h1>RTX 6000 Ada: hangi LLM'ler sığar?</h1>
+<p class="lede">RTX 6000 Ada 48 GB belleğe sahiptir. LLMScale sürücü payı olarak %5 bırakıp modele 45,60 GiB ayırır. Bellek bant genişliği 960 GB/sn'dir; bir model sığdıktan sonra üretim hızını sınırlayan budur. Aşağıdaki 25 popüler açık modelden 13 tanesi BF16'da, 18 tanesi FP8'de, 21 tanesi INT4'te 8k context ve tek kullanıcıyla sığar.</p>
+<div class="answer">
+  <div class="cap">İş istasyonu · kullanılabilir bellek</div>
+  <div class="big">45,60 GiB</div>
+  <p>25 modelden 21 tanesi INT4'te, 13 tanesi BF16'da sığar.</p>
+</div>
+<h2>RTX 6000 Ada: hangi LLM'ler sığar</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">Model</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th><th scope="col">Kullanıcı</th><th scope="col">Maks context</th></tr></thead>
+<tbody><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-0.5b.html">Qwen2.5 0.5B Instruct</a></th><td class="ok">1,87 GiB</td><td class="ok">1,36 GiB</td><td class="ok">1,11 GiB</td><td>425<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.2-1b.html">Llama 3.2 1B Instruct</a></th><td class="ok">3,56 GiB</td><td class="ok">2,29 GiB</td><td class="ok">1,66 GiB</td><td>153<small>BF16</small></td><td>128k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.2-3b.html">Llama 3.2 3B Instruct</a></th><td class="ok">8,30 GiB</td><td class="ok">5,00 GiB</td><td class="ok">3,36 GiB</td><td>39<small>BF16</small></td><td>128k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/phi-3-mini.html">Phi-3 mini 4k</a></th><td class="ok">10,23 GiB</td><td class="ok">6,31 GiB</td><td class="ok">4,36 GiB</td><td>22<small>BF16</small></td><td>4k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/mistral-7b-v0.3.html">Mistral 7B Instruct v0.3</a></th><td class="ok">16,70 GiB</td><td class="ok">9,28 GiB</td><td class="ok">5,56 GiB</td><td>27<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-coder-7b.html">Qwen2.5 Coder 7B</a></th><td class="ok">16,83 GiB</td><td class="ok">9,03 GiB</td><td class="ok">5,13 GiB</td><td>60<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-7b.html">Qwen2.5 7B Instruct</a></th><td class="ok">16,84 GiB</td><td class="ok">9,03 GiB</td><td class="ok">5,13 GiB</td><td>60<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.1-8b.html">Llama 3.1 8B Instruct</a></th><td class="ok">18,30 GiB</td><td class="ok">10,08 GiB</td><td class="ok">5,96 GiB</td><td>25<small>BF16</small></td><td>128k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen3-8b.html">Qwen3 8B</a></th><td class="ok">18,77 GiB</td><td class="ok">10,38 GiB</td><td class="ok">6,18 GiB</td><td>22<small>BF16</small></td><td>40k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/gemma-2-9b.html">Gemma 2 9B IT</a></th><td class="ok">22,57 GiB</td><td class="ok">13,10 GiB</td><td class="ok">8,37 GiB</td><td>8<small>BF16</small></td><td>8k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/mistral-nemo-12b.html">Mistral Nemo 12B Instruct</a></th><td class="ok">27,22 GiB</td><td class="ok">14,67 GiB</td><td class="ok">8,40 GiB</td><td>14<small>BF16</small></td><td>115k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-14b.html">Qwen2.5 14B Instruct</a></th><td class="ok">32,66 GiB</td><td class="ok">17,53 GiB</td><td class="ok">9,97 GiB</td><td>8<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/gpt-oss-20b.html">gpt-oss 20B</a></th><td class="ok">44,01 GiB</td><td class="ok">22,59 GiB</td><td class="ok">11,88 GiB</td><td>4<small>BF16</small></td><td>39k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/gemma-2-27b.html">Gemma 2 27B IT</a></th><td><span class="no">59,64 GiB</span><span class="sr"> (sığmaz)</span></td><td class="ok">31,78 GiB</td><td class="ok">17,85 GiB</td><td>5<small>FP8</small></td><td>8k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen3-30b-a3b.html">Qwen3 30B A3B</a></th><td><span class="no">64,13 GiB</span><span class="sr"> (sığmaz)</span></td><td class="ok">32,85 GiB</td><td class="ok">17,21 GiB</td><td>16<small>FP8</small></td><td>40k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen3-coder-30b-a3b.html">Qwen3 Coder 30B A3B</a></th><td><span class="no">64,13 GiB</span><span class="sr"> (sığmaz)</span></td><td class="ok">32,85 GiB</td><td class="ok">17,21 GiB</td><td>16<small>FP8</small></td><td>132k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-32b.html">Qwen2.5 32B Instruct</a></th><td><span class="no">70,07 GiB</span><span class="sr"> (sığmaz)</span></td><td class="ok">36,51 GiB</td><td class="ok">19,73 GiB</td><td>5<small>FP8</small></td><td>32k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen3-32b.html">Qwen3 32B</a></th><td><span class="no">70,08 GiB</span><span class="sr"> (sığmaz)</span></td><td class="ok">36,51 GiB</td><td class="ok">19,73 GiB</td><td>5<small>FP8</small></td><td>40k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/mixtral-8x7b.html">Mixtral 8x7B Instruct</a></th><td><span class="no">97,53 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">49,69 GiB</span><span class="sr"> (sığmaz)</span></td><td class="ok">25,77 GiB</td><td>19<small>INT4</small></td><td>32k<small>INT4</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.3-70b.html">Llama 3.3 70B Instruct</a></th><td><span class="no">148,1 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">75,78 GiB</span><span class="sr"> (sığmaz)</span></td><td class="ok">39,64 GiB</td><td>3<small>INT4</small></td><td>25k<small>INT4</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/qwen2.5-72b.html">Qwen2.5 72B Instruct</a></th><td><span class="no">152,5 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">77,98 GiB</span><span class="sr"> (sığmaz)</span></td><td class="ok">40,74 GiB</td><td>2<small>INT4</small></td><td>22k<small>INT4</small></td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/gpt-oss-120b.html">gpt-oss 120B</a></th><td><span class="no">240,7 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">121,1 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">61,21 GiB</span><span class="sr"> (sığmaz)</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/mixtral-8x22b.html">Mixtral 8x22B Instruct</a></th><td><span class="no">290,8 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">146,7 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">74,69 GiB</span><span class="sr"> (sığmaz)</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/llama-3.1-405b.html">Llama 3.1 405B Instruct</a></th><td><span class="no">836,6 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">420,9 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">213,0 GiB</span><span class="sr"> (sığmaz)</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/tr/models/deepseek-v3.html">DeepSeek V3</a></th><td><span class="no">1403,9 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">702,6 GiB</span><span class="sr"> (sığmaz)</span></td><td><span class="no">352,0 GiB</span><span class="sr"> (sığmaz)</span></td><td>—</td><td>—</td></tr></tbody>
+</table></div>
+<p class="note">Bellek; 8k context ve tek kullanıcı için (modelin maksimumu daha kısaysa o), FP16 KV cache, %10 ek yük ve 0,75 GiB CUDA context ile. Kullanıcı (her biri 8k) ve maksimum context, sığan en yüksek hassasiyet içindir.</p>
+<p>Tek karta sığmayan bir model birden çok kartta çalışabilir: tensor parallel, ağırlıklarını ve KV cache'ini kartlar arasında böler. Kaç tane gerektiğini hesaplayıcı bulur.</p>
+<h2>RTX 6000 Ada için bir modeli hesapla</h2>
+<ul class="links">
+  <li><a class="primary" href="/LLMScale/tr/?g=rtx6000ada-48">Hesaplayıcıyı bu GPU ile aç</a></li>
+</ul>
+<h2>Diğer GPU'lar</h2>
+<ul class="links"><li><a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a></li><li><a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a></li><li><a href="/LLMScale/tr/gpus/rtx3090-24.html">RTX 3090 / Ti</a></li><li><a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a></li><li><a href="/LLMScale/tr/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a></li><li><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></li><li><a href="/LLMScale/tr/gpus/a6000-48.html">RTX A6000</a></li><li><a href="/LLMScale/tr/gpus/l40s-48.html">NVIDIA L40S</a></li><li><a href="/LLMScale/tr/gpus/a100-80.html">A100 80GB</a></li><li><a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></li><li><a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></li><li><a href="/LLMScale/tr/gpus/apple-m4max-128.html">Apple M4 Max (128GB)</a></li><li><a href="/LLMScale/tr/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></li><li><a href="/LLMScale/tr/gpus/nv-dgxspark-128.html">NVIDIA DGX Spark (GB10)</a></li><li><a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a></li><li><a href="/LLMScale/tr/gpus/b200-192.html">B200 192GB</a></li><li><a href="/LLMScale/tr/gpus/apple-m3ultra-512.html">Apple M3 Ultra (512GB)</a></li></ul>
+</main>
+<footer class="wrap">LLMScale bir LLM'in ihtiyaç duyduğu GPU belleğini — ağırlıklar, KV cache, context ve eşzamanlı kullanıcılar — her modelin kendi mimarisinden, tarayıcında hesaplar.</footer>
+<script>(function(d){var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(p!=="en"&&p!=="tr")p=/^tr/.test(navigator.language||"")?"tr":"en";if(p===d.L)return;var b=document.createElement("div");b.className="langsuggest";b.lang=d.O;b.setAttribute("role","region");b.setAttribute("aria-label",d.S.text);var s=document.createElement("span");s.textContent=d.S.text;var a=document.createElement("a");a.href=d.H;a.hreflang=d.O;a.textContent=d.S.go;a.onclick=function(){try{localStorage.setItem("lang",d.O)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\u2715";c.setAttribute("aria-label",d.S.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})({"L":"tr","O":"en","S":{"text":"This page is also available in English.","go":"Switch to English","dismiss":"Dismiss"},"H":"/LLMScale/gpus/rtx6000ada-48.html"});</script>
+</body>
+</html>
