@@ -183,8 +183,11 @@ const CH = [
 ];
 
 // ---------- build DOM (sections, cards, bars) ----------
-let lang = "tr";
-try { if (localStorage.getItem("lang") === "en") lang = "en"; } catch (e) {}
+// Same rule as the app's detectLang(): a stored choice, else the browser's language.
+// This used to default to Turkish for everyone, so a crawler with no stored choice
+// indexed a Turkish body under this page's English title and lang="en".
+let lang = navigator.language?.startsWith("tr") ? "tr" : "en";
+try { const s = localStorage.getItem("lang"); if (s === "en" || s === "tr") lang = s; } catch (e) {}
 const scrollEl = document.getElementById("scroll");
 const sections = CH.map((ch, i) => {
   const sec = document.createElement("section"); sec.dataset.i = i;
@@ -227,6 +230,7 @@ function applyLang() {
     const cta = c.querySelector('[data-role="cta"]'); if (cta) cta.textContent = lang==="tr" ? "→ LLMScale ile VRAM hesapla" : "→ Size it on LLMScale";
   });
   document.getElementById("lang").textContent = lang==="tr" ? "EN" : "TR";
+  document.documentElement.lang = lang;
 }
 document.getElementById("lang").onclick = () => { lang = lang==="tr" ? "en" : "tr"; try { localStorage.setItem("lang", lang); } catch (e) {} applyLang(); };
 applyLang();

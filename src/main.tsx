@@ -1,4 +1,4 @@
-import { StrictMode, useState } from "react";
+import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
@@ -15,6 +15,12 @@ function Root() {
     }
   };
   const t = (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars);
+
+  // The HTML ships lang="en"; keep it in step with what is actually on screen, so
+  // screen readers pronounce Turkish as Turkish and CSS uppercase maps i → İ.
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, t }}>
