@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DARK_QUERY,
   SWITCHING_CLASS,
@@ -15,6 +15,7 @@ import { DecodePage } from "./pages/DecodePage";
 import { AnatomyPage } from "./pages/AnatomyPage";
 import { ComparePage } from "./pages/ComparePage";
 import { TrainPage } from "./pages/TrainPage";
+import { ConfigPage } from "./pages/ConfigPage";
 import { Badge, Segmented } from "./components/ui";
 import { About } from "./components/About";
 import { LANG_NAME, pathFor } from "./lib/langPath";
@@ -25,7 +26,7 @@ import { StaticPageLink } from "./components/StaticPageLink";
 const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
-function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" {
+function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" | "config" {
   const p = window.location.pathname;
   if (p.endsWith("fit.html")) return "fit";
   if (p.endsWith("vllm.html")) return "vllm";
@@ -33,13 +34,15 @@ function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "comp
   if (p.endsWith("anatomy.html")) return "anatomy";
   if (p.endsWith("compare.html")) return "compare";
   if (p.endsWith("train.html")) return "train";
+  if (p.endsWith("config.html")) return "config";
   return "sizing";
 }
 
-/** Grouped so the header reads as four intents rather than eight links. */
+/** Grouped so the header reads as four intents rather than nine links. */
 const NAV_GROUPS: { page: string; href: string }[][] = [
   [
     { page: "sizing", href: "" },
+    { page: "config", href: "config.html" },
     { page: "train", href: "train.html" },
   ],
   [
@@ -56,6 +59,14 @@ export default function App() {
   const { t, lang, setLang } = useLang();
   const page = currentPage();
   const [copied, setCopied] = useState(false);
+  // On a phone the nav pill scrolls sideways; start it on the current page rather
+  // than on whatever happens to fit at the left edge.
+  const navRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = navRef.current;
+    const el = box?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (box && el && box.scrollWidth > box.clientWidth) box.scrollLeft = el.offsetLeft - (box.clientWidth - el.offsetWidth) / 2;
+  }, []);
   // Each entry's inline bootstrap has already put the theme class on <html> before
   // React ran, so read it back instead of deciding the default a second time here.
   // Dark alone leaves no class: it is the :root baseline the tokens are defined on.
@@ -163,11 +174,11 @@ export default function App() {
               </button>
             </div>
           </div>
-          {/* Eight destinations is too many to read as one run, so they sit in
+          {/* Nine destinations is too many to read as one run, so they sit in
               four groups — plan the memory, choose the model, serve it, learn
               how it works — divided by a hairline and centred under the brand. */}
           <nav className="mt-2 flex justify-center">
-            <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-1 overflow-x-auto rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
+            <div ref={navRef} className="relative inline-flex max-w-full flex-wrap items-center justify-center gap-1 overflow-x-auto rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
               {NAV_GROUPS.map((group, gi) => (
                 <div key={gi} className="flex items-center gap-1">
                   {gi > 0 && <span aria-hidden="true" className="mx-1 h-4 w-px bg-white/15" />}
@@ -175,6 +186,7 @@ export default function App() {
                     <a
                       key={item.page}
                       href={`${home}${item.href}`}
+                      aria-current={page === item.page ? "page" : undefined}
                       className={tabCls(page === item.page)}
                     >
                       {t(`nav.${item.page}`)}
@@ -206,6 +218,8 @@ export default function App() {
             <ComparePage />
           ) : page === "train" ? (
             <TrainPage />
+          ) : page === "config" ? (
+            <ConfigPage />
           ) : (
             <SizingPage />
           )}

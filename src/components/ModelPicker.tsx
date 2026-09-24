@@ -135,7 +135,9 @@ export function ModelPicker({
           numKeyValueHeads: 8,
         };
         onModel(id, seeded, m);
-        setTab("custom");
+        // A page that hides the Custom tab would otherwise open a form it never
+        // offered; it shows the resolution warning instead.
+        if (!hideCustom) setTab("custom");
       }
       setResults([]);
       pickedId.current = id;
@@ -223,7 +225,7 @@ export function ModelPicker({
   return (
     <div>
       {!compact && <SectionTitle step="1" title={t("model.step")} />}
-      <div className={compact && tab === "search" ? "flex items-center gap-2" : undefined}>
+      <div className={compact && tab === "search" ? "flex flex-wrap items-center gap-2" : undefined}>
         <Segmented<Tab>
           value={tab}
           onChange={setTab}
@@ -233,7 +235,7 @@ export function ModelPicker({
             ...(hideCustom ? [] : [{ value: "custom" as Tab, label: t("model.tab.custom") }]),
           ]}
         />
-        {compact && tab === "search" && searchInput("flex-1")}
+        {compact && tab === "search" && searchInput("min-w-[14rem] flex-1")}
       </div>
 
       {!compact && tab === "search" && <div className="mt-3">{searchInput()}</div>}

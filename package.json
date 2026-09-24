@@ -26,6 +26,7 @@
     "test:anatomy": "node scripts/test-anatomy.ts",
     "test:modelname": "node scripts/test-modelname.ts",
     "test:theme": "node scripts/test-theme.ts",
+    "test:config": "node scripts/test-config.ts",
     "test:all": "for f in scripts/test-*.ts; do echo \"== $f\"; node \"$f\" > /dev/null || { node \"$f\" | grep FAIL; exit 1; }; done && echo \"ALL SUITES PASS\""
   },
   "dependencies": {

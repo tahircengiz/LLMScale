@@ -15,6 +15,10 @@ import { Card } from "../components/ui";
 
 const HERO = findKnownByHfId(HERO_MODEL_ID)!;
 
+/** A quiet link to the same model on another page, in the ghost-button style. */
+const SIDE_LINK =
+  "rounded-xl px-3 py-1.5 text-xs font-medium text-slate-300 ring-1 ring-control outline-none transition hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-brand-500";
+
 function initialState(): AppState {
   const fromUrl = decodeState(window.location.search);
   // A link written before the URL carried active parameters decodes a MoE preset
@@ -33,7 +37,7 @@ function initialState(): AppState {
 }
 
 export function SizingPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [state, setState] = useState<AppState>(initialState);
   // Interaction-sourced telemetry. A value the app writes itself can never
   // reach these, which is the whole point: the report reads intent instead of
@@ -104,6 +108,8 @@ export function SizingPage() {
 
   // A preset has a static page of its own (scripts/genPages.ts); point to it.
   const known = state.hfId ? findKnownByHfId(state.hfId) : undefined;
+  const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
+  const modelQuery = `?m=${encodeURIComponent(state.hfId).replace(/%2F/g, "/")}`;
 
   return (
     <div>
@@ -128,9 +134,21 @@ export function SizingPage() {
                 setMeta(m ?? null);
               }}
             />
-            {known && (
-              <div className="mt-3">
-                <StaticPageLink file={modelPageFile(known.id)}>{t("model.page", { name: known.displayName })}</StaticPageLink>
+            {state.hfId && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {/* The same model, read two other ways. Only for a Hub model: a
+                    hand-entered architecture has no config.json to read. */}
+                <a href={`${home}config.html${modelQuery}`} className={SIDE_LINK}>
+                  {t("model.link.config")}
+                </a>
+                <a href={`${home}anatomy.html${modelQuery}`} className={SIDE_LINK}>
+                  {t("model.link.anatomy")}
+                </a>
+                {known && (
+                  <span className="ml-1">
+                    <StaticPageLink file={modelPageFile(known.id)}>{t("model.page", { name: known.displayName })}</StaticPageLink>
+                  </span>
+                )}
               </div>
             )}
           </Card>

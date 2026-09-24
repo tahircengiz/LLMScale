@@ -402,6 +402,7 @@ ${usersBlock}
   <li><a href="${href(lang, "train.html")}${q}">${en ? "Fine-tuning memory" : "İnce ayar belleği"}</a></li>
   <li><a href="${href(lang, "vllm.html")}${q}">${en ? "vLLM parameters" : "vLLM parametreleri"}</a></li>
   <li><a href="${href(lang, "anatomy.html")}${q}">${en ? "Model anatomy" : "Model anatomisi"}</a></li>
+  <li><a href="${href(lang, "config.html")}${q}">${en ? "Its config.json, explained" : "config.json'u, açıklamalı"}</a></li>
 </ul>
 ${family.length ? `<h2>${en ? `Other ${m.family} models` : `Diğer ${m.family} modelleri`}</h2>
 <ul class="links">${family.map((x) => `<li>${modelLink(lang, x)}</li>`).join("")}</ul>` : ""}`;

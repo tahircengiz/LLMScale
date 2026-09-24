@@ -68,6 +68,14 @@ export const TR_META: Record<string, PageMeta> = {
     ogDescription:
       "Bir model ve iş yükü seç; performans, doğruluk ve güvenilirlik için ayarlanmış, kopyalanabilir bir vllm serve komutu al.",
   },
+  "config.html": {
+    title: "LLM config.json Açıklaması — Sade Dille | LLMScale",
+    description:
+      "Herhangi bir Hugging Face modelinin config.json'unu sade dille oku: katmanlar, attention head'leri, GQA ve MLA, uzmanlar, context ve RoPE ölçekleme, quantization — her cevap gerçek dosyanın satırlarına bağlı.",
+    ogTitle: "LLMScale — config.json Çözücü",
+    ogDescription:
+      "Bir LLM'in config.json'undaki her alan ne anlama geliyor? Bellek, context, attention ve uzmanlar üzerine sade cevaplar, gerçek dosyaya bağlı.",
+  },
   "learn.html": {
     title: "LLM 101 — Bir LLM Nasıl Çalışır, Görsel Anlatım | LLMScale",
     description:

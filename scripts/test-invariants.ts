@@ -244,7 +244,7 @@ console.log("\n--- every tool explains itself ---");
 // guarantees Turkish has whatever English has.
 const aboutPages = [...(read("src/components/About.tsx").match(/export type AboutPage = ([^;]+);/)?.[1] ?? "")
   .matchAll(/"([a-z]+)"/g)].map((m) => m[1]);
-check("About names the pages", aboutPages.length === 7, aboutPages.join(", "));
+check("About names the pages", aboutPages.length === 8, aboutPages.join(", "));
 const aboutGaps = aboutPages.filter((pg) => {
   const has = (k: string) => k in DICTS.en;
   let q = 0;
@@ -292,7 +292,7 @@ check("a preset links to its page from the calculator", read("src/pages/SizingPa
 // no file, or a file genPages no longer builds, is a link to nothing.
 check("the footer links to the concept guides", read("src/App.tsx").includes("{CONCEPTS_HUB}"));
 const conceptNames = Object.keys(CONCEPT_FILES);
-const linkedConcepts = [...read("src/components/About.tsx").matchAll(/"(kvCache|attention|quantization|[a-zA-Z]+)"(?=[,\]])/g)].map((m) => m[1]).filter((n) => !["sizing","train","fit","anatomy","compare","decode","vllm"].includes(n));
+const linkedConcepts = [...read("src/components/About.tsx").matchAll(/"(kvCache|attention|quantization|[a-zA-Z]+)"(?=[,\]])/g)].map((m) => m[1]).filter((n) => !["sizing","train","fit","anatomy","compare","decode","vllm","config"].includes(n));
 check("the explainers name only concept guides that exist", linkedConcepts.length > 0 && linkedConcepts.every((n) => conceptNames.includes(n)), [...new Set(linkedConcepts)].join(", "));
 check("every concept guide has its link text in both languages", conceptNames.every((n) => `concept.${n}` in DICTS.en && `concept.${n}` in DICTS.tr));
 

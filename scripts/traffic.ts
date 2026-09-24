@@ -94,6 +94,7 @@ const SURFACES: Record<string, string> = {
   "anatomy.html": "Model Anatomy",
   "compare.html": "Model Compare",
   "decode.html": "Name Decoder",
+  "config.html": "Config Decoder",
   "vllm.html": "vLLM Params",
   "learn.html": "LLM 101",
 };

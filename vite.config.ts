@@ -37,6 +37,7 @@ export default defineConfig({
         compare: fileURLToPath(new URL("./compare.html", import.meta.url)),
         train: fileURLToPath(new URL("./train.html", import.meta.url)),
         learn: fileURLToPath(new URL("./learn.html", import.meta.url)),
+        config: fileURLToPath(new URL("./config.html", import.meta.url)),
       },
     },
   },
