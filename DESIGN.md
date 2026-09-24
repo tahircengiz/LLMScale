@@ -345,6 +345,10 @@ ring and `0.25rem` internal padding; options sit inside it.
 - **Active:** solid `signal-indigo-deep`, white text, soft shadow.
 - **Idle:** muted text, transparent, 5% white wash on hover.
 - **Two sizes:** compact for header-level switches, standard inside forms.
+- **In the header** the groups keep their natural width and never wrap inside
+  themselves. On a phone they drop below the brand and share one line with the
+  Share button, which says just "Share" below `sm`; under 360px the options trim
+  their side padding to `0.375rem` so that line still fits a 320px screen.
 
 Used for precision, dtype, batch, language, theme, and every other small
 mutually-exclusive choice. If a choice has 2–6 options and they are short, it is

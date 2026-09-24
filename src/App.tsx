@@ -149,28 +149,46 @@ export default function App() {
               <span className="text-lg font-bold tracking-tight text-white">LLMScale</span>
               <Badge tone="good">{t("header.badge")}</Badge>
             </a>
-            <div className="flex items-center gap-2">
+            {/* On a phone the controls drop below the brand and have to hold one
+                line: the groups keep their natural width, Share shortens below
+                sm, and gap and padding trim below 360px. The wrap is only a
+                safety net — a wider system font drops Share whole onto the next
+                line rather than pushing the row off-screen. */}
+            <div className="flex flex-wrap items-center gap-2 max-[360px]:gap-1.5">
               <Segmented<Theme>
                 value={theme}
                 onChange={applyTheme}
                 size="sm"
+                nowrap
                 options={THEMES.map((v) => ({ value: v, label: t(`theme.${v}`) }))}
               />
               <Segmented<Lang>
                 value={lang}
                 onChange={setLang}
                 size="sm"
+                nowrap
                 options={[
                   { value: "en", label: "EN" },
                   { value: "tr", label: "TR" },
                 ]}
               />
+              {/* Both labels sit in one grid cell and the idle one only turns
+                  invisible, so the button keeps its width while it confirms the
+                  copy and nothing beside it moves. A phone has no room for the
+                  words, so it shows the tick and leaves them to screen readers. */}
               <button
                 type="button"
                 onClick={share}
-                className="rounded-xl bg-brand-600 px-3 py-1.5 text-sm font-medium text-onbrand shadow-lg shadow-brand-600/30 transition hover:bg-brand-500"
+                className="grid shrink-0 whitespace-nowrap rounded-xl bg-brand-600 px-3 py-1.5 text-center text-sm font-medium text-onbrand shadow-lg shadow-brand-600/30 transition hover:bg-brand-500 max-[360px]:px-2.5"
               >
-                {copied ? t("header.shareCopied") : t("header.share")}
+                <span className={"col-start-1 row-start-1" + (copied ? " invisible" : "")}>
+                  <span className="sm:hidden">{t("header.shareShort")}</span>
+                  <span className="max-sm:hidden">{t("header.share")}</span>
+                </span>
+                <span className={"col-start-1 row-start-1" + (copied ? "" : " invisible")}>
+                  <span aria-hidden="true" className="sm:hidden">✓</span>
+                  <span className="max-sm:sr-only">{t("header.shareCopied")}</span>
+                </span>
               </button>
             </div>
           </div>

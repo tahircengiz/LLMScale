@@ -11,6 +11,7 @@ const en: Dict = {
   "header.subtitle.ctx": "context window",
   "header.subtitle.users": "concurrent users",
   "header.share": "Share this estimate",
+  "header.shareShort": "Share",
   "header.shareCopied": "Link copied ✓",
   "results.empty": "Pick a model to see the VRAM breakdown.",
   "results.emptyHint":
@@ -731,6 +732,7 @@ const tr: Dict = {
   "header.subtitle.ctx": "context penceresi",
   "header.subtitle.users": "eşzamanlı kullanıcı",
   "header.share": "Bu tahmini paylaş",
+  "header.shareShort": "Paylaş",
   "header.shareCopied": "Link kopyalandı ✓",
   "results.empty": "VRAM kırılımını görmek için bir model seç.",
   "results.emptyHint":

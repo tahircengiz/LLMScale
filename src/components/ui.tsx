@@ -66,14 +66,20 @@ export function Segmented<T extends string>({
   options,
   onChange,
   size = "md",
+  nowrap = false,
 }: {
   value: T;
   options: { value: T; label: string }[];
   onChange: (v: T) => void;
   size?: "sm" | "md";
+  /** Keep the options side by side at their natural width, for a row of
+   *  header switches where a group that wraps inside itself breaks the row.
+   *  Below 360px the options trim their side padding to 0.375rem, which is what
+   *  lets the header's controls share one line on a 320px phone. */
+  nowrap?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap gap-1 rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
+    <div className={"flex gap-1 rounded-xl bg-ink-850 p-1 ring-1 ring-white/10 " + (nowrap ? "shrink-0" : "flex-wrap")}>
       {options.map((o) => (
         <button
           key={o.value}
@@ -81,6 +87,7 @@ export function Segmented<T extends string>({
           onClick={() => onChange(o.value)}
           className={
             (size === "sm" ? "px-2.5 py-1 text-xs " : "px-3 py-1.5 text-sm ") +
+            (nowrap ? "whitespace-nowrap max-[360px]:px-1.5 " : "") +
             "rounded-lg font-medium transition " +
             (value === o.value
               ? "bg-brand-600 text-onbrand shadow"
