@@ -277,6 +277,7 @@ const en: Dict = {
   "h1.vllm": "vLLM parameter helper — a tuned vllm serve command",
   "h1.learn": "LLM 101 — how a language model works",
   "nav.learn": "LLM 101",
+  "nav.menu": "Menu",
   "compare.subtitle":
     "Put 2–4 models side by side — specs, capabilities and per-task fit — to see which one is better for which use, from live Hugging Face data.",
   "compare.pickTitle": "Models",
@@ -990,6 +991,7 @@ const tr: Dict = {
   "h1.vllm": "vLLM parametre yardımcısı — ayarlanmış vllm serve komutu",
   "h1.learn": "LLM 101 — bir dil modeli nasıl çalışır",
   "nav.learn": "LLM 101",
+  "nav.menu": "Menü",
   "compare.subtitle":
     "2–4 modeli yan yana koy — spec'ler, yetenekler ve görev-bazlı uygunluk — hangisinin ne için daha iyi olduğunu gör, canlı Hugging Face verisinden.",
   "compare.pickTitle": "Modeller",

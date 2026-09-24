@@ -127,6 +127,18 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
+/* On a phone the header nav opens from a Menu button, which needs JavaScript.
+ * Without it the prerendered page would offer a button that does nothing, so
+ * show the destinations instead. Unlayered, so it beats the `hidden` utility. */
+@media (scripting: none) {
+  #site-nav {
+    display: flex;
+  }
+  nav [aria-controls="site-nav"] {
+    display: none;
+  }
+}
+
 /* ── Liquid glass ─────────────────────────────────────────────────────────────
  * A material, not a colour scheme. Glass only reads as glass when there is
  * something behind it to refract, so the page carries a colour field and every

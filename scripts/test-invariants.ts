@@ -276,6 +276,17 @@ check("every title fits in 60 characters", longTitles.length === 0, longTitles.m
 // Links inside a page stay in its language; a /tr/ page linking to English pages
 // would hand search engines the wrong version from the Turkish one.
 check("the header links stay in the page's language", read("src/App.tsx").includes("href={`${home}${item.href}`}"));
+// DESIGN.md: the nav wraps or folds, it never scrolls. A sideways-scrolling pill
+// clipped links mid-word at both edges of a phone.
+const navMarkup = read("src/App.tsx").match(/<nav[\s\S]*?<\/nav>/)?.[0] ?? "";
+check("the header nav never scrolls sideways", navMarkup !== "" && !navMarkup.includes("overflow-x"));
+// On a phone the Menu button opens the list, which takes JavaScript; index.css
+// shows the list instead when there is none, by the id the button controls.
+check(
+  "the phone nav's no-JavaScript fallback names the list the Menu button opens",
+  navMarkup.includes('id="site-nav"') && navMarkup.includes('aria-controls="site-nav"') &&
+    css.includes("#site-nav {") && css.includes('[aria-controls="site-nav"]')
+);
 check("so does the calculator's link to the vLLM helper", read("src/components/GpuFit.tsx").includes('${lang === "tr" ? "tr/" : ""}vllm.html'));
 
 console.log("\n--- the generated model and GPU guides ---");

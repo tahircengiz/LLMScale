@@ -59,13 +59,37 @@ export default function App() {
   const { t, lang, setLang } = useLang();
   const page = currentPage();
   const [copied, setCopied] = useState(false);
-  // On a phone the nav pill scrolls sideways; start it on the current page rather
-  // than on whatever happens to fit at the left edge.
-  const navRef = useRef<HTMLDivElement>(null);
+  // Below sm the nav folds to the current page and a Menu button (see the <nav>).
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  // A page restored from the back/forward cache comes back with the menu the
+  // visitor left through still open; greet them with the page instead.
   useEffect(() => {
-    const box = navRef.current;
-    const el = box?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (box && el && box.scrollWidth > box.clientWidth) box.scrollLeft = el.offsetLeft - (box.clientWidth - el.offsetWidth) / 2;
+    const close = (e: PageTransitionEvent) => {
+      if (e.persisted) setMenuOpen(false);
+    };
+    window.addEventListener("pageshow", close);
+    return () => window.removeEventListener("pageshow", close);
+  }, []);
+  // From sm up, a group the pill wraps onto a new row would lead with a hairline
+  // that divides nothing. Mark row-starting groups so theirs can go invisible —
+  // invisible, not removed, so the freed width cannot pull the group back up.
+  const navList = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const list = navList.current;
+    if (!list || typeof ResizeObserver === "undefined") return;
+    const groups = [...list.children] as HTMLElement[];
+    const mark = () => {
+      let top = NaN;
+      for (const g of groups) {
+        g.toggleAttribute("data-row-start", g.offsetTop !== top);
+        top = g.offsetTop;
+      }
+    };
+    const ro = new ResizeObserver(mark);
+    ro.observe(list);
+    groups.forEach((g) => ro.observe(g));
+    return () => ro.disconnect();
   }, []);
   // Each entry's inline bootstrap has already put the theme class on <html> before
   // React ran, so read it back instead of deciding the default a second time here.
@@ -194,24 +218,76 @@ export default function App() {
           </div>
           {/* Nine destinations is too many to read as one run, so they sit in
               four groups — plan the memory, choose the model, serve it, learn
-              how it works — divided by a hairline and centred under the brand. */}
-          <nav className="mt-2 flex justify-center">
-            <div ref={navRef} className="relative inline-flex max-w-full flex-wrap items-center justify-center gap-1 overflow-x-auto rounded-xl bg-ink-850 p-1 ring-1 ring-white/10">
-              {NAV_GROUPS.map((group, gi) => (
-                <div key={gi} className="flex items-center gap-1">
-                  {gi > 0 && <span aria-hidden="true" className="mx-1 h-4 w-px bg-white/15" />}
-                  {group.map((item) => (
-                    <a
-                      key={item.page}
-                      href={`${home}${item.href}`}
-                      aria-current={page === item.page ? "page" : undefined}
-                      className={tabCls(page === item.page)}
-                    >
-                      {t(`nav.${item.page}`)}
-                    </a>
-                  ))}
-                </div>
-              ))}
+              how it works — divided by a hairline and centred under the brand.
+              From sm up the pill wraps whole groups onto rows. Below sm a single
+              group is wider than the screen, so the pill folds to the current
+              page and a Menu button; opened, each group takes rows of its own
+              and the hairlines turn horizontal. Nothing scrolls sideways. */}
+          <nav
+            className="mt-2 flex justify-center"
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && menuOpen) {
+                setMenuOpen(false);
+                menuButton.current?.focus();
+              }
+            }}
+          >
+            <div className="w-full rounded-xl bg-ink-850 p-1 ring-1 ring-white/10 sm:w-auto sm:max-w-full">
+              <div className="flex items-center justify-between gap-2 sm:hidden">
+                <span className={tabCls(true)}>{t(`nav.${page}`)}</span>
+                <button
+                  ref={menuButton}
+                  type="button"
+                  onClick={() => setMenuOpen((o) => !o)}
+                  aria-expanded={menuOpen}
+                  aria-controls="site-nav"
+                  className={tabCls(false) + " flex items-center gap-1.5"}
+                >
+                  {t("nav.menu")}
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={"h-3.5 w-3.5 transition-transform " + (menuOpen ? "rotate-180" : "")}
+                  >
+                    <path d="M4 6l4 4 4-4" />
+                  </svg>
+                </button>
+              </div>
+              <div
+                id="site-nav"
+                ref={navList}
+                className={
+                  (menuOpen ? "flex" : "hidden") +
+                  " mt-1 flex-col gap-1 sm:mt-0 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-center"
+                }
+              >
+                {NAV_GROUPS.map((group, gi) => (
+                  <div key={gi} className="group flex flex-wrap items-center gap-1">
+                    <span
+                      aria-hidden="true"
+                      className={
+                        "h-px basis-full bg-white/15 sm:mx-1 sm:h-4 sm:w-px sm:basis-auto sm:group-data-[row-start]:invisible" +
+                        (gi === 0 ? " sm:hidden" : "")
+                      }
+                    />
+                    {group.map((item) => (
+                      <a
+                        key={item.page}
+                        href={`${home}${item.href}`}
+                        aria-current={page === item.page ? "page" : undefined}
+                        className={tabCls(page === item.page)}
+                      >
+                        {t(`nav.${item.page}`)}
+                      </a>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </nav>
         </div>

@@ -389,8 +389,11 @@ a segmented control, not a dropdown.
 A single centred pill at the inset tone holding all destinations, split into
 **semantic groups separated by thin vertical rules** — size, then choose, then
 serve, then learn. Active link is solid indigo with white text; idle links are
-muted with a white-wash hover. The pill wraps rather than scrolling on narrow
-screens.
+muted with a white-wash hover. Nothing in the nav scrolls sideways. From `sm` up
+the pill wraps whole groups onto rows, and a group that starts a row hides its
+leading rule. Below `sm` a single group is wider than a phone, so the pill folds
+to the current page (solid indigo) and a Menu button; opened, it lists each group
+on rows of its own, with the rules turned horizontal.
 
 ### Stat Tile
 
