@@ -94,6 +94,42 @@ async function publishTick(): Promise<void> {
 }
 setInterval(() => void publishTick(), 30_000).unref();
 
+// ── spend ─────────────────────────────────────────────────────────────────────
+// Behind the LiteLLM gateway the panel's key carries its own budget, and the
+// gateway knows what has really been spent; the token estimate only comes close.
+// Read at most once a minute, when the list is shown; until then the last value stays.
+export interface Budget {
+  spend: number;
+  max: number | null;
+  resetAt: string | null;
+}
+const BASE = (process.env.ANTHROPIC_BASE_URL ?? "").replace(/\/+$/, "");
+const GATEWAY = BASE && !/(^|\.)anthropic\.com$/.test(new URL(BASE).hostname) ? BASE : "";
+let budget: Budget | null = null;
+let budgetAt = 0;
+async function refreshBudget(): Promise<void> {
+  if (!GATEWAY || !process.env.ANTHROPIC_API_KEY || Date.now() - budgetAt < 60_000) return;
+  budgetAt = Date.now();
+  try {
+    const r = await fetch(`${GATEWAY}/key/info`, { headers: { authorization: `Bearer ${process.env.ANTHROPIC_API_KEY}` }, signal: AbortSignal.timeout(5_000) });
+    if (!r.ok) return;
+    const i = ((await r.json()) as { info?: { spend?: number; max_budget?: number | null; budget_reset_at?: string | null } }).info ?? {};
+    budget = { spend: Number(i.spend ?? 0), max: i.max_budget ?? null, resetAt: i.budget_reset_at ?? null };
+  } catch {
+    // The gateway did not answer: keep showing the last value.
+  }
+}
+
+const money = (n: number) => n.toFixed(2).replace(".", ",");
+/** The gateway's figures as one line; past 80% of the budget it says so, since at 100% runs stop. */
+export function budgetLine(b: Budget): string {
+  const reset = b.resetAt ? ` · ${new Date(b.resetAt).toLocaleDateString("tr-TR", { day: "numeric", month: "long", timeZone: "Europe/Istanbul" })} sıfırlanır` : "";
+  if (b.max == null) return `${money(b.spend)} $ harcandı (bütçe yok)`;
+  const share = b.max > 0 ? b.spend / b.max : 1;
+  const warn = share >= 0.8 ? ` · <strong>bütçenin %${Math.floor(share * 100)}'i harcandı; dolunca çalışmalar durur</strong>` : "";
+  return `${money(b.spend)} $ / ${money(b.max)} $ bütçe${reset}${warn}`;
+}
+
 // ── forms ─────────────────────────────────────────────────────────────────────
 /** A post from the edit form. Sources are one per line: url | source | title. */
 export function postFromForm(base: FeedPost, f: URLSearchParams): FeedPost {
@@ -257,13 +293,14 @@ function listPage(tab: string, lang: Lang, flash: string): string {
   const month = new Date().toISOString().slice(0, 7);
   const spent = store.tokensSince(`${month}-01`);
   const dollars = (spent.input * PRICE.input + spent.output * PRICE.output) / 1e6;
+  void refreshBudget();
   const runs = store.lastRuns(3).map((r) => `${r.startedAt.slice(0, 16).replace("T", " ")} ${r.step}: ${esc(r.summary ?? "sürüyor")}`).join("<br>");
   const body = `${flash ? `<div class="flash">${esc(flash)}</div>` : ""}${lastNote && !flash ? `<div class="flash">${esc(lastNote)}</div>` : ""}
 <nav class="tabs" aria-label="Taslaklar">${tabs}</nav>
 ${drafts.length ? drafts.map((d) => card(d, lang, false)).join("\n") : `<p class="empty">Burada taslak yok.</p>`}
 <section class="meta" style="margin-top:2rem"><p><span class="k">Son çalışmalar</span>${runs || "—"}</p>
-<p><span class="k">Bu ay</span>${spent.input.toLocaleString("tr-TR")} girdi / ${spent.output.toLocaleString("tr-TR")} çıktı token · ~${dollars.toFixed(2).replace(".", ",")} $</p>
-<div class="actions">${button("/run", "Şimdi topla ve yaz", { disabled: !!busy, confirm: "Haberler şimdi toplanıp Claude'a yazdırılsın mı? (~0,35 $)" })}</div></section>`;
+<p><span class="k">Bu ay</span>${spent.input.toLocaleString("tr-TR")} girdi / ${spent.output.toLocaleString("tr-TR")} çıktı token · ~${money(dollars)} $ (tahmin)</p>
+${budget ? `<p><span class="k">LiteLLM</span>${budgetLine(budget)}</p>\n` : ""}<div class="actions">${button("/run", "Şimdi topla ve yaz", { disabled: !!busy, confirm: "Haberler şimdi toplanıp Claude'a yazdırılsın mı? (~0,35 $)" })}</div></section>`;
   return layout(t.label, body);
 }
 

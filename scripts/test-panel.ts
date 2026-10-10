@@ -118,7 +118,8 @@ pstore.close();
 process.env.NEWSROOM_DB = dbFile;
 process.env.NEWSROOM_GATE = "gate-secret";
 process.env.PUBLISH_MODE = "off";
-const { handle } = await import("../newsroom/panel.ts");
+delete process.env.ANTHROPIC_BASE_URL;
+const { handle, budgetLine } = await import("../newsroom/panel.ts");
 const server: Server = createServer((req, res) => void handle(req, res));
 await new Promise<void>((ok) => server.listen(0, "127.0.0.1", ok));
 const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
@@ -152,6 +153,14 @@ await post_("/d/2026-10-10-pending-two/restore", { _csrf: token });
 check("…and can be brought back", after.draft("2026-10-10-pending-two")?.status === "pending");
 const page = await (await get("/")).text();
 check("text from a draft is escaped, never markup", !page.includes("<script>alert") && page.includes("&lt;script&gt;alert(1)"));
+check("without a gateway there is no spend line", !page.includes(">LiteLLM<"));
+
+console.log("\n--- spend ---");
+const low = budgetLine({ spend: 0.00254, max: 30, resetAt: "2026-11-01T00:00:00+00:00" });
+check("the gateway's spend, budget and reset date", low.includes("0,00 $ / 30,00 $ bütçe") && low.includes("1 Kasım sıfırlanır") && !low.includes("<strong>"), low);
+const high = budgetLine({ spend: 25, max: 30, resetAt: null });
+check("past 80% it warns", high.includes("%83") && high.includes("<strong>"), high);
+check("a key without a budget says so", budgetLine({ spend: 1.5, max: null, resetAt: null }) === "1,50 $ harcandı (bütçe yok)");
 after.close();
 server.close();
 
