@@ -13,8 +13,11 @@ import { normalizeUrl } from "./text.ts";
 
 /** new → (skipped | screened | rejected) → drafted | failed */
 export type CandidateStatus = "new" | "skipped" | "screened" | "rejected" | "drafted" | "failed";
-/** pending → approved → published, or rejected; published → withdrawn */
-export type DraftStatus = "pending" | "approved" | "rejected" | "published" | "withdrawn";
+/** pending → approved → committed → published, or rejected; published → withdrawing → withdrawn.
+ *  "committed" is in the site's repository but not deployed — where a post stops
+ *  while publishing runs in local mode. */
+export type DraftStatus = "pending" | "approved" | "committed" | "published" | "rejected" | "withdrawing" | "withdrawn";
+export const DRAFT_STATUSES: readonly DraftStatus[] = ["pending", "approved", "committed", "published", "rejected", "withdrawing", "withdrawn"];
 
 export interface Candidate {
   key: string;
@@ -49,6 +52,11 @@ export interface Draft {
   outputTokens: number;
   createdAt: string;
   updatedAt: string;
+  /** The id the post went out under: its date is the day it was published, not drafted. */
+  publishedId: string | null;
+  publishedAt: string | null;
+  /** The last thing publishing said about this draft — an error, or where it went. */
+  publishLog: string | null;
 }
 
 export const keyOf = (url: string) => createHash("sha256").update(normalizeUrl(url)).digest("hex").slice(0, 16);
@@ -106,6 +114,9 @@ const draftOf = (r: Row): Draft => ({
   outputTokens: r.output_tokens as number,
   createdAt: r.created_at as string,
   updatedAt: r.updated_at as string,
+  publishedId: (r.published_id as string) ?? null,
+  publishedAt: (r.published_at as string) ?? null,
+  publishLog: (r.publish_log as string) ?? null,
 });
 
 export class Store {
@@ -114,8 +125,14 @@ export class Store {
   constructor(path: string) {
     if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
     this.db = new DatabaseSync(path);
-    this.db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
+    // The panel and the daily run share the file; a writer waits for the other.
+    this.db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 10000;");
     this.db.exec(SCHEMA);
+    // Columns added after the first release, for databases made before them.
+    const have = new Set((this.db.prepare("PRAGMA table_info(drafts)").all() as Row[]).map((c) => c.name as string));
+    for (const [col, type] of [["published_id", "TEXT"], ["published_at", "TEXT"], ["publish_log", "TEXT"]]) {
+      if (!have.has(col)) this.db.exec(`ALTER TABLE drafts ADD COLUMN ${col} ${type}`);
+    }
   }
 
   /** Records an item once; false when its URL was seen before, under any spelling. */
@@ -155,7 +172,7 @@ export class Store {
     this.db.prepare("UPDATE candidates SET status = ?, reason = COALESCE(?, reason) WHERE key = ?").run(status, reason ?? null, key);
   }
 
-  addDraft(d: Omit<Draft, "createdAt" | "updatedAt" | "status"> & { status?: DraftStatus }): void {
+  addDraft(d: Omit<Draft, "createdAt" | "updatedAt" | "status" | "publishedId" | "publishedAt" | "publishLog"> & { status?: DraftStatus }): void {
     const now = new Date().toISOString();
     this.db
       .prepare(
@@ -175,6 +192,50 @@ export class Store {
   draft(id: string): Draft | undefined {
     const r = this.db.prepare("SELECT * FROM drafts WHERE id = ?").get(id) as Row | undefined;
     return r && draftOf(r);
+  }
+
+  /** Replaces a pending draft's post after an edit, with what the checks now find. */
+  updateDraftPost(id: string, post: FeedPost, problems: string[]): boolean {
+    return (
+      this.db
+        .prepare("UPDATE drafts SET post = ?, problems = ?, updated_at = ? WHERE id = ? AND status = 'pending'")
+        .run(JSON.stringify(post), JSON.stringify(problems), new Date().toISOString(), id).changes > 0
+    );
+  }
+
+  /** Moves a draft from one status to another; false when it was not in `from` (someone got there first). */
+  moveDraft(id: string, from: DraftStatus | DraftStatus[], to: DraftStatus, extra: { publishedId?: string; publishedAt?: string; log?: string | null } = {}): boolean {
+    const froms = Array.isArray(from) ? from : [from];
+    const res = this.db
+      .prepare(
+        `UPDATE drafts SET status = ?, updated_at = ?,
+           published_id = COALESCE(?, published_id), published_at = COALESCE(?, published_at),
+           publish_log = CASE WHEN ? THEN ? ELSE publish_log END
+         WHERE id = ? AND status IN (${froms.map(() => "?").join(",")})`
+      )
+      .run(to, new Date().toISOString(), extra.publishedId ?? null, extra.publishedAt ?? null, extra.log !== undefined ? 1 : 0, extra.log ?? null, id, ...froms);
+    return res.changes > 0;
+  }
+
+  setPublishLog(id: string, log: string): void {
+    this.db.prepare("UPDATE drafts SET publish_log = ?, updated_at = ? WHERE id = ?").run(log, new Date().toISOString(), id);
+  }
+
+  lastRuns(limit = 5): { step: string; startedAt: string; finishedAt: string | null; summary: string | null; inputTokens: number; outputTokens: number }[] {
+    return (this.db.prepare("SELECT * FROM runs ORDER BY id DESC LIMIT ?").all(limit) as Row[]).map((r) => ({
+      step: r.step as string,
+      startedAt: r.started_at as string,
+      finishedAt: (r.finished_at as string) ?? null,
+      summary: (r.summary as string) ?? null,
+      inputTokens: r.input_tokens as number,
+      outputTokens: r.output_tokens as number,
+    }));
+  }
+
+  /** Tokens spent since a time, for the panel's running total. */
+  tokensSince(iso: string): { input: number; output: number } {
+    const r = this.db.prepare("SELECT COALESCE(SUM(input_tokens),0) AS i, COALESCE(SUM(output_tokens),0) AS o FROM runs WHERE started_at >= ?").get(iso) as Row;
+    return { input: Number(r.i), output: Number(r.o) };
   }
 
   /** Removes a draft so its item can be written again; only a draft still waiting for review. */

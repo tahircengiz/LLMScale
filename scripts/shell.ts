@@ -224,3 +224,6 @@ ${p.script ? `<script>${p.script}</script>\n` : ""}</body>
 
   return { href, url, page };
 }
+
+/** The guides' styles, for other pages built in the site's look (the newsroom's review panel). */
+export { CSS as SHELL_CSS, THEME_BOOT };
