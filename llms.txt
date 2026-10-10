@@ -77,6 +77,12 @@ Overview: https://tahircengiz.github.io/LLMScale/gpus/
 - [Which LLMs Fit on RTX A6000?](https://tahircengiz.github.io/LLMScale/gpus/a6000-48.html): Which open LLMs fit on RTX A6000 (45.60 GiB usable): 21 of 25 popular models at INT4 and 13 at BF16, with concurrent users and maximum context for each.
 - [Which LLMs Fit on RTX PRO 6000 Blackwell?](https://tahircengiz.github.io/LLMScale/gpus/rtxpro6000-96.html): Which open LLMs fit on RTX PRO 6000 Blackwell (91.20 GiB usable): 23 of 25 popular models at INT4 and 18 at BF16, with concurrent users and maximum context for each.
 
+## News
+
+Overview: https://tahircengiz.github.io/LLMScale/feed/
+
+- [Mistral Large 4 preview: 1T-parameter MoE with 49B active…](https://tahircengiz.github.io/LLMScale/feed/2026-10-10-mistral-large-4-preview-moe.html): Mistral released a preview of Mistral Large 4 via its API: an MoE model with 1T total and 49B active parameters, trained on 3,800 NVIDIA Grace Blackwell…
+
 ## Optional
 
 - [Source code](https://github.com/tahircengiz/LLMScale): the calculator, its engine and its tests, under the GNU AGPL-3.0-only licence.

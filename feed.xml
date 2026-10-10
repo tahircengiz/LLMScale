@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>LLMScale — LLM news</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/</link>
+<atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
+<description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
+<language>en</language>
+<lastBuildDate>Sat, 10 Oct 2026 09:41:50 GMT</lastBuildDate>
+<item>
+<title>Mistral Large 4 preview: 1T-parameter MoE with 49B active, open weights due end of month</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-10-mistral-large-4-preview-moe.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-10-mistral-large-4-preview-moe.html</guid>
+<pubDate>Sat, 10 Oct 2026 09:41:50 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;Mistral released a preview of Mistral Large 4 via its API: an MoE model with 1T total and 49B active parameters, trained on 3,800 NVIDIA Grace Blackwell GPUs. Open weights are promised for the end of this month. It scores 38 on Artificial Analysis, up from 9 for Mistral Large 3.&lt;/p&gt;&lt;p&gt;For self-hosting, per-token compute follows the 49B active parameters, but all 1T weights must be held in memory, so VRAM rather than compute sets the hardware floor. No memory estimate yet: the model config is not public.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://mistral.ai/news/mistral-large-4"&gt;Mistral AI&lt;/a&gt; · &lt;a href="https://simonwillison.net/2026/Oct/6/le-chonk"&gt;Simon Willison's Weblog&lt;/a&gt;&lt;/p&gt;</description>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>LLMScale — LLM haberleri</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/</link>
+<atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
+<description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
+<language>tr</language>
+<lastBuildDate>Sat, 10 Oct 2026 09:41:50 GMT</lastBuildDate>
+<item>
+<title>Mistral Large 4 önizlemesi: 1T parametreli, 49B aktif MoE; açık ağırlıklar ay sonunda</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-10-mistral-large-4-preview-moe.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-10-mistral-large-4-preview-moe.html</guid>
+<pubDate>Sat, 10 Oct 2026 09:41:50 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;Mistral, Mistral Large 4'ün önizleme sürümünü API üzerinden sundu: toplam 1T, aktif 49B parametreli bir MoE model; 3.800 NVIDIA Grace Blackwell GPU üzerinde eğitildi. Açık ağırlıkların bu ayın sonunda yayımlanacağı söyleniyor. Artificial Analysis'te 38 puan alıyor; Mistral Large 3'ün puanı 9'du.&lt;/p&gt;&lt;p&gt;Kendi donanımında çalıştıracaklar için: token başına hesaplama 49B aktif parametreye göre ölçekleniyor, ama 1T ağırlığın tamamı bellekte durmalı; donanım alt sınırını compute değil VRAM belirliyor. Model config'i henüz açık olmadığından bellek tahmini yok.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://mistral.ai/news/mistral-large-4"&gt;Mistral AI&lt;/a&gt; · &lt;a href="https://simonwillison.net/2026/Oct/6/le-chonk"&gt;Simon Willison's Weblog&lt;/a&gt;&lt;/p&gt;</description>
+</item>
+</channel>
+</rss>
