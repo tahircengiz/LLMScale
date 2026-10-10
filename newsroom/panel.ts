@@ -74,12 +74,21 @@ async function claude(): Promise<Ask> {
   return claudeAsk();
 }
 
+// A pass that failed is retried, but not every 30 seconds: a new approval goes
+// out at once, a retry of what is already committed waits ten minutes.
+let retryAfter = 0;
 async function publishTick(): Promise<void> {
   if (busy || MODE === "off") return;
-  if (!store.drafts("approved").length && !store.drafts("withdrawing").length && !(MODE === "live" && store.drafts("committed").length)) return;
+  const fresh = store.drafts("approved").length + store.drafts("withdrawing").length;
+  const stuck = MODE === "live" ? store.drafts("committed").length : 0;
+  if (!fresh && (!stuck || Date.now() < retryAfter)) return;
   await exclusive("publish", async () => {
     const r = await publishPending(store, { mode: MODE, repoDir: REPO, branch: BRANCH, siteUrl: SITE });
-    if (r.error) throw new Error(r.error);
+    if (r.error) {
+      retryAfter = Date.now() + 10 * 60_000;
+      throw new Error(r.error);
+    }
+    retryAfter = 0;
     return MODE === "live" ? `${r.published.length} published, ${r.withdrawn.length} withdrawn` : `committed locally (local mode); ${r.withdrawn.length} withdrawn`;
   });
 }

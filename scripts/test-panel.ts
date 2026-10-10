@@ -92,7 +92,7 @@ r = await publishPending(store, { mode: "live", repoDir: repo, branch: "main", s
 check("live: the post committed earlier and the new one both go out", r.published.length === 2 && !r.error, JSON.stringify(r));
 check("…both marked published with their address", store.draft("2026-10-10-second-post")?.status === "published" && store.draft("2026-10-09-first-post")?.publishLog === "https://site.example/feed/2026-10-11-first-post.html");
 check("…on top of what main gained meanwhile", sh(remote, "log", "--format=%s", "main").split("\n").join(" | ") === "Publish news: Second post | Publish news: First post | elsewhere | init");
-check("…and the site is deployed", steps.some((s) => s.startsWith("npx gh-pages -d dist")));
+check("…and the site is deployed, to the push address", steps.some((s) => s.startsWith("npx gh-pages -d dist") && s.includes(`--repo ${remote}`)), steps.find((s) => s.startsWith("npx")) ?? "");
 
 console.log("\n--- withdrawing ---");
 store.moveDraft("2026-10-09-first-post", "published", "withdrawing");
@@ -104,6 +104,7 @@ seed(store, "2026-10-10-third-post", "Third post");
 store.moveDraft("2026-10-10-third-post", "pending", "approved");
 const failing: Runner = async (cmd, args, opts) => (cmd === "npx" ? { code: 1, out: "remote rejected" } : runner(cmd, args, opts));
 r = await publishPending(store, { mode: "live", repoDir: repo, branch: "main", siteUrl: "https://site.example/", run: failing }, now);
+check("main is pushed before the site, so a failed deploy retries from the same commit", sh(remote, "log", "-1", "--format=%s", "main") === "Publish news: Third post");
 check("is reported, and the post stays committed for the next attempt", !!r.error && store.draft("2026-10-10-third-post")?.status === "committed" && /deploy failed/.test(store.draft("2026-10-10-third-post")?.publishLog ?? ""), r.error);
 store.close();
 

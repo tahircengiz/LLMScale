@@ -71,19 +71,26 @@ async function git(cfg: PublishConfig, ...args: string[]) {
   return r.out.trim();
 }
 
-async function buildAndDeploy(cfg: PublishConfig, message: string): Promise<void> {
-  const run = cfg.run ?? runCommand;
-  const step = async (cmd: string, args: string[], what: string, timeoutMs = 900_000) => {
-    const r = await run(cmd, args, { cwd: cfg.repoDir, timeoutMs });
-    if (r.code !== 0) throw new Error(`${what} failed: ${r.out.trim().split("\n").slice(-4).join(" / ")}`);
-  };
+async function step(cfg: PublishConfig, cmd: string, args: string[], what: string, timeoutMs = 900_000): Promise<void> {
+  const r = await (cfg.run ?? runCommand)(cmd, args, { cwd: cfg.repoDir, timeoutMs });
+  if (r.code !== 0) throw new Error(`${what} failed: ${r.out.trim().split("\n").slice(-4).join(" / ")}`);
+}
+
+async function build(cfg: PublishConfig): Promise<void> {
   // The panel runs from this same checkout: reinstall only when what is installed
   // no longer matches the lockfile (after a pull that changed dependencies).
-  if ((await run("npm", ["ls", "--depth=0"], { cwd: cfg.repoDir, timeoutMs: 60_000 })).code !== 0) {
-    await step("npm", ["ci", "--no-audit", "--no-fund", "--loglevel=error"], "npm ci");
+  if ((await (cfg.run ?? runCommand)("npm", ["ls", "--depth=0"], { cwd: cfg.repoDir, timeoutMs: 60_000 })).code !== 0) {
+    await step(cfg, "npm", ["ci", "--no-audit", "--no-fund", "--loglevel=error"], "npm ci");
   }
-  await step("npm", ["run", "build"], "build");
-  if (cfg.mode === "live") await step("npx", ["gh-pages", "-d", "dist", "--dotfiles", "-m", message], "deploy");
+  await step(cfg, "npm", ["run", "build"], "build");
+}
+
+/** gh-pages pushes to the remote's fetch address unless told otherwise; the
+ *  checkout reads over public HTTPS and writes over SSH with the deploy key, so
+ *  it is given the push address. */
+async function deploy(cfg: PublishConfig, message: string): Promise<void> {
+  const repo = await git(cfg, "remote", "get-url", "--push", "origin");
+  await step(cfg, "npx", ["gh-pages", "-d", "dist", "--dotfiles", "--repo", repo, "-m", message], "deploy");
 }
 
 /** Sends the waiting approvals and withdrawals out. One pass; safe to call often. */
@@ -131,10 +138,12 @@ export async function publishPending(store: Store, cfg: PublishConfig, now = new
     for (const { draft, post } of newlyCommitted) store.moveDraft(draft.id, "approved", "committed", { publishedId: post.id, publishedAt: post.published, log: `committed ${sha}` });
     for (const d of removed) if (cfg.mode !== "live") store.moveDraft(d.id, "withdrawing", "withdrawn", { log: `removed in ${sha} (local mode, not deployed)` });
 
-    await buildAndDeploy(cfg, `Deploy: news (${sha})`);
-
+    await build(cfg);
     if (cfg.mode !== "live") return { published: [], withdrawn: removed.map((d) => d.id) };
+    // main first, then the site: main is the record, and a deploy that fails after
+    // it is retried from the same commit on the next pass.
     await git(cfg, "push", "origin", `HEAD:${cfg.branch}`);
+    await deploy(cfg, `Deploy: news (${sha})`);
     const goingOut = [...committed, ...newlyCommitted.map((x) => store.draft(x.draft.id)!)];
     for (const d of goingOut) store.moveDraft(d.id, "committed", "published", { log: `${cfg.siteUrl}feed/${d.publishedId}.html` });
     for (const d of removed) store.moveDraft(d.id, "withdrawing", "withdrawn", { log: `removed in ${sha}` });
