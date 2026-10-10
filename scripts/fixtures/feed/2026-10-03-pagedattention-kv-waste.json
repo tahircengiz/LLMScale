@@ -1,0 +1,40 @@
+{
+  "id": "2026-10-03-pagedattention-kv-waste",
+  "published": "2026-10-03T08:00:00Z",
+  "category": "research",
+  "en": {
+    "title": "PagedAttention: why serving engines waste less KV cache",
+    "body": "Before vLLM, serving systems reserved each request's KV cache as one contiguous block sized for the longest possible output. The paper behind vLLM measured that only 20–38% of that memory held actual tokens.\n\nPagedAttention stores the cache in fixed-size blocks, like pages in virtual memory, and allocates them as tokens arrive. Waste falls under 4%, and the freed memory goes to more concurrent requests."
+  },
+  "tr": {
+    "title": "PagedAttention: servis motorları KV cache'i neden daha az israf ediyor",
+    "body": "vLLM'den önce servis sistemleri her isteğin KV cache'ini, olası en uzun çıktıya göre boyutlanmış tek bir bitişik blok olarak ayırıyordu. vLLM'in makalesi bu belleğin yalnızca %20–38'inin gerçek token'ları tuttuğunu ölçtü.\n\nPagedAttention cache'i sanal bellekteki sayfalar gibi sabit boyutlu bloklarda saklıyor ve token'lar geldikçe ayırıyor. İsraf %4'ün altına iniyor, açılan bellek daha fazla eşzamanlı isteğe gidiyor."
+  },
+  "refs": [
+    {
+      "url": "https://arxiv.org/abs/2309.06180",
+      "title": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "source": "arXiv"
+    },
+    {
+      "url": "https://docs.vllm.ai/",
+      "title": "vLLM documentation",
+      "source": "vLLM"
+    }
+  ],
+  "tags": [
+    "vllm",
+    "kv-cache",
+    "serving"
+  ],
+  "image": {
+    "file": "paged-kv-cache.svg",
+    "width": 1200,
+    "height": 600,
+    "alt": {
+      "en": "Two rows of KV cache memory: a contiguous reservation that is mostly empty, and fixed-size blocks filled one after another as tokens arrive.",
+      "tr": "İki sıra KV cache belleği: çoğu boş kalan bitişik bir ayırma ve token'lar geldikçe sırayla dolan sabit boyutlu bloklar."
+    },
+    "credit": "LLMScale illustration"
+  }
+}

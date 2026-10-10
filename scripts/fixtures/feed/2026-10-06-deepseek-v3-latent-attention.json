@@ -1,0 +1,32 @@
+{
+  "id": "2026-10-06-deepseek-v3-latent-attention",
+  "published": "2026-10-06T14:00:00Z",
+  "category": "model",
+  "en": {
+    "title": "DeepSeek-V3's latent attention keeps its KV cache small",
+    "body": "DeepSeek-V3 is a Mixture-of-Experts model with 671B parameters (685B on Hugging Face, counting its multi-token prediction module), 37B of them active per token. Its multi-head latent attention caches one compressed latent per token and layer instead of keys and values for every head.\n\nThat shrinks the KV cache by more than an order of magnitude against ordinary attention, so long contexts cost little. The weights are another matter: even at INT4 the model needs several data-center GPUs."
+  },
+  "tr": {
+    "title": "DeepSeek-V3'ün latent attention'ı KV cache'i küçük tutuyor",
+    "body": "DeepSeek-V3, 671B parametreli bir Mixture-of-Experts modeli (Hugging Face'teki 685B, çoklu token tahmini modülüyle birlikte); token başına 37B'si aktif. Multi-head latent attention, her head için key ve value yerine token ve katman başına tek bir sıkıştırılmış latent saklıyor.\n\nBu, KV cache'i sıradan attention'a göre on kattan fazla küçültüyor; uzun context ucuza geliyor. Ağırlıklar ise başka konu: INT4'te bile model birden çok veri merkezi GPU'su istiyor."
+  },
+  "refs": [
+    {
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V3",
+      "title": "deepseek-ai/DeepSeek-V3 model card",
+      "source": "Hugging Face"
+    },
+    {
+      "url": "https://arxiv.org/abs/2412.19437",
+      "title": "DeepSeek-V3 Technical Report",
+      "source": "arXiv"
+    }
+  ],
+  "tags": [
+    "mla",
+    "deepseek",
+    "moe",
+    "kv-cache"
+  ],
+  "model": "deepseek-v3"
+}

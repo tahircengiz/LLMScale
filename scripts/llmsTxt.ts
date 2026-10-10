@@ -50,6 +50,10 @@ const concepts = section((e) => e.rel.startsWith("concepts/"));
 const models = section((e) => e.rel.startsWith("models/"));
 const gpus = section((e) => e.rel.startsWith("gpus/"));
 if (!tools.length || !concepts.length || !models.length || !gpus.length) throw new Error("llms.txt: a section came out empty");
+// The news feed is listed only when the build has posts (scripts/genFeed.ts),
+// newest first: its posts are dated, and the latest are the ones worth reading.
+const news = entries.filter((e) => /^feed\/\d{4}-\d{2}-\d{2}-/.test(e.rel)).sort((a, b) => b.rel.localeCompare(a.rel)).slice(0, 30);
+const newsSection = news.length ? `\n## News\n\n${hubUrl("feed") ? `Overview: ${hubUrl("feed")}\n\n` : ""}${list(news)}\n` : "";
 
 const text = `# LLMScale
 
@@ -72,11 +76,11 @@ ${hubUrl("models") ? `Overview: ${hubUrl("models")}\n\n` : ""}${list(models)}
 ## GPUs
 
 ${hubUrl("gpus") ? `Overview: ${hubUrl("gpus")}\n\n` : ""}${list(gpus)}
-
+${newsSection}
 ## Optional
 
 - [Source code](https://github.com/tahircengiz/LLMScale): the calculator, its engine and its tests, under the GNU AGPL-3.0-only licence.
 `;
 
 writeFileSync(join(outDir, "llms.txt"), text);
-console.log(`ok    llms.txt  ${tools.length} tools, ${concepts.length} concepts, ${models.length} models, ${gpus.length} GPUs`);
+console.log(`ok    llms.txt  ${tools.length} tools, ${concepts.length} concepts, ${models.length} models, ${gpus.length} GPUs${news.length ? `, ${news.length} news posts` : ""}`);

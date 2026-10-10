@@ -1,4 +1,5 @@
 import { defineConfig, type Plugin } from "vite";
+import { existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -6,6 +7,12 @@ import tailwindcss from "@tailwindcss/vite";
 // `base` must match the GitHub Pages sub-path (https://<user>.github.io/<repo>/).
 // Override with VITE_BASE for a custom domain (set VITE_BASE=/ for the root).
 const base = process.env.VITE_BASE ?? "/LLMScale/";
+
+// The app's footer links to the news feed only once it has a post: until then
+// scripts/genFeed.ts writes no feed pages, and the link would lead nowhere.
+// FEED_DIR is the same override scripts/feedData.ts reads.
+const feedDir = process.env.FEED_DIR ?? "content/feed";
+const hasFeed = existsSync(feedDir) && readdirSync(feedDir).some((f) => f.endsWith(".json"));
 
 // /tr/… pages exist only in the build: scripts/prerender.ts writes them from the
 // English entries. The dev server serves the English entry for them instead, and
@@ -25,6 +32,7 @@ function turkishPagesInDev(): Plugin {
 
 export default defineConfig({
   base,
+  define: { __HAS_FEED__: JSON.stringify(hasFeed) },
   plugins: [react(), tailwindcss(), turkishPagesInDev()],
   build: {
     rollupOptions: {

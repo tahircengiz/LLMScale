@@ -20,6 +20,7 @@ import { Badge, Segmented } from "./components/ui";
 import { About } from "./components/About";
 import { LANG_NAME, pathFor } from "./lib/langPath";
 import { CONCEPTS_HUB, GPUS_HUB, MODELS_HUB } from "./lib/staticPages";
+import { FEED_HUB } from "./lib/feed";
 import { StaticPageLink } from "./components/StaticPageLink";
 
 // Footer links.
@@ -355,6 +356,7 @@ function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: st
         <StaticPageLink file={MODELS_HUB}>{t("footer.models")}</StaticPageLink>
         <StaticPageLink file={GPUS_HUB}>{t("footer.gpus")}</StaticPageLink>
         <StaticPageLink file={CONCEPTS_HUB}>{t("footer.concepts")}</StaticPageLink>
+        {__HAS_FEED__ && <StaticPageLink file={FEED_HUB}>{t("footer.feed")}</StaticPageLink>}
       </nav>
       <p className="text-xs text-slate-500">{t("footer.privacy")}</p>
     </footer>

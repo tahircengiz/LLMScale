@@ -1,0 +1,31 @@
+{
+  "id": "2026-10-08-gpt-oss-120b-one-gpu",
+  "published": "2026-10-08T09:30:00Z",
+  "category": "model",
+  "en": {
+    "title": "gpt-oss-120b: a 117B open-weight MoE that fits one 80 GB GPU",
+    "body": "OpenAI's gpt-oss-120b has 117B parameters but routes each token through about 5.1B of them. Its expert weights ship in MXFP4, about 4.25 bits each, which is how the model card can say it runs on a single 80 GB GPU.\n\nMemory still has to hold every expert: a MoE's speed follows its active parameters, its footprint follows the total. The card below shows what that means at common precisions."
+  },
+  "tr": {
+    "title": "gpt-oss-120b: tek 80 GB GPU'ya sığan 117B açık ağırlıklı MoE",
+    "body": "OpenAI'ın gpt-oss-120b modeli 117B parametreye sahip, ama her token'ı bunların yaklaşık 5,1B'lik kısmından geçiriyor. Uzman ağırlıkları MXFP4 ile, yaklaşık 4,25 bit olarak geliyor; model kartının tek bir 80 GB GPU'da çalıştığını söyleyebilmesi bu sayede.\n\nBellek yine de her uzmanı tutmak zorunda: MoE'nin hızı aktif parametreleri, bellek ihtiyacı ise toplamı izler. Aşağıdaki kart bunun yaygın hassasiyetlerde ne demek olduğunu gösteriyor."
+  },
+  "refs": [
+    {
+      "url": "https://huggingface.co/openai/gpt-oss-120b",
+      "title": "openai/gpt-oss-120b model card",
+      "source": "Hugging Face"
+    },
+    {
+      "url": "https://openai.com/index/introducing-gpt-oss/",
+      "title": "Introducing gpt-oss",
+      "source": "OpenAI"
+    }
+  ],
+  "tags": [
+    "moe",
+    "gpt-oss",
+    "mxfp4"
+  ],
+  "model": "gpt-oss-120b"
+}

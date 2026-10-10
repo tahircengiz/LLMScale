@@ -40,7 +40,11 @@ fit, model anatomy, side-by-side comparison, model-name decoding, and a
 standalone explainer for people meeting the concepts for the first time. Guides
 generated from the same engine answer the questions people search for: a page
 per preset model, a page per commonly searched GPU, and concept guides to the KV
-cache, attention variants and quantization.
+cache, attention variants and quantization. A news feed follows new models,
+serving engines and hardware in short sourced posts; a post about a model shows
+what it takes to run, from the same engine, which is what the feed adds to the
+announcement it reports. Posts are drafted with an AI model and published only
+after the author approves them, and the page says so.
 
 Success is all of: people use it and come back, it stands as evidence of the
 author's expertise, it warms the same audience as the GPU PaaS work under way,
@@ -93,8 +97,9 @@ generators.
 - **Static hosting.** Published to GitHub Pages from the `gh-pages` branch;
   Vite `base` is the repo path. The build prerenders every entry to HTML in both
   languages (`scripts/prerender.ts`), generates the model, GPU and concept guides
-  from the engine (`scripts/genPages.ts`, `scripts/concepts.ts`), and reads the
-  sitemap off the built pages (`scripts/sitemap.ts`). The app replaces the
+  from the engine (`scripts/genPages.ts`, `scripts/concepts.ts`), builds the news
+  feed from the approved posts in `content/feed/` (`scripts/genFeed.ts`), and reads
+  the sitemap off the built pages (`scripts/sitemap.ts`). The app replaces the
   prerendered markup rather than hydrating it.
 - **Cost and pricing are deliberately out of scope.** The purpose is technical
   help. No prices, no cost-per-token, no purchasing advice.
