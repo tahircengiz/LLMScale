@@ -130,6 +130,13 @@ export interface PageSpec {
   bare?: boolean;
   /** A script this kind of page runs, after the shared ones. */
   script?: string;
+  /** A page in another look than the guides' brings its own theme bootstrap,
+   *  base styles, header, footer and <main> class; each defaults to the guides'. */
+  boot?: string;
+  baseCss?: string;
+  header?: string;
+  footer?: string;
+  mainClass?: string;
 }
 
 /** The page builder for one built site. `feed` adds the news feed to the header,
@@ -192,13 +199,13 @@ export function createShell(site: Site, { feed }: { feed: boolean }) {
 <meta name="twitter:title" content="${esc(p.h1)}">
 <meta name="twitter:description" content="${esc(p.description)}">
 <meta name="twitter:image" content="${p.ogImage ?? `${site.home}og.png`}">
-${p.head ? `${p.head}\n` : ""}<script>${THEME_BOOT}</script>
+${p.head ? `${p.head}\n` : ""}<script>${p.boot ?? THEME_BOOT}</script>
 ${site.tracker}
-<style>${CSS}${p.css ? `\n${p.css}` : ""}</style>
+<style>${p.baseCss ?? CSS}${p.css ? `\n${p.css}` : ""}</style>
 ${ld}
 </head>
 <body>
-<header class="top"><div class="wrap">
+${p.header ?? `<header class="top"><div class="wrap">
   <a class="brand" href="${href(p.lang)}"><img src="${site.base}favicon.svg" alt="" width="24" height="24">LLMScale</a>
   <nav aria-label="${c.nav}">
     <a href="${href(p.lang)}">${c.calc}</a>
@@ -207,22 +214,22 @@ ${ld}
     <a href="${href(p.lang, CONCEPTS_HUB)}"${current("concepts")}>${c.concepts}</a>
 ${feed ? `    <a href="${href(p.lang, FEED_HUB)}"${current("feed")}>${c.feed}</a>\n` : ""}    <a href="${href(o, p.file)}" hreflang="${o}" lang="${o}" onclick="try{localStorage.setItem('lang','${o}')}catch(e){}">${LANG_NAME[o]}</a>
   </nav>
-</div></header>
-<main class="wrap">
+</div></header>`}
+<main class="${p.mainClass ?? "wrap"}">
 ${p.bare ? "" : `  <nav class="crumbs" aria-label="${c.crumbs}">${p.crumbs
     .map((cr, i) => (i < p.crumbs.length - 1 ? `<a href="${href(p.lang, cr.file)}">${esc(cr.name)}</a> › ` : esc(cr.name)))
     .join("")}</nav>
   <h1>${esc(p.h1)}</h1>
 `}${p.body}
 </main>
-<footer class="wrap">${c.footer}</footer>
+${p.footer ?? `<footer class="wrap">${c.footer}</footer>`}
 <script>${suggestScript(p.lang, p.file)}</script>
 ${p.script ? `<script>${p.script}</script>\n` : ""}</body>
 </html>
 `;
   }
 
-  return { href, url, page };
+  return { href, url, page, suggestScript };
 }
 
 /** The guides' styles, for other pages built in the site's look (the newsroom's review panel). */

@@ -53,7 +53,8 @@ const NAV_GROUPS: { page: string; href: string }[][] = [
     { page: "decode", href: "decode.html" },
   ],
   [{ page: "vllm", href: "vllm.html" }],
-  [{ page: "learn", href: "learn.html" }],
+  // The news feed is static pages (scripts/genFeed.ts), linked once there are posts.
+  [{ page: "learn", href: "learn.html" }, ...(__HAS_FEED__ ? [{ page: "news", href: "feed/" }] : [])],
 ];
 
 export default function App() {

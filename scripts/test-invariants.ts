@@ -318,5 +318,25 @@ check("index.css acts on the switching class", css.includes(`.${SWITCHING_CLASS}
 check("the rule actually suppresses transitions", css.includes("transition: none !important"));
 check("App.tsx sets it by the shared constant, not a literal", app.includes("SWITCHING_CLASS") && !app.includes(`"${SWITCHING_CLASS}"`));
 
+console.log("\n--- the news feed wears the app's theme ---");
+// The feed is static pages built by scripts/genFeed.ts, but it is dressed as the
+// app: same theme bootstrap, same tokens for dark, light and glass, same nav. Its
+// copies of those live in scripts/feedRender.ts; these keep them from drifting.
+const { APP_CSS, APP_THEME_BOOT } = await import("./feedRender.ts");
+check("the feed bootstraps its theme like the entries",
+  APP_THEME_BOOT.includes(`"${DEFAULT_THEME_DARK}":"${DEFAULT_THEME}"`) && APP_THEME_BOOT.includes("classList.add(m)") && APP_THEME_BOOT.includes(DARK_QUERY) && !APP_THEME_BOOT.includes('add("dark")'));
+const hex6 = (h: string) => (h.length === 4 ? `#${[...h.slice(1)].map((c) => c + c).join("")}` : h).toLowerCase();
+const tokens = (block: string) => Object.fromEntries([...block.matchAll(/--(?:color-)?(ink-\d+|fg|slate-[345]00|brand-[456]00|accent-400)\s*:\s*(#[0-9a-f]{3,8})/gi)].map((m) => [m[1], hex6(m[2])]));
+const cssBlock = (src: string, selector: string) => src.match(new RegExp(`${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+for (const [name, appSel, feedSel] of [["dark", "@theme", ":root"], ["light", ".light", ".light"], ["glass", ".glass", ".glass"]] as const) {
+  const app = tokens(cssBlock(css, appSel));
+  const feed = tokens(cssBlock(APP_CSS, feedSel));
+  const off = Object.keys(app).filter((k) => k in feed && feed[k] !== app[k]);
+  const missing = ["ink-950", "ink-900", "ink-850", "fg", "brand-400"].filter((k) => k in app && !(k in feed));
+  check(`the feed's ${name} tokens match src/index.css`, Object.keys(app).length > 4 && off.length === 0 && missing.length === 0, [...off.map((k) => `${k} ${feed[k]}≠${app[k]}`), ...missing.map((k) => `${k} missing`)].join(", "));
+}
+check("the app's nav links to the news once there are posts", app.includes('__HAS_FEED__ ? [{ page: "news", href: "feed/" }]'));
+check("the nav names the news in both languages", "nav.news" in DICTS.en && "nav.news" in DICTS.tr);
+
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);
