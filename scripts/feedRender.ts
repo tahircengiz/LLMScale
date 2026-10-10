@@ -28,7 +28,7 @@ export const T = {
     title: "LLM News: New Models, Serving and GPUs",
     h1: "LLM news",
     lede: "New models, serving engines and GPUs, in short posts that each link to their sources. A post about a model also shows what it takes to run, computed by the same engine as the calculator.",
-    disclosure: "Posts are drafted with an AI model from their sources and reviewed by Tahir Cengiz before they go out.",
+    disclosure: "Posts are drafted with an AI model from their sources and reviewed by Tahir Ali Cengiz before they go out.",
     description: "Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.",
     rss: "RSS",
     rssTitle: "Subscribe with RSS",
@@ -55,7 +55,7 @@ export const T = {
     title: "LLM Haberleri: Yeni Modeller, Servis ve GPU'lar",
     h1: "LLM haberleri",
     lede: "Yeni modeller, servis motorları ve GPU'lar; her biri kaynağına bağlanan kısa postlarda. Bir modelle ilgili post, o modeli çalıştırmak için ne gerektiğini de gösterir; hesaplayıcıyla aynı motordan.",
-    disclosure: "Postlar kaynaklarından bir yapay zekâ modeliyle taslak olarak yazılır ve yayınlanmadan önce Tahir Cengiz tarafından gözden geçirilir.",
+    disclosure: "Postlar kaynaklarından bir yapay zekâ modeliyle taslak olarak yazılır ve yayınlanmadan önce Tahir Ali Cengiz tarafından gözden geçirilir.",
     description: "Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.",
     rss: "RSS",
     rssTitle: "RSS ile takip et",
@@ -220,7 +220,7 @@ export function postLd(ctx: RenderCtx, lang: Lang, p: FeedPost): object {
     ...(model ? { about: model.displayName } : {}),
     keywords: p.tags.join(", "),
     citation: p.refs.map((r) => r.url),
-    author: { "@type": "Person", name: "Tahir Cengiz", url: "https://github.com/tahircengiz" },
+    author: { "@type": "Person", name: "Tahir Ali Cengiz", url: "https://github.com/tahircengiz" },
     isPartOf: { "@type": "Blog", name: T[lang].h1, url: url(lang, FEED_HUB) },
   };
 }

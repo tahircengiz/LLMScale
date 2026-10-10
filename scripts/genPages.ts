@@ -243,7 +243,7 @@ ${family.length ? `<h2>${en ? `Other ${m.family} models` : `Diğer ${m.family} m
       { name },
     ],
     body,
-    ld: { "@context": "https://schema.org", "@type": "TechArticle", headline: en ? `${name}: how much VRAM does it need?` : `${name} kaç GB VRAM ister?`, inLanguage: lang, url: url(lang, file), about: name, isPartOf: { "@type": "WebSite", name: "LLMScale", url: url(lang) }, author: { "@type": "Person", name: "Tahir Cengiz", url: "https://github.com/tahircengiz" } },
+    ld: { "@context": "https://schema.org", "@type": "TechArticle", headline: en ? `${name}: how much VRAM does it need?` : `${name} kaç GB VRAM ister?`, inLanguage: lang, url: url(lang, file), about: name, isPartOf: { "@type": "WebSite", name: "LLMScale", url: url(lang) }, author: { "@type": "Person", name: "Tahir Ali Cengiz", url: "https://github.com/tahircengiz" } },
   });
 }
 
@@ -336,7 +336,7 @@ ${table}
       { name: g.name },
     ],
     body,
-    ld: { "@context": "https://schema.org", "@type": "TechArticle", headline: en ? `Which LLMs fit on ${g.name}?` : `${g.name}: hangi LLM'ler sığar?`, inLanguage: lang, url: url(lang, file), about: g.name, isPartOf: { "@type": "WebSite", name: "LLMScale", url: url(lang) }, author: { "@type": "Person", name: "Tahir Cengiz", url: "https://github.com/tahircengiz" } },
+    ld: { "@context": "https://schema.org", "@type": "TechArticle", headline: en ? `Which LLMs fit on ${g.name}?` : `${g.name}: hangi LLM'ler sığar?`, inLanguage: lang, url: url(lang, file), about: g.name, isPartOf: { "@type": "WebSite", name: "LLMScale", url: url(lang) }, author: { "@type": "Person", name: "Tahir Ali Cengiz", url: "https://github.com/tahircengiz" } },
   });
 }
 
@@ -430,7 +430,7 @@ function conceptPage(lang: Lang, c: Concept): string {
     h1: c.h1,
     crumbs: [{ name: "LLMScale", file: "" }, { name: en ? "Concepts" : "Kavramlar", file: CONCEPTS_HUB }, { name: c.crumb }],
     body: c.body,
-    ld: { "@context": "https://schema.org", "@type": "TechArticle", headline: c.h1, description: c.description, inLanguage: lang, url: url(lang, c.file), isPartOf: { "@type": "WebSite", name: "LLMScale", url: url(lang) }, author: { "@type": "Person", name: "Tahir Cengiz", url: "https://github.com/tahircengiz" } },
+    ld: { "@context": "https://schema.org", "@type": "TechArticle", headline: c.h1, description: c.description, inLanguage: lang, url: url(lang, c.file), isPartOf: { "@type": "WebSite", name: "LLMScale", url: url(lang) }, author: { "@type": "Person", name: "Tahir Ali Cengiz", url: "https://github.com/tahircengiz" } },
   });
 }
 

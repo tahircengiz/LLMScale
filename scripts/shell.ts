@@ -168,7 +168,7 @@ ${p.body}
 <link rel="alternate" hreflang="tr" href="${url("tr", p.file)}">
 <link rel="alternate" hreflang="x-default" href="${url("en", p.file)}">
 <meta name="robots" content="index, follow, max-image-preview:large">
-<meta name="author" content="Tahir Cengiz">
+<meta name="author" content="Tahir Ali Cengiz">
 <link rel="icon" type="image/svg+xml" href="${site.base}favicon.svg">
 <meta property="og:type" content="${p.ogType ?? "article"}">
 <meta property="og:title" content="${esc(p.h1)}">

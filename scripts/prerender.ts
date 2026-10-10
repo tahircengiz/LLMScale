@@ -164,7 +164,7 @@ for (const file of entries) {
         isAccessibleForFree: true,
         offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
         isPartOf: { "@type": "WebSite", name: "LLMScale", url: home[lang] },
-        author: { "@type": "Person", name: "Tahir Cengiz", url: "https://github.com/tahircengiz" },
+        author: { "@type": "Person", name: "Tahir Ali Cengiz", url: "https://github.com/tahircengiz" },
       }));
     }
     html = replaceOnce(html, file, "</head>", `  ${LD_MARK}\n    ${head.join("\n    ")}\n  </head>`);

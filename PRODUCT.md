@@ -124,7 +124,7 @@ generators.
 
 ## Brand Commitments
 
-- Name: **LLMScale**. Built by Tahir Cengiz.
+- Name: **LLMScale**. Built by Tahir Ali Cengiz.
 - **The source is public under AGPL-3.0-only** (since 2026-09-09). The tool itself
   is free. LLMScale is a hosted web app, so section 13 is the part that matters:
   anyone running a modified copy for other people over a network owes those users

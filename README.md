@@ -142,4 +142,4 @@ covers exactly that case. Run a modified copy for other people over a network an
 you owe those users the source of your version. Use it, fork it, learn from the
 KV-cache maths — just don't build a closed product on top of it.
 
-Built by [Tahir Cengiz](https://github.com/tahircengiz).
+Built by [Tahir Ali Cengiz](https://github.com/tahircengiz).
