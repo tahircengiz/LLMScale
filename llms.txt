@@ -77,7 +77,7 @@ Overview: https://tahircengiz.github.io/LLMScale/gpus/
 - [Which LLMs Fit on RTX A6000?](https://tahircengiz.github.io/LLMScale/gpus/a6000-48.html): Which open LLMs fit on RTX A6000 (45.60 GiB usable): 21 of 25 popular models at INT4 and 13 at BF16, with concurrent users and maximum context for each.
 - [Which LLMs Fit on RTX PRO 6000 Blackwell?](https://tahircengiz.github.io/LLMScale/gpus/rtxpro6000-96.html): Which open LLMs fit on RTX PRO 6000 Blackwell (91.20 GiB usable): 23 of 25 popular models at INT4 and 18 at BF16, with concurrent users and maximum context for each.
 
-## News
+## Feed
 
 Overview: https://tahircengiz.github.io/LLMScale/feed/
 

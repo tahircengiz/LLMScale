@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LLM Haberleri: Yeni Modeller, Servis ve GPU'lar | LLMScale</title>
+<title>LLM Akışı: Yeni Modeller, Servis ve GPU'lar | LLMScale</title>
 <meta name="description" content="Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/feed/">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/feed/">
@@ -13,7 +13,7 @@
 <meta name="author" content="Tahir Ali Cengiz">
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="website">
-<meta property="og:title" content="LLM haberleri">
+<meta property="og:title" content="LLM Akışı">
 <meta property="og:description" content="Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/feed/">
 <meta property="og:site_name" content="LLMScale">
@@ -21,10 +21,10 @@
 <meta property="og:locale" content="tr_TR">
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="LLM haberleri">
+<meta name="twitter:title" content="LLM Akışı">
 <meta name="twitter:description" content="Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
-<link rel="alternate" type="application/rss+xml" title="LLMScale — LLM haberleri" href="https://tahircengiz.github.io/LLMScale/tr/feed.xml">
+<link rel="alternate" type="application/rss+xml" title="LLMScale — LLM Akışı" href="https://tahircengiz.github.io/LLMScale/tr/feed.xml">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
 <style>:root{color-scheme:dark;--ink-950:#090b10;--ink-900:#14171f;--ink-850:#1b1f2a;--ink-800:#232834;--ink-700:#333a49;--c-white:#fff;--fg:#e7e9ef;--slate-300:#c3c8d4;--slate-400:#a1a8b8;--slate-500:#868ea0;--brand-400:#9698f7;--brand-500:#5d5fef;--brand-600:#4a4cd4;--accent-400:#00e096;--accent-500:#00c886;--bad-c:#fda4af;--onbrand:#fff;--bg:var(--ink-950);--card:var(--ink-900);--inset:var(--ink-850);--line:color-mix(in oklab,var(--c-white) 10%,transparent);--text:var(--fg);--muted:var(--slate-300);--faint:var(--slate-400);--brand:var(--brand-400);--button:var(--brand-600);--good:var(--accent-400);--bad:var(--bad-c)}
@@ -145,7 +145,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 .lead a{color:var(--text);text-decoration:none}
 .lead a:hover{text-decoration:underline}
 .pb p{margin:0 0 .55rem;max-width:none;font-size:.96875rem;line-height:1.55}
-.pb .tags{color:var(--faint);font-size:.875rem}
+.post .pb p.tags{color:var(--faint);font-size:.875rem}
 .big{padding-top:1rem}
 .big .lead{font-size:1.3rem;line-height:1.3;margin:.2rem 0 .5rem}
 .big .pb p{font-size:1.0625rem}
@@ -158,7 +158,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 .mem td:nth-child(2){white-space:nowrap}
 .meter{display:inline-block;vertical-align:middle;width:4rem;height:.4rem;margin-right:.5rem;border-radius:999px;background:var(--line);overflow:hidden}
 .meter span{display:block;height:100%;border-radius:inherit;background:var(--brand)}
-.pb .memnote{font-size:.75rem;line-height:1.45;color:var(--faint);margin:.35rem 0 .55rem}
+.post .pb p.memnote{font-size:.75rem;line-height:1.45;color:var(--faint);margin:.35rem 0 .55rem}
 .shot{margin:.6rem 0}
 .shot img{display:block;width:100%;height:auto;border-radius:1rem;border:1px solid var(--line);background:var(--inset)}
 .shot figcaption{font-size:.75rem;color:var(--faint);margin-top:.3rem}
@@ -179,21 +179,21 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 .status:empty{display:none}
 @media (max-width:40rem){.stream{margin-inline:-1rem;border-inline:0;border-radius:0}.topbar{border-radius:0}}
 @media (max-width:30rem){.post{grid-template-columns:32px minmax(0,1fr);gap:0 .6rem;padding-inline:.85rem}.av img{width:32px;height:32px;padding:7px}.meter{display:none}.mem{padding-inline:.65rem}}</style>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/tr/"},{"@type":"ListItem","position":2,"name":"Haberler","item":"https://tahircengiz.github.io/LLMScale/tr/feed/"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"LLM haberleri","inLanguage":"tr","url":"https://tahircengiz.github.io/LLMScale/tr/feed/","hasPart":[{"@type":"BlogPosting","headline":"Mistral Large 4 önizlemesi: 1T parametreli, 49B aktif MoE; açık ağırlıklar ay sonunda","url":"https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-10-mistral-large-4-preview-moe.html","datePublished":"2026-10-10T09:41:50Z"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/tr/"},{"@type":"ListItem","position":2,"name":"Akış","item":"https://tahircengiz.github.io/LLMScale/tr/feed/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"LLM Akışı","inLanguage":"tr","url":"https://tahircengiz.github.io/LLMScale/tr/feed/","hasPart":[{"@type":"BlogPosting","headline":"Mistral Large 4 önizlemesi: 1T parametreli, 49B aktif MoE; açık ağırlıklar ay sonunda","url":"https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-10-mistral-large-4-preview-moe.html","datePublished":"2026-10-10T09:41:50Z"}]}</script>
 </head>
 <body>
 <header class="hdr"><div class="hin">
 <div class="hrow"><a class="brand" href="/LLMScale/tr/"><img src="/LLMScale/favicon.svg" alt="" width="28" height="28"><b>LLMScale</b><span class="badge">canlı Hugging Face verisi</span></a>
 <div class="ctrls"><div class="seg" role="group" aria-label="Tema"><button type="button" data-theme-set="dark" aria-pressed="false">Koyu</button><button type="button" data-theme-set="light" aria-pressed="false">Açık</button><button type="button" data-theme-set="glass" aria-pressed="false">Cam</button></div><div class="seg" role="group" aria-label="Dil"><a href="/LLMScale/feed/" hreflang="en" lang="en" data-lang="en">EN</a><a href="/LLMScale/tr/feed/" hreflang="tr" lang="tr" data-lang="tr" aria-current="page">TR</a></div></div></div>
 <nav class="pnav" aria-label="LLMScale"><div class="navpill">
-<div class="mbar"><span class="tab on">Haberler</span><button type="button" class="tab" aria-controls="site-nav" aria-expanded="false">Menü<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button></div>
-<div id="site-nav"><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/tr/">VRAM Hesabı</a><a class="tab" href="/LLMScale/tr/config.html">Config Çözücü</a><a class="tab" href="/LLMScale/tr/train.html">İnce ayar</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/tr/fit.html">Görev Uygunluğu</a><a class="tab" href="/LLMScale/tr/anatomy.html">Model Anatomisi</a><a class="tab" href="/LLMScale/tr/compare.html">Model Karşılaştırma</a><a class="tab" href="/LLMScale/tr/decode.html">İsim Çözücü</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/tr/vllm.html">vLLM Parametreleri</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/tr/learn.html">LLM 101</a><a class="tab" href="/LLMScale/tr/feed/" aria-current="page">Haberler</a></div></div>
+<div class="mbar"><span class="tab on">Akış</span><button type="button" class="tab" aria-controls="site-nav" aria-expanded="false">Menü<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button></div>
+<div id="site-nav"><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/tr/">VRAM Hesabı</a><a class="tab" href="/LLMScale/tr/config.html">Config Çözücü</a><a class="tab" href="/LLMScale/tr/train.html">İnce ayar</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/tr/fit.html">Görev Uygunluğu</a><a class="tab" href="/LLMScale/tr/anatomy.html">Model Anatomisi</a><a class="tab" href="/LLMScale/tr/compare.html">Model Karşılaştırma</a><a class="tab" href="/LLMScale/tr/decode.html">İsim Çözücü</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/tr/vllm.html">vLLM Parametreleri</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/tr/learn.html">LLM 101</a><a class="tab" href="/LLMScale/tr/feed/" aria-current="page">Akış</a></div></div>
 </div></nav>
 </div></header>
 <main class="fmain">
 <div class="stream card">
-<div class="topbar"><h1>LLM haberleri</h1><a class="pill" href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" title="RSS ile takip et"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14"/><circle cx="6" cy="18" r="1.2" fill="currentColor"/></svg>RSS</a></div>
+<div class="topbar"><h1>LLM Akışı</h1><a class="pill" href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" title="RSS ile takip et"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14"/><circle cx="6" cy="18" r="1.2" fill="currentColor"/></svg>RSS</a></div>
 <section class="bio" aria-label="LLMScale"><img src="/LLMScale/favicon.svg" alt="" width="30" height="30"><div><p class="name">LLMScale</p><p>Yeni modeller, servis motorları ve GPU'lar; her biri kaynağına bağlanan kısa postlarda. Bir modelle ilgili post, o modeli çalıştırmak için ne gerektiğini de gösterir; hesaplayıcıyla aynı motordan.</p><p class="disc">Postlar kaynaklarından bir yapay zekâ modeliyle taslak olarak yazılır ve yayınlanmadan önce Tahir Ali Cengiz tarafından gözden geçirilir.</p></div></section>
 <article class="post" id="2026-10-10-mistral-large-4-preview-moe" data-href="/LLMScale/tr/feed/2026-10-10-mistral-large-4-preview-moe.html">
 <a class="av" href="/LLMScale/tr/feed/2026-10-10-mistral-large-4-preview-moe.html" tabindex="-1" aria-hidden="true"><img src="/LLMScale/favicon.svg" alt="" width="22" height="22"></a>

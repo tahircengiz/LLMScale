@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
-<title>LLMScale — LLM haberleri</title>
+<title>LLMScale — LLM Akışı</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/</link>
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>

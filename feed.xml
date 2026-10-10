@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
-<title>LLMScale — LLM news</title>
+<title>LLMScale — LLM Feed</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/</link>
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
