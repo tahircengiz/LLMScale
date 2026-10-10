@@ -131,6 +131,9 @@ export interface Gathered {
   arch?: ModelArch;
 }
 
+/** A blog entry shorter than this is taken for a link post: a pointer to someone else's page. */
+export const POINTER_CHARS = 3000;
+
 const isPrimary = (u: string) => {
   try {
     const h = new URL(u).hostname.replace(/^www\./, "");
@@ -158,12 +161,20 @@ export async function gather(c: Candidate, fetch: (url: string) => Promise<strin
   }
   const found = [...links(`${c.content}\n${text}`), ...pageLinks].filter(isPrimary).filter((u, i, all) => all.indexOf(u) === i);
   const hfRepo = c.hfRepo ?? found.map(hfRepoOf).find(Boolean);
-  // A forum post is a pointer: read the primary page it points to as well.
-  if (c.kind === "forum" && found[0]) {
+  // A forum post, or a short link-blog entry, is a pointer to someone else's
+  // announcement: read the primary page it points to as well, so the post can be
+  // written — and cite — from the source rather than from the pointer.
+  const hostOf = (u: string) => new URL(u).hostname.replace(/^www\./, "");
+  const pointedTo = found.find((u) => hostOf(u) !== hostOf(c.url));
+  if (pointedTo && (c.kind === "forum" || (c.kind === "blog" && text.length < POINTER_CHARS))) {
     try {
-      text = `${text}\n\nLINKED PAGE (${found[0]}):\n${clip(htmlToText(await fetch(found[0])), 6000)}`;
+      const repo = hfRepoOf(pointedTo);
+      const page = repo
+        ? (await fetch(`https://huggingface.co/${repo}/raw/main/README.md`)).replace(/^---[\s\S]*?\n---\s*/, "")
+        : htmlToText(await fetch(pointedTo));
+      text = `${text}\n\nLINKED PAGE (${pointedTo}):\n${clip(page, 6000)}`;
     } catch {
-      /* the post alone will do */
+      /* the pointer alone will do */
     }
   }
   const allowed = [c.url, ...(hfRepo ? [`https://huggingface.co/${hfRepo}`] : []), ...found]

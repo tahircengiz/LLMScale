@@ -34,6 +34,7 @@ A post has a headline and a body, written in English and in Turkish.
 - Body: one or two short paragraphs, at most 520 characters in each language. Say what happened first, then why it matters to someone sizing or serving models: memory, context, speed, hardware.
 - Plain text only: no Markdown, links, hashtags or emoji. Separate paragraphs with a blank line.
 - Turkish: natural Turkish for engineers, not a word-for-word translation. Keep the technical terms the site keeps in English — KV cache, context, attention, quantization, MoE, token, GPU, VRAM, serving, inference, batch. Use a decimal comma in Turkish numbers (5,1B; 4,25 bit).
+- SOURCE TEXT may end with a LINKED PAGE: the primary source the item points to (a lab's announcement, a model card). Prefer it for facts and cite it first.
 - Facts come only from SOURCE TEXT and ENGINE FIGURES. Add no number, date, benchmark result or claim that is not in them. If a figure matters but is missing, leave it out and say so in notes.
 - ENGINE FIGURES are LLMScale's own estimates from the model's configuration. If the post mentions memory, use these figures and say they are for one user at the stated context.
 - refs: 1 to 3 links, chosen only from ALLOWED LINKS, the primary source first. title is the linked page's title as a reader would recognise it; source names its publisher ("Hugging Face", "vLLM", "arXiv").

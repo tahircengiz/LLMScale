@@ -174,6 +174,19 @@ const blogCand = { ...cand, url: "https://simonwillison.net/2026/Oct/6/le-chonk/
 const gb = await gather(blogCand, async () => `<html><nav><a href="https://github.com/simonw/llm">llm</a></nav><article><p>Mistral announced <a href="https://mistral.ai/news/mistral-large-4">Mistral Large 4</a> today.</p>${"<p>Text about the model.</p>".repeat(30)}</article></html>`);
 check("a blog post's own links are allowed, read from its markup", gb.allowed.includes("https://mistral.ai/news/mistral-large-4"));
 check("…but not the site's navigation", !gb.allowed.some((u) => u.includes("github.com/simonw")));
+const fetched: string[] = [];
+const gl = await gather(blogCand, async (u) => {
+  fetched.push(u);
+  if (u.includes("mistral.ai")) return `<article><h1>Mistral Large 4</h1><p>1T total parameters, 49B active.</p>${"<p>Details.</p>".repeat(80)}</article>`;
+  return `<article><p>Mistral announced <a href="https://mistral.ai/news/mistral-large-4">Mistral Large 4</a>.</p>${"<p>Short note.</p>".repeat(40)}</article>`;
+});
+check("a short link-blog entry has its primary page read too", fetched.includes("https://mistral.ai/news/mistral-large-4") && gl.text.includes("LINKED PAGE (https://mistral.ai/news/mistral-large-4)") && gl.text.includes("49B active"));
+const fetchedLong: string[] = [];
+await gather(blogCand, async (u) => {
+  fetchedLong.push(u);
+  return `<article><p>See <a href="https://mistral.ai/news/x">this</a>.</p>${"<p>A long first-hand write-up with its own measurements and method.</p>".repeat(80)}</article>`;
+});
+check("…a long first-hand post is read on its own", fetchedLong.length === 1);
 
 console.log("\n--- write (stand-in for Claude) ---");
 const wstore = new Store(":memory:");
