@@ -20,12 +20,10 @@
 
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { DICTS, type Lang } from "../src/lib/dict.ts";
-import { LANG_NAME } from "../src/lib/langPath.ts";
-import { CONCEPTS_HUB, GPUS_HUB, MODELS_HUB } from "../src/lib/staticPages.ts";
+import type { Lang } from "../src/lib/dict.ts";
 import { FEED_HUB, FEED_MEDIA, feedPostFile, feedRssFile, paragraphs, type FeedPost } from "../src/lib/feed.ts";
-import { createShell, esc, LANGS, other, readSite, words } from "./shell.ts";
-import { APP_CSS, APP_SCRIPT, APP_THEME_BOOT, article, CSS, ICON, postLd, script, shortTitle, summary, T } from "./feedRender.ts";
+import { createShell, esc, LANGS, readSite, words } from "./shell.ts";
+import { article, CSS, ICON, postLd, script, shortTitle, summary, T } from "./feedRender.ts";
 import { FEED_DIR, loadFeed } from "./feedData.ts";
 
 const outDir = process.argv[2] ?? "dist";
@@ -45,72 +43,6 @@ const streamFile = (n: number) => (n === 1 ? FEED_HUB : `${FEED_HUB}page-${n}.ht
 const ctx = { base: site.base, home: site.home, href, url };
 
 // ── pages ─────────────────────────────────────────────────────────────────────
-// ── the app's header and footer ───────────────────────────────────────────────
-// The calculator's own nav, in its four groups, with the news as the last stop:
-// every tool is one click away from the feed, as the feed is from every tool.
-const NAV: { page: string; file: string }[][] = [
-  [
-    { page: "sizing", file: "" },
-    { page: "config", file: "config.html" },
-    { page: "train", file: "train.html" },
-  ],
-  [
-    { page: "fit", file: "fit.html" },
-    { page: "anatomy", file: "anatomy.html" },
-    { page: "compare", file: "compare.html" },
-    { page: "decode", file: "decode.html" },
-  ],
-  [{ page: "vllm", file: "vllm.html" }],
-  [
-    { page: "learn", file: "learn.html" },
-    { page: "news", file: FEED_HUB },
-  ],
-];
-const CHEVRON = `<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>`;
-const THEME_LABEL = { en: "Theme", tr: "Tema" };
-const LANG_LABEL = { en: "Language", tr: "Dil" };
-
-function appHeader(lang: Lang, file: string): string {
-  const d = DICTS[lang];
-  const groups = NAV.map(
-    (g) =>
-      `<div class="grp"><span class="sep" aria-hidden="true"></span>${g
-        .map((i) => `<a class="tab" href="${href(lang, i.file)}"${i.page === "news" ? ' aria-current="page"' : ""}>${esc(d[`nav.${i.page}`])}</a>`)
-        .join("")}</div>`
-  ).join("");
-  const themes = (["dark", "light", "glass"] as const).map((v) => `<button type="button" data-theme-set="${v}" aria-pressed="false">${esc(d[`theme.${v}`])}</button>`).join("");
-  const langs = LANGS.map((l) => `<a href="${href(l, file)}" hreflang="${l}" lang="${l}" data-lang="${l}"${l === lang ? ' aria-current="page"' : ""}>${l.toUpperCase()}</a>`).join("");
-  return `<header class="hdr"><div class="hin">
-<div class="hrow"><a class="brand" href="${href(lang)}"><img src="${site.base}favicon.svg" alt="" width="28" height="28"><b>LLMScale</b><span class="badge">${esc(d["header.badge"])}</span></a>
-<div class="ctrls"><div class="seg" role="group" aria-label="${THEME_LABEL[lang]}">${themes}</div><div class="seg" role="group" aria-label="${LANG_LABEL[lang]}">${langs}</div></div></div>
-<nav class="pnav" aria-label="LLMScale"><div class="navpill">
-<div class="mbar"><span class="tab on">${esc(d["nav.news"])}</span><button type="button" class="tab" aria-controls="site-nav" aria-expanded="false">${esc(d["nav.menu"])}${CHEVRON}</button></div>
-<div id="site-nav">${groups}</div>
-</div></nav>
-</div></header>`;
-}
-
-function appFooter(lang: Lang, file: string): string {
-  const d = DICTS[lang];
-  const o = other(lang);
-  return `<footer class="ffoot">
-<div class="links"><a href="https://github.com/tahircengiz/LLMScale" rel="noreferrer">github.com/tahircengiz/LLMScale</a><a href="https://tr.linkedin.com/in/tahircengiz" rel="noreferrer">linkedin.com/tahircengiz</a><a href="${href(o, file)}" hreflang="${o}" lang="${o}" data-lang="${o}">${LANG_NAME[o]}</a></div>
-<nav aria-label="${esc(d["footer.guides"])}"><a href="${href(lang, MODELS_HUB)}">${esc(d["footer.models"])}</a><a href="${href(lang, GPUS_HUB)}">${esc(d["footer.gpus"])}</a><a href="${href(lang, CONCEPTS_HUB)}">${esc(d["footer.concepts"])}</a></nav>
-<p>${esc(d["footer.privacy"])}</p>
-</footer>`;
-}
-
-/** What makes a feed page look like the app rather than a guide. */
-const appFrame = (lang: Lang, file: string) => ({
-  bare: true,
-  boot: APP_THEME_BOOT,
-  baseCss: APP_CSS,
-  css: CSS,
-  header: appHeader(lang, file),
-  footer: appFooter(lang, file),
-  mainClass: "fmain",
-});
-
 const rssHead = (lang: Lang) =>
   `<link rel="alternate" type="application/rss+xml" title="${esc(`LLMScale — ${T[lang].h1}`)}" href="${url(lang, feedRssFile)}">`;
 
@@ -139,9 +71,10 @@ ${pager ? `<nav class="more" aria-label="${t.all}">${pager}</nav>\n` : ""}<p cla
     h1,
     crumbs: n === 1 ? [{ name: "LLMScale", file: "" }, { name: t.crumb }] : [{ name: "LLMScale", file: "" }, { name: t.crumb, file: FEED_HUB }, { name: t.page(n) }],
     body,
-    ...appFrame(lang, file),
+    bare: true,
+    css: CSS,
     head: rssHead(lang),
-    script: `${script(lang)}\n${APP_SCRIPT}`,
+    script: script(lang),
     ogType: "website",
     ld: { "@context": "https://schema.org", "@type": "CollectionPage", name: t.h1, inLanguage: lang, url: url(lang, file), hasPart: chunk.map((p) => ({ "@type": "BlogPosting", headline: p[lang].title, url: url(lang, feedPostFile(p.id)), datePublished: p.published })) },
   });
@@ -166,9 +99,10 @@ ${others.length ? `<h2 class="morehead">${t.more}</h2>\n${others.map((o) => arti
     h1: p[lang].title,
     crumbs: [{ name: "LLMScale", file: "" }, { name: t.crumb, file: FEED_HUB }, { name: shortTitle(p[lang].title) }],
     body,
-    ...appFrame(lang, feedPostFile(p.id)),
+    bare: true,
+    css: CSS,
     head: rssHead(lang),
-    script: `${script(lang)}\n${APP_SCRIPT}`,
+    script: script(lang),
     ogImage: p.image ? `${site.home}${FEED_MEDIA}${p.image.file}` : undefined,
     ld: postLd(ctx, lang, p),
   });

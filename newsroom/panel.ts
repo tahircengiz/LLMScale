@@ -20,7 +20,7 @@ import { FEED_CATEGORIES, validatePost, type FeedCategory, type FeedPost } from 
 import { KNOWN_MODELS } from "../src/lib/models.ts";
 import type { Lang } from "../src/lib/dict.ts";
 import { article, CSS as FEED_CSS, type RenderCtx } from "../scripts/feedRender.ts";
-import { esc, SHELL_CSS } from "../scripts/shell.ts";
+import { esc, SHELL_CSS, THEME_BOOT } from "../scripts/shell.ts";
 import { runAll, runWrite } from "./pipeline.ts";
 import { publishPending, type PublishMode } from "./publish.ts";
 import { Store, type Draft, type DraftStatus } from "./store.ts";
@@ -123,6 +123,8 @@ export function postFromForm(base: FeedPost, f: URLSearchParams): FeedPost {
 
 // ── pages ─────────────────────────────────────────────────────────────────────
 const PANEL_CSS = `
+.wrap{margin:0 auto;padding-inline:1.25rem}
+main{padding-block:1.5rem 3rem}
 .bar{background:var(--card);border-bottom:1px solid var(--line)}
 .bar .wrap,.wrap.wide{max-width:76rem}
 .bar .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;padding-block:.7rem}
@@ -132,9 +134,9 @@ const PANEL_CSS = `
 .tabs a[aria-current=page]{color:var(--brand);border-color:var(--brand)}
 .mode{font-size:.78rem;color:var(--faint);margin-left:auto}
 .flash{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--brand);border-radius:.6rem;padding:.6rem .85rem;margin:1rem 0;font-size:.9rem}
-.card{display:grid;grid-template-columns:minmax(0,38rem) minmax(0,1fr);gap:1rem;align-items:start;margin:0 0 1.5rem}
-.card .stream{margin:0}
-@media (max-width:62rem){.card{grid-template-columns:1fr}}
+.dcard{display:grid;grid-template-columns:minmax(0,38rem) minmax(0,1fr);gap:1rem;align-items:start;margin:0 0 1.5rem}
+.dcard .stream{margin:0}
+@media (max-width:62rem){.dcard{grid-template-columns:1fr}}
 .meta{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.9rem 1rem;font-size:.875rem}
 .meta p{margin:0 0 .5rem;max-width:none}
 .meta .k{color:var(--faint);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;display:block}
@@ -163,6 +165,7 @@ function layout(title: string, body: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>${esc(title)} · Haber masası</title>
+<script>${THEME_BOOT}</script>
 <style>${SHELL_CSS}
 ${FEED_CSS}
 ${PANEL_CSS}</style>
@@ -198,7 +201,7 @@ const button = (action: string, label: string, opts: { primary?: boolean; disabl
 function card(d: Draft, lang: Lang, detail: boolean): string {
   const c = store.candidate(d.candidateKey);
   const post = d.status === "published" || d.status === "committed" ? { ...d.post, id: d.publishedId ?? d.post.id, published: d.publishedAt ?? d.post.published } : d.post;
-  const preview = `<div class="stream">${article(RC, lang, post, { level: 2 })}</div>`;
+  const preview = `<div class="stream card">${article(RC, lang, post, { level: 2 })}</div>`;
   const id = encodeURIComponent(d.id);
   const actions =
     d.status === "pending"
@@ -224,7 +227,7 @@ ${d.problems.length ? `<p><span class="k">Sorunlar (onaydan önce düzeltilmeli)
 <p><span class="k">Önizleme dili</span><a href="?lang=tr${detail ? "" : `&s=${tabOf(d.status)}`}">Türkçe</a> · <a href="?lang=en${detail ? "" : `&s=${tabOf(d.status)}`}">English</a></p>
 <div class="actions">${actions.join("")}</div>
 </div>`;
-  return `<section class="card" id="${esc(d.id)}">${preview}${meta}</section>`;
+  return `<section class="dcard" id="${esc(d.id)}">${preview}${meta}</section>`;
 }
 
 const tabOf = (s: DraftStatus) => TABS.find((t) => t.s.includes(s))?.key ?? "pending";
