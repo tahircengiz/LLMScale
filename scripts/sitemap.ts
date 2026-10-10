@@ -8,7 +8,7 @@
 // refuses to write one if a page points at a version that was never built.
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 const outDir = process.argv[2] ?? "dist";
 
@@ -20,7 +20,7 @@ function* htmlFiles(dir: string): Generator<string> {
   }
 }
 
-type Page = { canonical: string; alternates: Record<string, string> };
+type Page = { rel: string; canonical: string; alternates: Record<string, string> };
 const pages: Page[] = [];
 for (const path of htmlFiles(outDir)) {
   const html = readFileSync(path, "utf8");
@@ -34,7 +34,7 @@ for (const path of htmlFiles(outDir)) {
   if (alternates.en !== canonical && alternates.tr !== canonical) {
     throw new Error(`${path}: its canonical ${canonical} is neither of its own language versions`);
   }
-  pages.push({ canonical, alternates });
+  pages.push({ rel: relative(outDir, path).replaceAll("\\", "/"), canonical, alternates });
 }
 
 const built = new Set(pages.map((p) => p.canonical));
@@ -45,7 +45,11 @@ for (const p of pages) {
 }
 
 // The home page first, then the rest in address order, each language beside the other.
-const home = pages.find((p) => p.canonical === p.alternates.en && !/\/[^/]+\.html$/.test(p.canonical) && !/\/(models|gpus)\/$/.test(p.canonical))?.canonical;
+// The home page is the root index.html — told by its file, since every hub's
+// address ends in a slash too (guessing from the address once put the concepts
+// hub first).
+const home = pages.find((p) => p.rel === "index.html")?.canonical;
+if (!home) throw new Error(`${outDir}/index.html: no home page to list first`);
 pages.sort((a, b) =>
   a.canonical === home ? -1 : b.canonical === home ? 1 : a.alternates.en.localeCompare(b.alternates.en) || a.canonical.localeCompare(b.canonical)
 );
