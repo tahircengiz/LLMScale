@@ -8,6 +8,7 @@ import { collect, select } from "../newsroom/collect.ts";
 import { Store, keyOf } from "../newsroom/store.ts";
 import { buildPost, engineFigures, gather, screen, write, type Ask, type WriterOutput } from "../newsroom/draft.ts";
 import { KNOWN_MODELS } from "../src/lib/models.ts";
+import { claudeAsk, type Create } from "../newsroom/claude.ts";
 import { SOURCES, type Source } from "../newsroom/sources.ts";
 
 // Nothing here may reach the network: a stray fetch fails loudly.
@@ -224,6 +225,33 @@ for (const u of ["https://s.example/k1", "https://s.example/k2"]) {
 await write(kstore, writeAsk, { now, keys: [keyOf("https://s.example/k2")], fetch: async () => "<p>text</p>" });
 check("rewriting one item writes that item only", kstore.candidate(keyOf("https://s.example/k2"))?.status === "drafted" && kstore.candidate(keyOf("https://s.example/k1"))?.status === "screened");
 check("a failed write marks the item failed with the reason", failStore.candidate(keyOf("https://s.example/f"))?.status === "failed" && /declined/.test(failStore.candidate(keyOf("https://s.example/f"))?.reason ?? ""));
+
+console.log("\n--- Claude: one more try on a decline ---");
+type Msg = Awaited<ReturnType<Create>>;
+const reply = (model: string, refused: boolean): Msg =>
+  ({
+    model,
+    stop_reason: refused ? "refusal" : "end_turn",
+    stop_details: refused ? { category: "cyber" } : null,
+    content: refused ? [] : [{ type: "text", text: '{"ok":true}' }],
+    usage: { input_tokens: 100, output_tokens: refused ? 0 : 10 },
+  }) as unknown as Msg;
+const scripted = (refuses: Set<string>) => {
+  const asked: string[] = [];
+  const create: Create = async (p) => (asked.push(p.model), reply(p.model, refuses.has(p.model)));
+  return { asked, ask: claudeAsk("claude-opus-5-5", { fallback: "claude-opus-4-8", create }) };
+};
+const req = { system: "s", user: "u", schema: { type: "object" }, effort: "low" as const, maxTokens: 100 };
+const once = scripted(new Set());
+const okRes = await once.ask(req);
+check("an accepted request is sent once", once.asked.join() === "claude-opus-5-5" && okRes.model === "claude-opus-5-5");
+const retried = scripted(new Set(["claude-opus-5-5"]));
+const fbRes = await retried.ask(req);
+check("a declined request gets one more try on the fallback model", retried.asked.join() === "claude-opus-5-5,claude-opus-4-8" && fbRes.model === "claude-opus-4-8" && (fbRes.json as { ok: boolean }).ok);
+check("both attempts count toward the tokens", fbRes.inputTokens === 200 && fbRes.outputTokens === 10);
+const twice = scripted(new Set(["claude-opus-5-5", "claude-opus-4-8"]));
+const err = await twice.ask(req).then(() => "", (e: Error) => e.message);
+check("if the fallback declines too, the draft fails — no third try", twice.asked.length === 2 && /declined \(cyber\)/.test(err), err);
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);

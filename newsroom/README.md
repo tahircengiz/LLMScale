@@ -41,6 +41,7 @@ node newsroom/cli.ts preview && FEED_DIR=newsroom/data/preview-feed npm run buil
 | `ANTHROPIC_API_KEY` | — | needed by `screen`, `write` and `run` |
 | `ANTHROPIC_BASE_URL` | the Claude API | point it at a gateway to route the calls through it |
 | `NEWSROOM_MODEL` | `claude-opus-5-5` | one model for both steps |
+| `NEWSROOM_FALLBACK_MODEL` | `claude-opus-4-8` | a declined request gets one more try here; empty to turn it off |
 | `NEWSROOM_MIN_SCORE` | `7` | the screening score an item needs to be written up |
 | `NEWSROOM_MAX_DRAFTS` | `4` | drafts written per run |
 | `NEWSROOM_DB` | `newsroom/data/newsroom.db` | not in git |

@@ -9,29 +9,52 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { Ask } from "./draft.ts";
 
 export const DEFAULT_MODEL = "claude-opus-5-5";
+/** Where a declined request gets one more try. Anthropic sends cyber-category
+ *  declines — the likeliest kind in LLM news — to this model. */
+export const FALLBACK_MODEL = "claude-opus-4-8";
 
-export function claudeAsk(model = process.env.NEWSROOM_MODEL ?? DEFAULT_MODEL): Ask {
-  const client = new Anthropic();
+type Params = Anthropic.Beta.MessageCreateParamsNonStreaming;
+export type Create = (params: Params) => Promise<Anthropic.Beta.BetaMessage>;
+
+export function claudeAsk(
+  model = process.env.NEWSROOM_MODEL ?? DEFAULT_MODEL,
+  opts: { fallback?: string; create?: Create } = {}
+): Ask {
+  const fallback = opts.fallback ?? process.env.NEWSROOM_FALLBACK_MODEL ?? FALLBACK_MODEL;
+  let create = opts.create;
+  if (!create) {
+    const client = new Anthropic();
+    create = (params) => client.beta.messages.create(params);
+  }
+  const send = create;
   return async ({ system, user, schema, effort, maxTokens }) => {
-    // fallbacks: "default" re-runs a request a safety classifier declines on the
-    // model Anthropic recommends for that case, instead of failing the draft.
-    const res = await client.beta.messages.create({
-      model,
-      max_tokens: maxTokens,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content: user }],
-      output_config: { effort, format: { type: "json_schema", schema } },
-    } as Anthropic.Beta.MessageCreateParamsNonStreaming);
+    const ask = (m: string) =>
+      send({
+        model: m,
+        max_tokens: maxTokens,
+        system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+        messages: [{ role: "user", content: user }],
+        output_config: { effort, format: { type: "json_schema", schema } },
+      } as Params);
+    // A safety classifier can decline a request. The API's own `fallbacks` cannot
+    // be used here: LiteLLM takes that field for its own routing and drops beta
+    // headers and fallback credit tokens. So a declined request gets one more try
+    // on the fallback model, sent as it was; if that declines too, the draft fails.
+    const first = await ask(model);
+    const res = first.stop_reason === "refusal" && fallback && fallback !== model ? await ask(fallback) : first;
     if (res.stop_reason === "refusal") throw new Error(`declined (${res.stop_details?.category ?? "no category"})`);
     if (res.stop_reason === "max_tokens") throw new Error(`ran out of output tokens at ${maxTokens}`);
     const text = res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
-    const u = res.usage;
+    // A declined attempt is counted too, for an honest running cost.
+    const tokens = (r: Anthropic.Beta.BetaMessage) => ({
+      input: r.usage.input_tokens + (r.usage.cache_read_input_tokens ?? 0) + (r.usage.cache_creation_input_tokens ?? 0),
+      output: r.usage.output_tokens,
+    });
+    const used = res === first ? [tokens(res)] : [tokens(first), tokens(res)];
     return {
       json: JSON.parse(text) as unknown,
-      inputTokens: u.input_tokens + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0),
-      outputTokens: u.output_tokens,
+      inputTokens: used.reduce((n, t) => n + t.input, 0),
+      outputTokens: used.reduce((n, t) => n + t.output, 0),
       model: res.model,
     };
   };
