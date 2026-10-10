@@ -18,14 +18,19 @@ export function decodeEntities(s: string): string {
 /** CDATA sections hold their text verbatim; everything else is entity-encoded. */
 export const unwrapCdata = (s: string) => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1");
 
-/** Readable text from a web page or an HTML fragment: the <article> or <main>
- *  when there is one, without scripts, styles, navigation or footers, with block
- *  boundaries kept as line breaks. */
-export function htmlToText(html: string): string {
-  let s = html.replace(/<!--[\s\S]*?-->/g, " ");
+/** The part of a page that is the page: its <article> or <main> when it has a
+ *  substantial one, otherwise all of it. Text and links are both read from here,
+ *  so a site's navigation and footer do not count as what a post is about. */
+export function mainHtml(html: string): string {
+  const s = html.replace(/<!--[\s\S]*?-->/g, " ");
   const main = s.match(/<article\b[\s\S]*?<\/article>/i)?.[0] ?? s.match(/<main\b[\s\S]*?<\/main>/i)?.[0];
-  if (main && main.length > 400) s = main;
-  s = s
+  return main && main.length > 400 ? main : s;
+}
+
+/** Readable text from a web page or an HTML fragment: its main part, without
+ *  scripts, styles, navigation or footers, with block boundaries kept as line breaks. */
+export function htmlToText(html: string): string {
+  const s = mainHtml(html)
     .replace(/<(script|style|noscript|svg|nav|header|footer|aside|form|iframe|template)\b[\s\S]*?<\/\1>/gi, " ")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/?(p|div|section|article|li|ul|ol|h[1-6]|tr|table|blockquote|pre|figure|figcaption)\b[^>]*>/gi, "\n")

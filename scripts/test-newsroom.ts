@@ -102,6 +102,10 @@ const res = await collect(cstore, {
 });
 check("one failing source does not stop the others", res.find((r) => r.source === "a")?.added === 2 && res.find((r) => r.source === "broken")?.error === "HTTP 503");
 check("off-topic items are remembered but skipped", cstore.candidates("new").length === 1 && cstore.candidates("skipped").length === 1);
+const feedLinks = `<rss><channel><item><title>New MoE model weights, INT4 fits 24 GB VRAM</title><link>https://reddit.example/r/x/1</link><pubDate>Thu, 09 Oct 2026 10:00:00 GMT</pubDate><description><![CDATA[<p>See <a href="https://huggingface.co/lab/Moe-32B">the weights</a>.</p>]]></description></item></channel></rss>`;
+const lstore = new Store(":memory:");
+await collect(lstore, { now, sources: [{ ...src, id: "l", kind: "forum", take: 5 }], fetch: async () => feedLinks });
+check("links in an item's markup survive into its stored text", lstore.candidates("new")[0]?.content.includes("- https://huggingface.co/lab/Moe-32B"));
 const again = await collect(cstore, { now, sources: [{ ...src, id: "a", url: "https://a.example/feed", take: 10 }], fetch: async () => feedA });
 check("a second run adds nothing it has seen", again[0].added === 0);
 
@@ -161,6 +165,11 @@ check("an over-long body is reported, not silently cut", long.problems.some((p) 
 const none = buildPost({ ...out, refs: [] }, cand, g, { now, idTaken: () => false });
 check("with no usable source, the item's own link stands in, flagged", none.post.refs[0].url === "https://huggingface.co/openai/gpt-oss-120b" && none.problems.some((p) => p.includes("no usable source")));
 
+const blogCand = { ...cand, url: "https://simonwillison.net/2026/Oct/6/le-chonk/", kind: "blog" as const, hfRepo: null, title: "Introducing Mistral Large 4" };
+const gb = await gather(blogCand, async () => `<html><nav><a href="https://github.com/simonw/llm">llm</a></nav><article><p>Mistral announced <a href="https://mistral.ai/news/mistral-large-4">Mistral Large 4</a> today.</p>${"<p>Text about the model.</p>".repeat(30)}</article></html>`);
+check("a blog post's own links are allowed, read from its markup", gb.allowed.includes("https://mistral.ai/news/mistral-large-4"));
+check("…but not the site's navigation", !gb.allowed.some((u) => u.includes("github.com/simonw")));
+
 console.log("\n--- write (stand-in for Claude) ---");
 const wstore = new Store(":memory:");
 wstore.addCandidate({ ...base, url: cand.url, title: cand.title, kind: "model", hfRepo: cand.hfRepo, published: "2026-10-09T00:00:00Z" });
@@ -183,6 +192,13 @@ failStore.setScreened(keyOf("https://s.example/f"), { score: 9, category: "resea
 await write(failStore, async () => {
   throw new Error("declined (cyber)");
 }, { now, fetch: async () => "<p>text</p>" });
+const kstore = new Store(":memory:");
+for (const u of ["https://s.example/k1", "https://s.example/k2"]) {
+  kstore.addCandidate({ ...base, url: u });
+  kstore.setScreened(keyOf(u), { score: 9, category: "research", reason: "", duplicateOf: null, status: "screened" });
+}
+await write(kstore, writeAsk, { now, keys: [keyOf("https://s.example/k2")], fetch: async () => "<p>text</p>" });
+check("rewriting one item writes that item only", kstore.candidate(keyOf("https://s.example/k2"))?.status === "drafted" && kstore.candidate(keyOf("https://s.example/k1"))?.status === "screened");
 check("a failed write marks the item failed with the reason", failStore.candidate(keyOf("https://s.example/f"))?.status === "failed" && /declined/.test(failStore.candidate(keyOf("https://s.example/f"))?.reason ?? ""));
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);

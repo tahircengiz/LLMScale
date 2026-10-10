@@ -5,7 +5,7 @@ import { parseFeed, parseHfModels, parseHn, type RawItem } from "./feeds.ts";
 import { isMajorMinorRelease, passesPrefilter, relevance } from "./relevance.ts";
 import { SOURCES, type Source } from "./sources.ts";
 import type { Store } from "./store.ts";
-import { clip, hfRepoOf, htmlToText } from "./text.ts";
+import { clip, hfRepoOf, htmlToText, links, mainHtml } from "./text.ts";
 
 export const USER_AGENT = "LLMScale-newsroom/0.1 (+https://tahircengiz.github.io/LLMScale/feed/)";
 
@@ -53,7 +53,10 @@ export async function collect(
         let added = 0;
         let onTopic = 0;
         for (const item of recent) {
-          const text = clip(htmlToText(item.content), 20_000);
+          // Turning markup into text drops the links in it, and a forum post or a
+          // link blog is mostly its links: keep them, listed after the text.
+          const hrefs = links(mainHtml(item.content)).slice(0, 20);
+          const text = clip(htmlToText(item.content), 20_000) + (hrefs.length ? `\n\nLinks:\n${hrefs.map((u) => `- ${u}`).join("\n")}` : "");
           const topical = src.onTopic || passesPrefilter(relevance(`${item.title}\n${text}`));
           const isNew = store.addCandidate({
             url: item.url,

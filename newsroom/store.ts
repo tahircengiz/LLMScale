@@ -177,6 +177,11 @@ export class Store {
     return r && draftOf(r);
   }
 
+  /** Removes a draft so its item can be written again; only a draft still waiting for review. */
+  deleteDraft(id: string): boolean {
+    return this.db.prepare("DELETE FROM drafts WHERE id = ? AND status = 'pending'").run(id).changes > 0;
+  }
+
   hasDraftId(id: string): boolean {
     return this.db.prepare("SELECT 1 FROM drafts WHERE id = ?").get(id) !== undefined;
   }

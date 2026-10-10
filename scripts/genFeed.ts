@@ -302,7 +302,8 @@ const CSS = `
 .acts a:hover,.acts button:hover{color:var(--brand)}
 .acts [hidden]{display:none}
 .morehead{font-size:1rem;margin:0;padding:.85rem 1rem;border-bottom:1px solid var(--line)}
-.more{display:flex;justify-content:center;gap:1.5rem;padding:1rem;font-size:.9rem}
+.stream>.post:last-of-type{border-bottom:0}
+.more{display:flex;justify-content:center;gap:1.5rem;padding:1rem;font-size:.9rem;border-top:1px solid var(--line)}
 .status{margin:0;padding:0 1rem 1rem;max-width:none;text-align:center;font-size:.85rem;color:var(--faint)}
 .status:empty{display:none}
 @media (max-width:40rem){main:has(.stream){padding-top:0}.stream{margin-inline:-1.25rem;border-inline:0;border-radius:0}.topbar{border-radius:0}}

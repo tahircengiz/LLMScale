@@ -6,6 +6,7 @@
 //   node newsroom/cli.ts run                  all three, in order
 //   node newsroom/cli.ts list [status]        drafts (pending by default) or, with an item status, items
 //   node newsroom/cli.ts show <draft-id>      one draft in full, with its problems and notes
+//   node newsroom/cli.ts rewrite <draft-id>   discard a pending draft and have Claude write it again
 //   node newsroom/cli.ts preview [dir]        pending drafts as feed files, to build the site with
 //                                             (FEED_DIR=<dir> npm run build)
 //
@@ -107,6 +108,17 @@ try {
       console.log(`cost:     ${d.inputTokens} in / ${d.outputTokens} out tokens (${d.model})`);
       break;
     }
+    case "rewrite": {
+      const d = store.draft(rest[0] ?? "");
+      if (!d || d.status !== "pending") throw new Error(`no pending draft ${rest[0]}`);
+      const ask = await claude();
+      store.deleteDraft(d.id);
+      store.setStatus(d.candidateKey, "screened");
+      const res = await write(store, ask, { keys: [d.candidateKey] });
+      for (const r of res.results) console.log(r.error ? `FAIL  ${r.key}  ${r.error}` : `ok    ${r.id}${r.problems ? `  (${r.problems} problems)` : ""}`);
+      console.log(`rewrite: ${tokens(res.usage)}`);
+      break;
+    }
     case "preview": {
       const dir = rest[0] ?? fileURLToPath(new URL("./data/preview-feed", import.meta.url));
       rmSync(dir, { recursive: true, force: true });
@@ -117,7 +129,7 @@ try {
       break;
     }
     default:
-      console.log("usage: node newsroom/cli.ts collect|screen|write|run|list [status]|show <id>|preview [dir]");
+      console.log("usage: node newsroom/cli.ts collect|screen|write|run|list [status]|show <id>|rewrite <id>|preview [dir]");
   }
 } finally {
   store.close();

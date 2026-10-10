@@ -16,7 +16,7 @@ import { fetchText } from "./collect.ts";
 import { POST_SCHEMA, SCREEN_SCHEMA, SCREEN_SYSTEM, WRITE_SYSTEM } from "./prompts.ts";
 import { PRIMARY_HOSTS } from "./sources.ts";
 import type { Candidate, Store } from "./store.ts";
-import { clip, hfRepoOf, htmlToText, links, normalizeUrl, slugify } from "./text.ts";
+import { clip, hfRepoOf, htmlToText, links, mainHtml, normalizeUrl, slugify } from "./text.ts";
 
 export interface AskRequest {
   system: string;
@@ -141,17 +141,20 @@ const isPrimary = (u: string) => {
 /** The text Claude writes from, the links a post may cite, and the model it is about. */
 export async function gather(c: Candidate, fetch: (url: string) => Promise<string> = fetchText): Promise<Gathered> {
   let text = c.content;
+  let pageLinks: string[] = [];
   try {
     if (c.kind === "model" && c.hfRepo) {
       const card = await fetch(`https://huggingface.co/${c.hfRepo}/raw/main/README.md`);
       text = card.replace(/^---[\s\S]*?\n---\s*/, "");
     } else if (c.kind === "blog" || (c.kind === "forum" && c.sourceId === "hn")) {
-      text = htmlToText(await fetch(c.url));
+      const html = await fetch(c.url);
+      text = htmlToText(html);
+      pageLinks = links(mainHtml(html));
     }
   } catch {
     /* keep what the feed gave us */
   }
-  const found = links(`${c.content}\n${text}`).filter(isPrimary);
+  const found = [...links(`${c.content}\n${text}`), ...pageLinks].filter(isPrimary).filter((u, i, all) => all.indexOf(u) === i);
   const hfRepo = c.hfRepo ?? found.map(hfRepoOf).find(Boolean);
   // A forum post is a pointer: read the primary page it points to as well.
   if (c.kind === "forum" && found[0]) {
@@ -250,16 +253,17 @@ export function buildPost(out: WriterOutput, c: Candidate, g: Gathered, ctx: { n
 export async function write(
   store: Store,
   ask: Ask,
-  opts: { minScore?: number; maxDrafts?: number; maxAgeDays?: number; now?: Date; fetch?: (url: string) => Promise<string> } = {}
+  opts: { minScore?: number; maxDrafts?: number; maxAgeDays?: number; now?: Date; fetch?: (url: string) => Promise<string>; keys?: string[] } = {}
 ) {
-  const { minScore = 7, maxDrafts = 4, maxAgeDays = 7, now = new Date(), fetch = fetchText } = opts;
+  const { minScore = 7, maxDrafts = 4, maxAgeDays = 7, now = new Date(), fetch = fetchText, keys } = opts;
   const usage = { input: 0, output: 0 };
   const results: { key: string; id?: string; problems?: number; error?: string }[] = [];
   // Screened items wait for a slot; one that waited too long is no longer news.
   for (const c of store.candidates("screened")) {
     if (c.published && Date.parse(c.published) < now.getTime() - maxAgeDays * 86_400_000) store.setStatus(c.key, "rejected", "stale before it was written up");
   }
-  for (const c of store.toWrite(minScore, maxDrafts)) {
+  const queue = keys ? keys.map((k) => store.candidate(k)).filter((c): c is Candidate => !!c) : store.toWrite(minScore, maxDrafts);
+  for (const c of queue) {
     try {
       const g = await gather(c, fetch);
       const res = await ask({ system: WRITE_SYSTEM, user: writePrompt(c, g), schema: POST_SCHEMA, effort: "medium", maxTokens: 16000 });
