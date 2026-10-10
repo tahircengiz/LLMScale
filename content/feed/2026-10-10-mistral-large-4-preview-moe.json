@@ -1,0 +1,30 @@
+{
+  "id": "2026-10-10-mistral-large-4-preview-moe",
+  "published": "2026-10-10T09:41:50Z",
+  "category": "model",
+  "en": {
+    "title": "Mistral Large 4 preview: 1T-parameter MoE with 49B active, open weights due end of month",
+    "body": "Mistral released a preview of Mistral Large 4 via its API: an MoE model with 1T total and 49B active parameters, trained on 3,800 NVIDIA Grace Blackwell GPUs. Open weights are promised for the end of this month. It scores 38 on Artificial Analysis, up from 9 for Mistral Large 3.\n\nFor self-hosting, per-token compute follows the 49B active parameters, but all 1T weights must be held in memory, so VRAM rather than compute sets the hardware floor. No memory estimate yet: the model config is not public."
+  },
+  "tr": {
+    "title": "Mistral Large 4 önizlemesi: 1T parametreli, 49B aktif MoE; açık ağırlıklar ay sonunda",
+    "body": "Mistral, Mistral Large 4'ün önizleme sürümünü API üzerinden sundu: toplam 1T, aktif 49B parametreli bir MoE model; 3.800 NVIDIA Grace Blackwell GPU üzerinde eğitildi. Açık ağırlıkların bu ayın sonunda yayımlanacağı söyleniyor. Artificial Analysis'te 38 puan alıyor; Mistral Large 3'ün puanı 9'du.\n\nKendi donanımında çalıştıracaklar için: token başına hesaplama 49B aktif parametreye göre ölçekleniyor, ama 1T ağırlığın tamamı bellekte durmalı; donanım alt sınırını compute değil VRAM belirliyor. Model config'i henüz açık olmadığından bellek tahmini yok."
+  },
+  "refs": [
+    {
+      "url": "https://mistral.ai/news/mistral-large-4",
+      "title": "Introducing Mistral Large 4: Le chonk",
+      "source": "Mistral AI"
+    },
+    {
+      "url": "https://simonwillison.net/2026/Oct/6/le-chonk",
+      "title": "Introducing Mistral Large 4: Le chonk",
+      "source": "Simon Willison's Weblog"
+    }
+  ],
+  "tags": [
+    "moe",
+    "mistral",
+    "open-weights"
+  ]
+}
