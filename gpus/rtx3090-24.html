@@ -10,7 +10,7 @@
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/gpus/rtx3090-24.html">
 <link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/gpus/rtx3090-24.html">
 <meta name="robots" content="index, follow, max-image-preview:large">
-<meta name="author" content="Tahir Cengiz">
+<meta name="author" content="Tahir Ali Cengiz">
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Which LLMs fit on RTX 3090 / Ti?">
@@ -24,76 +24,117 @@
 <meta name="twitter:title" content="Which LLMs fit on RTX 3090 / Ti?">
 <meta name="twitter:description" content="Which open LLMs fit on RTX 3090 / Ti (22.80 GiB usable): 18 of 25 popular models at INT4 and 10 at BF16, with concurrent users and maximum context for each.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
-<script>try{var t=localStorage.getItem("theme");if(t!=="dark"&&t!=="light"&&t!=="glass")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch(e){}</script>
+<script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
-<style>:root{--bg:#eef1f8;--card:#fff;--inset:#f4f6fb;--line:#dce1ee;--text:#151d48;--muted:#39405c;--faint:#555b73;--brand:#4a4cd4;--good:#0b7d57;--bad:#b3123c;--button:#4a4cd4;color-scheme:light}
-:root[data-theme=dark]{--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}
-@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg:#090b10;--card:#14171f;--inset:#1b1f2a;--line:#2a303c;--text:#e7e9ef;--muted:#c3c8d4;--faint:#a1a8b8;--brand:#9698f7;--good:#00e096;--bad:#fda4af;color-scheme:dark}}
+<style>:root{color-scheme:dark;--ink-950:#090b10;--ink-900:#14171f;--ink-850:#1b1f2a;--ink-800:#232834;--ink-700:#333a49;--c-white:#fff;--fg:#e7e9ef;--slate-300:#c3c8d4;--slate-400:#a1a8b8;--slate-500:#868ea0;--brand-400:#9698f7;--brand-500:#5d5fef;--brand-600:#4a4cd4;--accent-400:#00e096;--accent-500:#00c886;--bad-c:#fda4af;--onbrand:#fff;--bg:var(--ink-950);--card:var(--ink-900);--inset:var(--ink-850);--line:color-mix(in oklab,var(--c-white) 10%,transparent);--text:var(--fg);--muted:var(--slate-300);--faint:var(--slate-400);--brand:var(--brand-400);--button:var(--brand-600);--good:var(--accent-400);--bad:var(--bad-c)}
+.light{color-scheme:light;--ink-950:#eaeef6;--ink-900:#fff;--ink-850:#f4f6fb;--ink-800:#e9edf6;--ink-700:#dce1ee;--c-white:#151d48;--fg:#151d48;--slate-300:#39405c;--slate-400:#555b73;--slate-500:#6b7188;--brand-400:#4a4cd4;--accent-400:#0b7d57;--bad-c:#b3123c}
+.glass{color-scheme:light;--ink-950:#dfe6fa;--ink-900:#fff;--ink-850:#f2f5fd;--ink-800:#e8ecf8;--ink-700:#cfd7ee;--c-white:#101736;--fg:#101736;--slate-300:#333c68;--slate-400:#3e4668;--slate-500:#434b6e;--brand-400:#3b39ba;--accent-400:#0a6f4d;--bad-c:#a30f36}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:400 1rem/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-.wrap{max-width:54rem;margin:0 auto;padding-inline:1.25rem}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(1100px 620px at 18% -14%,rgba(93,95,239,.1),transparent 62%),var(--ink-950);color:var(--fg);font:400 1rem/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.glass body{background:radial-gradient(46% 42% at 8% 2%,rgba(99,102,241,.72) 0%,transparent 60%),radial-gradient(40% 40% at 96% 6%,rgba(34,211,238,.68) 0%,transparent 62%),radial-gradient(44% 44% at 84% 96%,rgba(167,139,250,.72) 0%,transparent 60%),radial-gradient(38% 38% at 6% 92%,rgba(45,212,191,.66) 0%,transparent 60%),radial-gradient(34% 30% at 50% 46%,rgba(244,114,182,.4) 0%,transparent 66%),var(--ink-950);background-attachment:fixed}
 a{color:var(--brand);text-underline-offset:2px}
-a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
-.top{background:var(--card);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem 1.25rem;padding-block:.65rem}
-.brand{display:inline-flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);text-decoration:none}
-.top nav{display:flex;flex-wrap:wrap;gap:.2rem 1rem;font-size:.875rem}
-.top nav a{color:var(--muted);text-decoration:none}
-.top nav a:hover,.top nav a[aria-current=page]{color:var(--brand)}
-main{padding-block:1.5rem 3rem}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;vertical-align:top}
+thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+th[scope=row]{font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.card{background:color-mix(in oklab,var(--ink-900) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);box-shadow:0 20px 25px -5px rgb(0 0 0/.3),0 8px 10px -6px rgb(0 0 0/.3)}
+.hdr{border-bottom:1px solid var(--line);padding:.5rem 1rem}
+.hin{max-width:72rem;margin:0 auto}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem}
+.brand{display:flex;align-items:center;gap:.5rem;text-decoration:none}
+.brand img{width:28px;height:28px}
+.brand b{font-size:1.125rem;line-height:1.75rem;font-weight:700;letter-spacing:-.025em;color:var(--c-white)}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:.125rem .5rem;font-size:11px;line-height:1rem;font-weight:500;color:var(--accent-400);background:color-mix(in oklab,var(--accent-500) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--accent-500) 30%,transparent)}
+.ctrls{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.seg{display:flex;flex-shrink:0;gap:.25rem;border-radius:.75rem;background:var(--ink-850);padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}
+.seg a,.seg button{display:block;border:0;background:none;font:inherit;font-size:.75rem;line-height:1rem;font-weight:500;padding:.25rem .625rem;border-radius:.5rem;color:var(--slate-300);text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .15s,color .15s}
+.seg a:hover,.seg button:hover,.tab:hover{background:color-mix(in oklab,var(--c-white) 5%,transparent)}
+.seg [aria-pressed=true],.seg [aria-current=page],.tab[aria-current=page],.tab.on{background:var(--brand-600);color:var(--onbrand);box-shadow:0 1px 3px 0 rgb(0 0 0/.1),0 1px 2px -1px rgb(0 0 0/.1)}
+.pnav{margin-top:.5rem;display:flex;justify-content:center}
+.navpill{width:100%;border-radius:.75rem;background:var(--ink-850);padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}
+.tab{display:block;border:0;background:none;font:inherit;border-radius:.5rem;padding:.25rem .625rem;font-size:.875rem;line-height:1.25rem;font-weight:500;white-space:nowrap;color:var(--slate-300);text-decoration:none;cursor:pointer;transition:background-color .15s,color .15s}
+.mbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.mbar button{display:flex;align-items:center;gap:.375rem}
+.mbar svg{width:14px;height:14px;transition:transform .15s}
+.mbar [aria-expanded=true] svg{transform:rotate(180deg)}
+#site-nav{display:none;flex-direction:column;gap:.25rem;margin-top:.25rem}
+#site-nav.open{display:flex}
+.grp{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem}
+.grp .sep{height:1px;flex-basis:100%;background:color-mix(in oklab,var(--c-white) 15%,transparent)}
+.grp:first-child .sep{display:none}
+@media (min-width:640px){.hdr{padding-inline:1.5rem}.navpill{width:auto;max-width:100%}.mbar{display:none}#site-nav{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:0}.grp .sep{height:1rem;width:1px;flex-basis:auto;margin:0 .25rem}}
+@media (max-width:360px){.seg a,.seg button{padding-inline:.375rem}.ctrls{gap:.375rem}}
+@media (scripting:none){#site-nav{display:flex}.mbar button{display:none}}
+.glass .card{background:rgba(255,255,255,.52);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.65);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),inset 0 -1px 0 0 rgba(255,255,255,.25),0 12px 32px -14px rgba(20,28,66,.42)}
+.glass .hdr{background:rgba(255,255,255,.46);-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);border-bottom-color:rgba(255,255,255,.55)}
+.glass .navpill{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.8)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.92)}}
+@media (prefers-reduced-transparency:reduce){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}}
+.theme-switching,.theme-switching *,.theme-switching *::before,.theme-switching *::after{transition:none!important}
+.fmain{max-width:72rem;margin:0 auto;padding:1.5rem 1rem 2rem}
+.ffoot{max-width:72rem;margin:0 auto;padding:1.5rem 1rem 5rem;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:.5rem;text-align:center;font-size:.875rem;color:var(--slate-400)}
+.ffoot .links,.ffoot nav{display:flex;flex-wrap:wrap;justify-content:center;gap:.25rem 1rem}
+.ffoot .links a{color:var(--slate-400);text-decoration:none}
+.ffoot .links a:hover{color:var(--brand)}
+.ffoot nav a{font-size:.75rem;font-weight:500;color:var(--brand);text-decoration:none}
+.ffoot nav a:hover{text-decoration:underline}
+.ffoot p{margin:0;font-size:.75rem;color:var(--slate-500)}
+@media (min-width:640px){.fmain{padding-inline:1.5rem}}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--ink-900);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--slate-300)}
+.langsuggest a{background:var(--brand-600);color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
+.langsuggest button{background:none;border:0;color:var(--slate-400);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}
+.guide{max-width:54rem;margin:0 auto;padding:1.25rem 1.5rem 1.5rem;border-radius:1rem}
 .crumbs{font-size:.8125rem;color:var(--faint);margin:0 0 .6rem}
 .crumbs a{color:var(--faint)}
-h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
-h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
-p{margin:0 0 .9rem;max-width:68ch}
+.guide h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
+.guide h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
+.guide p{margin:0 0 .9rem;max-width:68ch}
 .lede{color:var(--muted)}
-.answer{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
+.answer{background:var(--inset);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
 .cap{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
 .big{font-size:2.1rem;font-weight:700;line-height:1.1;margin:.25rem 0 .45rem;font-variant-numeric:tabular-nums}
-.answer p{margin:0;color:var(--muted);font-size:.9375rem}
+.guide .answer p{margin:0;color:var(--muted);font-size:.9375rem}
 .spec{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;padding:0;margin:.85rem 0 0}
-.spec li{background:var(--inset);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
-.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--card)}
-table{border-collapse:collapse;width:100%;font-size:.875rem;font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
-tbody tr:last-child>*{border-bottom:0}
-thead th{background:var(--inset);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
-th[scope=row]{font-weight:600}
-td small{display:block;color:var(--faint);font-size:.75rem}
+.spec li{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
+/* positioned, so a table's screen-reader text (.sr, absolute) scrolls with it instead of widening the page */
+.scroll{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--inset)}
+.guide table{font-size:.875rem}
+.guide th,.guide td{padding:.5rem .75rem;border-bottom:1px solid var(--line);white-space:nowrap}
+.guide tbody tr:last-child>*{border-bottom:0}
+.guide thead th{background:var(--ink-800)}
+.guide td small{display:block;color:var(--faint);font-size:.75rem}
 .ok{color:var(--good);font-weight:600}
 .no{color:var(--bad)}
 .note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
 ul.plain{padding-left:1.1rem;margin:0 0 .9rem}
 ul.plain li{margin:.3rem 0}
 .links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
-.links a{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
-.links a.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
+.links a{display:inline-block;background:var(--inset);border:1px solid var(--line);border-radius:.75rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
+.links a:hover{border-color:var(--brand)}
+.links a.primary{background:var(--brand-600);border-color:transparent;color:var(--onbrand)}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
 pre{background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.75rem 1rem;overflow-x:auto;margin:0 0 .9rem;line-height:1.55}
 pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
-footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.8125rem;color:var(--faint)}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--muted)}
-.langsuggest a{background:#4a4cd4;color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
-.langsuggest button{background:none;border:0;color:var(--faint);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}</style>
+@media (max-width:40rem){.guide{padding:1rem;margin-inline:-.25rem}}</style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/"},{"@type":"ListItem","position":2,"name":"GPUs","item":"https://tahircengiz.github.io/LLMScale/gpus/"},{"@type":"ListItem","position":3,"name":"RTX 3090 / Ti","item":"https://tahircengiz.github.io/LLMScale/gpus/rtx3090-24.html"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Which LLMs fit on RTX 3090 / Ti?","inLanguage":"en","url":"https://tahircengiz.github.io/LLMScale/gpus/rtx3090-24.html","about":"RTX 3090 / Ti","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/"},"author":{"@type":"Person","name":"Tahir Cengiz","url":"https://github.com/tahircengiz"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Which LLMs fit on RTX 3090 / Ti?","inLanguage":"en","url":"https://tahircengiz.github.io/LLMScale/gpus/rtx3090-24.html","about":"RTX 3090 / Ti","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/"},"author":{"@type":"Person","name":"Tahir Ali Cengiz","url":"https://github.com/tahircengiz"}}</script>
 </head>
 <body>
-<header class="top"><div class="wrap">
-  <a class="brand" href="/LLMScale/"><img src="/LLMScale/favicon.svg" alt="" width="24" height="24">LLMScale</a>
-  <nav aria-label="Site">
-    <a href="/LLMScale/">VRAM calculator</a>
-    <a href="/LLMScale/models/">Models</a>
-    <a href="/LLMScale/gpus/" aria-current="page">GPUs</a>
-    <a href="/LLMScale/concepts/">Concepts</a>
-    <a href="/LLMScale/feed/">News</a>
-    <a href="/LLMScale/tr/gpus/rtx3090-24.html" hreflang="tr" lang="tr" onclick="try{localStorage.setItem('lang','tr')}catch(e){}">Türkçe</a>
-  </nav>
+<header class="hdr"><div class="hin">
+<div class="hrow"><a class="brand" href="/LLMScale/"><img src="/LLMScale/favicon.svg" alt="" width="28" height="28"><b>LLMScale</b><span class="badge">live Hugging Face data</span></a>
+<div class="ctrls"><div class="seg" role="group" aria-label="Theme"><button type="button" data-theme-set="dark" aria-pressed="false">Dark</button><button type="button" data-theme-set="light" aria-pressed="false">Light</button><button type="button" data-theme-set="glass" aria-pressed="false">Glass</button></div><div class="seg" role="group" aria-label="Language"><a href="/LLMScale/gpus/rtx3090-24.html" hreflang="en" lang="en" data-lang="en" aria-current="page">EN</a><a href="/LLMScale/tr/gpus/rtx3090-24.html" hreflang="tr" lang="tr" data-lang="tr">TR</a></div></div></div>
+<nav class="pnav" aria-label="LLMScale"><div class="navpill">
+<div class="mbar"><span class="tab on">GPUs</span><button type="button" class="tab" aria-controls="site-nav" aria-expanded="false">Menu<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button></div>
+<div id="site-nav"><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/">VRAM Sizing</a><a class="tab" href="/LLMScale/config.html">Config Decoder</a><a class="tab" href="/LLMScale/train.html">Fine-tune</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/fit.html">Task Fit</a><a class="tab" href="/LLMScale/anatomy.html">Model Anatomy</a><a class="tab" href="/LLMScale/compare.html">Model Compare</a><a class="tab" href="/LLMScale/decode.html">Name Decoder</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/vllm.html">vLLM Params</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/learn.html">LLM 101</a><a class="tab" href="/LLMScale/feed/">News</a></div></div>
+</div></nav>
 </div></header>
-<main class="wrap">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/LLMScale/">LLMScale</a> › <a href="/LLMScale/gpus/">GPUs</a> › RTX 3090 / Ti</nav>
-  <h1>Which LLMs fit on RTX 3090 / Ti?</h1>
+<main class="fmain">
+<div class="guide card">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/LLMScale/">LLMScale</a> › <a href="/LLMScale/gpus/">GPUs</a> › RTX 3090 / Ti</nav>
+<h1>Which LLMs fit on RTX 3090 / Ti?</h1>
 <p class="lede">RTX 3090 / Ti has 24 GB of memory. LLMScale budgets 22.80 GiB of it for a model, leaving 5% for the driver. Its memory bandwidth, 936 GB/s, is what limits generation speed once a model fits. Of the 25 popular open models below, 10 fit at BF16, 13 at FP8 and 18 at INT4 with an 8k context for one user.</p>
 <div class="answer">
   <div class="cap">Consumer · usable memory</div>
@@ -114,8 +155,21 @@ footer{border-top:1px solid var(--line);padding-block:1.25rem 5rem;font-size:.81
 </ul>
 <h2>Other GPUs</h2>
 <ul class="links"><li><a href="/LLMScale/gpus/rtx3060-12.html">RTX 3060</a></li><li><a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a></li><li><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></li><li><a href="/LLMScale/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a></li><li><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></li><li><a href="/LLMScale/gpus/a6000-48.html">RTX A6000</a></li><li><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></li><li><a href="/LLMScale/gpus/l40s-48.html">NVIDIA L40S</a></li><li><a href="/LLMScale/gpus/a100-80.html">A100 80GB</a></li><li><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></li><li><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></li><li><a href="/LLMScale/gpus/apple-m4max-128.html">Apple M4 Max (128GB)</a></li><li><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></li><li><a href="/LLMScale/gpus/nv-dgxspark-128.html">NVIDIA DGX Spark (GB10)</a></li><li><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></li><li><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></li><li><a href="/LLMScale/gpus/apple-m3ultra-512.html">Apple M3 Ultra (512GB)</a></li></ul>
+</div>
 </main>
-<footer class="wrap">LLMScale works out the GPU memory an LLM needs — weights, KV cache, context and concurrent users — in your browser, from each model's own architecture.</footer>
+<footer class="ffoot">
+<div class="links"><a href="https://github.com/tahircengiz/LLMScale" rel="noreferrer">github.com/tahircengiz/LLMScale</a><a href="https://tr.linkedin.com/in/tahircengiz" rel="noreferrer">linkedin.com/tahircengiz</a><a href="/LLMScale/tr/gpus/rtx3090-24.html" hreflang="tr" lang="tr" data-lang="tr">Türkçe</a></div>
+<nav aria-label="Guides"><a href="/LLMScale/models/">VRAM requirements by model</a><a href="/LLMScale/gpus/">Which LLMs fit on which GPU</a><a href="/LLMScale/concepts/">How LLM memory works</a></nav>
+<p>Sizing runs in your browser — no account, no backend. Visits are counted anonymously, without cookies.</p>
+</footer>
 <script>(function(d){var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(p!=="en"&&p!=="tr")p=/^tr/.test(navigator.language||"")?"tr":"en";if(p===d.L)return;var b=document.createElement("div");b.className="langsuggest";b.lang=d.O;b.setAttribute("role","region");b.setAttribute("aria-label",d.S.text);var s=document.createElement("span");s.textContent=d.S.text;var a=document.createElement("a");a.href=d.H;a.hreflang=d.O;a.textContent=d.S.go;a.onclick=function(){try{localStorage.setItem("lang",d.O)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\u2715";c.setAttribute("aria-label",d.S.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})({"L":"en","O":"tr","S":{"text":"Bu sayfa Türkçe olarak da var.","go":"Türkçe'ye geç","dismiss":"Kapat"},"H":"/LLMScale/tr/gpus/rtx3090-24.html"});</script>
+<script>(function(){var r=document.documentElement,bs=document.querySelectorAll("[data-theme-set]");
+function cur(){return r.classList.contains("glass")?"glass":r.classList.contains("light")?"light":"dark"}
+function mark(){var c=cur();bs.forEach(function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-theme-set")===c))})}
+function show(t){r.classList.add("theme-switching");r.classList.toggle("light",t==="light");r.classList.toggle("glass",t==="glass");void getComputedStyle(r).transitionProperty;r.classList.remove("theme-switching");mark()}
+bs.forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-theme-set");show(t);try{localStorage.setItem("theme",t)}catch(e){}})});mark();
+try{var mq=matchMedia("(prefers-color-scheme: dark)");mq.addEventListener("change",function(e){var s=null;try{s=localStorage.getItem("theme")}catch(x){}if(s!=="dark"&&s!=="light"&&s!=="glass")show(e.matches?"dark":"glass")})}catch(e){}
+var mb=document.querySelector("[aria-controls=site-nav]"),l=document.getElementById("site-nav");if(mb&&l)mb.addEventListener("click",function(){mb.setAttribute("aria-expanded",String(l.classList.toggle("open")))});
+document.querySelectorAll("[data-lang]").forEach(function(a){a.addEventListener("click",function(){try{localStorage.setItem("lang",a.getAttribute("data-lang"))}catch(e){}})})})();</script>
 </body>
 </html>
