@@ -53,7 +53,7 @@ the same engine, so a page cannot disagree with the calculator it links into:
 | **Model pages** | one per preset: memory by precision and context, the GPUs that hold it, concurrent users, fine-tuning memory |
 | **GPU pages** | the cards people search for: every preset at BF16, FP8 and INT4, with users and maximum context |
 | **Concept guides** | KV cache size; GQA, MQA and MLA; quantization and VRAM — every number in them computed, not typed |
-| **News** | a timeline in the manner of X or Threads — short posts on new models, serving engines and GPUs, each with its sources, older ones loading as you scroll; a post about a model carries its memory card from the engine. Posts are drafted with an AI model, reviewed before they go out, and committed as JSON in [`content/feed/`](content/feed/README.md); [`newsroom/`](newsroom/README.md) collects the news and drafts them — the build turns them into a page per post and an RSS feed per language |
+| **Feed** | a timeline in the manner of X or Threads — short posts on new models, serving engines and GPUs, each with its sources, older ones loading as you scroll; a post about a model carries its memory card from the engine. Posts are drafted with an AI model, reviewed before they go out, and committed as JSON in [`content/feed/`](content/feed/README.md); [`newsroom/`](newsroom/README.md) collects the news and drafts them — the build turns them into a page per post and an RSS feed per language |
 
 Each page has an English and a Turkish address (`/tr/…`), tied together with
 hreflang. Nothing redirects by language: a visitor whose preference differs from

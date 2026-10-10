@@ -53,7 +53,7 @@ if (!tools.length || !concepts.length || !models.length || !gpus.length) throw n
 // The news feed is listed only when the build has posts (scripts/genFeed.ts),
 // newest first: its posts are dated, and the latest are the ones worth reading.
 const news = entries.filter((e) => /^feed\/\d{4}-\d{2}-\d{2}-/.test(e.rel)).sort((a, b) => b.rel.localeCompare(a.rel)).slice(0, 30);
-const newsSection = news.length ? `\n## News\n\n${hubUrl("feed") ? `Overview: ${hubUrl("feed")}\n\n` : ""}${list(news)}\n` : "";
+const newsSection = news.length ? `\n## Feed\n\n${hubUrl("feed") ? `Overview: ${hubUrl("feed")}\n\n` : ""}${list(news)}\n` : "";
 
 const text = `# LLMScale
 
@@ -83,4 +83,4 @@ ${newsSection}
 `;
 
 writeFileSync(join(outDir, "llms.txt"), text);
-console.log(`ok    llms.txt  ${tools.length} tools, ${concepts.length} concepts, ${models.length} models, ${gpus.length} GPUs${news.length ? `, ${news.length} news posts` : ""}`);
+console.log(`ok    llms.txt  ${tools.length} tools, ${concepts.length} concepts, ${models.length} models, ${gpus.length} GPUs${news.length ? `, ${news.length} feed posts` : ""}`);

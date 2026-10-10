@@ -3,8 +3,8 @@
 // the build (genFeed.ts), which writes the pages, and the newsroom's review panel,
 // which shows a draft exactly as it will appear — so the two cannot drift.
 
-import { calculate, type Dtype } from "../src/lib/calc.ts";
-import { KNOWN_MODELS, type KnownModel } from "../src/lib/models.ts";
+import { calculate, type Dtype, type ModelArch } from "../src/lib/calc.ts";
+import { KNOWN_MODELS } from "../src/lib/models.ts";
 import { GPUS, usableGiB, type Gpu } from "../src/lib/gpus.ts";
 import { DEFAULT_STATE } from "../src/lib/urlState.ts";
 import type { Lang } from "../src/lib/dict.ts";
@@ -24,9 +24,9 @@ export interface RenderCtx {
 // ── words ─────────────────────────────────────────────────────────────────────
 export const T = {
   en: {
-    crumb: "News",
-    title: "LLM News: New Models, Serving and GPUs",
-    h1: "LLM news",
+    crumb: "Feed",
+    title: "LLM Feed: New Models, Serving and GPUs",
+    h1: "LLM Feed",
     lede: "New models, serving engines and GPUs, in short posts that each link to their sources. A post about a model also shows what it takes to run, computed by the same engine as the calculator.",
     disclosure: "Posts are drafted with an AI model from their sources and reviewed by Tahir Ali Cengiz before they go out.",
     description: "Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.",
@@ -35,15 +35,16 @@ export const T = {
     sources: "Sources",
     newer: "Newer posts",
     older: "Older posts",
-    back: "News",
-    all: "All news",
-    more: "More news",
+    back: "Feed",
+    all: "The whole feed",
+    more: "More from the feed",
     page: (n: number) => `page ${n}`,
     cat: { model: "Model", release: "Release", hardware: "Hardware", research: "Research", tooling: "Tooling" } as Record<FeedCategory, string>,
     memCap: (name: string, p: string, c: string) => `${name} · ${p} parameters · ${c} context, one user`,
     memCols: ["Precision", "Memory", "Fits on"],
     memNote: "FP16 KV cache, 10% overhead, 0.75 GiB CUDA context. “Fits on”: the smallest device that holds it alone, or how many of the largest it takes by memory.",
     guide: "Memory by context and GPU",
+    tweak: "Change the context, users or GPU in the calculator",
     calc: "Calculator",
     calcLabel: (name: string) => `Open ${name} in the calculator`,
     share: "Share",
@@ -51,9 +52,9 @@ export const T = {
     js: { loading: "Loading…", end: "You're all caught up.", failed: "Couldn't load older posts.", copied: "Link copied", now: "now", m: "m", h: "h", d: "d", locale: "en-US" },
   },
   tr: {
-    crumb: "Haberler",
-    title: "LLM Haberleri: Yeni Modeller, Servis ve GPU'lar",
-    h1: "LLM haberleri",
+    crumb: "Akış",
+    title: "LLM Akışı: Yeni Modeller, Servis ve GPU'lar",
+    h1: "LLM Akışı",
     lede: "Yeni modeller, servis motorları ve GPU'lar; her biri kaynağına bağlanan kısa postlarda. Bir modelle ilgili post, o modeli çalıştırmak için ne gerektiğini de gösterir; hesaplayıcıyla aynı motordan.",
     disclosure: "Postlar kaynaklarından bir yapay zekâ modeliyle taslak olarak yazılır ve yayınlanmadan önce Tahir Ali Cengiz tarafından gözden geçirilir.",
     description: "Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.",
@@ -62,15 +63,16 @@ export const T = {
     sources: "Kaynaklar",
     newer: "Daha yeni postlar",
     older: "Daha eski postlar",
-    back: "Haberler",
-    all: "Tüm haberler",
-    more: "Daha fazla haber",
+    back: "Akış",
+    all: "Tüm akış",
+    more: "Akıştan daha fazlası",
     page: (n: number) => `sayfa ${n}`,
     cat: { model: "Model", release: "Sürüm", hardware: "Donanım", research: "Araştırma", tooling: "Araç" } as Record<FeedCategory, string>,
     memCap: (name: string, p: string, c: string) => `${name} · ${p} parametre · ${c} context, tek kullanıcı`,
     memCols: ["Hassasiyet", "Bellek", "Sığdığı cihaz"],
     memNote: "FP16 KV cache, %10 ek yük, 0,75 GiB CUDA context. “Sığdığı cihaz”: modeli tek başına taşıyan en küçük cihaz ya da bellek olarak en büyüğünden kaç tane gerektiği.",
     guide: "Context ve GPU'ya göre bellek",
+    tweak: "Context, kullanıcı ya da GPU'yu hesaplayıcıda değiştir",
     calc: "Hesapla",
     calcLabel: (name: string) => `${name} modelini hesaplayıcıda aç`,
     share: "Paylaş",
@@ -129,12 +131,32 @@ const gpu = (id: string): Gpu => {
 const FEATURED = FEATURED_GPU_IDS.map(gpu).sort((a, b) => usableGiB(a) - usableGiB(b));
 const BIGGEST = gpu("b200-192");
 const gpuLink = (rc: RenderCtx, lang: Lang, g: Gpu) => `<a href="${rc.href(lang, gpuPageFile(g.id))}">${esc(g.name)}</a>`;
+const MODELS = new Map(KNOWN_MODELS.map((m) => [m.id, m]));
 /** The context a card is computed at: 8k, or the model's maximum if shorter — the guides' choice. */
-const refCtx = (m: KnownModel) => Math.min(8192, m.maxContext ?? 8192);
+const refCtx = (m: Pick<ModelArch, "maxContext">) => Math.min(8192, m.maxContext ?? 8192);
 
-export function memoryCard(rc: RenderCtx, lang: Lang, m: KnownModel): string {
+/** A model a card can be drawn for: a bundled one, with its guide page, or a
+ *  Hugging Face repo whose architecture the post carries. */
+export interface CardModel {
+  name: string;
+  hfId: string;
+  arch: ModelArch;
+  /** The model's guide page, for a bundled model. */
+  guide?: string;
+}
+
+/** The card a post shows, if it is about a model the engine can size. */
+export function cardModelOf(p: FeedPost): CardModel | undefined {
+  const m = p.model ? MODELS.get(p.model) : undefined;
+  if (m) return { name: m.displayName, hfId: m.hfId, arch: m, guide: modelPageFile(m.id) };
+  if (p.hf && p.arch) return { name: p.hf.split("/").pop() ?? p.hf, hfId: p.hf, arch: p.arch };
+  return undefined;
+}
+
+export function memoryCard(rc: RenderCtx, lang: Lang, cm: CardModel): string {
   const { href } = rc;
   const t = T[lang];
+  const m = cm.arch;
   const ctx = refCtx(m);
   const rows = PRECISIONS.map((d) => {
     const need = calculate({ arch: m, weightDtype: d, contextLength: ctx, concurrency: 1, kvDtype: "fp16", overheadPct: DEFAULT_STATE.overheadPct, cudaContextGiB: DEFAULT_STATE.cudaContextGiB }).totalGiB;
@@ -143,7 +165,7 @@ export function memoryCard(rc: RenderCtx, lang: Lang, m: KnownModel): string {
   });
   const max = Math.max(...rows.map((r) => r.need));
   return `<figure class="mem">
-<figcaption>${esc(t.memCap(m.displayName, params(lang, m.numParams), ctxK(ctx)))}</figcaption>
+<figcaption>${esc(t.memCap(cm.name, params(lang, m.numParams), ctxK(ctx)))}</figcaption>
 <table>
 <thead><tr>${t.memCols.map((c) => `<th scope="col">${c}</th>`).join("")}</tr></thead>
 <tbody>${rows
@@ -153,12 +175,11 @@ export function memoryCard(rc: RenderCtx, lang: Lang, m: KnownModel): string {
     )
     .join("")}</tbody>
 </table>
-<p class="memnote">${t.memNote} <a href="${href(lang, modelPageFile(m.id))}">${t.guide}</a></p>
+<p class="memnote">${t.memNote} ${cm.guide ? `<a href="${href(lang, cm.guide)}">${t.guide}</a>` : `<a href="${href(lang)}?m=${encodeURIComponent(cm.hfId)}">${t.tweak}</a>`}</p>
 </figure>`;
 }
 
 // ── a post ────────────────────────────────────────────────────────────────────
-const MODELS = new Map(KNOWN_MODELS.map((m) => [m.id, m]));
 
 export interface PostView {
   /** The post's own page: its title is the page's <h1>, its time in full. */
@@ -172,7 +193,7 @@ export function article(ctx: RenderCtx, lang: Lang, p: FeedPost, view: PostView 
   const site = { base: ctx.base };
   const t = T[lang];
   const text = p[lang];
-  const model = p.model ? MODELS.get(p.model) : undefined;
+  const card = cardModelOf(p);
   const link = href(lang, feedPostFile(p.id));
   const lvl = view.standalone ? 1 : (view.level ?? 2);
   const title = view.standalone ? esc(text.title) : `<a href="${link}">${esc(text.title)}</a>`;
@@ -182,8 +203,8 @@ export function article(ctx: RenderCtx, lang: Lang, p: FeedPost, view: PostView 
   const image = p.image
     ? `<figure class="shot"><img src="${site.base}${FEED_MEDIA}${p.image.file}" width="${p.image.width}" height="${p.image.height}" alt="${esc(p.image.alt[lang])}" loading="lazy" decoding="async"><figcaption>${t.credit}: ${esc(p.image.credit)}</figcaption></figure>\n`
     : "";
-  const calcTarget = model ? model.hfId : p.hf;
-  const calcName = model ? model.displayName : p.hf;
+  const calcTarget = card ? card.hfId : p.hf;
+  const calcName = card ? card.name : p.hf;
   const acts = [
     calcTarget ? `<a href="${href(lang)}?m=${encodeURIComponent(calcTarget)}" aria-label="${esc(t.calcLabel(calcName ?? ""))}">${ICON.calc}<span>${t.calc}</span></a>` : "",
     `<button type="button" data-share="${url(lang, feedPostFile(p.id))}" data-title="${esc(text.title)}" hidden>${ICON.share}<span>${t.share}</span></button>`,
@@ -194,7 +215,7 @@ export function article(ctx: RenderCtx, lang: Lang, p: FeedPost, view: PostView 
 <div class="ph"><b>LLMScale</b><span aria-hidden="true">·</span>${when}<span aria-hidden="true">·</span><span class="cat">${t.cat[p.category]}</span></div>
 <h${lvl} class="lead">${title}</h${lvl}>
 ${paragraphs(text.body).map((s) => `<p>${esc(s)}</p>`).join("\n")}
-${p.tags.length ? `<p class="tags">${p.tags.map((tag) => `#${esc(tag)}`).join(" ")}</p>\n` : ""}${model ? `${memoryCard(ctx, lang, model)}\n` : ""}${image}<ul class="src" aria-label="${t.sources}">${p.refs
+${p.tags.length ? `<p class="tags">${p.tags.map((tag) => `#${esc(tag)}`).join(" ")}</p>\n` : ""}${card ? `${memoryCard(ctx, lang, card)}\n` : ""}${image}<ul class="src" aria-label="${t.sources}">${p.refs
     .map((r) => `<li><a href="${esc(r.url)}" rel="noopener"><span class="d">${esc(r.source)} · ${esc(host(r.url))}</span><span class="t">${esc(r.title)}</span></a></li>`)
     .join("")}</ul>
 <div class="acts">${acts}</div>
@@ -205,7 +226,7 @@ ${p.tags.length ? `<p class="tags">${p.tags.map((tag) => `#${esc(tag)}`).join(" 
 export function postLd(ctx: RenderCtx, lang: Lang, p: FeedPost): object {
   const { url } = ctx;
   const site = { home: ctx.home };
-  const model = p.model ? MODELS.get(p.model) : undefined;
+  const card = cardModelOf(p);
   return {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -217,7 +238,7 @@ export function postLd(ctx: RenderCtx, lang: Lang, p: FeedPost): object {
     url: url(lang, feedPostFile(p.id)),
     mainEntityOfPage: url(lang, feedPostFile(p.id)),
     ...(p.image ? { image: `${site.home}${FEED_MEDIA}${p.image.file}` } : {}),
-    ...(model ? { about: model.displayName } : {}),
+    ...(card ? { about: card.name } : {}),
     keywords: p.tags.join(", "),
     citation: p.refs.map((r) => r.url),
     author: { "@type": "Person", name: "Tahir Ali Cengiz", url: "https://github.com/tahircengiz" },
@@ -255,7 +276,7 @@ export const CSS = `
 .lead a{color:var(--text);text-decoration:none}
 .lead a:hover{text-decoration:underline}
 .pb p{margin:0 0 .55rem;max-width:none;font-size:.96875rem;line-height:1.55}
-.pb .tags{color:var(--faint);font-size:.875rem}
+.post .pb p.tags{color:var(--faint);font-size:.875rem}
 .big{padding-top:1rem}
 .big .lead{font-size:1.3rem;line-height:1.3;margin:.2rem 0 .5rem}
 .big .pb p{font-size:1.0625rem}
@@ -268,7 +289,7 @@ export const CSS = `
 .mem td:nth-child(2){white-space:nowrap}
 .meter{display:inline-block;vertical-align:middle;width:4rem;height:.4rem;margin-right:.5rem;border-radius:999px;background:var(--line);overflow:hidden}
 .meter span{display:block;height:100%;border-radius:inherit;background:var(--brand)}
-.pb .memnote{font-size:.75rem;line-height:1.45;color:var(--faint);margin:.35rem 0 .55rem}
+.post .pb p.memnote{font-size:.75rem;line-height:1.45;color:var(--faint);margin:.35rem 0 .55rem}
 .shot{margin:.6rem 0}
 .shot img{display:block;width:100%;height:auto;border-radius:1rem;border:1px solid var(--line);background:var(--inset)}
 .shot figcaption{font-size:.75rem;color:var(--faint);margin-top:.3rem}

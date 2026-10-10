@@ -5,7 +5,7 @@
 // approve, fix or reject.
 
 import { calculate, type Dtype, type ModelArch } from "../src/lib/calc.ts";
-import { FEED_CATEGORIES, validatePost, type FeedCategory, type FeedPost } from "../src/lib/feed.ts";
+import { FEED_CATEGORIES, validatePost, type FeedArch, type FeedCategory, type FeedPost } from "../src/lib/feed.ts";
 import { GPUS, usableGiB } from "../src/lib/gpus.ts";
 import { findKnownByHfId, KNOWN_MODELS } from "../src/lib/models.ts";
 import { FEATURED_GPU_IDS } from "../src/lib/staticPages.ts";
@@ -127,6 +127,8 @@ export interface Gathered {
   hfRepo?: string;
   knownId?: string;
   figures?: string;
+  /** The repo's architecture, when the site does not bundle the model: the post carries it for its memory card. */
+  arch?: ModelArch;
 }
 
 const isPrimary = (u: string) => {
@@ -171,12 +173,16 @@ export async function gather(c: Candidate, fetch: (url: string) => Promise<strin
 
   const known = hfRepo ? findKnownByHfId(hfRepo) : undefined;
   let figures: string | undefined;
+  let arch: ModelArch | undefined;
   if (known) figures = engineFigures(known.displayName, known.hfId, known, known.maxContext);
   else if (hfRepo) {
     const r = await resolveModel(hfRepo).catch(() => null);
-    if (r?.arch && r.arch.numParams > 0) figures = engineFigures(hfRepo, hfRepo, r.arch, r.arch.maxContext);
+    if (r?.arch && r.arch.numParams > 0) {
+      arch = r.arch;
+      figures = engineFigures(hfRepo, hfRepo, r.arch, r.arch.maxContext);
+    }
   }
-  return { text: clip(text, 12_000), allowed, hfRepo, knownId: known?.id, figures };
+  return { text: clip(text, 12_000), allowed, hfRepo, knownId: known?.id, figures, arch };
 }
 
 export function writePrompt(c: Candidate, g: Gathered): string {
@@ -199,6 +205,23 @@ export function writePrompt(c: Candidate, g: Gathered): string {
     g.text || "(the feed gave no text beyond the title)",
     ">>>",
   ].join("\n");
+}
+
+/** The fields of an architecture a post carries (FeedArch), and only those. */
+export function feedArch(a: ModelArch): FeedArch {
+  const out: FeedArch = {
+    numParams: Math.round(a.numParams),
+    numLayers: a.numLayers,
+    hiddenSize: a.hiddenSize,
+    numAttentionHeads: a.numAttentionHeads,
+    numKeyValueHeads: a.numKeyValueHeads,
+  };
+  if (a.headDim) out.headDim = a.headDim;
+  if (a.maxContext) out.maxContext = a.maxContext;
+  if (a.activeParams) out.activeParams = Math.round(a.activeParams);
+  if (a.kvLoraRank) out.kvLoraRank = a.kvLoraRank;
+  if (a.qkRopeHeadDim) out.qkRopeHeadDim = a.qkRopeHeadDim;
+  return out;
 }
 
 /** ISO time to the second, as posts carry it. */
@@ -244,7 +267,7 @@ export function buildPost(out: WriterOutput, c: Candidate, g: Gathered, ctx: { n
     tr: { title: String(out.tr?.title ?? "").trim(), body: String(out.tr?.body ?? "").trim() },
     refs,
     tags,
-    ...(g.knownId ? { model: g.knownId } : g.hfRepo && g.figures ? { hf: g.hfRepo } : {}),
+    ...(g.knownId ? { model: g.knownId } : g.hfRepo && g.arch ? { hf: g.hfRepo, arch: feedArch(g.arch) } : {}),
   };
   problems.push(...validatePost(post, { knownModels: new Set(KNOWN_MODELS.map((m) => m.id)), fileStem: id }));
   return { post, problems };

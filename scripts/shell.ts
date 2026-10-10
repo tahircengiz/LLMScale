@@ -128,8 +128,8 @@ export function createShell(site: Site, { feed }: { feed: boolean }) {
 
   /** What a page's section is called: the phone menu's label on a page the nav does not list. */
   const SECTION = {
-    en: { models: "Models", gpus: "GPUs", concepts: "Concepts", feed: "News", crumbs: "Breadcrumb" },
-    tr: { models: "Modeller", gpus: "GPU'lar", concepts: "Kavramlar", feed: "Haberler", crumbs: "Konum" },
+    en: { models: "Models", gpus: "GPUs", concepts: "Concepts", feed: "Feed", crumbs: "Breadcrumb" },
+    tr: { models: "Modeller", gpus: "GPU'lar", concepts: "Kavramlar", feed: "Akış", crumbs: "Konum" },
   };
 
   function page(p: PageSpec): string {

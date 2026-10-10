@@ -1,4 +1,5 @@
 import type { Lang } from "./dict";
+import type { ModelArch } from "./calc";
 
 // The news feed: short posts about LLM releases, serving engines and hardware,
 // written in both languages, each pointing at its sources. A post is one JSON
@@ -42,6 +43,12 @@ export interface FeedImage {
   credit: string;
 }
 
+/** What the calculator needs to size a model it does not bundle, read from the
+ *  model's config.json when the post was drafted — so the build draws its memory
+ *  card without going to the Hub. */
+export type FeedArch = Pick<ModelArch, "numParams" | "numLayers" | "hiddenSize" | "numAttentionHeads" | "numKeyValueHeads"> &
+  Partial<Pick<ModelArch, "headDim" | "maxContext" | "activeParams" | "kvLoraRank" | "qkRopeHeadDim">>;
+
 export interface FeedPost {
   /** `YYYY-MM-DD-slug`: the file name, the page address, and the date it went out. */
   id: string;
@@ -57,6 +64,8 @@ export interface FeedPost {
   model?: string;
   /** A Hugging Face repo the calculator can read when the model is not bundled. */
   hf?: string;
+  /** That repo's architecture, so the post can show its memory card too. */
+  arch?: FeedArch;
   image?: FeedImage;
 }
 
@@ -76,7 +85,9 @@ const ISO_UTC_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?Z$/;
 const TAG_RE = /^[a-z0-9][a-z0-9-]{0,30}$/;
 const HF_RE = /^[\w.-]+\/[\w.-]+$/;
 const MEDIA_RE = /^[a-z0-9][a-z0-9-]*\.(png|jpe?g|webp|svg)$/;
-const KNOWN_KEYS = new Set(["id", "published", "updated", "category", "en", "tr", "refs", "tags", "model", "hf", "image"]);
+const KNOWN_KEYS = new Set(["id", "published", "updated", "category", "en", "tr", "refs", "tags", "model", "hf", "arch", "image"]);
+const ARCH_REQUIRED = ["numParams", "numLayers", "hiddenSize", "numAttentionHeads", "numKeyValueHeads"] as const;
+const ARCH_OPTIONAL = ["headDim", "maxContext", "activeParams", "kvLoraRank", "qkRopeHeadDim"] as const;
 
 export interface ValidateOptions {
   /** Ids of the bundled models a post may name in `model`. */
@@ -169,6 +180,27 @@ export function validatePost(raw: unknown, opts: ValidateOptions): string[] {
   if (p.model !== undefined && (!str(p.model) || !opts.knownModels.has(p.model))) errs.push(`model "${String(p.model)}" is not a bundled model id`);
   if (p.hf !== undefined && (!str(p.hf) || !HF_RE.test(p.hf))) errs.push("hf must be a Hugging Face repo id like org/name");
   if (p.model !== undefined && p.hf !== undefined) errs.push("give either model or hf, not both: a bundled model already knows its repo");
+
+  const arch = p.arch;
+  if (arch !== undefined) {
+    if (p.hf === undefined) errs.push("arch goes with hf: a bundled model brings its own architecture");
+    if (!isObj(arch)) errs.push("arch must be an object");
+    else {
+      for (const k of Object.keys(arch)) if (![...ARCH_REQUIRED, ...ARCH_OPTIONAL].includes(k as never)) errs.push(`arch: unknown field "${k}"`);
+      for (const k of [...ARCH_REQUIRED, ...ARCH_OPTIONAL]) {
+        const v = arch[k];
+        if (v === undefined && (ARCH_OPTIONAL as readonly string[]).includes(k)) continue;
+        if (typeof v !== "number" || !Number.isFinite(v) || v <= 0) errs.push(`arch.${k} must be a positive number`);
+        else if (k !== "numParams" && k !== "activeParams" && !Number.isInteger(v)) errs.push(`arch.${k} must be a whole number`);
+      }
+      const n = arch.numParams;
+      if (typeof n === "number" && (n < 1e6 || n > 1e14)) errs.push("arch.numParams is out of range for a language model");
+      if (typeof arch.activeParams === "number" && typeof n === "number" && arch.activeParams > n) errs.push("arch.activeParams exceeds numParams");
+      if (typeof arch.numKeyValueHeads === "number" && typeof arch.numAttentionHeads === "number" && arch.numKeyValueHeads > arch.numAttentionHeads) {
+        errs.push("arch.numKeyValueHeads exceeds numAttentionHeads");
+      }
+    }
+  }
 
   const img = p.image;
   if (img !== undefined) {

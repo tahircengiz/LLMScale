@@ -160,6 +160,11 @@ check("tags are normalised", built.post.tags.join() === "moe,gpt-oss");
 check("the bundled model is attached, so the card shows", built.post.model === "gpt-oss-120b" && built.post.hf === undefined);
 check("published is to the second, as posts require", built.post.published === "2026-10-10T08:00:00Z");
 check("apart from the dropped link, the post passes the feed's own check", built.problems.length === 1, built.problems.join(" | "));
+const hfG = { ...g, knownId: undefined, hfRepo: "Qwen/Qwen3-14B", allowed: ["https://huggingface.co/Qwen/Qwen3-14B"],
+  arch: { numParams: 14768307200.4, numLayers: 40, hiddenSize: 5120, numAttentionHeads: 40, numKeyValueHeads: 8, headDim: 128, vocabSize: 151936, maxContext: 40960 } };
+const hfPost = buildPost({ ...out, refs: [{ url: "https://huggingface.co/Qwen/Qwen3-14B", title: "Model card", source: "Hugging Face" }] }, { ...cand, url: "https://huggingface.co/Qwen/Qwen3-14B", hfRepo: "Qwen/Qwen3-14B" }, hfG, { now, idTaken: () => false });
+check("a model the site does not bundle carries its architecture, so the card shows", hfPost.post.hf === "Qwen/Qwen3-14B" && hfPost.post.arch?.numLayers === 40 && hfPost.post.model === undefined, hfPost.problems.join(" | "));
+check("…only the fields the card needs, whole parameter counts", hfPost.post.arch?.numParams === 14768307200 && !("vocabSize" in (hfPost.post.arch ?? {})) && hfPost.problems.length === 0);
 const long = buildPost({ ...out, refs: out.refs.slice(0, 1), en: { ...out.en, body: "x ".repeat(400) } }, cand, g, { now, idTaken: () => false });
 check("an over-long body is reported, not silently cut", long.problems.some((p) => p.includes("en.body is")));
 const none = buildPost({ ...out, refs: [] }, cand, g, { now, idTaken: () => false });

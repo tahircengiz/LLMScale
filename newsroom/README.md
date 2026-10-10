@@ -56,6 +56,9 @@ node newsroom/cli.ts preview && FEED_DIR=newsroom/data/preview-feed npm run buil
 - **Numbers come from the engine.** For a post about a model, Claude is given
   the memory figures LLMScale's engine computes for it — the same ones the post's
   memory card will show — and told to add no figure that is not in the source.
+  A model the site does not bundle has its architecture read from its
+  `config.json` once, at drafting, and stored in the post (`arch`), so the build
+  draws its card without going to the Hub.
 - **The feed's own rules apply.** Every draft goes through `validatePost()`, the
   check the build runs; a draft that fails it is stored with its problems listed.
 - **A person decides.** Drafts wait for review. The reviewer sees the source,

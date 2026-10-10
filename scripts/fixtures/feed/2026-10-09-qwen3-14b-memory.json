@@ -1,0 +1,34 @@
+{
+  "id": "2026-10-09-qwen3-14b-memory",
+  "published": "2026-10-09T11:00:00Z",
+  "category": "model",
+  "en": {
+    "title": "Qwen3-14B: a dense 14.8B model with grouped-query attention",
+    "body": "Qwen3-14B has 14.8B parameters in 40 layers. Its 40 query heads share 8 key-value heads, so its KV cache is 5x smaller than full multi-head attention would need.\n\nThe card below shows what it takes to run at common precisions, computed from its config.json."
+  },
+  "tr": {
+    "title": "Qwen3-14B: grouped-query attention kullanan 14,8B'lik yoğun model",
+    "body": "Qwen3-14B, 40 katmanda 14,8B parametreye sahip. 40 query head 8 key-value head'i paylaşıyor; bu yüzden KV cache'i tam multi-head attention'a göre 5 kat küçük.\n\nAşağıdaki kart, config.json'dan hesaplanarak, yaygın hassasiyetlerde ne gerektiğini gösteriyor."
+  },
+  "refs": [
+    {
+      "url": "https://huggingface.co/Qwen/Qwen3-14B",
+      "title": "Qwen/Qwen3-14B model card",
+      "source": "Hugging Face"
+    }
+  ],
+  "tags": [
+    "qwen",
+    "gqa"
+  ],
+  "hf": "Qwen/Qwen3-14B",
+  "arch": {
+    "numParams": 14768307200,
+    "numLayers": 40,
+    "hiddenSize": 5120,
+    "numAttentionHeads": 40,
+    "numKeyValueHeads": 8,
+    "headDim": 128,
+    "maxContext": 40960
+  }
+}

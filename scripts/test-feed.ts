@@ -80,6 +80,15 @@ rejects("an image needs a credit", { image: { ...image, credit: "" } }, "image.c
 rejects("an image file name cannot climb out of the folder", { image: { ...image, file: "../secret.png" } }, "image.file must be");
 rejects("an image has whole-pixel dimensions", { image: { ...image, width: 12.5 } }, "image.width");
 
+const arch = { numParams: 14768307200, numLayers: 40, hiddenSize: 5120, numAttentionHeads: 40, numKeyValueHeads: 8, headDim: 128, maxContext: 40960 };
+check("a Hugging Face model may carry its architecture for the card", errors({ model: undefined, hf: "Qwen/Qwen3-14B", arch }).length === 0);
+rejects("an architecture goes with hf, not with a bundled model", { arch }, "arch goes with hf");
+rejects("an architecture needs its core fields", { model: undefined, hf: "Qwen/Qwen3-14B", arch: { ...arch, numLayers: undefined } }, "arch.numLayers");
+rejects("layer and head counts are whole numbers", { model: undefined, hf: "Qwen/Qwen3-14B", arch: { ...arch, numLayers: 40.5 } }, "whole number");
+rejects("more key-value heads than query heads is not a model", { model: undefined, hf: "Qwen/Qwen3-14B", arch: { ...arch, numKeyValueHeads: 64 } }, "exceeds numAttentionHeads");
+rejects("active parameters cannot exceed the total", { model: undefined, hf: "Qwen/Qwen3-14B", arch: { ...arch, activeParams: 2e10 } }, "exceeds numParams");
+rejects("an unknown architecture field is refused", { model: undefined, hf: "Qwen/Qwen3-14B", arch: { ...arch, vocabSize: 151936 } }, 'arch: unknown field "vocabSize"');
+
 console.log("\n--- order ---");
 const a = { ...good, id: "2026-10-08-a", published: "2026-10-08T09:30:00Z" };
 const b = { ...good, id: "2026-10-08-b", published: "2026-10-08T09:30:00Z" };
@@ -97,8 +106,8 @@ try {
 check("published post ids are unique", new Set(published.map((p) => p.id)).size === published.length);
 const fixtures = loadFeed("scripts/fixtures/feed");
 check("the sample posts used for previews are valid", fixtures.length === readdirSync("scripts/fixtures/feed").filter((f) => f.endsWith(".json")).length);
-check("the samples cover a memory card, an image and a post without a model",
-  fixtures.some((p) => p.model) && fixtures.some((p) => p.image) && fixtures.some((p) => !p.model && !p.hf));
+check("the samples cover a bundled model's card, a Hugging Face model's card, an image and a post without a model",
+  fixtures.some((p) => p.model) && fixtures.some((p) => p.hf && p.arch) && fixtures.some((p) => p.image) && fixtures.some((p) => !p.model && !p.hf));
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);
