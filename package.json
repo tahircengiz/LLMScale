@@ -28,6 +28,8 @@
     "test:theme": "node scripts/test-theme.ts",
     "test:config": "node scripts/test-config.ts",
     "test:feed": "node scripts/test-feed.ts",
+    "test:newsroom": "node scripts/test-newsroom.ts",
+    "newsroom": "node newsroom/cli.ts",
     "test:all": "for f in scripts/test-*.ts; do echo \"== $f\"; node \"$f\" > /dev/null || { node \"$f\" | grep FAIL; exit 1; }; done && echo \"ALL SUITES PASS\""
   },
   "dependencies": {
@@ -36,6 +38,7 @@
     "three": "^0.171.0"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "0.128.0",
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",

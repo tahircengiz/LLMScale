@@ -9,6 +9,9 @@ dist-ssr
 # workflow file locally but untracked so it doesn't block `git push`.
 .github/workflows/
 
+# The newsroom's database and previews: drafts stay on the machine that runs it
+newsroom/data/
+
 # Editor / OS
 .DS_Store
 .idea
