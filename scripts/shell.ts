@@ -126,6 +126,10 @@ export interface PageSpec {
   ogType?: string;
   /** An absolute image URL for social cards; the site's og.png otherwise. */
   ogImage?: string;
+  /** The body brings its own <h1> and replaces the breadcrumb trail (which stays in the structured data). */
+  bare?: boolean;
+  /** A script this kind of page runs, after the shared ones. */
+  script?: string;
 }
 
 /** The page builder for one built site. `feed` adds the news feed to the header,
@@ -205,15 +209,15 @@ ${feed ? `    <a href="${href(p.lang, FEED_HUB)}"${current("feed")}>${c.feed}</a
   </nav>
 </div></header>
 <main class="wrap">
-  <nav class="crumbs" aria-label="${c.crumbs}">${p.crumbs
+${p.bare ? "" : `  <nav class="crumbs" aria-label="${c.crumbs}">${p.crumbs
     .map((cr, i) => (i < p.crumbs.length - 1 ? `<a href="${href(p.lang, cr.file)}">${esc(cr.name)}</a> › ` : esc(cr.name)))
     .join("")}</nav>
   <h1>${esc(p.h1)}</h1>
-${p.body}
+`}${p.body}
 </main>
 <footer class="wrap">${c.footer}</footer>
 <script>${suggestScript(p.lang, p.file)}</script>
-</body>
+${p.script ? `<script>${p.script}</script>\n` : ""}</body>
 </html>
 `;
   }
