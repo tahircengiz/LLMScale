@@ -40,9 +40,13 @@ export function passesPrefilter(r: Relevance): boolean {
   return r.score >= 2 && core.length >= 1;
 }
 
-/** A GitHub release tag that is a minor or major version: v1.2.0, 0.31.0 — not
- *  v0.31.1, v0.31.0rc1 or proto-v0.5.0. */
-export function isMajorMinorRelease(url: string): boolean {
+/** Which GitHub release tags a source keeps. "minor": a minor or major version —
+ *  v1.2.0, 0.31.0, not v0.31.1. "stable": any plain x.y.z, for projects such as
+ *  SGLang that ship their features in the last number. Neither keeps release
+ *  candidates, post-releases or side packages (v0.31.0rc1, v0.5.15.post1, proto-v0.5.0). */
+export type ReleaseRule = "minor" | "stable";
+
+export function keepsRelease(url: string, rule: ReleaseRule): boolean {
   const tag = decodeURIComponent(url.split("/releases/tag/")[1] ?? "");
-  return /^v?\d+\.\d+\.0$/.test(tag);
+  return (rule === "minor" ? /^v?\d+\.\d+\.0$/ : /^v?\d+\.\d+\.\d+$/).test(tag);
 }

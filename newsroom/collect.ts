@@ -2,7 +2,7 @@
 // of it, so tomorrow's run does not see today's items as new.
 
 import { parseFeed, parseHfModels, parseHn, type RawItem } from "./feeds.ts";
-import { isMajorMinorRelease, passesPrefilter, relevance } from "./relevance.ts";
+import { keepsRelease, passesPrefilter, relevance } from "./relevance.ts";
 import { SOURCES, type Source } from "./sources.ts";
 import type { Store } from "./store.ts";
 import { clip, hfRepoOf, htmlToText, links, mainHtml } from "./text.ts";
@@ -35,7 +35,7 @@ export function select(src: Source, items: RawItem[], now: Date, maxAgeDays: num
   const since = now.getTime() - maxAgeDays * 86_400_000;
   return items
     .filter((i) => (i.published ? Date.parse(i.published) >= since : true))
-    .filter((i) => !src.majorMinorOnly || isMajorMinorRelease(i.url))
+    .filter((i) => !src.releases || keepsRelease(i.url, src.releases))
     .sort((a, b) => (b.published ?? "").localeCompare(a.published ?? ""))
     .slice(0, src.take);
 }

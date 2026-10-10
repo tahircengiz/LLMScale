@@ -5,7 +5,10 @@
 // The list leans on primary sources — the projects, labs and vendors themselves —
 // and keeps two aggregators (r/LocalLLaMA, Hacker News) to catch what the
 // primary feeds miss. Serving engines are read from their GitHub releases, minor
-// and major versions only: a patch or a release candidate is rarely news.
+// and major versions only: a patch or a release candidate is rarely news. SGLang
+// is the exception, because its features ship in the last number.
+
+import type { ReleaseRule } from "./relevance.ts";
 
 export type SourceKind = "release" | "blog" | "paper" | "model" | "forum";
 export type SourceFormat = "feed" | "hf-models" | "hn";
@@ -19,8 +22,8 @@ export interface Source {
   kind: SourceKind;
   /** At most this many items per run, newest first. */
   take: number;
-  /** GitHub releases: keep only x.y.0 tags — no patches, release candidates or side packages. */
-  majorMinorOnly?: boolean;
+  /** GitHub releases: which tags count as news (see keepsRelease). */
+  releases?: ReleaseRule;
   /** Every item is on topic, so the keyword pre-filter is skipped — or its feed
    *  gives too little text for the filter to judge, and the screener should. */
   onTopic?: boolean;
@@ -28,14 +31,14 @@ export interface Source {
   maxAgeDays?: number;
 }
 
-const gh = (repo: string, name: string): Source => ({
+const gh = (repo: string, name: string, releases: ReleaseRule = "minor"): Source => ({
   id: `gh-${repo.split("/")[1]}`,
   name,
   url: `https://github.com/${repo}/releases.atom`,
   format: "feed",
   kind: "release",
   take: 5,
-  majorMinorOnly: true,
+  releases,
   onTopic: true,
 });
 
@@ -45,7 +48,8 @@ const ARXIV_QUERY =
 export const SOURCES: Source[] = [
   // Serving engines and runtimes
   gh("vllm-project/vllm", "vLLM"),
-  gh("sgl-project/sglang", "SGLang"),
+  // SGLang ships features in the last number (v0.5.20, v0.5.21, ...): x.y.0 alone would never match.
+  gh("sgl-project/sglang", "SGLang", "stable"),
   gh("ollama/ollama", "Ollama"),
   gh("huggingface/transformers", "Transformers"),
   gh("NVIDIA/TensorRT-LLM", "TensorRT-LLM"),
@@ -61,10 +65,12 @@ export const SOURCES: Source[] = [
     // Trending lags release: a model trends for days or weeks after it appears.
     maxAgeDays: 14,
   },
-  { id: "qwen-blog", name: "Qwen", url: "https://qwenlm.github.io/blog/index.xml", format: "feed", kind: "blog", take: 5 },
+  // The Qwen blog feed (qwenlm.github.io) stopped in September 2025; Qwen models still arrive through trending.
+  { id: "mistral-news", name: "Mistral AI", url: "https://mistral.ai/rss.xml", format: "feed", kind: "blog", take: 10 },
   { id: "openai-news", name: "OpenAI", url: "https://openai.com/news/rss.xml", format: "feed", kind: "blog", take: 15 },
   { id: "google-ai", name: "Google", url: "https://blog.google/technology/ai/rss/", format: "feed", kind: "blog", take: 10 },
   // Engineering blogs
+  { id: "vllm-blog", name: "vLLM", url: "https://vllm.ai/blog/rss.xml", format: "feed", kind: "blog", take: 5, onTopic: true },
   { id: "hf-blog", name: "Hugging Face", url: "https://huggingface.co/blog/feed.xml", format: "feed", kind: "blog", take: 15, onTopic: true },
   { id: "nvidia-dev", name: "NVIDIA", url: "https://developer.nvidia.com/blog/feed/", format: "feed", kind: "blog", take: 25 },
   { id: "rocm-blogs", name: "AMD ROCm", url: "https://rocm.blogs.amd.com/blog/atom.xml", format: "feed", kind: "blog", take: 10 },
@@ -110,7 +116,6 @@ export const PRIMARY_HOSTS = [
   "nvidia.com",
   "amd.com",
   "pytorch.org",
-  "docs.vllm.ai",
-  "blog.vllm.ai",
+  "vllm.ai",
   "lmsys.org",
 ];

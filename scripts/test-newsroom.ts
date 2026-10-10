@@ -3,12 +3,12 @@
 // Run: node scripts/test-newsroom.ts
 import { decodeEntities, clip, hfRepoOf, htmlToText, links, normalizeUrl, slugify } from "../newsroom/text.ts";
 import { parseFeed, parseHfModels, parseHn } from "../newsroom/feeds.ts";
-import { isMajorMinorRelease, passesPrefilter, relevance } from "../newsroom/relevance.ts";
+import { keepsRelease, passesPrefilter, relevance } from "../newsroom/relevance.ts";
 import { collect, select } from "../newsroom/collect.ts";
 import { Store, keyOf } from "../newsroom/store.ts";
 import { buildPost, engineFigures, gather, screen, write, type Ask, type WriterOutput } from "../newsroom/draft.ts";
 import { KNOWN_MODELS } from "../src/lib/models.ts";
-import type { Source } from "../newsroom/sources.ts";
+import { SOURCES, type Source } from "../newsroom/sources.ts";
 
 // Nothing here may reach the network: a stray fetch fails loudly.
 globalThis.fetch = (async () => {
@@ -68,9 +68,15 @@ check("an on-topic post passes the pre-filter", passesPrefilter(relevance("New o
 check("\"opensource\" spelled as one word still counts", passesPrefilter(relevance("GLM 5.3 Flash opensource @ the top of the index, 30B MoE")));
 check("company news does not", !passesPrefilter(relevance("Company announces new office in London and a hiring push")));
 check("release words alone are not enough", !passesPrefilter(relevance("We are excited to announce the launch of our new release")));
-check("x.y.0 releases count", isMajorMinorRelease("https://github.com/o/r/releases/tag/v0.31.0") && isMajorMinorRelease("https://github.com/o/r/releases/tag/4.2.0"));
+const tag = (t: string) => `https://github.com/o/r/releases/tag/${t}`;
+check("x.y.0 releases count", keepsRelease(tag("v0.31.0"), "minor") && keepsRelease(tag("4.2.0"), "minor"));
 check("patches, candidates and side packages do not",
-  !isMajorMinorRelease("https://github.com/o/r/releases/tag/v0.31.1") && !isMajorMinorRelease("https://github.com/o/r/releases/tag/v0.31.0rc1") && !isMajorMinorRelease("https://github.com/o/r/releases/tag/proto-v0.5.0"));
+  !keepsRelease(tag("v0.31.1"), "minor") && !keepsRelease(tag("v0.31.0rc1"), "minor") && !keepsRelease(tag("proto-v0.5.0"), "minor"));
+check("a stable rule keeps patch-numbered releases", keepsRelease(tag("v0.5.21"), "stable") && keepsRelease(tag("v0.6.0"), "stable"));
+check("but still no candidates or post-releases",
+  !keepsRelease(tag("v0.5.15.post1"), "stable") && !keepsRelease(tag("v1.3.0rc29"), "stable") && !keepsRelease(tag("proto-v0.5.0"), "stable"));
+const ids = SOURCES.map((s) => s.id);
+check("source ids are unique", new Set(ids).size === ids.length);
 const now = new Date("2026-10-10T08:00:00Z");
 const src: Source = { id: "t", name: "T", url: "https://t.example/feed", format: "feed", kind: "blog", take: 2 };
 const sel = select(src, [
