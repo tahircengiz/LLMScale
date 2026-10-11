@@ -1,0 +1,26 @@
+{
+  "id": "2026-10-11-ollama-mlx-default-apple-silicon",
+  "published": "2026-10-11T15:11:00Z",
+  "category": "release",
+  "en": {
+    "title": "Ollama v0.40.0 makes MLX the default runtime on Apple Silicon",
+    "body": "Ollama v0.40.0 makes MLX the default runtime on Apple Silicon. Model architectures that MLX supports now run on it automatically. Listed models include qwen3.8, gemma4, qwen3.6 and qwen3.5, plus the embedding model embeddinggemma-2. More models will be enabled after testing.\n\nOn Macs this swaps the inference backend with no configuration change. The release notes give no speed or memory figures, so re-measure throughput and memory use on your own hardware."
+  },
+  "tr": {
+    "title": "Ollama v0.40.0, Apple Silicon'da MLX'i varsayılan runtime yapıyor",
+    "body": "Ollama v0.40.0 ile Apple Silicon'da varsayılan runtime artık MLX. MLX'in desteklediği model mimarileri otomatik olarak MLX üzerinde çalışıyor. Listede qwen3.8, gemma4, qwen3.6, qwen3.5 ve embedding modeli embeddinggemma-2 yer alıyor. Test edildikçe yeni modeller eklenecek.\n\nMac'lerde inference backend'i herhangi bir ayar gerekmeden değişiyor. Sürüm notları hız ya da bellek rakamı vermiyor, bu yüzden throughput ve bellek kullanımını kendi donanımınızda yeniden ölçün."
+  },
+  "refs": [
+    {
+      "url": "https://github.com/ollama/ollama/releases/tag/v0.40.0",
+      "title": "Ollama v0.40.0 release notes",
+      "source": "GitHub"
+    }
+  ],
+  "tags": [
+    "ollama",
+    "mlx",
+    "apple-silicon",
+    "local-inference"
+  ]
+}
