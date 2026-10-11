@@ -81,6 +81,7 @@ Overview: https://tahircengiz.github.io/LLMScale/gpus/
 
 Overview: https://tahircengiz.github.io/LLMScale/feed/
 
+- [Ollama v0.40.0 makes MLX the default runtime on Apple…](https://tahircengiz.github.io/LLMScale/feed/2026-10-11-ollama-mlx-default-apple-silicon.html): Ollama v0.40.0 makes MLX the default runtime on Apple Silicon. Model architectures that MLX supports now run on it automatically. Listed models include…
 - [Mistral Large 4 preview: 1T-parameter MoE with 49B active…](https://tahircengiz.github.io/LLMScale/feed/2026-10-10-mistral-large-4-preview-moe.html): Mistral released a preview of Mistral Large 4 via its API: an MoE model with 1T total and 49B active parameters, trained on 3,800 NVIDIA Grace Blackwell…
 
 ## Optional

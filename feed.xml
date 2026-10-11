@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Sat, 10 Oct 2026 09:41:50 GMT</lastBuildDate>
+<lastBuildDate>Sun, 11 Oct 2026 15:11:00 GMT</lastBuildDate>
+<item>
+<title>Ollama v0.40.0 makes MLX the default runtime on Apple Silicon</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-11-ollama-mlx-default-apple-silicon.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-11-ollama-mlx-default-apple-silicon.html</guid>
+<pubDate>Sun, 11 Oct 2026 15:11:00 GMT</pubDate>
+<category>Release</category>
+<description>&lt;p&gt;Ollama v0.40.0 makes MLX the default runtime on Apple Silicon. Model architectures that MLX supports now run on it automatically. Listed models include qwen3.8, gemma4, qwen3.6 and qwen3.5, plus the embedding model embeddinggemma-2. More models will be enabled after testing.&lt;/p&gt;&lt;p&gt;On Macs this swaps the inference backend with no configuration change. The release notes give no speed or memory figures, so re-measure throughput and memory use on your own hardware.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://github.com/ollama/ollama/releases/tag/v0.40.0"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>Mistral Large 4 preview: 1T-parameter MoE with 49B active, open weights due end of month</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-10-mistral-large-4-preview-moe.html</link>

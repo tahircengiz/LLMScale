@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Sat, 10 Oct 2026 09:41:50 GMT</lastBuildDate>
+<lastBuildDate>Sun, 11 Oct 2026 15:11:00 GMT</lastBuildDate>
+<item>
+<title>Ollama v0.40.0, Apple Silicon'da MLX'i varsayılan runtime yapıyor</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-11-ollama-mlx-default-apple-silicon.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-11-ollama-mlx-default-apple-silicon.html</guid>
+<pubDate>Sun, 11 Oct 2026 15:11:00 GMT</pubDate>
+<category>Sürüm</category>
+<description>&lt;p&gt;Ollama v0.40.0 ile Apple Silicon'da varsayılan runtime artık MLX. MLX'in desteklediği model mimarileri otomatik olarak MLX üzerinde çalışıyor. Listede qwen3.8, gemma4, qwen3.6, qwen3.5 ve embedding modeli embeddinggemma-2 yer alıyor. Test edildikçe yeni modeller eklenecek.&lt;/p&gt;&lt;p&gt;Mac'lerde inference backend'i herhangi bir ayar gerekmeden değişiyor. Sürüm notları hız ya da bellek rakamı vermiyor, bu yüzden throughput ve bellek kullanımını kendi donanımınızda yeniden ölçün.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://github.com/ollama/ollama/releases/tag/v0.40.0"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>Mistral Large 4 önizlemesi: 1T parametreli, 49B aktif MoE; açık ağırlıklar ay sonunda</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-10-mistral-large-4-preview-moe.html</link>
