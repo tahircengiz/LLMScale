@@ -14,6 +14,7 @@ Every figure comes from one engine. Weights are parameters × bytes per paramete
 - [LLM config.json Explained — Plain Language](https://tahircengiz.github.io/LLMScale/config.html): Read any Hugging Face model's config.json in plain language: layers, attention heads, GQA and MLA, experts, context and RoPE scaling, quantization — each answer tied to the lines of the real file.
 - [LLM Name Decoder — 70B, A3B, AWQ, GGUF, FP8](https://tahircengiz.github.io/LLMScale/decode.html): Decode any LLM model name: what 70B, AWQ, GGUF, FP8, A3B, Instruct and more mean — colour-coded, explained, and interactive.
 - [LLM Task Fit — Is This Model Right for the Job?](https://tahircengiz.github.io/LLMScale/fit.html): Check whether an LLM fits your task — chat, code, RAG, agents, reasoning, vision, embeddings — scored from the model's real size, context, tuning and modality. Live Hugging Face data.
+- [Serving Brief — Chat Template, MTP, Quantization](https://tahircengiz.github.io/LLMScale/serving.html): Read a Hugging Face model repository the way an inference engine does: chat template, tool and reasoning parsers, generation_config, quantization from the tensor names, and whether its MTP layers ship — with vLLM and SGLang flags.
 - [vLLM Serve Parameters — Tuned Command Helper](https://tahircengiz.github.io/LLMScale/vllm.html): Generate a tuned vllm serve command for any model — flags for throughput, latency, accuracy or memory, plus tool-calling, long context and quantization, with a copyable command.
 
 ## Concepts
