@@ -27,16 +27,18 @@ database alongside a curated preset list. Repos with no config of their own —
 GGUF forks, for instance — are resolved through their `base_model` lineage, and
 the page says so.
 
-## Eight tools
+## Ten tools
 
 | | |
 |---|---|
 | **VRAM Sizing** | the calculator |
+| **Config Decoder** | a model's config.json in plain language, every answer tied to the lines it came from |
 | **Fine-tune** | LoRA, QLoRA and full fine-tune memory — gradients, optimizer state, activations |
 | **Task Fit** | is this model right for chat, code, RAG, agents, vision…? Transparent rule-based scoring |
 | **Model Anatomy** | a visual X-ray: parameter distribution, weight size at each precision, GQA head grouping, KV growth |
 | **Model Compare** | 2–4 models side by side |
 | **Name Decoder** | what 70B, A3B, AWQ, GGUF, FP8, MXFP4 actually mean |
+| **Serving Brief** | what a repository's other files say about serving it — chat template and parsers, sampling defaults, quantization read from the tensor names, MTP layers that ship or don't — with vLLM and SGLang flags |
 | **vLLM Params** | a tuned `vllm serve` command with per-flag rationale |
 | **LLM 101** | an interactive walkthrough of how a language model works |
 

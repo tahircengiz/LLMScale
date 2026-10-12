@@ -76,6 +76,14 @@ export const TR_META: Record<string, PageMeta> = {
     ogDescription:
       "Bir LLM'in config.json'undaki her alan ne anlama geliyor? Bellek, context, attention ve uzmanlar üzerine sade cevaplar, gerçek dosyaya bağlı.",
   },
+  "serving.html": {
+    title: "Servis Özeti — Sohbet Şablonu, MTP, Quantization | LLMScale",
+    description:
+      "Bir Hugging Face model reposunu çıkarım motorunun okuduğu gibi oku: sohbet şablonu, araç ve akıl yürütme parser'ları, generation_config, tensör adlarından quantization ve MTP katmanlarının gelip gelmediği — vLLM ve SGLang bayraklarıyla.",
+    ogTitle: "LLMScale — Servis Özeti",
+    ogDescription:
+      "Bir modelin dosyaları servis hakkında ne diyor: araç ve akıl yürütme parser'ları, örnekleme varsayılanları, quantization, MTP — vLLM ve SGLang bayraklarıyla.",
+  },
   "learn.html": {
     title: "LLM 101 — Bir LLM Nasıl Çalışır, Görsel Anlatım | LLMScale",
     description:

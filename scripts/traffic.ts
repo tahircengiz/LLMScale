@@ -95,6 +95,7 @@ const SURFACES: Record<string, string> = {
   "compare.html": "Model Compare",
   "decode.html": "Name Decoder",
   "config.html": "Config Decoder",
+  "serving.html": "Serving Brief",
   "vllm.html": "vLLM Params",
   "learn.html": "LLM 101",
 };

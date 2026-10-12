@@ -16,6 +16,7 @@ import { AnatomyPage } from "./pages/AnatomyPage";
 import { ComparePage } from "./pages/ComparePage";
 import { TrainPage } from "./pages/TrainPage";
 import { ConfigPage } from "./pages/ConfigPage";
+import { ServingPage } from "./pages/ServingPage";
 import { Badge, Segmented } from "./components/ui";
 import { About } from "./components/About";
 import { LANG_NAME, pathFor } from "./lib/langPath";
@@ -27,7 +28,7 @@ import { StaticPageLink } from "./components/StaticPageLink";
 const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
-function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" | "config" {
+function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" | "config" | "serving" {
   const p = window.location.pathname;
   if (p.endsWith("fit.html")) return "fit";
   if (p.endsWith("vllm.html")) return "vllm";
@@ -36,6 +37,7 @@ function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "comp
   if (p.endsWith("compare.html")) return "compare";
   if (p.endsWith("train.html")) return "train";
   if (p.endsWith("config.html")) return "config";
+  if (p.endsWith("serving.html")) return "serving";
   return "sizing";
 }
 
@@ -52,7 +54,10 @@ const NAV_GROUPS: { page: string; href: string }[][] = [
     { page: "compare", href: "compare.html" },
     { page: "decode", href: "decode.html" },
   ],
-  [{ page: "vllm", href: "vllm.html" }],
+  [
+    { page: "serving", href: "serving.html" },
+    { page: "vllm", href: "vllm.html" },
+  ],
   // The news feed is static pages (scripts/genFeed.ts), linked once there are posts.
   [{ page: "learn", href: "learn.html" }, ...(__HAS_FEED__ ? [{ page: "news", href: "feed/" }] : [])],
 ];
@@ -316,6 +321,8 @@ export default function App() {
             <TrainPage />
           ) : page === "config" ? (
             <ConfigPage />
+          ) : page === "serving" ? (
+            <ServingPage />
           ) : (
             <SizingPage />
           )}

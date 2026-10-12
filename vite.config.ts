@@ -46,6 +46,7 @@ export default defineConfig({
         train: fileURLToPath(new URL("./train.html", import.meta.url)),
         learn: fileURLToPath(new URL("./learn.html", import.meta.url)),
         config: fileURLToPath(new URL("./config.html", import.meta.url)),
+        serving: fileURLToPath(new URL("./serving.html", import.meta.url)),
       },
     },
   },
