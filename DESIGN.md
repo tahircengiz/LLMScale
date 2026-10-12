@@ -386,14 +386,24 @@ a segmented control, not a dropdown.
 
 ### Navigation
 
-A single centred pill at the inset tone holding all destinations, split into
-**semantic groups separated by thin vertical rules** — size, then choose, then
-serve, then learn. Active link is solid indigo with white text; idle links are
-muted with a white-wash hover. Nothing in the nav scrolls sideways. From `sm` up
-the pill wraps whole groups onto rows, and a group that starts a row hides its
-leading rule. Below `sm` a single group is wider than a phone, so the pill folds
-to the current page (solid indigo) and a Menu button; opened, it lists each group
-on rows of its own, with the rules turned horizontal.
+A single centred pill at the inset tone, one row at every width from `sm` up and
+in both languages. The calculator — the product's core — is a direct link; after
+a thin vertical rule come three menus by intent: **Model** (understand and choose
+it), **Serve** (run it) and **Learn**. The menu holding the current page is solid
+indigo and names the page after its own name ("Serve · Serving Brief"); the
+others are muted with a white-wash hover. A menu opens below its trigger as an
+inset-tone panel with a hairline ring and the deep drop shadow; each entry is its
+name over a one-line description, the current one marked with the selected ring
+and fill, and a menu's sections are divided by a hairline, a titled one under an
+uppercase caption. On glass the panel is nearly opaque, because it lies over the
+page. A click elsewhere, Escape, or focus leaving the menu closes it. A new tool
+lengthens a menu, never the row.
+
+Below `sm` the pill folds to the current page (solid indigo) and a Menu button;
+opened, it lists every destination under its menu's caption, sections divided by
+horizontal rules. Without JavaScript every width shows that list instead. Nothing
+in the nav scrolls sideways. The structure lives in `src/lib/nav.ts`, which the app
+header and the static pages' header both draw from.
 
 ### Stat Tile
 

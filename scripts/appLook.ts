@@ -1,7 +1,7 @@
 // The app's look for the static pages — the news feed and the guides — so they
 // wear the calculator's clothes: the same three themes (dark, light and the glass
 // material), the same header with its theme and language switches, and the same
-// grouped nav. Moving between the tools, the guides and the news does not feel
+// nav, built from the same src/lib/nav.ts. Moving between the tools, the guides and the news does not feel
 // like leaving the site.
 //
 // The values mirror src/index.css and src/components/ui.tsx; scripts/test-invariants.ts
@@ -10,8 +10,8 @@
 
 import { DICTS, type Lang } from "../src/lib/dict.ts";
 import { LANG_NAME } from "../src/lib/langPath.ts";
-import { FEED_HUB } from "../src/lib/feed.ts";
 import { CONCEPTS_HUB, GPUS_HUB, MODELS_HUB } from "../src/lib/staticPages.ts";
+import { menuOf, NAV_HOME, navMenus, navPages, type NavItem } from "../src/lib/nav.ts";
 
 const LANGS: Lang[] = ["en", "tr"];
 export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -37,7 +37,7 @@ thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var
 th[scope=row]{font-weight:600}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .card{background:color-mix(in oklab,var(--ink-900) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);box-shadow:0 20px 25px -5px rgb(0 0 0/.3),0 8px 10px -6px rgb(0 0 0/.3)}
-.hdr{border-bottom:1px solid var(--line);padding:.5rem 1rem}
+.hdr{position:relative;z-index:40;border-bottom:1px solid var(--line);padding:.5rem 1rem}
 .hin{max-width:72rem;margin:0 auto}
 .hrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem}
 .brand{display:flex;align-items:center;gap:.5rem;text-decoration:none}
@@ -53,20 +53,35 @@ th[scope=row]{font-weight:600}
 .navpill{width:100%;border-radius:.75rem;background:var(--ink-850);padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}
 .tab{display:block;border:0;background:none;font:inherit;border-radius:.5rem;padding:.25rem .625rem;font-size:.875rem;line-height:1.25rem;font-weight:500;white-space:nowrap;color:var(--slate-300);text-decoration:none;cursor:pointer;transition:background-color .15s,color .15s}
 .mbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
-.mbar button{display:flex;align-items:center;gap:.375rem}
-.mbar svg{width:14px;height:14px;transition:transform .15s}
-.mbar [aria-expanded=true] svg{transform:rotate(180deg)}
-#site-nav{display:none;flex-direction:column;gap:.25rem;margin-top:.25rem}
+.mbar button,.trig{display:flex;align-items:center;gap:.375rem}
+.mbar svg,.trig svg{width:14px;height:14px;flex-shrink:0;transition:transform .2s}
+.mbar [aria-expanded=true] svg,.trig[aria-expanded=true] svg{transform:rotate(180deg)}
+#site-nav{display:none;flex-direction:column;gap:.5rem;margin-top:.25rem}
 #site-nav.open{display:flex}
-.grp{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem}
-.grp .sep{height:1px;flex-basis:100%;background:color-mix(in oklab,var(--c-white) 15%,transparent)}
-.grp:first-child .sep{display:none}
-@media (min-width:640px){.hdr{padding-inline:1.5rem}.navpill{width:auto;max-width:100%}.mbar{display:none}#site-nav{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:0}.grp .sep{height:1rem;width:1px;flex-basis:auto;margin:0 .25rem}}
+.grp{display:flex;flex-direction:column;gap:.25rem;border-top:1px solid var(--line);padding-top:.5rem}
+.grp:first-child{border-top:0;padding-top:0}
+.grp .row{display:flex;flex-wrap:wrap;gap:.25rem}
+.cap{margin:0;padding:0 .625rem .25rem;font-size:11px;line-height:1rem;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--slate-500)}
+.menus{display:none;align-items:center;gap:.25rem}
+.menus .sep{height:1rem;width:1px;margin:0 .25rem;background:color-mix(in oklab,var(--c-white) 15%,transparent)}
+.menu{position:relative}
+.trig .gn{opacity:.75}.trig .dot{opacity:.5}
+.panel{display:none;position:absolute;top:100%;left:0;z-index:50;margin-top:.5rem;width:18rem;border-radius:.75rem;background:var(--ink-850);padding:.375rem;box-shadow:inset 0 0 0 1px var(--line),0 25px 50px -12px rgb(0 0 0/.25)}
+.panel.end{left:auto;right:0}
+.panel.open{display:block}
+.panel .sec+.sec{margin-top:.375rem;border-top:1px solid var(--line);padding-top:.375rem}
+.panel a{display:block;border-radius:.5rem;padding:.375rem .75rem;text-decoration:none;transition:background-color .15s}
+.panel a:hover{background:color-mix(in oklab,var(--c-white) 5%,transparent)}
+.panel a[aria-current=page]{background:color-mix(in oklab,var(--brand-600) 10%,transparent);box-shadow:inset 0 0 0 1px var(--brand-500)}
+.panel b{display:block;font-size:.875rem;line-height:1.25rem;font-weight:500;color:var(--c-white)}
+.panel a span{display:block;margin-top:.125rem;font-size:.75rem;line-height:1.1rem;color:var(--slate-400)}
+@media (min-width:640px){.hdr{padding-inline:1.5rem}.navpill{width:auto;max-width:100%}.mbar,#site-nav,#site-nav.open{display:none}.menus{display:flex}}
 @media (max-width:360px){.seg a,.seg button{padding-inline:.375rem}.ctrls{gap:.375rem}}
-@media (scripting:none){#site-nav{display:flex}.mbar button{display:none}}
+@media (scripting:none){#site-nav,#site-nav.open{display:flex}.mbar button,.menus{display:none}}
 .glass .card{background:rgba(255,255,255,.52);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.65);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),inset 0 -1px 0 0 rgba(255,255,255,.25),0 12px 32px -14px rgba(20,28,66,.42)}
 .glass .hdr{background:rgba(255,255,255,.46);-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);border-bottom-color:rgba(255,255,255,.55)}
 .glass .navpill{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.8)}
+.glass .panel{background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),0 18px 40px -16px rgba(20,28,66,.45)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.92)}}
 @media (prefers-reduced-transparency:reduce){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}}
 .theme-switching,.theme-switching *,.theme-switching *::before,.theme-switching *::after{transition:none!important}
@@ -93,29 +108,14 @@ function show(t){r.classList.add("theme-switching");r.classList.toggle("light",t
 bs.forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-theme-set");show(t);try{localStorage.setItem("theme",t)}catch(e){}})});mark();
 try{var mq=matchMedia("(prefers-color-scheme: dark)");mq.addEventListener("change",function(e){var s=null;try{s=localStorage.getItem("theme")}catch(x){}if(s!=="dark"&&s!=="light"&&s!=="glass")show(e.matches?"dark":"glass")})}catch(e){}
 var mb=document.querySelector("[aria-controls=site-nav]"),l=document.getElementById("site-nav");if(mb&&l)mb.addEventListener("click",function(){mb.setAttribute("aria-expanded",String(l.classList.toggle("open")))});
+var ts=document.querySelectorAll(".trig");function shut(x){ts.forEach(function(t){if(t===x)return;t.setAttribute("aria-expanded","false");var p=document.getElementById(t.getAttribute("aria-controls"));if(p)p.classList.remove("open")})}
+ts.forEach(function(t){t.addEventListener("click",function(){var p=document.getElementById(t.getAttribute("aria-controls")),o=t.getAttribute("aria-expanded")!=="true";shut(t);t.setAttribute("aria-expanded",String(o));if(p)p.classList.toggle("open",o)})});
+document.querySelectorAll(".menu").forEach(function(m){m.addEventListener("focusout",function(e){if(!m.contains(e.relatedTarget))shut(null)})});
+document.addEventListener("pointerdown",function(e){if(!(e.target.closest&&e.target.closest(".menu")))shut(null)});
+document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;var t=document.querySelector(".trig[aria-expanded=true]");if(t){shut(null);t.focus()}else if(mb&&l&&l.classList.contains("open")){l.classList.remove("open");mb.setAttribute("aria-expanded","false");mb.focus()}});
 document.querySelectorAll("[data-lang]").forEach(function(a){a.addEventListener("click",function(){try{localStorage.setItem("lang",a.getAttribute("data-lang"))}catch(e){}})})})();`;
 
 // ── header and footer ─────────────────────────────────────────────────────────
-// The calculator's own nav, in its four groups, with the news as the last stop:
-// every tool is one click away from the feed, as the feed is from every tool.
-export const NAV: { page: string; file: string }[][] = [
-  [
-    { page: "sizing", file: "" },
-    { page: "config", file: "config.html" },
-    { page: "train", file: "train.html" },
-  ],
-  [
-    { page: "fit", file: "fit.html" },
-    { page: "anatomy", file: "anatomy.html" },
-    { page: "compare", file: "compare.html" },
-    { page: "decode", file: "decode.html" },
-  ],
-  [{ page: "vllm", file: "vllm.html" }],
-  [
-    { page: "learn", file: "learn.html" },
-    { page: "news", file: FEED_HUB },
-  ],
-];
 const CHEVRON = `<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>`;
 const THEME_LABEL = { en: "Theme", tr: "Tema" };
 const LANG_LABEL = { en: "Language", tr: "Dil" };
@@ -134,12 +134,30 @@ export interface FrameCtx {
  *  a page the nav does not list (a guide), whose own name then labels the phone menu. */
 export function appHeader({ lang, file, href, base, feed }: FrameCtx, current: string | null, label: string): string {
   const d = DICTS[lang];
-  const groups = NAV.map((g) => g.filter((i) => i.page !== "news" || feed)).map(
-    (g) =>
-      `<div class="grp"><span class="sep" aria-hidden="true"></span>${g
-        .map((i) => `<a class="tab" href="${href(lang, i.file)}"${i.page === current ? ' aria-current="page"' : ""}>${esc(d[`nav.${i.page}`])}</a>`)
-        .join("")}</div>`
-  ).join("");
+  const menus = navMenus(feed);
+  const here = current ? menuOf(menus, current) : undefined;
+  const hereItem = navPages(menus).find((i) => i.page !== undefined && i.page === current);
+  // The page itself is marked current: an app surface or the feed by its id, a
+  // guide hub by its file.
+  const on = (i: NavItem) => (i.page !== undefined && i.page === current) || (i.file !== "" && (file === i.file || file === `${i.file}index.html`));
+  const cur = (i: NavItem) => (on(i) ? ' aria-current="page"' : "");
+  const tab = (i: NavItem) => `<a class="tab" href="${href(lang, i.file)}"${cur(i)}>${esc(d[i.label])}</a>`;
+  const desktop = `<div class="menus">${tab(NAV_HOME)}<span class="sep" aria-hidden="true"></span>${menus
+    .map((m, mi) => {
+      const label = m === here && hereItem
+        ? `<span class="gn">${esc(d[m.label])}</span><span class="dot" aria-hidden="true">·</span><span>${esc(d[hereItem.label])}</span>`
+        : esc(d[m.label]);
+      const sections = m.sections
+        .map((sec) => `<div class="sec">${sec.title ? `<p class="cap">${esc(d[sec.title])}</p>` : ""}${sec.items
+          .map((i) => `<a href="${href(lang, i.file)}"${cur(i)}><b>${esc(d[i.label])}</b>${i.desc ? `<span>${esc(d[i.desc])}</span>` : ""}</a>`)
+          .join("")}</div>`)
+        .join("");
+      return `<div class="menu"><button type="button" class="tab trig${m === here ? " on" : ""}" aria-expanded="false" aria-controls="nm-${m.id}">${label}${CHEVRON}</button><div class="panel${mi === menus.length - 1 ? " end" : ""}" id="nm-${m.id}">${sections}</div></div>`;
+    })
+    .join("")}</div>`;
+  const phone = `<div id="site-nav"><div class="grp"><div class="row">${tab(NAV_HOME)}</div></div>${menus
+    .map((m) => `<div class="grp"><p class="cap">${esc(d[m.label])}</p><div class="row">${m.sections.flatMap((sec) => sec.items).map(tab).join("")}</div></div>`)
+    .join("")}</div>`;
   const themes = (["dark", "light", "glass"] as const).map((v) => `<button type="button" data-theme-set="${v}" aria-pressed="false">${esc(d[`theme.${v}`])}</button>`).join("");
   const langs = LANGS.map((l) => `<a href="${href(l, file)}" hreflang="${l}" lang="${l}" data-lang="${l}"${l === lang ? ' aria-current="page"' : ""}>${l.toUpperCase()}</a>`).join("");
   return `<header class="hdr"><div class="hin">
@@ -147,7 +165,8 @@ export function appHeader({ lang, file, href, base, feed }: FrameCtx, current: s
 <div class="ctrls"><div class="seg" role="group" aria-label="${THEME_LABEL[lang]}">${themes}</div><div class="seg" role="group" aria-label="${LANG_LABEL[lang]}">${langs}</div></div></div>
 <nav class="pnav" aria-label="LLMScale"><div class="navpill">
 <div class="mbar"><span class="tab on">${esc(label)}</span><button type="button" class="tab" aria-controls="site-nav" aria-expanded="false">${esc(d["nav.menu"])}${CHEVRON}</button></div>
-<div id="site-nav">${groups}</div>
+${desktop}
+${phone}
 </div></nav>
 </div></header>`;
 }

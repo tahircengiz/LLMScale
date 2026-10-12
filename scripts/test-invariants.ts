@@ -275,10 +275,10 @@ const longTitles = [
 check("every title fits in 60 characters", longTitles.length === 0, longTitles.map(([f, t]) => `${f} (${[...t].length})`).join(", "));
 // Links inside a page stay in its language; a /tr/ page linking to English pages
 // would hand search engines the wrong version from the Turkish one.
-check("the header links stay in the page's language", read("src/App.tsx").includes("href={`${home}${item.href}`}"));
-// DESIGN.md: the nav wraps or folds, it never scrolls. A sideways-scrolling pill
-// clipped links mid-word at both edges of a phone.
-const navMarkup = read("src/App.tsx").match(/<nav[\s\S]*?<\/nav>/)?.[0] ?? "";
+check("the header links stay in the page's language", read("src/components/SiteNav.tsx").includes("const href = (i: NavItem) => `${home}${i.file}`"));
+// DESIGN.md: the nav folds, it never scrolls. A sideways-scrolling pill clipped
+// links mid-word at both edges of a phone.
+const navMarkup = read("src/components/SiteNav.tsx").match(/<nav[\s\S]*?<\/nav>/)?.[0] ?? "";
 check("the header nav never scrolls sideways", navMarkup !== "" && !navMarkup.includes("overflow-x"));
 // On a phone the Menu button opens the list, which takes JavaScript; index.css
 // shows the list instead when there is none, by the id the button controls.
@@ -287,6 +287,20 @@ check(
   navMarkup.includes('id="site-nav"') && navMarkup.includes('aria-controls="site-nav"') &&
     css.includes("#site-nav {") && css.includes('[aria-controls="site-nav"]')
 );
+// One nav, two renderers: the app header and the static pages' copy both draw
+// from src/lib/nav.ts. Before it, the static copy was a list of its own, and a new
+// tool reached the app's header and not the guides'.
+const { NAV_MENUS, navPages } = await import("../src/lib/nav.ts");
+check("the app header builds its nav from src/lib/nav.ts", read("src/components/SiteNav.tsx").includes('from "../lib/nav"') && !read("src/App.tsx").includes("NAV_GROUPS"));
+check("so do the static pages", read("scripts/appLook.ts").includes('from "../src/lib/nav.ts"') && !/export const NAV\b/.test(read("scripts/appLook.ts")));
+const navItems = navPages(NAV_MENUS);
+const navWords = navItems.flatMap((i) => [i.label, ...(i.desc ? [i.desc] : [])]).concat(NAV_MENUS.flatMap((m) => [m.label, ...m.sections.flatMap((x) => (x.title ? [x.title] : []))]));
+const navUnworded = navWords.filter((k) => !(k in DICTS.en) || !(k in DICTS.tr));
+check("every nav entry has its words in both languages", navUnworded.length === 0, navUnworded.join(", "));
+const navDead = navItems.filter((i) => i.file !== "" && !inputs.includes(i.file) && !/\/$/.test(i.file)).map((i) => i.file);
+check("every nav entry leads to an entry page or a guide hub", navDead.length === 0, navDead.join(", "));
+const navMissing = aboutPages.filter((pg) => !navItems.some((i) => i.page === pg));
+check("every tool is in the nav", navMissing.length === 0, navMissing.join(", "));
 check("so does the calculator's link to the vLLM helper", read("src/components/GpuFit.tsx").includes('${lang === "tr" ? "tr/" : ""}vllm.html'));
 
 console.log("\n--- the generated model and GPU guides ---");
@@ -336,7 +350,7 @@ for (const [name, appSel, feedSel] of [["dark", "@theme", ":root"], ["light", ".
   const missing = ["ink-950", "ink-900", "ink-850", "fg", "brand-400"].filter((k) => k in app && !(k in feed));
   check(`the static pages' ${name} tokens match src/index.css`, Object.keys(app).length > 4 && off.length === 0 && missing.length === 0, [...off.map((k) => `${k} ${feed[k]}≠${app[k]}`), ...missing.map((k) => `${k} missing`)].join(", "));
 }
-check("the app's nav links to the news once there are posts", app.includes('__HAS_FEED__ ? [{ page: "news", href: "feed/" }]'));
+check("the app's nav links to the news once there are posts", read("src/components/SiteNav.tsx").includes("navMenus(__HAS_FEED__)") && NAV_MENUS.some((m) => m.sections.some((x) => x.items.some((i) => i.page === "news" && i.feedOnly))));
 check("the nav names the news in both languages", "nav.news" in DICTS.en && "nav.news" in DICTS.tr);
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DARK_QUERY,
   SWITCHING_CLASS,
@@ -23,6 +23,7 @@ import { LANG_NAME, pathFor } from "./lib/langPath";
 import { CONCEPTS_HUB, GPUS_HUB, MODELS_HUB } from "./lib/staticPages";
 import { FEED_HUB } from "./lib/feed";
 import { StaticPageLink } from "./components/StaticPageLink";
+import { SiteNav } from "./components/SiteNav";
 
 // Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
@@ -41,63 +42,10 @@ function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "comp
   return "sizing";
 }
 
-/** Grouped so the header reads as four intents rather than nine links. */
-const NAV_GROUPS: { page: string; href: string }[][] = [
-  [
-    { page: "sizing", href: "" },
-    { page: "config", href: "config.html" },
-    { page: "train", href: "train.html" },
-  ],
-  [
-    { page: "fit", href: "fit.html" },
-    { page: "anatomy", href: "anatomy.html" },
-    { page: "compare", href: "compare.html" },
-    { page: "decode", href: "decode.html" },
-  ],
-  [
-    { page: "serving", href: "serving.html" },
-    { page: "vllm", href: "vllm.html" },
-  ],
-  // The news feed is static pages (scripts/genFeed.ts), linked once there are posts.
-  [{ page: "learn", href: "learn.html" }, ...(__HAS_FEED__ ? [{ page: "news", href: "feed/" }] : [])],
-];
-
 export default function App() {
   const { t, lang, setLang } = useLang();
   const page = currentPage();
   const [copied, setCopied] = useState(false);
-  // Below sm the nav folds to the current page and a Menu button (see the <nav>).
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuButton = useRef<HTMLButtonElement>(null);
-  // A page restored from the back/forward cache comes back with the menu the
-  // visitor left through still open; greet them with the page instead.
-  useEffect(() => {
-    const close = (e: PageTransitionEvent) => {
-      if (e.persisted) setMenuOpen(false);
-    };
-    window.addEventListener("pageshow", close);
-    return () => window.removeEventListener("pageshow", close);
-  }, []);
-  // From sm up, a group the pill wraps onto a new row would lead with a hairline
-  // that divides nothing. Mark row-starting groups so theirs can go invisible —
-  // invisible, not removed, so the freed width cannot pull the group back up.
-  const navList = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const list = navList.current;
-    if (!list || typeof ResizeObserver === "undefined") return;
-    const groups = [...list.children] as HTMLElement[];
-    const mark = () => {
-      let top = NaN;
-      for (const g of groups) {
-        g.toggleAttribute("data-row-start", g.offsetTop !== top);
-        top = g.offsetTop;
-      }
-    };
-    const ro = new ResizeObserver(mark);
-    ro.observe(list);
-    groups.forEach((g) => ro.observe(g));
-    return () => ro.disconnect();
-  }, []);
   // Each entry's inline bootstrap has already put the theme class on <html> before
   // React ran, so read it back instead of deciding the default a second time here.
   // Dark alone leaves no class: it is the :root baseline the tokens are defined on.
@@ -162,9 +110,6 @@ export default function App() {
     }
   }
 
-  const tabCls = (active: boolean) =>
-    "rounded-lg px-2.5 py-1 text-sm font-medium transition whitespace-nowrap " +
-    (active ? "bg-brand-600 text-onbrand shadow" : "text-slate-300 hover:bg-white/5");
 
   // "Fit" pages fill exactly one viewport (dashboard, no page scroll); other
   // pages keep the classic scrolling document inside the content area.
@@ -172,7 +117,8 @@ export default function App() {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
-      <header className="shrink-0 border-b border-white/10 px-4 py-2 sm:px-6">
+      {/* Above the page, so an open nav menu lies over the cards beneath it. */}
+      <header className="relative z-40 shrink-0 border-b border-white/10 px-4 py-2 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <a href={home} className="flex items-center gap-2 no-underline">
@@ -223,80 +169,7 @@ export default function App() {
               </button>
             </div>
           </div>
-          {/* Nine destinations is too many to read as one run, so they sit in
-              four groups — plan the memory, choose the model, serve it, learn
-              how it works — divided by a hairline and centred under the brand.
-              From sm up the pill wraps whole groups onto rows. Below sm a single
-              group is wider than the screen, so the pill folds to the current
-              page and a Menu button; opened, each group takes rows of its own
-              and the hairlines turn horizontal. Nothing scrolls sideways. */}
-          <nav
-            className="mt-2 flex justify-center"
-            onKeyDown={(e) => {
-              if (e.key === "Escape" && menuOpen) {
-                setMenuOpen(false);
-                menuButton.current?.focus();
-              }
-            }}
-          >
-            <div className="w-full rounded-xl bg-ink-850 p-1 ring-1 ring-white/10 sm:w-auto sm:max-w-full">
-              <div className="flex items-center justify-between gap-2 sm:hidden">
-                <span className={tabCls(true)}>{t(`nav.${page}`)}</span>
-                <button
-                  ref={menuButton}
-                  type="button"
-                  onClick={() => setMenuOpen((o) => !o)}
-                  aria-expanded={menuOpen}
-                  aria-controls="site-nav"
-                  className={tabCls(false) + " flex items-center gap-1.5"}
-                >
-                  {t("nav.menu")}
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={"h-3.5 w-3.5 transition-transform " + (menuOpen ? "rotate-180" : "")}
-                  >
-                    <path d="M4 6l4 4 4-4" />
-                  </svg>
-                </button>
-              </div>
-              <div
-                id="site-nav"
-                ref={navList}
-                className={
-                  (menuOpen ? "flex" : "hidden") +
-                  " mt-1 flex-col gap-1 sm:mt-0 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-center"
-                }
-              >
-                {NAV_GROUPS.map((group, gi) => (
-                  <div key={gi} className="group flex flex-wrap items-center gap-1">
-                    <span
-                      aria-hidden="true"
-                      className={
-                        "h-px basis-full bg-white/15 sm:mx-1 sm:h-4 sm:w-px sm:basis-auto sm:group-data-[row-start]:invisible" +
-                        (gi === 0 ? " sm:hidden" : "")
-                      }
-                    />
-                    {group.map((item) => (
-                      <a
-                        key={item.page}
-                        href={`${home}${item.href}`}
-                        aria-current={page === item.page ? "page" : undefined}
-                        className={tabCls(page === item.page)}
-                      >
-                        {t(`nav.${item.page}`)}
-                      </a>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </nav>
+          <SiteNav page={page} />
         </div>
       </header>
 

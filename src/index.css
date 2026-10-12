@@ -127,14 +127,15 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* On a phone the header nav opens from a Menu button, which needs JavaScript.
- * Without it the prerendered page would offer a button that does nothing, so
- * show the destinations instead. Unlayered, so it beats the `hidden` utility. */
+/* The header's menus and the phone's Menu button open with JavaScript. Without
+ * it the prerendered page would offer buttons that do nothing, so it lists every
+ * destination instead, at every width. Unlayered, so it beats the utilities. */
 @media (scripting: none) {
   #site-nav {
     display: flex;
   }
-  nav [aria-controls="site-nav"] {
+  nav [aria-controls="site-nav"],
+  .nav-row {
     display: none;
   }
 }
@@ -224,6 +225,17 @@ input[type="number"] {
   -webkit-backdrop-filter: blur(14px) saturate(160%);
   backdrop-filter: blur(14px) saturate(160%);
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+}
+
+/* An open nav menu lies over the page, so its pane is nearly opaque: what it
+ * covers must not show through the descriptions. */
+.glass .nav-panel {
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
+    0 18px 40px -16px rgba(20, 28, 66, 0.45);
 }
 
 /* Without backdrop-filter the panes would read as flat white on a loud field,
