@@ -41,7 +41,7 @@ thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var
 th[scope=row]{font-weight:600}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .card{background:color-mix(in oklab,var(--ink-900) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);box-shadow:0 20px 25px -5px rgb(0 0 0/.3),0 8px 10px -6px rgb(0 0 0/.3)}
-.hdr{border-bottom:1px solid var(--line);padding:.5rem 1rem}
+.hdr{position:relative;z-index:40;border-bottom:1px solid var(--line);padding:.5rem 1rem}
 .hin{max-width:72rem;margin:0 auto}
 .hrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem}
 .brand{display:flex;align-items:center;gap:.5rem;text-decoration:none}
@@ -57,20 +57,35 @@ th[scope=row]{font-weight:600}
 .navpill{width:100%;border-radius:.75rem;background:var(--ink-850);padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}
 .tab{display:block;border:0;background:none;font:inherit;border-radius:.5rem;padding:.25rem .625rem;font-size:.875rem;line-height:1.25rem;font-weight:500;white-space:nowrap;color:var(--slate-300);text-decoration:none;cursor:pointer;transition:background-color .15s,color .15s}
 .mbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
-.mbar button{display:flex;align-items:center;gap:.375rem}
-.mbar svg{width:14px;height:14px;transition:transform .15s}
-.mbar [aria-expanded=true] svg{transform:rotate(180deg)}
-#site-nav{display:none;flex-direction:column;gap:.25rem;margin-top:.25rem}
+.mbar button,.trig{display:flex;align-items:center;gap:.375rem}
+.mbar svg,.trig svg{width:14px;height:14px;flex-shrink:0;transition:transform .2s}
+.mbar [aria-expanded=true] svg,.trig[aria-expanded=true] svg{transform:rotate(180deg)}
+#site-nav{display:none;flex-direction:column;gap:.5rem;margin-top:.25rem}
 #site-nav.open{display:flex}
-.grp{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem}
-.grp .sep{height:1px;flex-basis:100%;background:color-mix(in oklab,var(--c-white) 15%,transparent)}
-.grp:first-child .sep{display:none}
-@media (min-width:640px){.hdr{padding-inline:1.5rem}.navpill{width:auto;max-width:100%}.mbar{display:none}#site-nav{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:0}.grp .sep{height:1rem;width:1px;flex-basis:auto;margin:0 .25rem}}
+.grp{display:flex;flex-direction:column;gap:.25rem;border-top:1px solid var(--line);padding-top:.5rem}
+.grp:first-child{border-top:0;padding-top:0}
+.grp .row{display:flex;flex-wrap:wrap;gap:.25rem}
+.cap{margin:0;padding:0 .625rem .25rem;font-size:11px;line-height:1rem;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--slate-500)}
+.menus{display:none;align-items:center;gap:.25rem}
+.menus .sep{height:1rem;width:1px;margin:0 .25rem;background:color-mix(in oklab,var(--c-white) 15%,transparent)}
+.menu{position:relative}
+.trig .gn{opacity:.75}.trig .dot{opacity:.5}
+.panel{display:none;position:absolute;top:100%;left:0;z-index:50;margin-top:.5rem;width:18rem;border-radius:.75rem;background:var(--ink-850);padding:.375rem;box-shadow:inset 0 0 0 1px var(--line),0 25px 50px -12px rgb(0 0 0/.25)}
+.panel.end{left:auto;right:0}
+.panel.open{display:block}
+.panel .sec+.sec{margin-top:.375rem;border-top:1px solid var(--line);padding-top:.375rem}
+.panel a{display:block;border-radius:.5rem;padding:.375rem .75rem;text-decoration:none;transition:background-color .15s}
+.panel a:hover{background:color-mix(in oklab,var(--c-white) 5%,transparent)}
+.panel a[aria-current=page]{background:color-mix(in oklab,var(--brand-600) 10%,transparent);box-shadow:inset 0 0 0 1px var(--brand-500)}
+.panel b{display:block;font-size:.875rem;line-height:1.25rem;font-weight:500;color:var(--c-white)}
+.panel a span{display:block;margin-top:.125rem;font-size:.75rem;line-height:1.1rem;color:var(--slate-400)}
+@media (min-width:640px){.hdr{padding-inline:1.5rem}.navpill{width:auto;max-width:100%}.mbar,#site-nav,#site-nav.open{display:none}.menus{display:flex}}
 @media (max-width:360px){.seg a,.seg button{padding-inline:.375rem}.ctrls{gap:.375rem}}
-@media (scripting:none){#site-nav{display:flex}.mbar button{display:none}}
+@media (scripting:none){#site-nav,#site-nav.open{display:flex}.mbar button,.menus{display:none}}
 .glass .card{background:rgba(255,255,255,.52);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.65);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),inset 0 -1px 0 0 rgba(255,255,255,.25),0 12px 32px -14px rgba(20,28,66,.42)}
 .glass .hdr{background:rgba(255,255,255,.46);-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);border-bottom-color:rgba(255,255,255,.55)}
 .glass .navpill{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.8)}
+.glass .panel{background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),0 18px 40px -16px rgba(20,28,66,.45)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.92)}}
 @media (prefers-reduced-transparency:reduce){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}}
 .theme-switching,.theme-switching *,.theme-switching *::before,.theme-switching *::after{transition:none!important}
@@ -128,7 +143,8 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <div class="ctrls"><div class="seg" role="group" aria-label="Theme"><button type="button" data-theme-set="dark" aria-pressed="false">Dark</button><button type="button" data-theme-set="light" aria-pressed="false">Light</button><button type="button" data-theme-set="glass" aria-pressed="false">Glass</button></div><div class="seg" role="group" aria-label="Language"><a href="/LLMScale/models/qwen3-32b.html" hreflang="en" lang="en" data-lang="en" aria-current="page">EN</a><a href="/LLMScale/tr/models/qwen3-32b.html" hreflang="tr" lang="tr" data-lang="tr">TR</a></div></div></div>
 <nav class="pnav" aria-label="LLMScale"><div class="navpill">
 <div class="mbar"><span class="tab on">Models</span><button type="button" class="tab" aria-controls="site-nav" aria-expanded="false">Menu<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button></div>
-<div id="site-nav"><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/">VRAM Sizing</a><a class="tab" href="/LLMScale/config.html">Config Decoder</a><a class="tab" href="/LLMScale/train.html">Fine-tune</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/fit.html">Task Fit</a><a class="tab" href="/LLMScale/anatomy.html">Model Anatomy</a><a class="tab" href="/LLMScale/compare.html">Model Compare</a><a class="tab" href="/LLMScale/decode.html">Name Decoder</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/vllm.html">vLLM Params</a></div><div class="grp"><span class="sep" aria-hidden="true"></span><a class="tab" href="/LLMScale/learn.html">LLM 101</a><a class="tab" href="/LLMScale/feed/">Feed</a></div></div>
+<div class="menus"><a class="tab" href="/LLMScale/">VRAM Sizing</a><span class="sep" aria-hidden="true"></span><div class="menu"><button type="button" class="tab trig" aria-expanded="false" aria-controls="nm-model">Model<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button><div class="panel" id="nm-model"><div class="sec"><a href="/LLMScale/fit.html"><b>Task Fit</b><span>Is this model right for the job?</span></a><a href="/LLMScale/compare.html"><b>Model Compare</b><span>Two to four models side by side</span></a><a href="/LLMScale/anatomy.html"><b>Model Anatomy</b><span>Where its parameters and memory go</span></a><a href="/LLMScale/config.html"><b>Config Decoder</b><span>Its config.json in plain language</span></a><a href="/LLMScale/decode.html"><b>Name Decoder</b><span>What 70B, A3B, AWQ or FP8 in a name mean</span></a></div><div class="sec"><a href="/LLMScale/train.html"><b>Fine-tune</b><span>Memory for LoRA, QLoRA and full fine-tuning</span></a></div></div></div><div class="menu"><button type="button" class="tab trig" aria-expanded="false" aria-controls="nm-serve">Serve<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button><div class="panel" id="nm-serve"><div class="sec"><a href="/LLMScale/serving.html"><b>Serving Brief</b><span>What its files say about serving it</span></a><a href="/LLMScale/vllm.html"><b>vLLM Params</b><span>A tuned vllm serve command</span></a></div></div></div><div class="menu"><button type="button" class="tab trig" aria-expanded="false" aria-controls="nm-learn">Learn<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button><div class="panel end" id="nm-learn"><div class="sec"><a href="/LLMScale/learn.html"><b>LLM 101</b><span>How a language model works, step by step</span></a><a href="/LLMScale/feed/"><b>Feed</b><span>New models, engines and hardware</span></a></div><div class="sec"><p class="cap">Guides</p><a href="/LLMScale/models/"><b>VRAM requirements by model</b></a><a href="/LLMScale/gpus/"><b>Which LLMs fit on which GPU</b></a><a href="/LLMScale/concepts/"><b>How LLM memory works</b></a></div></div></div></div>
+<div id="site-nav"><div class="grp"><div class="row"><a class="tab" href="/LLMScale/">VRAM Sizing</a></div></div><div class="grp"><p class="cap">Model</p><div class="row"><a class="tab" href="/LLMScale/fit.html">Task Fit</a><a class="tab" href="/LLMScale/compare.html">Model Compare</a><a class="tab" href="/LLMScale/anatomy.html">Model Anatomy</a><a class="tab" href="/LLMScale/config.html">Config Decoder</a><a class="tab" href="/LLMScale/decode.html">Name Decoder</a><a class="tab" href="/LLMScale/train.html">Fine-tune</a></div></div><div class="grp"><p class="cap">Serve</p><div class="row"><a class="tab" href="/LLMScale/serving.html">Serving Brief</a><a class="tab" href="/LLMScale/vllm.html">vLLM Params</a></div></div><div class="grp"><p class="cap">Learn</p><div class="row"><a class="tab" href="/LLMScale/learn.html">LLM 101</a><a class="tab" href="/LLMScale/feed/">Feed</a><a class="tab" href="/LLMScale/models/">VRAM requirements by model</a><a class="tab" href="/LLMScale/gpus/">Which LLMs fit on which GPU</a><a class="tab" href="/LLMScale/concepts/">How LLM memory works</a></div></div></div>
 </div></nav>
 </div></header>
 <main class="fmain">
@@ -192,6 +208,11 @@ function show(t){r.classList.add("theme-switching");r.classList.toggle("light",t
 bs.forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-theme-set");show(t);try{localStorage.setItem("theme",t)}catch(e){}})});mark();
 try{var mq=matchMedia("(prefers-color-scheme: dark)");mq.addEventListener("change",function(e){var s=null;try{s=localStorage.getItem("theme")}catch(x){}if(s!=="dark"&&s!=="light"&&s!=="glass")show(e.matches?"dark":"glass")})}catch(e){}
 var mb=document.querySelector("[aria-controls=site-nav]"),l=document.getElementById("site-nav");if(mb&&l)mb.addEventListener("click",function(){mb.setAttribute("aria-expanded",String(l.classList.toggle("open")))});
+var ts=document.querySelectorAll(".trig");function shut(x){ts.forEach(function(t){if(t===x)return;t.setAttribute("aria-expanded","false");var p=document.getElementById(t.getAttribute("aria-controls"));if(p)p.classList.remove("open")})}
+ts.forEach(function(t){t.addEventListener("click",function(){var p=document.getElementById(t.getAttribute("aria-controls")),o=t.getAttribute("aria-expanded")!=="true";shut(t);t.setAttribute("aria-expanded",String(o));if(p)p.classList.toggle("open",o)})});
+document.querySelectorAll(".menu").forEach(function(m){m.addEventListener("focusout",function(e){if(!m.contains(e.relatedTarget))shut(null)})});
+document.addEventListener("pointerdown",function(e){if(!(e.target.closest&&e.target.closest(".menu")))shut(null)});
+document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;var t=document.querySelector(".trig[aria-expanded=true]");if(t){shut(null);t.focus()}else if(mb&&l&&l.classList.contains("open")){l.classList.remove("open");mb.setAttribute("aria-expanded","false");mb.focus()}});
 document.querySelectorAll("[data-lang]").forEach(function(a){a.addEventListener("click",function(){try{localStorage.setItem("lang",a.getAttribute("data-lang"))}catch(e){}})})})();</script>
 </body>
 </html>
