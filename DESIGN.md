@@ -391,13 +391,18 @@ in both languages. The calculator — the product's core — is a direct link; a
 a thin vertical rule come three menus by intent: **Model** (understand and choose
 it), **Serve** (run it) and **Learn**. The menu holding the current page is solid
 indigo and names the page after its own name ("Serve · Serving Brief"); the
-others are muted with a white-wash hover. A menu opens below its trigger as an
-inset-tone panel with a hairline ring and the deep drop shadow; each entry is its
-name over a one-line description, the current one marked with the selected ring
-and fill, and a menu's sections are divided by a hairline, a titled one under an
-uppercase caption. On glass the panel is nearly opaque, because it lies over the
-page. A click elsewhere, Escape, or focus leaving the menu closes it. A new tool
-lengthens a menu, never the row.
+others are muted with a white-wash hover. A menu opens when the pointer rests on
+its trigger (90 ms), or on a click, Enter or the down arrow; moving along the row
+switches menus at once, and leaving waits 220 ms so the pointer can cross into the
+panel. The panel centres under the row: an inset-tone pane with a hairline ring
+and the deep drop shadow, in two columns. On the left each entry is its name over
+a one-line description — the current page solid indigo with white text, the entry
+under the pointer or focus an indigo tint with an indigo ring and an indigo name;
+sections are divided by a hairline, a titled one under an uppercase caption. On
+the right a quieter well says what the entry under the pointer holds ("What
+you'll find"), defaulting to the current page or the first entry. On glass the
+panel is nearly opaque, because it lies over the page. A click elsewhere, Escape,
+or focus leaving the menu closes it. A new tool lengthens a menu, never the row.
 
 Below `sm` the pill folds to the current page (solid indigo) and a Menu button;
 opened, it lists every destination under its menu's caption, sections divided by

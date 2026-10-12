@@ -62,26 +62,32 @@ th[scope=row]{font-weight:600}
 .grp:first-child{border-top:0;padding-top:0}
 .grp .row{display:flex;flex-wrap:wrap;gap:.25rem}
 .cap{margin:0;padding:0 .625rem .25rem;font-size:11px;line-height:1rem;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--slate-500)}
-.menus{display:none;align-items:center;gap:.25rem}
+.menus{display:none;position:relative;align-items:center;gap:.25rem}
 .menus .sep{height:1rem;width:1px;margin:0 .25rem;background:color-mix(in oklab,var(--c-white) 15%,transparent)}
-.menu{position:relative}
 .trig .gn{opacity:.75}.trig .dot{opacity:.5}
-.panel{display:none;position:absolute;top:100%;left:0;z-index:50;margin-top:.5rem;width:18rem;border-radius:.75rem;background:var(--ink-850);padding:.375rem;box-shadow:inset 0 0 0 1px var(--line),0 25px 50px -12px rgb(0 0 0/.25)}
-.panel.end{left:auto;right:0}
+.panel{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);z-index:50;width:34rem;max-width:calc(100vw - 2rem);padding-top:.5rem}
 .panel.open{display:block}
+.pin{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.375rem;border-radius:.75rem;background:var(--ink-850);padding:.375rem;box-shadow:inset 0 0 0 1px var(--line),0 25px 50px -12px rgb(0 0 0/.25)}
 .panel .sec+.sec{margin-top:.375rem;border-top:1px solid var(--line);padding-top:.375rem}
 .panel a{display:block;border-radius:.5rem;padding:.375rem .75rem;text-decoration:none;transition:background-color .15s}
-.panel a:hover{background:color-mix(in oklab,var(--c-white) 5%,transparent)}
-.panel a[aria-current=page]{background:color-mix(in oklab,var(--brand-600) 10%,transparent);box-shadow:inset 0 0 0 1px var(--brand-500)}
+.panel a.lit{background:color-mix(in oklab,var(--brand-600) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--brand-500) 50%,transparent)}
+.panel a.lit b{color:var(--brand-400)}
+.panel a[aria-current=page]{background:var(--brand-600);box-shadow:0 1px 3px 0 rgb(0 0 0/.1)}
+.panel a[aria-current=page] b{color:var(--onbrand)}
+.panel a[aria-current=page] span{color:color-mix(in oklab,var(--onbrand) 80%,transparent)}
 .panel b{display:block;font-size:.875rem;line-height:1.25rem;font-weight:500;color:var(--c-white)}
 .panel a span{display:block;margin-top:.125rem;font-size:.75rem;line-height:1.1rem;color:var(--slate-400)}
+.peek{border-radius:.5rem;background:color-mix(in oklab,var(--ink-900) 60%,transparent);padding:.75rem;box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--c-white) 5%,transparent)}
+.peek .cap{padding:0}
+.peek strong{display:block;margin-top:.375rem;font-size:.875rem;line-height:1.25rem;font-weight:600;letter-spacing:-.015em;color:var(--c-white)}
+.peek p.t{margin:.25rem 0 0;font-size:.75rem;line-height:1.6;color:var(--slate-300)}
 @media (min-width:640px){.hdr{padding-inline:1.5rem}.navpill{width:auto;max-width:100%}.mbar,#site-nav,#site-nav.open{display:none}.menus{display:flex}}
 @media (max-width:360px){.seg a,.seg button{padding-inline:.375rem}.ctrls{gap:.375rem}}
 @media (scripting:none){#site-nav,#site-nav.open{display:flex}.mbar button,.menus{display:none}}
 .glass .card{background:rgba(255,255,255,.52);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.65);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),inset 0 -1px 0 0 rgba(255,255,255,.25),0 12px 32px -14px rgba(20,28,66,.42)}
 .glass .hdr{background:rgba(255,255,255,.46);-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);border-bottom-color:rgba(255,255,255,.55)}
 .glass .navpill{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.8)}
-.glass .panel{background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),0 18px 40px -16px rgba(20,28,66,.45)}
+.glass .pin{background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),0 18px 40px -16px rgba(20,28,66,.45)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.92)}}
 @media (prefers-reduced-transparency:reduce){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}}
 .theme-switching,.theme-switching *,.theme-switching *::before,.theme-switching *::after{transition:none!important}
@@ -108,9 +114,12 @@ function show(t){r.classList.add("theme-switching");r.classList.toggle("light",t
 bs.forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-theme-set");show(t);try{localStorage.setItem("theme",t)}catch(e){}})});mark();
 try{var mq=matchMedia("(prefers-color-scheme: dark)");mq.addEventListener("change",function(e){var s=null;try{s=localStorage.getItem("theme")}catch(x){}if(s!=="dark"&&s!=="light"&&s!=="glass")show(e.matches?"dark":"glass")})}catch(e){}
 var mb=document.querySelector("[aria-controls=site-nav]"),l=document.getElementById("site-nav");if(mb&&l)mb.addEventListener("click",function(){mb.setAttribute("aria-expanded",String(l.classList.toggle("open")))});
-var ts=document.querySelectorAll(".trig");function shut(x){ts.forEach(function(t){if(t===x)return;t.setAttribute("aria-expanded","false");var p=document.getElementById(t.getAttribute("aria-controls"));if(p)p.classList.remove("open")})}
-ts.forEach(function(t){t.addEventListener("click",function(){var p=document.getElementById(t.getAttribute("aria-controls")),o=t.getAttribute("aria-expanded")!=="true";shut(t);t.setAttribute("aria-expanded",String(o));if(p)p.classList.toggle("open",o)})});
-document.querySelectorAll(".menu").forEach(function(m){m.addEventListener("focusout",function(e){if(!m.contains(e.relatedTarget))shut(null)})});
+var ts=document.querySelectorAll(".trig"),tm=0;function shut(x){ts.forEach(function(t){if(t===x)return;t.setAttribute("aria-expanded","false");var p=document.getElementById(t.getAttribute("aria-controls"));if(p)p.classList.remove("open")})}
+function show(t){clearTimeout(tm);shut(t);if(!t)return;t.setAttribute("aria-expanded","true");var p=document.getElementById(t.getAttribute("aria-controls"));if(p)p.classList.add("open")}
+function isOpen(){return!!document.querySelector(".trig[aria-expanded=true]")}
+ts.forEach(function(t){var pb="mouse";t.addEventListener("pointerdown",function(e){pb=e.pointerType});t.addEventListener("click",function(e){var o=t.getAttribute("aria-expanded")==="true";show(o&&(e.detail===0||pb!=="mouse")?null:t)});t.addEventListener("keydown",function(e){if(e.key!=="ArrowDown")return;e.preventDefault();show(t);var a=document.querySelector("#"+t.getAttribute("aria-controls")+" a");if(a)a.focus()})});
+document.querySelectorAll(".menu").forEach(function(m){var t=m.querySelector(".trig");m.addEventListener("pointerenter",function(e){if(e.pointerType!=="mouse")return;clearTimeout(tm);if(isOpen())show(t);else tm=setTimeout(function(){show(t)},90)});m.addEventListener("pointerleave",function(e){if(e.pointerType!=="mouse")return;clearTimeout(tm);tm=setTimeout(function(){show(null)},220)});m.addEventListener("focusout",function(e){if(!m.contains(e.relatedTarget))shut(null)});
+var pk=m.querySelector(".peek");m.querySelectorAll(".panel a").forEach(function(a){function lit(){m.querySelectorAll(".panel a.lit").forEach(function(x){x.classList.remove("lit")});a.classList.add("lit");if(pk&&a.dataset.more){pk.querySelector("strong").textContent=a.querySelector("b").textContent;pk.querySelector("p.t").textContent=a.dataset.more}}a.addEventListener("pointerenter",lit);a.addEventListener("focus",lit)})});
 document.addEventListener("pointerdown",function(e){if(!(e.target.closest&&e.target.closest(".menu")))shut(null)});
 document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;var t=document.querySelector(".trig[aria-expanded=true]");if(t){shut(null);t.focus()}else if(mb&&l&&l.classList.contains("open")){l.classList.remove("open");mb.setAttribute("aria-expanded","false");mb.focus()}});
 document.querySelectorAll("[data-lang]").forEach(function(a){a.addEventListener("click",function(){try{localStorage.setItem("lang",a.getAttribute("data-lang"))}catch(e){}})})})();`;
@@ -143,16 +152,19 @@ export function appHeader({ lang, file, href, base, feed }: FrameCtx, current: s
   const cur = (i: NavItem) => (on(i) ? ' aria-current="page"' : "");
   const tab = (i: NavItem) => `<a class="tab" href="${href(lang, i.file)}"${cur(i)}>${esc(d[i.label])}</a>`;
   const desktop = `<div class="menus">${tab(NAV_HOME)}<span class="sep" aria-hidden="true"></span>${menus
-    .map((m, mi) => {
+    .map((m) => {
       const label = m === here && hereItem
         ? `<span class="gn">${esc(d[m.label])}</span><span class="dot" aria-hidden="true">·</span><span>${esc(d[hereItem.label])}</span>`
         : esc(d[m.label]);
+      const items = m.sections.flatMap((sec) => sec.items);
+      const first = items.find(on) ?? items[0];
       const sections = m.sections
         .map((sec) => `<div class="sec">${sec.title ? `<p class="cap">${esc(d[sec.title])}</p>` : ""}${sec.items
-          .map((i) => `<a href="${href(lang, i.file)}"${cur(i)}><b>${esc(d[i.label])}</b>${i.desc ? `<span>${esc(d[i.desc])}</span>` : ""}</a>`)
+          .map((i) => `<a href="${href(lang, i.file)}"${cur(i)}${i.more ? ` data-more="${esc(d[i.more])}"` : ""}><b>${esc(d[i.label])}</b>${i.desc ? `<span>${esc(d[i.desc])}</span>` : ""}</a>`)
           .join("")}</div>`)
         .join("");
-      return `<div class="menu"><button type="button" class="tab trig${m === here ? " on" : ""}" aria-expanded="false" aria-controls="nm-${m.id}">${label}${CHEVRON}</button><div class="panel${mi === menus.length - 1 ? " end" : ""}" id="nm-${m.id}">${sections}</div></div>`;
+      const peek = first?.more ? `<div class="peek"><p class="cap">${esc(d["nav.peek"])}</p><strong>${esc(d[first.label])}</strong><p class="t">${esc(d[first.more])}</p></div>` : "";
+      return `<div class="menu"><button type="button" class="tab trig${m === here ? " on" : ""}" aria-expanded="false" aria-controls="nm-${m.id}">${label}${CHEVRON}</button><div class="panel" id="nm-${m.id}"><div class="pin"><div>${sections}</div>${peek}</div></div></div>`;
     })
     .join("")}</div>`;
   const phone = `<div id="site-nav"><div class="grp"><div class="row">${tab(NAV_HOME)}</div></div>${menus

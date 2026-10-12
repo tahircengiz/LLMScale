@@ -5,8 +5,10 @@
 //
 // One calm row at every width from sm up, in both languages: the calculator is a
 // direct link, and everything else sits in three menus by intent — understand the
-// model, serve it, learn — each item with a line saying what it is for. A new tool
-// lengthens a menu, never the row. Below sm the row folds to the current page and
+// model, serve it, learn — each item with a line saying what it is for, and beside
+// the list a few lines on what the page under the pointer holds. A menu opens when
+// the pointer rests on it, or on a click or Enter. A new tool lengthens a menu,
+// never the row. Below sm the row folds to the current page and
 // a Menu button, as before.
 //
 // React-free, so the build-time page generators can import it.
@@ -21,6 +23,9 @@ export interface NavItem {
   label: string;
   /** Dictionary key of its one-line description, shown in the desktop menu. */
   desc?: string;
+  /** Dictionary key of what a visitor finds there, shown beside the list for the
+   *  entry the pointer or focus is on. */
+  more?: string;
   /** Path under the language root: "" for the calculator, "x.html" for a tool. */
   file: string;
   /** Linked only when the build has news posts. */
@@ -35,10 +40,10 @@ export interface NavMenu {
   sections: { title?: string; items: NavItem[] }[];
 }
 
-const item = (page: string, file: string): NavItem => ({ page, label: `nav.${page}`, desc: `nav.desc.${page}`, file });
+const item = (page: string, file: string): NavItem => ({ page, label: `nav.${page}`, desc: `nav.desc.${page}`, more: `nav.more.${page}`, file });
 
 /** The calculator: the product's core, one click from everywhere. */
-export const NAV_HOME: NavItem = item("sizing", "");
+export const NAV_HOME: NavItem = { ...item("sizing", ""), more: undefined };
 
 export const NAV_MENUS: NavMenu[] = [
   {
@@ -62,9 +67,9 @@ export const NAV_MENUS: NavMenu[] = [
       {
         title: "nav.guides",
         items: [
-          { label: "footer.models", file: MODELS_HUB },
-          { label: "footer.gpus", file: GPUS_HUB },
-          { label: "footer.concepts", file: CONCEPTS_HUB },
+          { label: "footer.models", more: "nav.more.models", file: MODELS_HUB },
+          { label: "footer.gpus", more: "nav.more.gpus", file: GPUS_HUB },
+          { label: "footer.concepts", more: "nav.more.concepts", file: CONCEPTS_HUB },
         ],
       },
     ],

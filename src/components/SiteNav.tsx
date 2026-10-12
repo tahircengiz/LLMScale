@@ -4,6 +4,11 @@ import { menuOf, NAV_HOME, navMenus, navPages, type NavItem, type NavMenu } from
 
 const MENUS = navMenus(__HAS_FEED__);
 
+/** How long the pointer rests on a closed menu before it opens, and how long a
+ *  menu waits after the pointer leaves — time to cross the gap into the panel. */
+const OPEN_DELAY = 90;
+const CLOSE_DELAY = 220;
+
 const tabCls = (active: boolean) =>
   "rounded-lg px-2.5 py-1 text-sm font-medium transition whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-brand-500 " +
   (active ? "bg-brand-600 text-onbrand shadow" : "text-slate-300 hover:bg-white/5");
@@ -26,24 +31,38 @@ function Chevron({ open }: { open: boolean }) {
 }
 
 /** The header nav. From sm up: the calculator as a direct link, then three menus
- *  by intent, the current page's menu solid indigo and naming the page. Below sm:
- *  the current page and a Menu button that lists everything. Every link is in the
- *  DOM from the first render, so the prerendered page carries the whole site map. */
+ *  by intent, the current page's menu solid indigo and naming the page. A menu
+ *  opens when the pointer rests on it, or on a click or Enter; beside its list it
+ *  says what the entry under the pointer or focus holds. Below sm: the current page
+ *  and a Menu button that lists everything. Every link is in the DOM from the first
+ *  render, so the prerendered page carries the whole site map. */
 export function SiteNav({ page }: { page: string }) {
   const { t, lang } = useLang();
   const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
   const [open, setOpen] = useState<NavMenu["id"] | null>(null);
+  // The entry the pointer or focus is on, which the panel's side describes.
+  const [peek, setPeek] = useState<string | null>(null);
   const [phoneOpen, setPhoneOpen] = useState(false);
   const row = useRef<HTMLDivElement>(null);
   const phoneButton = useRef<HTMLButtonElement>(null);
+  const timer = useRef<number | undefined>(undefined);
+  // What last pressed a trigger: a mouse already opened its menu on the way in.
+  const pressedBy = useRef<string>("mouse");
   const current = menuOf(MENUS, page);
   const currentItem = navPages(MENUS).find((i) => i.page === page);
+
+  const clearTimer = () => window.clearTimeout(timer.current);
+  function show(id: NavMenu["id"] | null) {
+    clearTimer();
+    setOpen(id);
+    setPeek(null);
+  }
 
   // A click anywhere else closes the open menu.
   useEffect(() => {
     if (!open) return;
     const away = (e: PointerEvent) => {
-      if (!row.current?.contains(e.target as Node)) setOpen(null);
+      if (!row.current?.contains(e.target as Node)) show(null);
     };
     document.addEventListener("pointerdown", away);
     return () => document.removeEventListener("pointerdown", away);
@@ -54,12 +73,15 @@ export function SiteNav({ page }: { page: string }) {
   useEffect(() => {
     const close = (e: PageTransitionEvent) => {
       if (e.persisted) {
-        setOpen(null);
+        show(null);
         setPhoneOpen(false);
       }
     };
     window.addEventListener("pageshow", close);
-    return () => window.removeEventListener("pageshow", close);
+    return () => {
+      window.removeEventListener("pageshow", close);
+      clearTimer();
+    };
   }, []);
 
   const href = (i: NavItem) => `${home}${i.file}`;
@@ -72,7 +94,7 @@ export function SiteNav({ page }: { page: string }) {
         if (e.key !== "Escape") return;
         if (open) {
           const id = open;
-          setOpen(null);
+          show(null);
           document.getElementById(`nav-trigger-${id}`)?.focus();
         } else if (phoneOpen) {
           setPhoneOpen(false);
@@ -81,21 +103,35 @@ export function SiteNav({ page }: { page: string }) {
       }}
     >
       <div className="w-full rounded-xl bg-ink-850 p-1 ring-1 ring-white/10 sm:w-auto">
-        {/* ── from sm up: one row ── */}
-        <div ref={row} className="nav-row hidden items-center gap-1 sm:flex">
+        {/* ── from sm up: one row; the panels centre under it ── */}
+        <div ref={row} className="nav-row relative hidden items-center gap-1 sm:flex">
           <a href={href(NAV_HOME)} aria-current={page === NAV_HOME.page ? "page" : undefined} className={tabCls(page === NAV_HOME.page)}>
             {t(NAV_HOME.label)}
           </a>
           <span aria-hidden="true" className="mx-1 h-4 w-px bg-white/15" />
-          {MENUS.map((m, mi) => {
+          {MENUS.map((m) => {
             const here = current?.id === m.id;
             const isOpen = open === m.id;
+            const items = m.sections.flatMap((s) => s.items);
+            // The side describes what is under the pointer, else this page, else the first entry.
+            const shown = items.find((i) => i.file === peek) ?? items.find((i) => i.page === page) ?? items[0];
             return (
               <div
                 key={m.id}
-                className="relative"
+                onPointerEnter={(e) => {
+                  if (e.pointerType !== "mouse") return;
+                  clearTimer();
+                  // Moving along the row switches at once; a closed row waits a beat.
+                  if (open) show(m.id);
+                  else timer.current = window.setTimeout(() => show(m.id), OPEN_DELAY);
+                }}
+                onPointerLeave={(e) => {
+                  if (e.pointerType !== "mouse") return;
+                  clearTimer();
+                  timer.current = window.setTimeout(() => show(null), CLOSE_DELAY);
+                }}
                 onBlur={(e) => {
-                  if (isOpen && !e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(null);
+                  if (isOpen && !e.currentTarget.contains(e.relatedTarget as Node | null)) show(null);
                 }}
               >
                 <button
@@ -103,7 +139,16 @@ export function SiteNav({ page }: { page: string }) {
                   type="button"
                   aria-expanded={isOpen}
                   aria-controls={`nav-menu-${m.id}`}
-                  onClick={() => setOpen(isOpen ? null : m.id)}
+                  onPointerDown={(e) => (pressedBy.current = e.pointerType)}
+                  // A mouse already opened it on the way in, so its click keeps it
+                  // open; from the keyboard (detail 0) or a touch, a click toggles.
+                  onClick={(e) => show(isOpen && (e.detail === 0 || pressedBy.current !== "mouse") ? null : m.id)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "ArrowDown") return;
+                    e.preventDefault();
+                    show(m.id);
+                    requestAnimationFrame(() => document.querySelector<HTMLElement>(`#nav-menu-${m.id} a`)?.focus());
+                  }}
                   className={tabCls(here) + " flex items-center gap-1.5"}
                 >
                   {here && currentItem ? (
@@ -121,36 +166,47 @@ export function SiteNav({ page }: { page: string }) {
                 </button>
                 <div
                   id={`nav-menu-${m.id}`}
-                  className={
-                    (isOpen ? "block" : "hidden") +
-                    " nav-panel absolute top-full z-50 mt-2 w-72 rounded-xl bg-ink-850 p-1.5 shadow-2xl ring-1 ring-white/10 " +
-                    // The last menu opens leftwards so it never runs off a narrow window.
-                    (mi === MENUS.length - 1 ? "right-0" : "left-0")
-                  }
+                  // pt-2 is a transparent bridge: the pointer crosses it from the row
+                  // into the panel without leaving the menu.
+                  className={(isOpen ? "block" : "hidden") + " absolute left-1/2 top-full z-50 w-[34rem] max-w-[calc(100vw-2rem)] -translate-x-1/2 pt-2"}
                 >
-                  {m.sections.map((s, si) => (
-                    <div key={si} className={si > 0 ? "mt-1.5 border-t border-white/10 pt-1.5" : undefined}>
-                      {s.title && <p className="px-3 pb-1 pt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-500">{t(s.title)}</p>}
-                      {s.items.map((i) => {
-                        const on = i.page !== undefined && i.page === page;
-                        return (
-                          <a
-                            key={i.file || "home"}
-                            href={href(i)}
-                            aria-current={on ? "page" : undefined}
-                            onClick={() => setOpen(null)}
-                            className={
-                              "block rounded-lg px-3 py-1.5 outline-none transition focus-visible:ring-2 focus-visible:ring-brand-500 " +
-                              (on ? "bg-brand-600/10 ring-1 ring-inset ring-brand-500" : "hover:bg-white/5")
-                            }
-                          >
-                            <span className="block text-sm font-medium text-white">{t(i.label)}</span>
-                            {i.desc && <span className="mt-0.5 block text-xs leading-snug text-slate-400">{t(i.desc)}</span>}
-                          </a>
-                        );
-                      })}
+                  <div className="nav-panel grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-1.5 rounded-xl bg-ink-850 p-1.5 shadow-2xl ring-1 ring-white/10">
+                    <div>
+                      {m.sections.map((s, si) => (
+                        <div key={si} className={si > 0 ? "mt-1.5 border-t border-white/10 pt-1.5" : undefined}>
+                          {s.title && <p className="px-3 pb-1 pt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-500">{t(s.title)}</p>}
+                          {s.items.map((i) => {
+                            const on = i.page !== undefined && i.page === page;
+                            const lit = shown === i && peek !== null;
+                            return (
+                              <a
+                                key={i.file || "home"}
+                                href={href(i)}
+                                aria-current={on ? "page" : undefined}
+                                onPointerEnter={() => setPeek(i.file)}
+                                onFocus={() => setPeek(i.file)}
+                                onClick={() => show(null)}
+                                className={
+                                  "block rounded-lg px-3 py-1.5 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-brand-500 " +
+                                  (on ? "bg-brand-600 shadow" : lit ? "bg-brand-600/20 ring-1 ring-inset ring-brand-500/50" : "")
+                                }
+                              >
+                                <span className={"block text-sm font-medium " + (on ? "text-onbrand" : lit ? "text-brand-400" : "text-white")}>{t(i.label)}</span>
+                                {i.desc && <span className={"mt-0.5 block text-xs leading-snug " + (on ? "text-onbrand/80" : "text-slate-400")}>{t(i.desc)}</span>}
+                              </a>
+                            );
+                          })}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                    {shown?.more && (
+                      <div className="rounded-lg bg-ink-900/60 p-3 ring-1 ring-inset ring-white/5">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{t("nav.peek")}</p>
+                        <p className="mt-1.5 text-sm font-semibold tracking-tight text-white">{t(shown.label)}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-300">{t(shown.more)}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
