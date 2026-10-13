@@ -27,6 +27,7 @@ export function Controls({
   contextLength,
   concurrency,
   gpuUtil,
+  load,
   maxContext,
   onChange,
 }: {
@@ -35,6 +36,8 @@ export function Controls({
   contextLength: number;
   concurrency: number;
   gpuUtil: number;
+  /** The typical request; a prompt of 0 means every user is sized at the full context. */
+  load: { prompt: number; output: number; prefix: number };
   maxContext?: number;
   onChange: (patch: {
     weightDtype?: Dtype;
@@ -42,6 +45,9 @@ export function Controls({
     contextLength?: number;
     concurrency?: number;
     gpuUtil?: number;
+    loadPrompt?: number;
+    loadOutput?: number;
+    loadPrefix?: number;
   }) => void;
 }) {
   const { t } = useLang();
@@ -127,6 +133,51 @@ export function Controls({
           ))}
         </div>
       </Field>
+
+      {/* Users at the full context are the worst case vLLM reports. A typical
+          request holds less, and a shared prefix is cached once (calc.ts). */}
+      <div>
+        <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-300">
+          <input
+            id="typical-load"
+            type="checkbox"
+            checked={load.prompt > 0}
+            onChange={(e) =>
+              onChange(
+                e.target.checked
+                  ? {
+                      loadPrompt: Math.max(1, Math.min(2048, Math.round(contextLength / 4))),
+                      loadOutput: Math.min(512, Math.round(contextLength / 8)),
+                      loadPrefix: 0,
+                    }
+                  : { loadPrompt: 0, loadOutput: 0, loadPrefix: 0 },
+              )
+            }
+            className="h-3.5 w-3.5 accent-brand-500"
+          />
+          {t("controls.load")}
+        </label>
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{t("controls.loadNote")}</p>
+        {load.prompt > 0 && (
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Field label={t("controls.loadPrompt")}>
+              <NumberInput value={load.prompt} onChange={(v) => onChange({ loadPrompt: Math.max(1, v) })} min={1} step={256} suffix={t("controls.tok")} />
+            </Field>
+            <Field label={t("controls.loadOutput")}>
+              <NumberInput value={load.output} onChange={(v) => onChange({ loadOutput: Math.max(0, v) })} min={0} step={128} suffix={t("controls.tok")} />
+            </Field>
+            <Field label={t("controls.loadPrefix")}>
+              <NumberInput
+                value={load.prefix}
+                onChange={(v) => onChange({ loadPrefix: Math.max(0, Math.min(v, load.prompt)) })}
+                min={0}
+                step={256}
+                suffix={t("controls.tok")}
+              />
+            </Field>
+          </div>
+        )}
+      </div>
 
       {/* The share of each card the engine may fill. The overhead itself is sized
           per GPU from the model (overhead.ts), so this is the one knob left. */}

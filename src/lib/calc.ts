@@ -210,7 +210,9 @@ const VLLM_BLOCK = 16;
  * Checked against vLLM's own figures for Gemma 3 1B (51.0× vs 51.02×) and
  * Granite 4.0-H Micro (23.2× vs 23.21×) in scripts/test-vllmlog.ts.
  */
-export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens = 2048): number {
+/** How vLLM lays out a model's cache: one block size and page for every layer, and
+ *  how many equal groups each kind of layer is cut into. */
+function kvLayout(arch: ModelArch, kvDtype: Dtype) {
   const perLayer = kvBytesPerLayerToken(arch, kvDtype);
   const attn = arch.attnLayers ?? arch.numLayers;
   const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, attn) : 0;
@@ -221,18 +223,86 @@ export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength:
   const block = statePerLayer > 0 && perLayer > 0 ? Math.ceil(statePerLayer / perLayer / VLLM_BLOCK) * VLLM_BLOCK : VLLM_BLOCK;
   const page = Math.max(block * perLayer, statePerLayer);
   const kinds = [full, sliding, stateLayers].filter((n) => n > 0);
-  if (!kinds.length || !(page > 0)) return 0;
+  if (!kinds.length || !(page > 0)) return null;
   const lo = Math.min(...kinds);
   const hi = Math.max(...kinds);
   // The fewest layers of any kind sets the group, unless the kinds are close in size.
   const group = hi < lo * 1.5 ? hi : lo;
   const groups = (n: number) => Math.ceil(n / group);
-  const blocksOf = (tokens: number) => Math.ceil(tokens / block);
-  let blocks = 0;
-  if (full) blocks += groups(full) * blocksOf(contextLength);
-  if (sliding) blocks += groups(sliding) * (blocksOf(Math.min(arch.slidingWindow! - 1 + 2 * batchTokens, contextLength)) + 1);
-  if (stateLayers) blocks += groups(stateLayers) * 2;
-  return blocks * group * page;
+  return { block, page, group, full: groups(full), sliding: sliding ? groups(sliding) : 0, state: groups(stateLayers) };
+}
+
+/**
+ * KV cache and state vLLM 0.31.0 holds back for ONE request at `contextLength`:
+ * the bound it sizes its pool and admits requests by
+ * (get_max_concurrency_for_kv_cache_config in vllm/v1/core/kv_cache_utils.py,
+ * max_admission_blocks_per_request in vllm/v1/kv_cache_interface.py). It is more
+ * than the cache attention reads (kvBytesPerSeq) in three ways:
+ *   - a sliding layer keeps window − 1 tokens plus every token in flight, two
+ *     batches of max_num_batched_tokens under async scheduling, plus one block;
+ *   - a Mamba or linear-attention layer keeps two state blocks (prefix caching's
+ *     "align" mode), and the attention layers' blocks grow to the state's page;
+ *   - each kind of layer is cut into groups of equal size, the last one padded.
+ * Checked against vLLM's own figures for Gemma 3 1B (51.0× vs 51.02×) and
+ * Granite 4.0-H Micro (23.2× vs 23.21×) in scripts/test-vllmlog.ts.
+ */
+export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens = 2048): number {
+  const l = kvLayout(arch, kvDtype);
+  if (!l) return 0;
+  const blocksOf = (tokens: number) => Math.ceil(tokens / l.block);
+  let blocks = l.full * blocksOf(contextLength);
+  if (l.sliding) blocks += l.sliding * (blocksOf(Math.min(arch.slidingWindow! - 1 + 2 * batchTokens, contextLength)) + 1);
+  blocks += l.state * 2;
+  return blocks * l.group * l.page;
+}
+
+/** A load as it runs, not at its limit: what an average request sends and gets
+ *  back, and how much of every prompt is the same (a system prompt, few-shot
+ *  examples) and so cached once. */
+export interface TypicalLoad {
+  promptTokens: number;
+  outputTokens: number;
+  sharedPrefix: number;
+}
+
+/** Tokens an average request holds while it is served: its prompt and, since
+ *  requests are at different points of their replies, half its reply. */
+export function tokensInUse(load: TypicalLoad, contextLength: number): number {
+  return Math.max(1, Math.min(contextLength, Math.round(load.promptTokens + load.outputTokens / 2)));
+}
+
+/** The part of a request's cache prefix caching shares: the full-attention
+ *  layers' whole blocks of the common prefix. Sliding layers keep only their
+ *  window and a hybrid's state is per request, so neither is shared. */
+export function kvSharedPrefix(arch: ModelArch, kvDtype: Dtype, prefixTokens: number): number {
+  const l = kvLayout(arch, kvDtype);
+  if (!l || !l.full) return 0;
+  return l.full * Math.floor(Math.max(0, prefixTokens) / l.block) * l.group * l.page;
+}
+
+/**
+ * How many requests one GPU (or each of a tensor-parallel group) serves at once
+ * under a typical load. vLLM hands out KV blocks as tokens arrive, so what bounds
+ * concurrency in practice is the cache requests actually hold, not the
+ * full-context reservation its "Maximum concurrency" line reports; and a shared
+ * prefix sits in the pool once. max_num_seqs caps it either way.
+ */
+export function typicalConcurrency(
+  input: Omit<CalcInput, "concurrency">,
+  usableGiB: number,
+  load: TypicalLoad,
+): { users: number; inUse: number; capped: boolean } {
+  const inUse = tokensInUse(load, input.contextLength);
+  const room = kvRoom(input, usableGiB) * kvSplit(input.arch, input.gpus ?? 1);
+  const batch = input.batch ?? SMALL_CARD_BATCH;
+  const per = kvReservedPerSeq(input.arch, input.kvDtype, inUse, batch.tokens);
+  const shared = Math.min(kvSharedPrefix(input.arch, input.kvDtype, Math.min(load.sharedPrefix, inUse)), per);
+  if (room <= 0 || !(per > 0)) return { users: 0, inUse, capped: false };
+  // The shared blocks sit in the pool once; each request adds the rest of its own.
+  const unique = per - shared;
+  const fit = unique > 0 ? Math.floor((room - shared) / unique) : batch.seqs;
+  const users = Math.max(0, Math.min(fit, batch.seqs));
+  return { users, inUse, capped: fit > batch.seqs };
 }
 
 export function calculate(input: CalcInput): CalcResult {

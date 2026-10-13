@@ -170,6 +170,7 @@ export function SizingPage() {
               contextLength={state.contextLength}
               concurrency={state.concurrency}
               gpuUtil={state.gpuUtil}
+              load={{ prompt: state.loadPrompt, output: state.loadOutput, prefix: state.loadPrefix }}
               maxContext={state.arch?.maxContext}
               onChange={patch}
             />
@@ -203,6 +204,7 @@ export function SizingPage() {
                 contextLength={state.contextLength}
                 concurrency={state.concurrency}
                 gpuUtil={state.gpuUtil}
+                load={state.loadPrompt > 0 ? { promptTokens: state.loadPrompt, outputTokens: state.loadOutput, sharedPrefix: state.loadPrefix } : null}
                 totalGiB={result.totalGiB}
                 gpuId={state.gpuId}
                 migId={state.migId}

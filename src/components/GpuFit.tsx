@@ -1,7 +1,7 @@
 import { FEATURED_GPU_IDS, gpuPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "./StaticPageLink";
 import { useEffect, useState } from "react";
-import { calculate, gpusNeeded, maxConcurrency, maxContextLength, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch } from "../lib/calc";
+import { calculate, gpusNeeded, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch, type TypicalLoad } from "../lib/calc";
 import { batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
@@ -22,6 +22,7 @@ export function GpuFit({
   contextLength,
   concurrency,
   gpuUtil,
+  load,
   totalGiB,
   gpuId,
   migId,
@@ -36,6 +37,8 @@ export function GpuFit({
   contextLength: number;
   concurrency: number;
   gpuUtil: number;
+  /** A typical request, when one is set: concurrency as it runs, beside the worst case. */
+  load: TypicalLoad | null;
   /** The headline total, for the prompt shown before a device is picked. */
   totalGiB: number;
   gpuId: string;
@@ -95,6 +98,7 @@ export function GpuFit({
   const selBatch = batchFor(selected, migId);
   const maxUsers = maxConcurrency({ ...base, contextLength, batch: selBatch }, effUsable);
   const maxCtx = maxContextLength({ ...base, concurrency, batch: selBatch }, effUsable);
+  const typical = load ? typicalConcurrency({ ...base, contextLength, batch: selBatch }, effUsable, load) : null;
   // A MIG slice gets roughly its share of the memory system, so scale the
   // published bandwidth with it. Only estimate where the model actually fits —
   // a speed for a configuration that cannot run is noise.
@@ -300,13 +304,28 @@ export function GpuFit({
           <div className="mt-0.5 text-[11px] text-slate-500">{t("gpu.bw", { bw: selected.bandwidthGBs })}</div>
         ) : null}
 
-        <div className={"mt-3 grid grid-cols-2 gap-2" + (speed ? " sm:grid-cols-3" : "")}>
+        {/* Three stats share a row; four sit two by two, since the card is half the page wide. */}
+        <div className={"mt-3 grid grid-cols-2 gap-2" + ((speed ? 1 : 0) + (typical ? 1 : 0) === 1 ? " sm:grid-cols-3" : "")}>
           <Stat
             label={t("gpu.maxUsers")}
             value={maxUsers > 0 ? formatInt(maxUsers) : "0"}
             sub={t("gpu.atCtx", { x: ctxLabel(contextLength) })}
-            accent={maxUsers > 0}
+            accent={maxUsers > 0 && !typical}
           />
+          {/* The worst case above is what vLLM reports at startup; this is what
+              the pool holds when requests are the size the visitor described. */}
+          {typical && (
+            <Stat
+              label={t("gpu.typicalUsers")}
+              value={typical.users > 0 ? formatInt(typical.users) : "0"}
+              sub={
+                typical.capped
+                  ? t("gpu.typicalCapped", { n: formatInt(selBatch.seqs) })
+                  : t("gpu.typicalAt", { x: formatInt(typical.inUse) })
+              }
+              accent={typical.users > 0}
+            />
+          )}
           {/* Mirrors the stat beside it: each holds the other input at its current
               value — max users at this context, max context at this concurrency. */}
           <Stat

@@ -13,6 +13,12 @@ export interface AppState {
   concurrency: number;
   /** Share of each card the engine may fill: vLLM's --gpu-memory-utilization. */
   gpuUtil: number;
+  /** A typical request, for concurrency as it runs (calc.ts, typicalConcurrency):
+   *  average prompt and output tokens, and the prefix every prompt shares. A
+   *  prompt of 0 means not set. */
+  loadPrompt: number;
+  loadOutput: number;
+  loadPrefix: number;
   gpuId: string;
   migId: string;
 }
@@ -39,6 +45,9 @@ export const DEFAULT_STATE: AppState = {
   contextLength: 8192,
   concurrency: 1,
   gpuUtil: VLLM_UTIL,
+  loadPrompt: 0,
+  loadOutput: 0,
+  loadPrefix: 0,
   // Deliberately empty: the app opens on no model and no device. A default we
   // put in front of people is indistinguishable from a choice they made, and a
   // crawler that renders the page used to emit our default as if it were one.
@@ -98,6 +107,11 @@ export function encodeState(s: AppState): string {
   p.set("n", String(s.concurrency));
   // Left out at vLLM's default, so a link only carries a share someone chose.
   if (s.gpuUtil !== VLLM_UTIL) p.set("gu", String(s.gpuUtil));
+  if (s.loadPrompt > 0) {
+    p.set("lp", String(s.loadPrompt));
+    p.set("lo", String(s.loadOutput));
+    if (s.loadPrefix > 0) p.set("lx", String(s.loadPrefix));
+  }
   // Absent, not empty, while no device is chosen — an empty `g=` would still
   // read as a value and would land in the analytics data as one.
   if (s.gpuId) p.set("g", s.gpuId);
@@ -163,6 +177,12 @@ export function decodeState(search: string): Partial<AppState> {
   // as overhead; the overhead is now sized per GPU, so it is not read.
   const gu = num(p.get("gu"));
   if (gu !== undefined && gu > 0 && gu <= 1) out.gpuUtil = gu;
+  const lp = num(p.get("lp"));
+  if (lp && lp > 0) {
+    out.loadPrompt = lp;
+    out.loadOutput = Math.max(0, num(p.get("lo")) ?? 0);
+    out.loadPrefix = Math.max(0, num(p.get("lx")) ?? 0);
+  }
   if (p.get("g")) out.gpuId = p.get("g")!;
   if (p.get("mig")) out.migId = p.get("mig")!;
   return out;
