@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Tue, 13 Oct 2026 17:13:50 GMT</lastBuildDate>
+<lastBuildDate>Tue, 13 Oct 2026 17:14:17 GMT</lastBuildDate>
+<item>
+<title>Intel names Crescent Island GPU D-Series, with up to 480 GB of LPDDR5X</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-13-intel-d-series-gpu-480gb-lpddr5x.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-13-intel-d-series-gpu-480gb-lpddr5x.html</guid>
+<pubDate>Tue, 13 Oct 2026 17:14:17 GMT</pubDate>
+<category>Hardware</category>
+<description>&lt;p&gt;Intel has named its Crescent Island GPU the D-Series. The D270 has 32 Xe3P cores, 256 XMX engines and 32 MB of L2. It is rated at up to 1.3 PFLOPS FP8 and supports formats from FP4 to FP64, on an air-cooled 350 W PCIe Gen5 x16 card. Intel's own version has 160 GB of LPDDR5X, ODM designs go up to 480 GB, and bandwidth is rated at 1.5 TB/s.&lt;/p&gt;&lt;p&gt;That capacity could hold large weights plus long-context KV cache on one card. However, 1.5 TB/s limits decode speed, which is bandwidth-bound. No pricing yet.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://reddit.com/r/LocalLLaMA/comments/1x4g90u/intel_crescent_island_gpu_gets_dseries_name"&gt;Reddit r/LocalLLaMA&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>vLLM adds bi-directional KV transfer, cutting multi-turn TTFT up to 3.3x</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-13-vllm-bidirectional-kv-transfer-multi-turn.html</link>
