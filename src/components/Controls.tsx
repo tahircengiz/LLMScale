@@ -2,6 +2,7 @@ import type { Dtype } from "../lib/calc";
 import { formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { Field, NumberInput, SectionTitle, Segmented } from "./ui";
+import { PresetChips } from "./PresetChips";
 
 const WEIGHT_DTYPES: { value: Dtype; label: string }[] = [
   { value: "fp16", label: "FP16" },
@@ -28,6 +29,7 @@ export function Controls({
   concurrency,
   gpuUtil,
   load,
+  hfId,
   maxContext,
   onChange,
 }: {
@@ -38,6 +40,8 @@ export function Controls({
   gpuUtil: number;
   /** The typical request; a prompt of 0 means every user is sized at the full context. */
   load: { prompt: number; output: number; prefix: number };
+  /** The model's repository, read for what moves a preset (presets.ts). */
+  hfId: string;
   maxContext?: number;
   onChange: (patch: {
     weightDtype?: Dtype;
@@ -158,6 +162,24 @@ export function Controls({
           {t("controls.load")}
         </label>
         <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{t("controls.loadNote")}</p>
+        {load.prompt > 0 && (
+          <div className="mt-2">
+            <PresetChips
+              hfId={hfId}
+              maxContext={maxContext}
+              current={{ promptTokens: load.prompt, outputTokens: load.output, sharedPrefix: load.prefix }}
+              onApply={(a) =>
+                onChange({
+                  loadPrompt: a.promptTokens,
+                  loadOutput: a.outputTokens,
+                  loadPrefix: a.sharedPrefix,
+                  // The window has to hold a whole request.
+                  contextLength: Math.max(contextLength, a.promptTokens + a.outputTokens),
+                })
+              }
+            />
+          </div>
+        )}
         {load.prompt > 0 && (
           <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Field label={t("controls.loadPrompt")}>

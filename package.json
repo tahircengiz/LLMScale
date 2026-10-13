@@ -33,6 +33,8 @@
     "test:newsroom": "node scripts/test-newsroom.ts",
     "test:vllmlog": "node scripts/test-vllmlog.ts",
     "test:load": "node scripts/test-load.ts",
+    "test:planner": "node scripts/test-planner.ts",
+    "test:presets": "node scripts/test-presets.ts",
     "newsroom": "node newsroom/cli.ts",
     "test:all": "for f in scripts/test-*.ts; do echo \"== $f\"; node \"$f\" > /dev/null || { node \"$f\" | grep FAIL; exit 1; }; done && echo \"ALL SUITES PASS\""
   },

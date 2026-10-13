@@ -74,6 +74,13 @@ function operate(m: ModelSetup, w: Workload, device: Device, tp: number, prefill
   const f = r * prefillS;
   if (f >= 1) return { ok: false, batch: Infinity, tpotMs: Infinity, ttftS: Infinity, fails: "prefill" };
   const stretch = 1 / (1 - f);
+  const ttftS = prefillS * stretch;
+  // An embedding model reads its input and answers with a vector: no decode, so
+  // only the prompt side bounds it.
+  if (w.outputTokens <= 0) {
+    const fails: Limit | undefined = ttftS > w.ttftS ? "ttft" : undefined;
+    return { ok: !fails, batch: 0, tpotMs: 0, ttftS, fails };
+  }
   const step = (b: number) => decodeStep({ arch: m.arch, weightDtype: m.weightDtype, kvDtype: m.kvDtype, contextLength: inUse }, Math.max(1, Math.ceil(b)), device, tp)!.stepMs * stretch;
   // Little's law, solved by iteration: the step time grows with the batch it serves.
   let b = (r * w.outputTokens * step(1)) / 1000;
@@ -86,7 +93,6 @@ function operate(m: ModelSetup, w: Workload, device: Device, tp: number, prefill
     b = next;
   }
   const tpotMs = step(b);
-  const ttftS = prefillS * stretch;
   const fails: Limit | undefined = b > kvSeqs ? "kv" : tpotMs > w.tpotMs ? "tpot" : ttftS > w.ttftS ? "ttft" : undefined;
   return { ok: !fails, batch: b, tpotMs, ttftS, fails };
 }

@@ -8,6 +8,7 @@ import { formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, Field, NumberInput, SectionTitle, Segmented, Stat } from "../components/ui";
+import { PresetChips } from "../components/PresetChips";
 
 // "How many GPUs does my load take?" (planner.ts): requests per second, their
 // lengths and latency targets in; replicas, tensor-parallel size and GPU count out.
@@ -38,7 +39,7 @@ function initial() {
     gpuId: PLANNABLE.some((g) => g.id === wanted) ? wanted : "h100-80",
     rps: n("rps", 10),
     prompt: n("ip", 2048),
-    output: n("op", 256),
+    output: p.has("op") ? Math.max(0, Number(p.get("op")) || 0) : 256,
     prefix: Math.max(0, Number(p.get("px")) || 0),
     ttft: n("ttft", 1),
     tpot: n("tpot", 50),
@@ -130,6 +131,16 @@ export function PlanPage() {
           </Card>
           <Card className="space-y-5 p-5">
             <SectionTitle step="2" title={t("plan.loadTitle")} />
+            <PresetChips
+              hfId={hfId}
+              maxContext={arch?.maxContext}
+              current={w}
+              onApply={(a) => {
+                setW((x) => ({ ...x, promptTokens: a.promptTokens, outputTokens: a.outputTokens, sharedPrefix: a.sharedPrefix, ttftS: a.ttftS, tpotMs: a.tpotMs }));
+                // --max-model-len has to hold the request.
+                setCtx((c) => Math.max(c, a.promptTokens + a.outputTokens));
+              }}
+            />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label={t("plan.rps")} hint={t("plan.rpsHint")}>
                 <NumberInput value={w.rps} onChange={(v) => patch({ rps: Math.max(0.01, v) })} min={0.01} step={1} />
@@ -141,7 +152,7 @@ export function PlanPage() {
                 <NumberInput value={w.promptTokens} onChange={(v) => patch({ promptTokens: Math.max(1, v), sharedPrefix: Math.min(w.sharedPrefix, Math.max(1, v)) })} min={1} step={256} suffix={t("controls.tok")} />
               </Field>
               <Field label={t("controls.loadOutput")}>
-                <NumberInput value={w.outputTokens} onChange={(v) => patch({ outputTokens: Math.max(1, v) })} min={1} step={64} suffix={t("controls.tok")} />
+                <NumberInput value={w.outputTokens} onChange={(v) => patch({ outputTokens: Math.max(0, v) })} min={0} step={64} suffix={t("controls.tok")} />
               </Field>
               <Field label={t("controls.loadPrefix")} hint={t("plan.prefixHint")}>
                 <NumberInput value={w.sharedPrefix} onChange={(v) => patch({ sharedPrefix: Math.max(0, Math.min(v, w.promptTokens)) })} min={0} step={256} suffix={t("controls.tok")} />

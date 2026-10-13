@@ -171,6 +171,7 @@ export function SizingPage() {
               concurrency={state.concurrency}
               gpuUtil={state.gpuUtil}
               load={{ prompt: state.loadPrompt, output: state.loadOutput, prefix: state.loadPrefix }}
+              hfId={state.hfId}
               maxContext={state.arch?.maxContext}
               onChange={patch}
             />
