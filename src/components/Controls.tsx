@@ -1,10 +1,8 @@
 import type { Dtype } from "../lib/calc";
 import { formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
-import { Field, SectionTitle, Segmented } from "./ui";
+import { Field, NumberInput, SectionTitle, Segmented } from "./ui";
 import { PresetChips } from "./PresetChips";
-import { AdvancedToggle, PickField } from "./choice";
-import { contextChoices, outputChoices, prefixChoices, promptChoices, userChoices, utilChoices } from "../lib/choices";
 
 const WEIGHT_DTYPES: { value: Dtype; label: string }[] = [
   { value: "fp16", label: "FP16" },
@@ -20,6 +18,9 @@ const KV_DTYPES: { value: Dtype; label: string }[] = [
   { value: "bf16", label: "BF16" },
   { value: "fp8", label: "FP8" },
 ];
+
+const CTX_PRESETS = [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576];
+const USER_PRESETS = [1, 4, 8, 16, 32, 64, 128];
 
 export function Controls({
   weightDtype,
@@ -53,54 +54,89 @@ export function Controls({
     loadPrefix?: number;
   }) => void;
 }) {
-  const { t, lang } = useLang();
-  const wd = WEIGHT_DTYPES.map((o) => ({ ...o, hint: t(`hint.wd.${o.value}`) }));
-  const kd = KV_DTYPES.map((o) => ({ ...o, hint: t(`hint.kv.${o.value}`) }));
-  const tok = (n: number) => `${formatInt(n)} ${t("controls.tok")}`;
+  const { t } = useLang();
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between gap-3">
-        <SectionTitle step="2" title={t("controls.step")} />
-        <AdvancedToggle />
-      </div>
+      <SectionTitle step="2" title={t("controls.step")} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label={t("controls.weightQuant")} info={t("info.weightQuant")}>
-          <Segmented<Dtype> value={weightDtype} options={wd} onChange={(v) => onChange({ weightDtype: v })} size="sm" />
+        <Field label={t("controls.weightQuant")}>
+          <Segmented<Dtype>
+            value={weightDtype}
+            options={WEIGHT_DTYPES}
+            onChange={(v) => onChange({ weightDtype: v })}
+            size="sm"
+          />
           {/* The bar shrinks the moment a lighter precision is picked. Name the
               counterweight next to it — the sizes here are exact, the quality
               cost is not something this page can measure. */}
           <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">{t(`quality.wd.${weightDtype}`)}</p>
         </Field>
-        <Field label={t("controls.kvPrecision")} info={t("info.kvPrecision")}>
-          <Segmented<Dtype> value={kvDtype} options={kd} onChange={(v) => onChange({ kvDtype: v })} size="sm" />
+        <Field label={t("controls.kvPrecision")} hint={t("controls.kvHint")}>
+          <Segmented<Dtype>
+            value={kvDtype}
+            options={KV_DTYPES}
+            onChange={(v) => onChange({ kvDtype: v })}
+            size="sm"
+          />
           <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">{t(`quality.kv.${kvDtype}`)}</p>
         </Field>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <PickField
-          label={t("controls.context")}
-          info={t("info.context")}
-          aside={maxContext ? t("controls.contextMax", { n: formatInt(maxContext) }) : undefined}
+      <Field
+        label={t("controls.context")}
+        hint={maxContext ? t("controls.contextMax", { n: formatInt(maxContext) }) : undefined}
+      >
+        <NumberInput
           value={contextLength}
-          options={contextChoices(t, lang, maxContext)}
           onChange={(v) => onChange({ contextLength: Math.max(1, v) })}
           min={1}
           step={256}
           suffix={t("controls.tok")}
-          custom={tok}
         />
-        <PickField
-          label={t("controls.users")}
-          info={t("info.users")}
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {CTX_PRESETS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => onChange({ contextLength: c })}
+              className={
+                "rounded-lg px-2 py-1 text-[11px] ring-1 transition " +
+                (contextLength === c
+                  ? "bg-brand-600 text-onbrand ring-brand-500"
+                  : "bg-ink-850 text-slate-300 ring-white/10 hover:bg-white/5")
+              }
+            >
+              {c >= 1048576 ? `${c / 1048576}M` : c >= 1024 ? `${c / 1024}k` : c}
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      <Field label={t("controls.users")} hint={t("controls.usersHint")}>
+        <NumberInput
           value={concurrency}
-          options={userChoices(t, lang)}
           onChange={(v) => onChange({ concurrency: Math.max(1, v) })}
           min={1}
-          custom={(n) => formatInt(n)}
         />
-      </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {USER_PRESETS.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onChange({ concurrency: n })}
+              className={
+                "rounded-lg px-2.5 py-1 text-[11px] ring-1 transition " +
+                (concurrency === n
+                  ? "bg-brand-600 text-onbrand ring-brand-500"
+                  : "bg-ink-850 text-slate-300 ring-white/10 hover:bg-white/5")
+              }
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      </Field>
 
       {/* Users at the full context are the worst case vLLM reports. A typical
           request holds less, and a shared prefix is cached once (calc.ts). */}
@@ -114,8 +150,8 @@ export function Controls({
               onChange(
                 e.target.checked
                   ? {
-                      loadPrompt: Math.max(1, Math.min(2000, Math.round(contextLength / 4))),
-                      loadOutput: Math.min(256, Math.round(contextLength / 8)),
+                      loadPrompt: Math.max(1, Math.min(2048, Math.round(contextLength / 4))),
+                      loadOutput: Math.min(512, Math.round(contextLength / 8)),
                       loadPrefix: 0,
                     }
                   : { loadPrompt: 0, loadOutput: 0, loadPrefix: 0 },
@@ -145,57 +181,43 @@ export function Controls({
           </div>
         )}
         {load.prompt > 0 && (
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <PickField
-              label={t("controls.loadPrompt")}
-              info={t("info.loadPrompt")}
-              value={load.prompt}
-              options={promptChoices(t, lang)}
-              onChange={(v) => onChange({ loadPrompt: Math.max(1, v), loadPrefix: Math.min(load.prefix, Math.max(1, v)) })}
-              min={1}
-              step={256}
-              suffix={t("controls.tok")}
-              custom={tok}
-            />
-            <PickField
-              label={t("controls.loadOutput")}
-              info={t("info.loadOutput")}
-              value={load.output}
-              options={outputChoices(t, lang)}
-              onChange={(v) => onChange({ loadOutput: Math.max(0, v) })}
-              min={0}
-              step={128}
-              suffix={t("controls.tok")}
-              custom={tok}
-            />
-            <PickField
-              label={t("controls.loadPrefix")}
-              info={t("info.loadPrefix")}
-              value={load.prefix}
-              options={prefixChoices(t, lang).filter((o) => o.value <= load.prompt)}
-              onChange={(v) => onChange({ loadPrefix: Math.max(0, Math.min(v, load.prompt)) })}
-              min={0}
-              step={256}
-              suffix={t("controls.tok")}
-              custom={tok}
-            />
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Field label={t("controls.loadPrompt")}>
+              <NumberInput value={load.prompt} onChange={(v) => onChange({ loadPrompt: Math.max(1, v) })} min={1} step={256} suffix={t("controls.tok")} />
+            </Field>
+            <Field label={t("controls.loadOutput")}>
+              <NumberInput value={load.output} onChange={(v) => onChange({ loadOutput: Math.max(0, v) })} min={0} step={128} suffix={t("controls.tok")} />
+            </Field>
+            <Field label={t("controls.loadPrefix")}>
+              <NumberInput
+                value={load.prefix}
+                onChange={(v) => onChange({ loadPrefix: Math.max(0, Math.min(v, load.prompt)) })}
+                min={0}
+                step={256}
+                suffix={t("controls.tok")}
+              />
+            </Field>
           </div>
         )}
       </div>
 
       {/* The share of each card the engine may fill. The overhead itself is sized
           per GPU from the model (overhead.ts), so this is the one knob left. */}
-      <PickField
-        label={t("controls.util")}
-        info={t("info.util")}
-        value={gpuUtil}
-        options={utilChoices(t)}
-        onChange={(v) => onChange({ gpuUtil: Math.min(1, Math.max(0.5, v)) })}
-        min={0.5}
-        max={1}
-        step={0.01}
-        custom={(v) => v.toFixed(2)}
-      />
+      <Field label={t("controls.util")} hint={gpuUtil.toFixed(2)}>
+        <input
+          type="range"
+          min={0.7}
+          max={0.98}
+          step={0.01}
+          value={gpuUtil}
+          onChange={(e) => onChange({ gpuUtil: Number(e.target.value) })}
+          aria-describedby="util-note"
+          className="w-full"
+        />
+        <p id="util-note" className="mt-1 text-[11px] leading-relaxed text-slate-500">
+          {t("controls.utilNote")}
+        </p>
+      </Field>
     </div>
   );
 }

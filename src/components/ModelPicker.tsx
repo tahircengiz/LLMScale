@@ -11,7 +11,6 @@ import { KNOWN_MODELS } from "../lib/models";
 import { formatParams } from "../lib/format";
 import { track } from "../lib/analytics";
 import { useLang } from "../lib/i18n";
-import { useAdvanced } from "./choice";
 import { usesMla } from "../lib/calc";
 import { Badge, Field, NumberInput, SectionTitle, Segmented } from "./ui";
 
@@ -64,10 +63,6 @@ export function ModelPicker({
 }) {
   const { t } = useLang();
   const [tab, setTab] = useState<Tab>("search");
-  // Typing an architecture by hand is for advanced mode, or for a model the Hub
-  // could not describe, where the picker opens the form itself.
-  const [advanced] = useAdvanced();
-  const showCustom = !hideCustom && (advanced || tab === "custom");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<HfSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -237,7 +232,7 @@ export function ModelPicker({
           options={[
             { value: "search", label: t("model.tab.search") },
             { value: "presets", label: t("model.tab.presets") },
-            ...(showCustom ? [{ value: "custom" as Tab, label: t("model.tab.custom") }] : []),
+            ...(hideCustom ? [] : [{ value: "custom" as Tab, label: t("model.tab.custom") }]),
           ]}
         />
         {compact && tab === "search" && searchInput("min-w-[14rem] flex-1")}

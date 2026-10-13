@@ -265,3 +265,68 @@ export function AdvancedOnly({ children }: { children: ReactNode }) {
   const [advanced] = useAdvanced();
   return advanced ? <>{children}</> : null;
 }
+
+/**
+ * A number in a field with one-click values under it, in the calculator's style:
+ * the field takes any value, each chip a common one and says on hover what it
+ * means. The chip matching the value is lit.
+ */
+export function ChipField({
+  label,
+  info,
+  aside,
+  value,
+  chips,
+  onChange,
+  min,
+  max,
+  step,
+  suffix,
+  chipLabel,
+}: {
+  label: string;
+  info?: string;
+  aside?: ReactNode;
+  value: number;
+  chips: Choice<number>[];
+  onChange: (v: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  suffix?: string;
+  /** A shorter label for a chip than the option's own (8k for 8,192). */
+  chipLabel?: (v: number) => string;
+}) {
+  const id = useId();
+  return (
+    <div>
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+        <span className="inline-flex items-center gap-1.5">
+          <label htmlFor={id} className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            {label}
+          </label>
+          {info && <InfoTip text={info} />}
+        </span>
+        {aside && <span className="text-xs text-slate-500">{aside}</span>}
+      </div>
+      <NumberInput id={id} value={value} onChange={onChange} min={min} max={max} step={step} suffix={suffix} />
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {chips.map((c) => (
+          <Tip key={c.value} text={c.hint}>
+            <button
+              type="button"
+              aria-pressed={c.value === value}
+              onClick={() => onChange(c.value)}
+              className={
+                "rounded-lg px-2 py-1 text-[11px] ring-1 transition " +
+                (c.value === value ? "bg-brand-600 text-onbrand ring-brand-500" : "bg-ink-850 text-slate-300 ring-white/10 hover:bg-white/5")
+              }
+            >
+              {chipLabel ? chipLabel(c.value) : c.label}
+            </button>
+          </Tip>
+        ))}
+      </div>
+    </div>
+  );
+}
