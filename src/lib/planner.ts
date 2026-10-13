@@ -13,7 +13,7 @@
 // React-free: the plan page uses it and scripts/test-planner.ts checks it.
 
 import { calculate, typicalConcurrency, tokensInUse, type Dtype, type ModelArch, type TypicalLoad } from "./calc.ts";
-import { batchFor, usableGiB, type Gpu } from "./gpus.ts";
+import { batchFor, computeEfficiency, usableGiB, type Gpu } from "./gpus.ts";
 import { VLLM_UTIL } from "./overhead.ts";
 import { tpValid } from "./parallel.ts";
 import { decodeStep, prefillTime } from "./perf.ts";
@@ -97,7 +97,7 @@ function operate(m: ModelSetup, w: Workload, device: Device, tp: number, prefill
   return { ok: !fails, batch: b, tpotMs, ttftS, fails };
 }
 
-type Device = { tflops?: Gpu["tflops"]; bandwidthGBs: number };
+type Device = { tflops?: Gpu["tflops"]; bandwidthGBs: number; computeEfficiency: number };
 
 /** Every tensor-parallel size from `sizes` the model fits on and the heads allow,
  *  with what it takes to carry the load; cheapest first. */
@@ -114,7 +114,7 @@ export function planOptions(
   const batch = batchFor(g);
   const load: TypicalLoad = { promptTokens: w.promptTokens, outputTokens: w.outputTokens, sharedPrefix: w.sharedPrefix };
   const inUse = tokensInUse(load, m.maxModelLen);
-  const device: Device = { tflops: g.tflops, bandwidthGBs: g.bandwidthGBs ?? 0 };
+  const device: Device = { tflops: g.tflops, bandwidthGBs: g.bandwidthGBs ?? 0, computeEfficiency: computeEfficiency(g) };
   const heads = m.arch.numAttentionHeads;
   const kvHeads = m.arch.numKeyValueHeads || heads;
 
@@ -131,7 +131,7 @@ export function planOptions(
     }
     const kvSeqs = typicalConcurrency(sizing, usable, load).users;
     // A cached prefix is not recomputed; the rest of the prompt is.
-    const prefillS = prefillTime(m.arch, m.weightDtype, Math.max(1, w.promptTokens - w.sharedPrefix), { tflops: g.tflops, bandwidthGBs: g.bandwidthGBs }, tp).seconds;
+    const prefillS = prefillTime(m.arch, m.weightDtype, Math.max(1, w.promptTokens - w.sharedPrefix), { tflops: g.tflops, bandwidthGBs: g.bandwidthGBs, computeEfficiency: device.computeEfficiency }, tp).seconds;
     const at = (r: number) => operate(m, w, device, tp, prefillS, kvSeqs, inUse, r);
     const idle = at(1e-9);
     if (!idle.ok) {

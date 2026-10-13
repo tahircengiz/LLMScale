@@ -25,9 +25,10 @@ const best = (m: ModelSetup, w: Workload, g = H100) => planOptions(m, w, g).opti
 console.log("--- a small model ---");
 {
   const p = best(m8, chat);
-  // A 2k prompt is ~69 ms of prefill; at ~9 req/s that is 63% of the GPU's time,
+  // A 2k prompt is ~57 ms of prefill; at ~10 req/s that is 60% of the GPU's time,
   // and decode, stretched by it, reaches the 50 ms per token target.
-  check("Llama 3.1 8B, 10 req/s on H100s: two GPUs, one replica each", p.tp === 1 && p.replicas === 2, `${p.replicas}× TP${p.tp}, ${p.replicaRps.toFixed(1)} req/s each`);
+  check("Llama 3.1 8B, 10 req/s on H100s: one GPU", p.tp === 1 && p.replicas === 1, `${p.replicas}× TP${p.tp}, ${p.replicaRps.toFixed(1)} req/s each`);
+  check("…and 15 req/s two", best(m8, { ...chat, rps: 15 }).gpus === 2);
   check("…held back by time per token", p.limit === "tpot", p.limit);
   check("…within both targets at its share", p.tpotMs <= 50 && p.ttftS <= 1, `${p.tpotMs.toFixed(1)} ms, ${p.ttftS.toFixed(2)} s`);
   const busy = best(m8, { ...chat, rps: 200 });

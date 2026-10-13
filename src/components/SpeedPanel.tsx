@@ -76,12 +76,12 @@ export function SpeedPanel({
   promptTokens: number;
   /** The most sequences the card holds at that size: where the curve ends. */
   maxBatch: number;
-  device: { tflops?: Tflops; bandwidthGBs: number };
+  device: { tflops?: Tflops; bandwidthGBs: number; computeEfficiency?: number };
   name: string;
 }) {
   const { t } = useLang();
   const curve = decodeCurve({ arch, weightDtype, kvDtype, contextLength: tokensPerSeq }, Math.max(1, maxBatch), device);
-  const ttft = device.tflops ? prefillTime(arch, weightDtype, promptTokens, { tflops: device.tflops, bandwidthGBs: device.bandwidthGBs }) : null;
+  const ttft = device.tflops ? prefillTime(arch, weightDtype, promptTokens, { tflops: device.tflops, bandwidthGBs: device.bandwidthGBs, computeEfficiency: device.computeEfficiency }) : null;
   if (!curve.length) return null;
   const last = curve[curve.length - 1];
   const knee = curve.find((p) => p.bound === "compute");
@@ -115,7 +115,7 @@ export function SpeedPanel({
       <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
         {t(device.tflops ? "speed.note" : "speed.noteBw", {
           bw: Math.round(BANDWIDTH_EFFICIENCY * 100),
-          fl: Math.round(COMPUTE_EFFICIENCY * 100),
+          fl: Math.round((device.computeEfficiency ?? COMPUTE_EFFICIENCY) * 100),
           n: formatInt(tokensPerSeq),
         })}
       </p>

@@ -101,8 +101,10 @@ npm run test:invariants   # guards against silent drift between lists
 | KV cache (MLA) | `layers × (kv_lora_rank + qk_rope_head_dim) × bytes × context × concurrency` |
 | KV cache as vLLM reserves it | sliding layers hold `min(window − 1 + 2 × batched_tokens, context)`, Mamba and linear-attention layers two state blocks, each kind grouped and padded as vLLM groups it (`kvReservedPerSeq`) |
 | Overhead per GPU | `0.15 GiB + 4 B × max_num_seqs × vocab + max(8 B × batched_tokens × ffn_width, 2 B × vocab × hidden) ÷ TP + CUDA graphs` (`src/lib/overhead.ts`) |
-| Decode step | slower of `(weights read + kv_cache of the batch) ÷ (bandwidth × 0.8)` and `batch × 2 × active_params ÷ (dense TFLOPS × 0.5)` |
-| Time to first token | slower of `prompt FLOPs ÷ (dense TFLOPS × 0.5)` and one read of the weights |
+| Decode step | slower of `(weights read + kv_cache of the batch) ÷ (bandwidth × 0.8)` and `batch × 2 × active_params ÷ (dense TFLOPS × e)` |
+| Time to first token | slower of `prompt FLOPs ÷ (dense TFLOPS × e)` and one read of the weights |
+
+`e` is 0.9 on GeForce cards, measured with vLLM 0.31.0 on an RTX 4070 Ti (a 2,048-token prompt ran at 97% of the rated BF16 peak; these cards clock above their rating), and 0.6 on other cards, an estimate. On the same card the decode estimate lands within 8% of vLLM's measured step time (`scripts/fixtures/vllm/calib-rtx4070ti.json`).
 
 GPU fit budgets a discrete card at vLLM's default `--gpu-memory-utilization`,
 92% of its memory, leaving the rest to the CUDA context; each card adds vLLM's

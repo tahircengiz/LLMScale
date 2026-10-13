@@ -127,7 +127,8 @@ generators.
   flight, a hybrid's linear-attention and Mamba layers as fixed state blocks — the
   overhead per GPU follows vLLM's own accounting, a checkpoint that ships quantized
   is sized by its own files, and prefill and the compute ceiling of large decode
-  batches use the vendors' dense tensor throughput at a stated 50%. Estimates are
+  batches use the vendors' dense tensor throughput at 90% on GeForce cards
+  (measured with vLLM on an RTX 4070 Ti) and 60% elsewhere (estimated). Estimates are
   for capacity planning and are labelled as such, not presented as guarantees.
 
 ## Brand Commitments

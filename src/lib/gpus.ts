@@ -1,5 +1,5 @@
 import { calculate, gpusNeeded, type CalcInput } from "./calc.ts";
-import type { Tflops } from "./perf.ts";
+import { COMPUTE_EFFICIENCY, CONSUMER_COMPUTE_EFFICIENCY, type Tflops } from "./perf.ts";
 import { VLLM_UTIL, vllmBatch, type BatchShape } from "./overhead.ts";
 
 // Curated GPU database. `vramGiB` is the nominal on-board memory treated as GiB.
@@ -197,6 +197,12 @@ export function usableGiB(g: Gpu, migId?: string, share: number = VLLM_UTIL): nu
   if (slice) return slice * share;
   if (g.unified) return g.vramGiB;
   return g.vramGiB * share;
+}
+
+/** The share of its rated tensor peak a device reaches serving (perf.ts): measured
+ *  on a GeForce card, which runs above its rated clock; estimated for the rest. */
+export function computeEfficiency(g: Gpu): number {
+  return g.category === "consumer" && g.vendor === "NVIDIA" ? CONSUMER_COMPUTE_EFFICIENCY : COMPUTE_EFFICIENCY;
 }
 
 /** The batch `vllm serve` profiles with on this device by default (overhead.ts). */

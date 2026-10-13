@@ -2,11 +2,11 @@ import { FEATURED_GPU_IDS, gpuPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "./StaticPageLink";
 import { useEffect, useState } from "react";
 import { calculate, gpusNeeded, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch, type TypicalLoad } from "../lib/calc";
-import { batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
+import { computeEfficiency, batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
-import { BANDWIDTH_EFFICIENCY, COMPUTE_EFFICIENCY, decodeStep } from "../lib/perf";
+import { BANDWIDTH_EFFICIENCY, decodeStep } from "../lib/perf";
 import { SpeedPanel } from "./SpeedPanel";
 import { useLang } from "../lib/i18n";
 import { Badge, SectionTitle, Stat } from "./ui";
@@ -127,6 +127,7 @@ export function GpuFit({
   const deviceOf = (g: Gpu, scale = 1) => ({
     bandwidthGBs: (g.bandwidthGBs ?? 0) * scale,
     tflops: g.tflops ? { bf16: g.tflops.bf16 * scale, fp8: g.tflops.fp8 && g.tflops.fp8 * scale, fp4: g.tflops.fp4 && g.tflops.fp4 * scale } : undefined,
+    computeEfficiency: computeEfficiency(g),
   });
   const decodeIn = { arch, weightDtype, kvDtype, contextLength };
   const speedOf = (g: Gpu) => (g.bandwidthGBs ? decodeStep(decodeIn, concurrency, deviceOf(g)) : null);
@@ -351,7 +352,7 @@ export function GpuFit({
           <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
             {t(selected.tflops ? "gpu.speedNote" : "gpu.speedNoteBw", {
               p: Math.round(BANDWIDTH_EFFICIENCY * 100),
-              c: Math.round(COMPUTE_EFFICIENCY * 100),
+              c: Math.round(selDevice.computeEfficiency * 100),
             })}
           </p>
         )}

@@ -97,10 +97,15 @@ export function estimateDecode(i: DecodeInput): DecodeEstimate | null {
   };
 }
 
-/** Share of peak tensor throughput large matrix multiplies reach in a serving
- *  engine: prefill and big decode batches. Kernels reach more in isolation; with
- *  attention, norms and launches in between, half is a fair planning figure. */
-export const COMPUTE_EFFICIENCY = 0.5;
+/** Share of the vendor's dense tensor peak a serving engine's matrix multiplies
+ *  reach: prefill and big decode batches. Measured with vLLM 0.31.0 on an RTX
+ *  4070 Ti (scripts/fixtures/vllm/calib-rtx4070ti.json): a 2,048-token prompt on
+ *  Qwen3-4B ran at 97% of the rated 80 TFLOPS, because a GeForce card clocks well
+ *  above the boost clock its rating assumes. Cards rated at their top clock
+ *  (datacenter and workstation parts) are not measured here; 0.6 is a planning
+ *  estimate for them. */
+export const COMPUTE_EFFICIENCY = 0.6;
+export const CONSUMER_COMPUTE_EFFICIENCY = 0.9;
 
 /** A device's dense tensor throughput, TFLOPS, without structured sparsity. */
 export interface Tflops {
@@ -149,16 +154,17 @@ export interface PrefillEstimate {
 }
 
 /** Time to first token for one request alone on `gpus` GPUs: the prompt's FLOPs
- *  at COMPUTE_EFFICIENCY of peak, or one read of the weights, whichever is slower.
- *  Queueing behind other requests is not in it. */
+ *  at the device's share of peak (COMPUTE_EFFICIENCY unless it says otherwise),
+ *  or one read of the weights, whichever is slower. Queueing is not in it. */
 export function prefillTime(
   arch: ModelArch,
   weightDtype: Dtype,
   tokens: number,
-  device: { tflops: Tflops; bandwidthGBs: number },
+  device: { tflops: Tflops; bandwidthGBs: number; computeEfficiency?: number },
   gpus = 1,
 ): PrefillEstimate {
-  const compute = prefillFlops(arch, tokens) / (computeTflops(device.tflops, weightDtype) * 1e12 * COMPUTE_EFFICIENCY * gpus);
+  const eff = device.computeEfficiency ?? COMPUTE_EFFICIENCY;
+  const compute = prefillFlops(arch, tokens) / (computeTflops(device.tflops, weightDtype) * 1e12 * eff * gpus);
   const memory = weightsBytes(arch, weightDtype) / (device.bandwidthGBs * 1e9 * BANDWIDTH_EFFICIENCY * gpus);
   return compute >= memory ? { seconds: compute, bound: "compute" } : { seconds: memory, bound: "memory" };
 }
@@ -182,7 +188,7 @@ export interface DecodePoint {
 export function decodeStep(
   i: Omit<DecodeInput, "concurrency" | "bandwidthGBs">,
   batch: number,
-  device: { tflops?: Tflops; bandwidthGBs: number },
+  device: { tflops?: Tflops; bandwidthGBs: number; computeEfficiency?: number },
   gpus = 1,
 ): DecodePoint | null {
   const mem = estimateDecode({ ...i, concurrency: batch, bandwidthGBs: device.bandwidthGBs * gpus });
@@ -196,7 +202,7 @@ export function decodeStep(
     // Each new token attends over its context; a sliding layer over its window.
     const span = (attn - sliding) * i.contextLength + sliding * Math.min(i.contextLength, i.arch.slidingWindow ?? 0);
     const flops = batch * (2 * active + 4 * attnWidth(i.arch) * span);
-    const computeMs = (flops / (computeTflops(device.tflops, i.weightDtype) * 1e12 * COMPUTE_EFFICIENCY * gpus)) * 1000;
+    const computeMs = (flops / (computeTflops(device.tflops, i.weightDtype) * 1e12 * (device.computeEfficiency ?? COMPUTE_EFFICIENCY) * gpus)) * 1000;
     if (computeMs > stepMs) [stepMs, bound] = [computeMs, "compute"];
   }
   return { batch, stepMs, perUser: 1000 / stepMs, total: (1000 / stepMs) * batch, bound };
@@ -207,7 +213,7 @@ export function decodeStep(
 export function decodeCurve(
   i: Omit<DecodeInput, "concurrency" | "bandwidthGBs">,
   maxBatch: number,
-  device: { tflops?: Tflops; bandwidthGBs: number },
+  device: { tflops?: Tflops; bandwidthGBs: number; computeEfficiency?: number },
   gpus = 1,
 ): DecodePoint[] {
   const out: DecodePoint[] = [];

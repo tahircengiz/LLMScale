@@ -1,5 +1,7 @@
 // Unit test for the decode-speed estimate. Run: node scripts/test-perf.ts
-import { estimateDecode, BANDWIDTH_EFFICIENCY, COMPUTE_EFFICIENCY, computeTflops, decodeCurve, decodeStep, prefillFlops, prefillTime } from "../src/lib/perf.ts";
+import { readFileSync } from "node:fs";
+import { archFromConfig } from "../src/lib/hf.ts";
+import { estimateDecode, BANDWIDTH_EFFICIENCY, COMPUTE_EFFICIENCY, CONSUMER_COMPUTE_EFFICIENCY, computeTflops, decodeCurve, decodeStep, prefillFlops, prefillTime } from "../src/lib/perf.ts";
 import type { ModelArch } from "../src/lib/calc.ts";
 
 let fails = 0;
@@ -58,8 +60,8 @@ const H100 = { tflops: { bf16: 989, fp8: 1979 }, bandwidthGBs: 3350 };
   const windowed = { ...llama8b, slidingLayers: 16, slidingWindow: 4096 };
   check("sliding layers cap attention at the window", prefillFlops(windowed, 32768) < long);
   const p2k = prefillTime(llama8b, "bf16", 2048, H100);
-  // 2 × 8.03B × 2048 + attention ≈ 3.4e13 FLOPs at half of 989 TFLOPS.
-  check("Llama 3.1 8B, 2k prompt on an H100: ~70 ms, compute-bound", p2k.bound === "compute" && p2k.seconds > 0.05 && p2k.seconds < 0.09, `${(p2k.seconds * 1000).toFixed(0)} ms`);
+  // 2 × 8.03B × 2048 + attention ≈ 3.4e13 FLOPs at 60% of 989 TFLOPS.
+  check("Llama 3.1 8B, 2k prompt on an H100: ~60 ms, compute-bound", p2k.bound === "compute" && p2k.seconds > 0.045 && p2k.seconds < 0.075, `${(p2k.seconds * 1000).toFixed(0)} ms`);
   const tiny = prefillTime(llama8b, "bf16", 16, H100);
   check("a 16-token prompt is one read of the weights", tiny.bound === "memory", `${(tiny.seconds * 1000).toFixed(1)} ms`);
   check("FP8 weights run on FP8 tensor cores", computeTflops(H100.tflops, "fp8") === 1979 && computeTflops(H100.tflops, "int4") === 989);
@@ -87,6 +89,38 @@ console.log("\n--- decode against compute (E3) ---");
   check("total throughput levels off once compute binds", last.total / prev.total < 1.3, `${prev.total.toFixed(0)} → ${last.total.toFixed(0)}`);
   check("without TFLOPS it stays the bandwidth estimate", decodeStep(base, 512, { bandwidthGBs: 3350 })!.bound === "memory");
   check("an odd batch size ends the curve", decodeCurve(base, 48, H100).map((p) => p.batch).join(",") === "1,2,4,8,16,32,48");
+}
+
+console.log("\n--- against vLLM on an RTX 4070 Ti ---");
+{
+  // scripts/fixtures/vllm/calib-rtx4070ti.json: vLLM 0.31.0, timed generate() calls.
+  const cal = JSON.parse(readFileSync(new URL("./fixtures/vllm/calib-rtx4070ti.json", import.meta.url), "utf8"));
+  const repo = (n: string) => JSON.parse(readFileSync(new URL(`./fixtures/repos/${n}.json`, import.meta.url), "utf8"));
+  const dev = { ...cal.device, computeEfficiency: CONSUMER_COMPUTE_EFFICIENCY };
+  const q4 = archFromConfig(repo("Qwen_Qwen3-4B").config, repo("Qwen_Qwen3-4B").numParams)!;
+  const r4 = cal.runs.find((r: { model: string }) => r.model === "Qwen/Qwen3-4B");
+  for (const p of [512, 1024, 2048, 3968]) {
+    const ours = prefillTime(q4, "bf16", p, dev).seconds;
+    const theirs = r4.prefill[p];
+    check(`Qwen3-4B, ${p}-token prompt: within 12% of vLLM`, Math.abs(ours / theirs - 1) <= 0.12, `${(ours * 1000).toFixed(0)} vs ${(theirs * 1000).toFixed(0)} ms`);
+  }
+  const rate = prefillFlops(q4, 2048) / r4.prefill[2048] / 1e12;
+  check("…which runs at 90–100% of the card's rated BF16 peak", rate / cal.device.tflops.bf16 > 0.9 && rate / cal.device.tflops.bf16 <= 1.05, `${rate.toFixed(1)} of ${cal.device.tflops.bf16} TFLOPS`);
+  for (const b of [1, 2, 4, 8, 16, 32]) {
+    // Each sequence holds 128 to 256 tokens over the 128 steps: 192 on average.
+    const ours = decodeStep({ arch: q4, weightDtype: "bf16", kvDtype: "fp16", contextLength: 192 }, b, dev)!.stepMs;
+    const theirs = r4.decode[b].stepMs;
+    check(`Qwen3-4B decode, ${b} sequences: within 8% of vLLM`, Math.abs(ours / theirs - 1) <= 0.08, `${ours.toFixed(1)} vs ${theirs.toFixed(1)} ms`);
+  }
+  // A 0.6B model's step is short enough for vLLM's ~1 ms of scheduling and
+  // sampling to show; the estimate leaves it out and runs up to a fifth fast.
+  const q06 = archFromConfig(repo("Qwen_Qwen3-0.6B").config, repo("Qwen_Qwen3-0.6B").numParams)!;
+  const r06 = cal.runs.find((r: { model: string }) => r.model === "Qwen/Qwen3-0.6B");
+  for (const b of [1, 16, 128, 256]) {
+    const ours = decodeStep({ arch: q06, weightDtype: "bf16", kvDtype: "fp16", contextLength: 192 }, b, dev)!.stepMs;
+    const theirs = r06.decode[b].stepMs;
+    check(`Qwen3-0.6B decode, ${b} sequences: within 20%`, Math.abs(ours / theirs - 1) <= 0.2, `${ours.toFixed(1)} vs ${theirs.toFixed(1)} ms`);
+  }
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
