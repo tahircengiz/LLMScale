@@ -75,7 +75,8 @@ export async function readSafetensorsHeader(id: string, file: string): Promise<R
 
 /** Everything the brief reads from one repository. Throws only when the model API
  *  itself does not know the repository. */
-export async function fetchSnapshot(id: string): Promise<RepoSnapshot> {
+export async function fetchSnapshot(id: string, opts: { tensors?: boolean } = {}): Promise<RepoSnapshot> {
+  const wantTensors = opts.tensors !== false;
   const res = await fetchWithTimeout(`${HF}/api/models/${id}?blobs=true`, 10000);
   if (!res.ok) throw new Error(`Model not found: ${res.status}`);
   const info = await res.json();
@@ -103,8 +104,9 @@ export async function fetchSnapshot(id: string): Promise<RepoSnapshot> {
     opt<Json>("hf_quant_config.json"),
     opt<Json>("adapter_config.json"),
     opt<Json>("params.json"),
-    // DeepSeek-V3's index names 91,991 tensors in about 8 MB.
-    opt<Json>("model.safetensors.index.json", "json", 30000),
+    // DeepSeek-V3's index names 91,991 tensors in about 8 MB; a caller that only
+    // needs the chat template (the vLLM page) skips it.
+    wantTensors ? opt<Json>("model.safetensors.index.json", "json", 30000) : Promise.resolve(undefined),
   ]);
 
   let tensors: RepoSnapshot["tensors"] = null;
@@ -112,7 +114,7 @@ export async function fetchSnapshot(id: string): Promise<RepoSnapshot> {
   if (index?.weight_map) {
     tensors = digestTensors(Object.keys(index.weight_map));
     tensorFile = "model.safetensors.index.json";
-  } else {
+  } else if (wantTensors) {
     // No index: a model small enough for one file. Read that file's header.
     const single = files.filter((f) => !f.name.includes("/") && /^(model|consolidated)\.safetensors$/.test(f.name));
     if (single.length === 1) {

@@ -1,9 +1,8 @@
 import { FEATURED_GPU_IDS, gpuPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "./StaticPageLink";
 import { useEffect, useState } from "react";
-import { calculate, maxConcurrency, maxContextLength, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch } from "../lib/calc";
-import { nearestTp, tpValid } from "../lib/parallel";
-import { DRIVER_RESERVE, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
+import { calculate, gpusNeeded, maxConcurrency, maxContextLength, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch } from "../lib/calc";
+import { batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
@@ -22,8 +21,7 @@ export function GpuFit({
   kvDtype,
   contextLength,
   concurrency,
-  overheadPct,
-  cudaContextGiB,
+  gpuUtil,
   totalGiB,
   gpuId,
   migId,
@@ -37,8 +35,8 @@ export function GpuFit({
   kvDtype: Dtype;
   contextLength: number;
   concurrency: number;
-  overheadPct: number;
-  cudaContextGiB: number;
+  gpuUtil: number;
+  /** The headline total, for the prompt shown before a device is picked. */
   totalGiB: number;
   gpuId: string;
   migId: string;
@@ -65,29 +63,48 @@ export function GpuFit({
   const migProfiles = migProfilesFor(selected.id);
   const migSlice = migId ? migMem(selected.id, migId) : null;
   const capGiB = migSlice ?? (selected.unified ? selected.totalGiB ?? selected.vramGiB : selected.vramGiB);
-  const effUsable = usableGiB(selected, migId);
-  const base = { arch, weightDtype, kvDtype, overheadPct, cudaContextGiB };
+  const usableOf = (g: Gpu, mig = "") => usableGiB(g, mig, gpuUtil);
+  const effUsable = usableOf(selected, migId);
+  const base = { arch, weightDtype, kvDtype };
 
-  function usage(usable: number) {
-    return { usable, pct: totalGiB / usable, fits: totalGiB <= usable, needed: Math.ceil(totalGiB / usable) };
+  // What a device has to hold differs by device: vLLM profiles a bigger batch on a
+  // bigger card, and every extra GPU repeats the overhead (overhead.ts). Each card
+  // is sized on its own terms, once per render.
+  const cache = new Map<string, ReturnType<typeof measure>>();
+  function measure(g: Gpu, mig: string) {
+    const usable = usableOf(g, mig);
+    const input = { ...base, contextLength, concurrency, batch: batchFor(g, mig) };
+    const need = calculate(input).totalGiB;
+    const fits = need <= usable;
+    // How many cards memory alone asks for, and the fewest vLLM can split the
+    // heads across; they differ when the first does not divide the heads.
+    const raw = fits ? 1 : gpusNeeded(input, usable, 1024, false) ?? Math.ceil(need / usable);
+    const tp = fits ? 1 : gpusNeeded(input, usable);
+    return { usable, need, pct: need / usable, fits, raw, tp, needed: tp ?? raw };
+  }
+  function usage(g: Gpu, mig = "") {
+    const key = `${g.id}|${mig}`;
+    if (!cache.has(key)) cache.set(key, measure(g, mig));
+    return cache.get(key)!;
   }
 
-  const selUsage = usage(effUsable);
+  const selUsage = usage(selected, migId);
   const kvHeads = arch.numKeyValueHeads ?? arch.numAttentionHeads;
   const heads = arch.numAttentionHeads;
-  const tpOk = nearestTp(selUsage.needed, heads, kvHeads);
-  const maxUsers = maxConcurrency({ ...base, contextLength }, effUsable);
-  const maxCtx = maxContextLength({ ...base, concurrency }, effUsable);
+  const tpOk = selUsage.tp;
+  const selBatch = batchFor(selected, migId);
+  const maxUsers = maxConcurrency({ ...base, contextLength, batch: selBatch }, effUsable);
+  const maxCtx = maxContextLength({ ...base, concurrency, batch: selBatch }, effUsable);
   // A MIG slice gets roughly its share of the memory system, so scale the
   // published bandwidth with it. Only estimate where the model actually fits —
   // a speed for a configuration that cannot run is noise.
   // The page already scores every device to draw the grid, so answering "then
   // what should I use?" is a search over the same numbers rather than a chore
   // the reader has to do by clicking through five tiers.
-  const bySize = [...GPUS].sort((a, b) => usableGiB(a, "") - usableGiB(b, ""));
-  const smallestFit = bySize.find((g) => totalGiB <= usableGiB(g, ""));
+  const bySize = [...GPUS].sort((a, b) => usableOf(a) - usableOf(b));
+  const smallestFit = bySize.find((g) => usage(g).fits);
   const smallerAlternative =
-    selUsage.fits && smallestFit && smallestFit.id !== selected.id && usableGiB(smallestFit, "") < effUsable
+    selUsage.fits && smallestFit && smallestFit.id !== selected.id && usableOf(smallestFit) < effUsable
       ? smallestFit
       : null;
   // Precisions strictly lighter than the current one, best quality first.
@@ -97,7 +114,7 @@ export function GpuFit({
   const quantFix = selUsage.fits
     ? null
     : lighter
-        .map((d) => ({ d, total: calculate({ ...base, weightDtype: d, contextLength, concurrency }).totalGiB }))
+        .map((d) => ({ d, total: calculate({ ...base, weightDtype: d, contextLength, concurrency, batch: selBatch }).totalGiB }))
         .find((x) => x.total <= effUsable) ?? null;
 
   const bwScale = migSlice ? migSlice / selected.vramGiB : 1;
@@ -124,7 +141,7 @@ export function GpuFit({
   // outgrown it, so the card the panel above is describing never leaves the page.
   const grid = splitDevices(
     catGpus,
-    (g) => totalGiB <= usableGiB(g, ""),
+    (g) => usage(g).fits,
     (g) => g.id === gpuId
   );
 
@@ -133,13 +150,13 @@ export function GpuFit({
 
   // Stage 1: jump to a category — pick its smallest fitting device, else its largest.
   function pickForCat(cat: GpuCategory) {
-    const inCat = [...GPUS].filter((g) => g.category === cat).sort((a, b) => usableGiB(a, "") - usableGiB(b, ""));
-    const fit = inCat.find((g) => totalGiB <= usableGiB(g, ""));
+    const inCat = [...GPUS].filter((g) => g.category === cat).sort((a, b) => usableOf(a) - usableOf(b));
+    const fit = inCat.find((g) => usage(g).fits);
     return (fit ?? inCat[inCat.length - 1]).id;
   }
 
   const renderCard = (g: Gpu) => {
-    const u = usage(usableGiB(g, ""));
+    const u = usage(g);
     // Sitting in the visible group no longer implies "fits", so a selected card
     // that is over budget has to say so on its own — in red and in words.
     const overBudget = g.id === gpuId && !u.fits;
@@ -183,7 +200,7 @@ export function GpuFit({
 
   return (
     <div>
-      <SectionTitle step="3" title={t("gpu.step")} hint={t("gpu.usableHint", { p: Math.round(DRIVER_RESERVE * 100) })} />
+      <SectionTitle step="3" title={t("gpu.step")} hint={t("gpu.usableHint", { p: Math.round(gpuUtil * 100) })} />
 
       {/* Stage 1: category */}
       <div className="mb-3 flex flex-wrap gap-1.5">
@@ -272,7 +289,7 @@ export function GpuFit({
           />
         </div>
         <div className="mt-1 text-xs text-slate-400">
-          {t("gpu.usage", { x: formatGiB(totalGiB), y: capGiB, p: Math.round(selUsage.pct * 100) })}
+          {t("gpu.usage", { x: formatGiB(selUsage.need), y: capGiB, p: Math.round(selUsage.pct * 100) })}
           {migId ? ` · MIG ${migId}` : ""}
         </div>
         {selected.unified && !migId ? (
@@ -392,11 +409,11 @@ export function GpuFit({
               </div>
               <ul className="space-y-1 text-[11.5px] leading-relaxed text-slate-400">
                 <li>
-                  {tpValid(selUsage.needed, heads, kvHeads)
-                    ? t("gpu.tpHeadsOk", { n: selUsage.needed, h: heads, kv: kvHeads })
+                  {tpOk !== null && tpOk === selUsage.raw
+                    ? t("gpu.tpHeadsOk", { n: tpOk, h: heads, kv: kvHeads })
                     : tpOk !== null
                       ? t("gpu.tpHeads", { h: heads, kv: kvHeads, ok: tpOk })
-                      : t("gpu.tpNone", { n: selUsage.needed, h: heads })}
+                      : t("gpu.tpNone", { n: selUsage.raw, h: heads })}
                 </li>
                 {selected.category === "consumer" && <li>{t("gpu.tpNvlink")}</li>}
                 <li>{t("gpu.tpOverhead")}</li>

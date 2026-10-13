@@ -30,8 +30,8 @@ without the user having to trust a rule of thumb.
 The site models the terms that decide the answer — weights at a chosen
 precision, KV cache scaled by context window and concurrent users using each
 model's real grouped-query or multi-head latent attention layout, MoE models
-holding every expert resident rather than only the active ones, activation and
-fragmentation overhead, and CUDA context — then reports which devices fit, how
+holding every expert resident rather than only the active ones, and vLLM's own
+per-GPU overhead measured against real startups — then reports which devices fit, how
 many concurrent users a card supports, and the maximum context for a single user.
 
 Around that core it also covers fine-tuning memory (LoRA, QLoRA, full),
@@ -58,9 +58,8 @@ and it answers the author's own sizing questions first.
 Most estimates are `params × 2`. This one models what that misses, and says so:
 real per-model GQA and MLA layouts read live from the Hugging Face Hub, MoE
 loading all experts while decoding through only the active ones, and every
-assumption named on the page rather than buried — 95% of a discrete card's
-memory usable after the driver reserve and a unified-memory device's addressable
-share, flash-attention assumed for activations, bandwidth efficiency stated for
+assumption named on the page rather than buried — vLLM's default 92% of a
+discrete card's memory and a unified-memory device's addressable share, flash-attention assumed for activations, bandwidth efficiency stated for
 decode estimates.
 
 The engine is validated against published results rather than only against

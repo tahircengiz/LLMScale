@@ -167,7 +167,7 @@ const CAP_ROWS = ["instruct", "code", "math", "reasoning", "vision", "multilingu
 function vram8k(a: Anatomy): number {
   return calculate({
     arch: a.arch, weightDtype: a.weightDtype ?? "bf16", kvDtype: "fp16",
-    contextLength: 8192, concurrency: 1, overheadPct: 0.1, cudaContextGiB: 0.75,
+    contextLength: 8192, concurrency: 1,
   }).totalGiB;
 }
 

@@ -1,3 +1,6 @@
+import { calculate, gpusNeeded, type CalcInput } from "./calc.ts";
+import { VLLM_UTIL, vllmBatch, type BatchShape } from "./overhead.ts";
+
 // Curated GPU database. `vramGiB` is the nominal on-board memory treated as GiB.
 
 export type GpuCategory = "consumer" | "workstation" | "datacenter" | "apple" | "apu";
@@ -173,19 +176,39 @@ export const MIG_PROFILES: Record<string, MigProfile[]> = {
   ],
 };
 
-/** Fraction of a discrete board's nominal VRAM left after the driver reserve. */
+/** Fraction of a discrete board's nominal VRAM a training job can use, after the
+ *  CUDA context and the driver's reserve (the fine-tuning page). */
 export const DRIVER_RESERVE = 0.95;
 
 /**
  * Memory budget (GiB) a model may actually occupy. A selected MIG slice wins; a
  * unified-memory device already stores its usable slice in vramGiB; a discrete
- * board takes the driver-reserve haircut.
+ * board gets `share` of its memory: for serving, vLLM's --gpu-memory-utilization
+ * (0.92 by default, overhead.ts), whose remainder holds the CUDA context.
  */
-export function usableGiB(g: Gpu, migId?: string): number {
+export function usableGiB(g: Gpu, migId?: string, share: number = VLLM_UTIL): number {
   const slice = migId ? migMem(g.id, migId) : null;
-  if (slice) return slice * DRIVER_RESERVE;
+  if (slice) return slice * share;
   if (g.unified) return g.vramGiB;
-  return g.vramGiB * DRIVER_RESERVE;
+  return g.vramGiB * share;
+}
+
+/** The batch `vllm serve` profiles with on this device by default (overhead.ts). */
+export function batchFor(g: Gpu, migId?: string): BatchShape {
+  const slice = migId ? migMem(g.id, migId) : null;
+  return vllmBatch(slice ?? g.totalGiB ?? g.vramGiB, g.name);
+}
+
+/** What a deployment needs on one of these devices: the overhead follows the
+ *  batch vLLM profiles with there, so the figure differs by device. */
+export function needOn(input: Omit<CalcInput, "batch" | "gpus">, g: Gpu): number {
+  return calculate({ ...input, batch: batchFor(g) }).totalGiB;
+}
+
+/** How many of these devices hold the deployment, the overhead repeated on each and
+ *  the count one vLLM can split the heads across; null when none up to 64 does. */
+export function cardsFor(input: Omit<CalcInput, "batch" | "gpus">, g: Gpu, share: number = VLLM_UTIL): number | null {
+  return gpusNeeded({ ...input, batch: batchFor(g) }, usableGiB(g, undefined, share));
 }
 
 export function migProfilesFor(gpuId: string): MigProfile[] {

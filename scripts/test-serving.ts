@@ -273,6 +273,24 @@ for (const f of readdirSync(dir).filter((x) => x.endsWith(".json")).sort()) {
   }
 }
 
+console.log("\n--- the vLLM page names the same parsers ---");
+{
+  // One reading, two pages: the vLLM page takes its parsers from the same brief.
+  const { recommend } = await import("../src/lib/vllm.ts");
+  const { archFromConfig } = await import("../src/lib/hf.ts");
+  for (const name of ["Qwen_Qwen3-32B", "openai_gpt-oss-20b", "deepseek-ai_DeepSeek-V3.1", "Qwen_Qwen3-Coder-30B-A3B-Instruct", "unsloth_Llama-3.1-8B-Instruct"]) {
+    const snap = load(name);
+    const b = buildBrief(snap, "en");
+    const arch = archFromConfig(snap.config, snap.numParams ?? 8e9)!;
+    const rec = recommend({ hfId: snap.id, arch, priority: "balanced", task: "tool", gpuVramGiB: 80, gpuCount: 8, maxModelLen: 8192, parsers: b.facts.parsers.vllm });
+    const want = flag(b, "vllm", "--tool-call-parser")?.value;
+    const got = /--tool-call-parser (\S+)/.exec(rec.command)?.[1];
+    const wantR = flag(b, "vllm", "--reasoning-parser")?.value;
+    const gotR = /--reasoning-parser (\S+)/.exec(rec.command)?.[1];
+    check(`${name}: vLLM page and Serving Brief agree`, want === got && wantR === gotR, `${got}/${gotR} vs ${want}/${wantR}`);
+  }
+}
+
 console.log("\n--- the page's own strings ---");
 {
   const uiKeys = Object.keys(DICTS.en).filter((k) => k.startsWith("serve.") || k.startsWith("about.serving."));

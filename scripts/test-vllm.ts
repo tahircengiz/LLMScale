@@ -40,12 +40,14 @@ check("defaults are left out: prefix caching, seed", !has(tool.command, "--enabl
 const thru = recommend(base({ priority: "throughput" }));
 check("throughput → batched 8192", has(thru.command, "--max-num-batched-tokens 8192"));
 check("throughput → gpu-util 0.95", has(thru.command, "--gpu-memory-utilization 0.95"));
+check("balanced leaves vLLM's default 0.92 out", !has(recommend(base({})).command, "--gpu-memory-utilization"));
 
 // --max-num-seqs is a preset capped by what the KV cache can actually hold, so
 // the flag must never promise more concurrency than the memory allows.
 const seqsOf = (cmd: string) => Number(/--max-num-seqs (\d+)/.exec(cmd)?.[1] ?? 0);
-// 8B on one 80 GB card at 8k: ~53 GiB of KV budget over a 1 GiB/sequence cost.
-check("throughput → seqs clamped to the KV budget", seqsOf(thru.command) === 53, String(seqsOf(thru.command)));
+// 8B on one 80 GB card at 8k: 76 GiB at 0.95, less 14.96 of weights and 1.87 of
+// vLLM's overhead at 8,192 tokens and 512 sequences, over 1 GiB a sequence.
+check("throughput → seqs clamped to the KV budget", seqsOf(thru.command) === 59, String(seqsOf(thru.command)));
 check("throughput → says why it was capped", thru.warnings.some((w) => w.key === "vllm.w.seqcap"));
 // Eight cards leave room for the whole preset, so nothing is capped.
 const roomy = recommend(base({ priority: "throughput", gpuCount: 8 }));

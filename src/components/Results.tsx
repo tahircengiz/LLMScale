@@ -1,5 +1,5 @@
 import type { CalcResult } from "../lib/calc";
-import { formatBytes, formatGiB } from "../lib/format";
+import { formatBytes, formatGiB, formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { AMBER, GREEN, GREY, INDIGO } from "../lib/palette";
 import { SectionTitle, Stat } from "./ui";
@@ -8,16 +8,17 @@ const SEGMENTS = [
   { key: "weights", i18n: "seg.weights", color: INDIGO },
   { key: "kv", i18n: "seg.kv", color: GREEN },
   { key: "act", i18n: "seg.act", color: AMBER },
-  { key: "cuda", i18n: "seg.cuda", color: GREY },
+  { key: "runtime", i18n: "seg.runtime", color: GREY },
 ] as const;
 
-export function Results({ result }: { result: CalcResult }) {
+/** `cardName`: the device the overhead was sized for, when one is chosen. */
+export function Results({ result, cardName }: { result: CalcResult; cardName?: string }) {
   const { t } = useLang();
   const parts = {
     weights: result.weightsGiB,
     kv: result.kvCacheGiB,
     act: result.activationsGiB,
-    cuda: result.cudaOverheadGiB,
+    runtime: result.runtimeGiB,
   };
   const total = result.totalGiB || 1;
 
@@ -56,6 +57,15 @@ export function Results({ result }: { result: CalcResult }) {
           </span>
         ))}
       </div>
+
+      {/* The overhead is vLLM's, at the batch it profiles with on this card. */}
+      <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
+        {t(cardName ? "results.overheadNote.card" : "results.overheadNote.none", {
+          name: cardName ?? "",
+          tokens: formatInt(result.batch.tokens),
+          seqs: formatInt(result.batch.seqs),
+        })}
+      </p>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label={t("stat.weights")} value={formatGiB(result.weightsGiB)} />

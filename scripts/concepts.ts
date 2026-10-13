@@ -19,8 +19,7 @@ import {
   type ModelArch,
 } from "../src/lib/calc.ts";
 import { KNOWN_MODELS, type KnownModel } from "../src/lib/models.ts";
-import { GPUS, usableGiB, type Gpu } from "../src/lib/gpus.ts";
-import { DEFAULT_STATE } from "../src/lib/urlState.ts";
+import { batchFor, GPUS, usableGiB, type Gpu } from "../src/lib/gpus.ts";
 import type { Lang } from "../src/lib/dict.ts";
 import { CONCEPT_FILES, GPUS_HUB, MODELS_HUB } from "../src/lib/staticPages.ts";
 
@@ -58,7 +57,7 @@ const card = (id: string): Gpu => {
   if (!g) throw new Error(`concepts: no GPU ${id}`);
   return g;
 };
-const WORK = { kvDtype: "fp16" as Dtype, overheadPct: DEFAULT_STATE.overheadPct, cudaContextGiB: DEFAULT_STATE.cudaContextGiB };
+const WORK = { kvDtype: "fp16" as Dtype };
 const kvTok = (m: ModelArch) => kvBytesPerToken(m, "fp16");
 const kvGiB = (m: ModelArch, ctx: number, users = 1) => (kvTok(m) * ctx * users) / BYTES_PER_GIB;
 const wGiB = (m: ModelArch, d: Dtype) => weightsBytes(m, d) / BYTES_PER_GIB;
@@ -84,7 +83,7 @@ function kvCache(f: Fmt): Concept {
   const kvMax = kvGiB(ex, exMax);
   const h100 = card("h100-80");
   const users = [8192, 32768, 131072].map((c) =>
-    maxConcurrency({ arch: ex, weightDtype: "bf16", contextLength: c, ...WORK }, usableGiB(h100))
+    maxConcurrency({ arch: ex, weightDtype: "bf16", contextLength: c, ...WORK, batch: batchFor(h100) }, usableGiB(h100))
   );
   const CTX = [8192, 32768, 131072];
   const ids = ["llama-3.2-3b", "qwen2.5-7b", "llama-3.1-8b", "mistral-nemo-12b", "qwen3-32b", "llama-3.3-70b", "qwen2.5-72b", "deepseek-v3"];
@@ -286,7 +285,7 @@ function quantization(f: Fmt): Concept {
 
   const oss = model("gpt-oss-120b");
   const h100 = card("h100-80");
-  const ossNeed = calculate({ arch: oss, weightDtype: "int4", contextLength: 8192, concurrency: 1, ...WORK }).totalGiB;
+  const ossNeed = calculate({ arch: oss, weightDtype: "int4", contextLength: 8192, concurrency: 1, ...WORK, batch: batchFor(h100) }).totalGiB;
   const long = model("llama-3.3-70b");
   const longKv = kvGiB(long, 131072);
   const longInt4 = wGiB(long, "int4");

@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ModelArch } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
+import { fetchSnapshot } from "../lib/repoFetch";
+import { buildBrief, type Parsers } from "../lib/serving";
 import { findKnownByHfId } from "../lib/models";
 import { extractCaps } from "../lib/fit";
-import { recommend, PRIORITIES, VLLM_TASKS, type Priority, type VllmTask } from "../lib/vllm";
+import { recommend, servingDtype, PRIORITIES, VLLM_TASKS, type Priority, type VllmTask } from "../lib/vllm";
 import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor, runsVllm } from "../lib/gpus";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Card, Field, NumberInput, SectionTitle, Segmented } from "../components/ui";
+import { LogCheck } from "../components/LogCheck";
 
 const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
 
@@ -47,17 +50,34 @@ export function VllmPage() {
   const [migId, setMigId] = useState(init.mig);
   const [maxLen, setMaxLen] = useState(init.ctx);
   const [copied, setCopied] = useState<string | null>(null);
+  // Parsers read from the chat template, the same reading the Serving Brief does.
+  const [parsers, setParsers] = useState<{ id: string; p: Parsers } | null>(null);
 
   useEffect(() => {
-    if (hfId && !arch) {
-      resolveModel(hfId).then((r) => {
-        setMeta({
-          source: r.source, gated: r.gated, modelType: r.modelType, isMoE: r.isMoE,
-          tags: r.tags, pipelineTag: r.pipelineTag, weightDtype: r.weightDtype, warningKey: r.warningKey,
-        });
-        setArch(r.arch ?? { numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8 });
+    if (!hfId) return;
+    let alive = true;
+    fetchSnapshot(hfId, { tensors: false })
+      .then((snap) => alive && setParsers({ id: hfId, p: buildBrief(snap, "en").facts.parsers.vllm }))
+      .catch(() => alive && setParsers(null));
+    return () => {
+      alive = false;
+    };
+  }, [hfId]);
+
+  /** Read a model from the Hub (or the bundled list) and put it on the page. */
+  function load(id: string) {
+    resolveModel(id).then((r) => {
+      setHfId(id);
+      setMeta({
+        source: r.source, gated: r.gated, modelType: r.modelType, isMoE: r.isMoE,
+        tags: r.tags, pipelineTag: r.pipelineTag, weightDtype: r.weightDtype, warningKey: r.warningKey,
       });
-    }
+      setArch(r.arch ?? { numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8 });
+    });
+  }
+
+  useEffect(() => {
+    if (hfId && !arch) load(hfId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -87,9 +107,10 @@ export function VllmPage() {
     return recommend({
       hfId, arch, modelType: meta?.modelType, isMoE: caps.isMoE, vision: caps.vision,
       weightDtype: meta?.weightDtype,
-      priority, task, gpuVramGiB: effVram, gpuCount: effCount, maxModelLen: maxLen, mig: !!migId,
+      parsers: parsers?.id === hfId ? parsers.p : undefined,
+      priority, task, gpuVramGiB: effVram, gpuName: gpu.name, gpuCount: effCount, maxModelLen: maxLen, mig: !!migId,
     });
-  }, [hfId, arch, meta, priority, task, effVram, effCount, migId, maxLen]);
+  }, [hfId, arch, meta, parsers, priority, task, effVram, gpu.name, effCount, migId, maxLen]);
 
   async function copyText(text: string, which: string) {
     try {
@@ -279,6 +300,20 @@ export function VllmPage() {
           </Card>
         </div>
       </div>
+
+      {/* Full width: a pasted log is long, and the table reads better wide. */}
+      {arch && (
+        <Card className="mt-5 p-5">
+          <LogCheck
+            hfId={hfId}
+            arch={arch}
+            weightDtype={servingDtype(hfId, meta?.weightDtype)}
+            cardGiB={effVram}
+            cardName={migId ? `${gpu.name} MIG ${migId}` : gpu.name}
+            onUseModel={load}
+          />
+        </Card>
+      )}
     </div>
   );
 }

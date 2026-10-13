@@ -108,6 +108,8 @@ export interface LayerPlan {
   window?: number;
   /** Fixed state per sequence across the linear-attention and Mamba layers, bytes. */
   stateBytesPerSeq: number;
+  /** How many layers keep that state. */
+  stateLayers: number;
 }
 
 /** How a config's layers cache, or undefined when every layer is plain full
@@ -129,5 +131,6 @@ export function layerPlan(c: Json): LayerPlan | undefined {
     sliding: Math.min(sliding, attention),
     window: sliding ? window!.size : undefined,
     stateBytesPerSeq: hybrid ? hybrid.state * stateElementsPerLayer(c) * 2 : 0,
+    stateLayers: hybrid ? hybrid.state : 0,
   };
 }

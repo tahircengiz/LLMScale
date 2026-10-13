@@ -2,8 +2,10 @@
 // Rules are grounded in the current vLLM V1 docs (engine args, optimization,
 // tool calling, quantized KV cache). Reason/warning strings are i18n keys.
 
-import { weightsBytes, kvBytesPerSeq, BYTES_PER_GIB } from "./calc.ts";
-import { largestTpAtMost, nearestTp, tpValid } from "./parallel.ts";
+import { calculate, gpusNeeded, maxConcurrency } from "./calc.ts";
+import { VLLM_UTIL, vllmBatch, type BatchShape } from "./overhead.ts";
+import { largestTpAtMost, tpValid } from "./parallel.ts";
+import type { Parsers } from "./serving.ts";
 import type { Dtype, ModelArch } from "./calc";
 
 export type Priority = "balanced" | "throughput" | "latency" | "accuracy" | "memory";
@@ -21,6 +23,8 @@ export interface VllmInput {
   priority: Priority;
   task: VllmTask;
   gpuVramGiB: number;
+  /** The device's name: vLLM keeps an A100 at the small batch defaults. */
+  gpuName?: string;
   gpuCount: number;
   maxModelLen: number;
   /** Serving on a single MIG slice (no tensor parallelism across MIG). */
@@ -29,6 +33,10 @@ export interface VllmInput {
    * name-based quant guess for the VRAM-fit sanity check so natively-quantized
    * models aren't sized as bf16. */
   weightDtype?: Dtype;
+  /** The tool and reasoning parsers the Serving Brief read from the chat template
+   *  (serving.ts). Given, they win over the name-based guess below, so the two
+   *  pages cannot name different parsers for one model. */
+  parsers?: Parsers;
 }
 
 export interface VllmFlag {
@@ -68,6 +76,11 @@ function quantToDtype(q: string | null): Dtype {
   return "bf16";
 }
 
+/** The precision vLLM will load a model at: the config's, else the repo name's. */
+export function servingDtype(hfId: string, weightDtype?: Dtype): Dtype {
+  return weightDtype ?? quantToDtype(detectQuant(hfId));
+}
+
 /** Map a model family to its vLLM tool-call parser. `template: true` means a
  * model-specific --chat-template is usually required. */
 export function toolParser(hfId: string, modelType?: string): { parser: string; template?: boolean } | null {
@@ -100,6 +113,7 @@ export function recommend(i: VllmInput): VllmRec {
   flags.push({ flag: "--max-model-len", value: String(i.maxModelLen), reasonKey: "vllm.r.maxlen" });
 
   // --- parallelism ---
+  let tp = 1;
   if (i.mig) {
     warnings.push({ key: "vllm.w.mig" });
   } else if (i.gpuCount > 1) {
@@ -107,15 +121,16 @@ export function recommend(i: VllmInput): VllmRec {
     // carries one: it uses the largest that works and the warning says so.
     const heads = i.arch.numAttentionHeads;
     const kv = i.arch.numKeyValueHeads ?? heads;
-    const tp = tpValid(i.gpuCount, heads, kv) ? i.gpuCount : largestTpAtMost(i.gpuCount, heads, kv);
+    tp = tpValid(i.gpuCount, heads, kv) ? i.gpuCount : largestTpAtMost(i.gpuCount, heads, kv);
     if (tp !== i.gpuCount) warnings.push({ key: "vllm.w.tp", vars: { n: i.gpuCount, h: heads, ok: tp } });
     if (tp > 1) flags.push({ flag: "--tensor-parallel-size", value: String(tp), reasonKey: "vllm.r.tp" });
     if (i.isMoE) flags.push({ flag: "--enable-expert-parallel", reasonKey: "vllm.r.ep" });
   }
 
   // --- gpu memory utilization ---
-  const util = i.priority === "throughput" || i.priority === "memory" ? 0.95 : 0.9;
-  flags.push({ flag: "--gpu-memory-utilization", value: util.toFixed(2), reasonKey: "vllm.r.gpuutil" });
+  // 0.92 is vLLM's default (CacheConfig), so only the leaner priorities say it.
+  const util = i.priority === "throughput" || i.priority === "memory" ? 0.95 : VLLM_UTIL;
+  if (util !== VLLM_UTIL) flags.push({ flag: "--gpu-memory-utilization", value: util.toFixed(2), reasonKey: "vllm.r.gpuutil" });
 
   // --- KV cache precision ---
   let kvDtype: Dtype = "fp16";
@@ -129,16 +144,34 @@ export function recommend(i: VllmInput): VllmRec {
 
   // --- memory budget ---
   // Sized before the scheduler flags, because the KV cache is what decides how
-  // many sequences can actually be resident. Same model as the sizing engine:
-  // (weights + KV) x 1.1 overhead + 1 GiB CUDA context, against util x VRAM.
+  // many sequences can actually be resident. The sizing page's engine (calc.ts),
+  // at the batch these flags set: each GPU holds util × its memory, its share of
+  // the weights and the cache, and vLLM's overhead (overhead.ts).
   // Prefer the config-detected precision (handles MXFP4 / config-only FP8 that
   // the name-based detectQuant misses); fall back to the name-based guess.
-  const wDtype = i.weightDtype ?? quantToDtype(quant);
-  const weightsGiB = weightsBytes(i.arch, wDtype) / BYTES_PER_GIB;
-  const kvSeqGiB = kvBytesPerSeq(i.arch, kvDtype, i.maxModelLen) / BYTES_PER_GIB;
-  const budgetGiB = i.gpuCount * i.gpuVramGiB * util;
+  const wDtype = servingDtype(i.hfId, i.weightDtype);
+  const card = vllmBatch(i.gpuVramGiB, i.gpuName);
+  const preset = i.priority === "throughput" ? 512 : i.priority === "latency" ? 32 : i.priority === "memory" ? 64 : undefined;
+  const batch: BatchShape = {
+    tokens: i.priority === "throughput" ? 8192 : i.priority === "latency" ? 2048 : card.tokens,
+    seqs: preset ?? card.seqs,
+    graphCap: card.graphCap,
+  };
+  const sizing = { arch: i.arch, weightDtype: wDtype, kvDtype, contextLength: i.maxModelLen, batch, gpus: tp };
+  const usableGiB = i.gpuVramGiB * util;
   /** Full-length sequences the KV cache can hold once the weights are resident. */
-  const seqCap = Math.max(1, Math.floor(((budgetGiB - 1) / 1.1 - weightsGiB) / kvSeqGiB));
+  const seqCap = Math.max(1, maxConcurrency(sizing, usableGiB));
+  // A sliding layer holds its window plus every token in flight, two batches of
+  // --max-num-batched-tokens (kvReservedPerSeq in calc.ts), so the batch, not the
+  // window, sets what Gemma-style models keep.
+  if (i.arch.slidingWindow && i.arch.slidingLayers) {
+    const held = Math.min(i.arch.slidingWindow - 1 + 2 * batch.tokens, i.maxModelLen);
+    if (held >= 2 * i.arch.slidingWindow)
+      warnings.push({
+        key: "vllm.w.sliding",
+        vars: { w: i.arch.slidingWindow.toLocaleString("en-US"), held: held.toLocaleString("en-US"), t: batch.tokens.toLocaleString("en-US") },
+      });
+  }
 
   /** A preset is an upper bound — clamp it to what the KV cache can hold. */
   let seqsClamped = false;
@@ -171,14 +204,22 @@ export function recommend(i: VllmInput): VllmRec {
   // --- task specifics ---
   if (i.task === "tool") {
     flags.push({ flag: "--enable-auto-tool-choice", reasonKey: "vllm.r.tool" });
-    const p = toolParser(i.hfId, i.modelType);
-    if (p) {
-      flags.push({ flag: "--tool-call-parser", value: p.parser, reasonKey: "vllm.r.toolparser", reasonVars: { parser: p.parser } });
-      if (p.template) warnings.push({ key: "vllm.w.template" });
+    if (i.parsers?.tool) {
+      flags.push({ flag: "--tool-call-parser", value: i.parsers.tool, reasonKey: "vllm.r.toolparser", reasonVars: { parser: i.parsers.tool } });
+      if (i.parsers.template) flags.push({ flag: "--chat-template", value: i.parsers.template, reasonKey: "vllm.r.chatTemplate" });
     } else {
-      warnings.push({ key: "vllm.w.parserUnknown" });
+      // No chat template read (a gated repo, or the Hub did not answer): fall back to the name.
+      const p = toolParser(i.hfId, i.modelType);
+      if (p) {
+        flags.push({ flag: "--tool-call-parser", value: p.parser, reasonKey: "vllm.r.toolparser", reasonVars: { parser: p.parser } });
+        if (p.template) warnings.push({ key: "vllm.w.template" });
+      } else {
+        warnings.push({ key: "vllm.w.parserUnknown" });
+      }
     }
   }
+  // A model that thinks puts its reasoning in the reply unless vLLM separates it.
+  if (i.parsers?.reasoning) flags.push({ flag: "--reasoning-parser", value: i.parsers.reasoning, reasonKey: "vllm.r.reasoningParser" });
   // --guided-decoding-backend is gone; structured output is configured here now.
   if (i.task === "structured") flags.push({ flag: "--structured-outputs-config.backend", value: "xgrammar", reasonKey: "vllm.r.guided" });
   if (i.task === "vision" || i.vision) {
@@ -196,18 +237,17 @@ export function recommend(i: VllmInput): VllmRec {
   else if (quant) warnings.push({ key: "vllm.w.quant", vars: { q: quant.toUpperCase() } });
 
   // --- VRAM fit sanity (same budget the scheduler caps were sized against) ---
-  const required = (weightsGiB + kvSeqGiB) * 1.1 + 1; // +overhead +CUDA ctx
-  if (required > budgetGiB) {
+  // One sequence at the full length, on each GPU of the group.
+  const one = calculate({ ...sizing, concurrency: 1 });
+  if (one.perGpuGiB > usableGiB) {
+    // A GPU count vLLM can split the heads across, not just enough memory.
+    const enough = gpusNeeded({ ...sizing, concurrency: 1 }, usableGiB);
     warnings.push({
       key: "vllm.w.fit",
       vars: {
-        need: required.toFixed(1),
-        have: budgetGiB.toFixed(1),
-        // A GPU count vLLM can split the heads across, not just enough memory.
-        gpus: (() => {
-          const raw = Math.max(2, Math.ceil(required / (i.gpuVramGiB * util)));
-          return nearestTp(raw, i.arch.numAttentionHeads, i.arch.numKeyValueHeads ?? i.arch.numAttentionHeads) ?? raw;
-        })(),
+        need: one.perGpuGiB.toFixed(1),
+        have: usableGiB.toFixed(1),
+        gpus: enough ?? Math.max(2, Math.ceil(one.totalGiB / usableGiB)),
       },
     });
   }

@@ -6,10 +6,9 @@
 
 import { calculate, type Dtype, type ModelArch } from "../src/lib/calc.ts";
 import { FEED_CATEGORIES, validatePost, type FeedArch, type FeedCategory, type FeedPost } from "../src/lib/feed.ts";
-import { GPUS, usableGiB } from "../src/lib/gpus.ts";
+import { cardsFor, GPUS, needOn, usableGiB } from "../src/lib/gpus.ts";
 import { findKnownByHfId, KNOWN_MODELS } from "../src/lib/models.ts";
 import { FEATURED_GPU_IDS } from "../src/lib/staticPages.ts";
-import { DEFAULT_STATE } from "../src/lib/urlState.ts";
 import { formatGiB, formatParams } from "../src/lib/format.ts";
 import { resolveModel } from "../src/lib/hf.ts";
 import { fetchText } from "./collect.ts";
@@ -98,14 +97,16 @@ const BIGGEST = GPUS.find((g) => g.id === "b200-192")!;
 export function engineFigures(name: string, hfId: string, arch: ModelArch, maxContext?: number): string {
   const ctx = Math.min(8192, maxContext ?? arch.maxContext ?? 8192);
   const lines = PRECISIONS.map((d) => {
-    const need = calculate({ arch, weightDtype: d, contextLength: ctx, concurrency: 1, kvDtype: "fp16", overheadPct: DEFAULT_STATE.overheadPct, cudaContextGiB: DEFAULT_STATE.cudaContextGiB }).totalGiB;
-    const holder = FEATURED.find((g) => need <= usableGiB(g));
-    return `- ${d.toUpperCase()}: ${formatGiB(need)} — ${holder ? `smallest single device that holds it: ${holder.name}` : `no single device holds it; by memory, ${Math.ceil(need / usableGiB(BIGGEST))}× ${BIGGEST.name}`}`;
+    const input = { arch, weightDtype: d, contextLength: ctx, concurrency: 1, kvDtype: "fp16" as Dtype };
+    const need = calculate(input).totalGiB;
+    const holder = FEATURED.find((g) => needOn(input, g) <= usableGiB(g));
+    const many = cardsFor(input, BIGGEST) ?? Math.ceil(needOn(input, BIGGEST) / usableGiB(BIGGEST));
+    return `- ${d.toUpperCase()}: ${formatGiB(need)} — ${holder ? `smallest single device that holds it: ${holder.name}` : `no single device holds it; it takes ${many}× ${BIGGEST.name}`}`;
   });
   const active = arch.activeParams ? `, about ${formatParams(arch.activeParams)} active per token (MoE)` : "";
   return [
     `Model: ${name} (${hfId}), ${formatParams(arch.numParams)} parameters${active}, ${arch.numLayers} layers, max context ${arch.maxContext ?? "unknown"} tokens.`,
-    `Memory for one user at ${ctx} tokens of context (FP16 KV cache, 10% overhead, 0.75 GiB CUDA context):`,
+    `Memory for one user at ${ctx} tokens of context (FP16 KV cache, vLLM's overhead on each device at its defaults):`,
     ...lines,
   ].join("\n");
 }

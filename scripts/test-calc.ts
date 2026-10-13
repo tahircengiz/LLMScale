@@ -19,8 +19,6 @@ const r = calculate({
   kvDtype: "fp16",
   contextLength: 8192,
   concurrency: 1,
-  overheadPct: 0.1,
-  cudaContextGiB: 0.75,
 });
 console.log("\nQwen2.5-7B @ bf16, 8k ctx, 1 user:");
 console.log(`  weights=${r.weightsGiB.toFixed(2)} kv/seq=${r.kvPerSeqGiB.toFixed(3)} total=${r.totalGiB.toFixed(2)} GiB`);
@@ -40,8 +38,6 @@ const rl = calculate({
   kvDtype: "fp16",
   contextLength: 128000,
   concurrency: 1,
-  overheadPct: 0.1,
-  cudaContextGiB: 0.75,
 });
 console.log("\nLlama-3.1-8B @ fp16, 128k ctx, 1 user:");
 console.log(`  weights=${rl.weightsGiB.toFixed(2)} kv/seq=${rl.kvPerSeqGiB.toFixed(2)} total=${rl.totalGiB.toFixed(2)} GiB`);
@@ -51,7 +47,7 @@ check("Llama weights ~14.96 GiB", approx(rl.weightsGiB, 8.03e9 * 2 / 1024 ** 3, 
 
 // --- Reverse: how many 4k-ctx users fit on an 80GB H100 with Llama 8B fp16? ---
 const fit = maxConcurrency(
-  { arch: llama, weightDtype: "fp16", kvDtype: "fp16", contextLength: 4096, overheadPct: 0.1, cudaContextGiB: 0.75 },
+  { arch: llama, weightDtype: "fp16", kvDtype: "fp16", contextLength: 4096 },
   80
 );
 console.log(`\nLlama-3.1-8B fp16, 4k ctx on 80 GiB → ${fit} concurrent sequences`);

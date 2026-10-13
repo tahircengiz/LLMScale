@@ -26,7 +26,7 @@ export function Controls({
   kvDtype,
   contextLength,
   concurrency,
-  overheadPct,
+  gpuUtil,
   maxContext,
   onChange,
 }: {
@@ -34,14 +34,14 @@ export function Controls({
   kvDtype: Dtype;
   contextLength: number;
   concurrency: number;
-  overheadPct: number;
+  gpuUtil: number;
   maxContext?: number;
   onChange: (patch: {
     weightDtype?: Dtype;
     kvDtype?: Dtype;
     contextLength?: number;
     concurrency?: number;
-    overheadPct?: number;
+    gpuUtil?: number;
   }) => void;
 }) {
   const { t } = useLang();
@@ -128,16 +128,22 @@ export function Controls({
         </div>
       </Field>
 
-      <Field label={t("controls.overhead")} hint={`${Math.round(overheadPct * 100)}%`}>
+      {/* The share of each card the engine may fill. The overhead itself is sized
+          per GPU from the model (overhead.ts), so this is the one knob left. */}
+      <Field label={t("controls.util")} hint={gpuUtil.toFixed(2)}>
         <input
           type="range"
-          min={0}
-          max={0.3}
+          min={0.7}
+          max={0.98}
           step={0.01}
-          value={overheadPct}
-          onChange={(e) => onChange({ overheadPct: Number(e.target.value) })}
+          value={gpuUtil}
+          onChange={(e) => onChange({ gpuUtil: Number(e.target.value) })}
+          aria-describedby="util-note"
           className="w-full"
         />
+        <p id="util-note" className="mt-1 text-[11px] leading-relaxed text-slate-500">
+          {t("controls.utilNote")}
+        </p>
       </Field>
     </div>
   );

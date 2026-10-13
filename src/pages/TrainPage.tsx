@@ -85,11 +85,11 @@ export function TrainPage() {
   );
 
   const gpu = GPUS.find((g) => g.id === gpuId) ?? GPUS[0];
-  const usable = usableGiB(gpu);
+  const usable = usableGiB(gpu, undefined, DRIVER_RESERVE);
   const fits = result ? result.totalGiB <= usable : false;
   const needed = result ? Math.ceil(result.totalGiB / usable) : 0;
   const smallestFit = result
-    ? [...GPUS].sort((a, b) => usableGiB(a) - usableGiB(b)).find((g) => result.totalGiB <= usableGiB(g))
+    ? [...GPUS].sort((a, b) => usableGiB(a, undefined, DRIVER_RESERVE) - usableGiB(b, undefined, DRIVER_RESERVE)).find((g) => result.totalGiB <= usableGiB(g, undefined, DRIVER_RESERVE))
     : undefined;
 
   const segments = result
@@ -103,8 +103,8 @@ export function TrainPage() {
     : [];
 
   function jump(cat: GpuCategory) {
-    const list = GPUS.filter((g) => g.category === cat).sort((a, b) => usableGiB(a) - usableGiB(b));
-    const fit = result ? list.find((g) => result.totalGiB <= usableGiB(g)) : undefined;
+    const list = GPUS.filter((g) => g.category === cat).sort((a, b) => usableGiB(a, undefined, DRIVER_RESERVE) - usableGiB(b, undefined, DRIVER_RESERVE));
+    const fit = result ? list.find((g) => result.totalGiB <= usableGiB(g, undefined, DRIVER_RESERVE)) : undefined;
     setGpuId((fit ?? list[list.length - 1]).id);
   }
 

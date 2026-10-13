@@ -200,6 +200,8 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   const experts = expertCount(c);
   const perTok = expertsPerToken(c);
   if (experts && experts > 1 && perTok) [arch.numExperts, arch.expertsPerToken] = [experts, perTok];
+  const moeWidth = c.moe_intermediate_size ?? c.expert_intermediate_size;
+  if (arch.numExperts && typeof moeWidth === "number") arch.moeIntermediateSize = moeWidth;
   // An absent flag counts as untied: the larger, safer figure for a quantized estimate.
   arch.tieEmbeddings = (c.tie_word_embeddings ?? cfg?.tie_word_embeddings) === true;
   // Sliding windows and hybrid layers cache less than every layer at full context.
@@ -207,7 +209,7 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   if (plan) {
     if (plan.attention !== numLayers) arch.attnLayers = plan.attention;
     if (plan.sliding && plan.window) [arch.slidingLayers, arch.slidingWindow] = [plan.sliding, plan.window];
-    if (plan.stateBytesPerSeq) arch.stateBytesPerSeq = plan.stateBytesPerSeq;
+    if (plan.stateBytesPerSeq) [arch.stateBytesPerSeq, arch.stateLayers] = [plan.stateBytesPerSeq, plan.stateLayers];
   }
   return arch;
 }

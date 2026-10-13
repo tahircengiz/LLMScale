@@ -24,7 +24,7 @@ function warn(name: string, detail = "") {
 
 // ---------- A. calc engine edge cases (no network) ----------
 console.log("===== A. calc engine edge cases =====");
-const D = { weightDtype: "bf16" as Dtype, kvDtype: "fp16" as Dtype, overheadPct: 0.1, cudaContextGiB: 0.75 };
+const D = { weightDtype: "bf16" as Dtype, kvDtype: "fp16" as Dtype };
 const a7b: ModelArch = { numParams: 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 128 };
 
 // zero params

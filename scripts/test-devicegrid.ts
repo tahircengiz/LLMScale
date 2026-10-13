@@ -76,8 +76,6 @@ if (!hero || !selected) {
       kvDtype: DEFAULT_STATE.kvDtype,
       contextLength,
       concurrency,
-      overheadPct: DEFAULT_STATE.overheadPct,
-      cudaContextGiB: DEFAULT_STATE.cudaContextGiB,
     }).totalGiB;
 
   const catGpus = GPUS.filter((g) => g.category === selected.category).sort(

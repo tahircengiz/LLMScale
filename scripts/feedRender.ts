@@ -5,8 +5,7 @@
 
 import { calculate, type Dtype, type ModelArch } from "../src/lib/calc.ts";
 import { KNOWN_MODELS } from "../src/lib/models.ts";
-import { GPUS, usableGiB, type Gpu } from "../src/lib/gpus.ts";
-import { DEFAULT_STATE } from "../src/lib/urlState.ts";
+import { cardsFor, GPUS, needOn, usableGiB, type Gpu } from "../src/lib/gpus.ts";
 import type { Lang } from "../src/lib/dict.ts";
 import { FEATURED_GPU_IDS, gpuPageFile, modelPageFile } from "../src/lib/staticPages.ts";
 import { FEED_HUB, FEED_MEDIA, feedPostFile, paragraphs, type FeedCategory, type FeedPost } from "../src/lib/feed.ts";
@@ -42,7 +41,7 @@ export const T = {
     cat: { model: "Model", release: "Release", hardware: "Hardware", research: "Research", tooling: "Tooling" } as Record<FeedCategory, string>,
     memCap: (name: string, p: string, c: string) => `${name} · ${p} parameters · ${c} context, one user`,
     memCols: ["Precision", "Memory", "Fits on"],
-    memNote: "FP16 KV cache, 10% overhead, 0.75 GiB CUDA context. “Fits on”: the smallest device that holds it alone, or how many of the largest it takes by memory.",
+    memNote: "FP16 KV cache and vLLM's overhead on each device at its defaults. “Fits on”: the smallest device that holds it alone, or how many of the largest it takes.",
     guide: "Memory by context and GPU",
     tweak: "Change the context, users or GPU in the calculator",
     calc: "Calculator",
@@ -70,7 +69,7 @@ export const T = {
     cat: { model: "Model", release: "Sürüm", hardware: "Donanım", research: "Araştırma", tooling: "Araç" } as Record<FeedCategory, string>,
     memCap: (name: string, p: string, c: string) => `${name} · ${p} parametre · ${c} context, tek kullanıcı`,
     memCols: ["Hassasiyet", "Bellek", "Sığdığı cihaz"],
-    memNote: "FP16 KV cache, %10 ek yük, 0,75 GiB CUDA context. “Sığdığı cihaz”: modeli tek başına taşıyan en küçük cihaz ya da bellek olarak en büyüğünden kaç tane gerektiği.",
+    memNote: "FP16 KV cache ve her cihazda kendi varsayılanlarıyla vLLM'in ek yükü. “Sığdığı cihaz”: modeli tek başına taşıyan en küçük cihaz ya da en büyüğünden kaç tane gerektiği.",
     guide: "Context ve GPU'ya göre bellek",
     tweak: "Context, kullanıcı ya da GPU'yu hesaplayıcıda değiştir",
     calc: "Hesapla",
@@ -159,9 +158,11 @@ export function memoryCard(rc: RenderCtx, lang: Lang, cm: CardModel): string {
   const m = cm.arch;
   const ctx = refCtx(m);
   const rows = PRECISIONS.map((d) => {
-    const need = calculate({ arch: m, weightDtype: d, contextLength: ctx, concurrency: 1, kvDtype: "fp16", overheadPct: DEFAULT_STATE.overheadPct, cudaContextGiB: DEFAULT_STATE.cudaContextGiB }).totalGiB;
-    const holder = FEATURED.find((g) => need <= usableGiB(g));
-    return { d, need, fit: holder ? gpuLink(rc, lang, holder) : `${Math.ceil(need / usableGiB(BIGGEST))}× ${gpuLink(rc, lang, BIGGEST)}` };
+    const input = { arch: m, weightDtype: d, contextLength: ctx, concurrency: 1, kvDtype: "fp16" as Dtype };
+    const need = calculate(input).totalGiB;
+    const holder = FEATURED.find((g) => needOn(input, g) <= usableGiB(g));
+    const many = cardsFor(input, BIGGEST) ?? Math.ceil(needOn(input, BIGGEST) / usableGiB(BIGGEST));
+    return { d, need, fit: holder ? gpuLink(rc, lang, holder) : `${many}× ${gpuLink(rc, lang, BIGGEST)}` };
   });
   const max = Math.max(...rows.map((r) => r.need));
   return `<figure class="mem">

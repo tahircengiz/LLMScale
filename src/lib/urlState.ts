@@ -1,4 +1,5 @@
 import type { Dtype, ModelArch } from "./calc";
+import { VLLM_UTIL } from "./overhead.ts";
 
 // Shareable state encoded in the URL query string so a configured calculation
 // can be linked directly (great for the "share this estimate" use case).
@@ -10,8 +11,8 @@ export interface AppState {
   kvDtype: Dtype;
   contextLength: number;
   concurrency: number;
-  overheadPct: number;
-  cudaContextGiB: number;
+  /** Share of each card the engine may fill: vLLM's --gpu-memory-utilization. */
+  gpuUtil: number;
   gpuId: string;
   migId: string;
 }
@@ -37,8 +38,7 @@ export const DEFAULT_STATE: AppState = {
   kvDtype: "fp16",
   contextLength: 8192,
   concurrency: 1,
-  overheadPct: 0.1,
-  cudaContextGiB: 0.75,
+  gpuUtil: VLLM_UTIL,
   // Deliberately empty: the app opens on no model and no device. A default we
   // put in front of people is indistinguishable from a choice they made, and a
   // crawler that renders the page used to emit our default as if it were one.
@@ -72,6 +72,9 @@ export function encodeState(s: AppState): string {
     // if the batch were one sequence.
     const a = s.arch;
     if (a.vocabSize) p.set("v", String(a.vocabSize));
+    // The overhead's activation peak reads the feed-forward widths (overhead.ts).
+    if (a.intermediateSize) p.set("i", String(a.intermediateSize));
+    if (a.moeIntermediateSize) p.set("mi", String(a.moeIntermediateSize));
     if (a.tieEmbeddings) p.set("te", "1");
     if (a.attnLayers !== undefined) p.set("al", String(a.attnLayers));
     if (a.slidingLayers && a.slidingWindow) {
@@ -79,6 +82,7 @@ export function encodeState(s: AppState): string {
       p.set("sw", String(a.slidingWindow));
     }
     if (a.stateBytesPerSeq) p.set("st", String(a.stateBytesPerSeq));
+    if (a.stateLayers) p.set("sn", String(a.stateLayers));
     if (a.numExperts && a.expertsPerToken) {
       p.set("ne", String(a.numExperts));
       p.set("ek", String(a.expertsPerToken));
@@ -92,7 +96,8 @@ export function encodeState(s: AppState): string {
   p.set("kd", s.kvDtype);
   p.set("ctx", String(s.contextLength));
   p.set("n", String(s.concurrency));
-  p.set("ov", String(s.overheadPct));
+  // Left out at vLLM's default, so a link only carries a share someone chose.
+  if (s.gpuUtil !== VLLM_UTIL) p.set("gu", String(s.gpuUtil));
   // Absent, not empty, while no device is chosen — an empty `g=` would still
   // read as a value and would land in the analytics data as one.
   if (s.gpuId) p.set("g", s.gpuId);
@@ -128,11 +133,14 @@ export function decodeState(search: string): Partial<AppState> {
       qkRopeHeadDim: num(p.get("qr")),
       activeParams: num(p.get("ap")),
       vocabSize: num(p.get("v")),
+      intermediateSize: num(p.get("i")),
+      moeIntermediateSize: num(p.get("mi")),
       tieEmbeddings: p.get("te") === "1" ? true : undefined,
       attnLayers: num(p.get("al")),
       slidingLayers: num(p.get("sl")),
       slidingWindow: num(p.get("sw")),
       stateBytesPerSeq: num(p.get("st")),
+      stateLayers: num(p.get("sn")),
       numExperts: num(p.get("ne")),
       expertsPerToken: num(p.get("ek")),
     } as ModelArch;
@@ -151,8 +159,10 @@ export function decodeState(search: string): Partial<AppState> {
   if (ctx) out.contextLength = ctx;
   const n = num(p.get("n"));
   if (n) out.concurrency = n;
-  const ov = num(p.get("ov"));
-  if (ov !== undefined) out.overheadPct = ov;
+  // Links made before 2026-10-13 carry `ov`, a share of the weights and cache added
+  // as overhead; the overhead is now sized per GPU, so it is not read.
+  const gu = num(p.get("gu"));
+  if (gu !== undefined && gu > 0 && gu <= 1) out.gpuUtil = gu;
   if (p.get("g")) out.gpuId = p.get("g")!;
   if (p.get("mig")) out.migId = p.get("mig")!;
   return out;

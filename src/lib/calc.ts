@@ -1,5 +1,8 @@
 // Core VRAM sizing engine.
-// All math is pure and dependency-free so it can be unit-tested with `node calc.ts`.
+// All math is pure and React-free so it can be unit-tested with `node calc.ts`.
+
+import { overheadPerGpu, SMALL_CARD_BATCH, type BatchShape } from "./overhead.ts";
+import { tpValid } from "./parallel.ts";
 
 export type Dtype = "fp32" | "fp16" | "bf16" | "fp8" | "int8" | "int4";
 
@@ -65,12 +68,17 @@ export interface ModelArch {
    *  tokens (Gemma 2 and 3, gpt-oss). */
   slidingLayers?: number;
   slidingWindow?: number;
-  /** The fixed state a hybrid keeps per sequence, in bytes, whatever the context. */
+  /** The fixed state a hybrid keeps per sequence, in bytes, whatever the context,
+   *  and how many linear-attention or Mamba layers keep it. */
   stateBytesPerSeq?: number;
+  stateLayers?: number;
   /** Routed experts per MoE layer and how many each token goes through: how much
    *  of a MoE a batch reads per step depends on both (perf.ts). */
   numExperts?: number;
   expertsPerToken?: number;
+  /** One expert's feed-forward width (moe_intermediate_size): what a routed token
+   *  works through, where intermediateSize is the dense layers' (overhead.ts). */
+  moeIntermediateSize?: number;
   /** Whether the input embedding and the output head are one matrix. */
   tieEmbeddings?: boolean;
   /** A checkpoint that ships quantized: its precision and the bytes its weight
@@ -94,10 +102,12 @@ export interface CalcInput {
   contextLength: number;
   /** Number of concurrent sequences / batch size. */
   concurrency: number;
-  /** Activation + fragmentation overhead as a fraction of (weights+kv), e.g. 0.1 */
-  overheadPct: number;
-  /** Fixed framework + CUDA context overhead in GiB. */
-  cudaContextGiB: number;
+  /** The batch the engine profiles with on the target card, which sets the
+   *  activation peak (overhead.ts). Defaults to vLLM's for a card under 70 GiB. */
+  batch?: BatchShape;
+  /** GPUs the model is split across by tensor parallelism. Each one holds its
+   *  share of the weights and the cache and repeats the overhead. Default 1. */
+  gpus?: number;
 }
 
 export interface CalcResult {
@@ -106,8 +116,17 @@ export interface CalcResult {
   /** KV cache for a single sequence at the given context. */
   kvPerSeqGiB: number;
   kvPerTokenBytes: number;
+  /** Per GPU: the peak of the engine's profiling forward pass. */
   activationsGiB: number;
-  cudaOverheadGiB: number;
+  /** Per GPU: what the runtime keeps (workspaces, communication buffers) and the
+   *  CUDA graphs. */
+  runtimeGiB: number;
+  /** GPUs the figures are for, and the batch the overhead was sized at. */
+  gpus: number;
+  batch: BatchShape;
+  /** One GPU's load: its share of the weights and the cache, plus the overhead. */
+  perGpuGiB: number;
+  /** The whole deployment: weights + KV cache + the overhead on every GPU. */
   totalGiB: number;
   headDim: number;
 }
@@ -166,82 +185,147 @@ export function kvBytesPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: nu
   return perLayer * ((layers - sliding) * contextLength + windowed) + (arch.stateBytesPerSeq ?? 0);
 }
 
+/** How many ways the KV cache splits across `gpus`: by key-value head, so a model
+ *  with fewer KV heads than GPUs replicates them, and MLA's single latent per token
+ *  is held whole on every GPU (vLLM shards attention by head; the latent has none). */
+export function kvSplit(arch: ModelArch, gpus: number): number {
+  if (usesMla(arch)) return 1;
+  return Math.max(1, Math.min(gpus, arch.numKeyValueHeads || gpus));
+}
+
+/** vLLM's KV block, in tokens (CacheConfig.block_size on CUDA). */
+const VLLM_BLOCK = 16;
+
+/**
+ * KV cache and state vLLM 0.31.0 holds back for ONE request at `contextLength`:
+ * the bound it sizes its pool and admits requests by
+ * (get_max_concurrency_for_kv_cache_config in vllm/v1/core/kv_cache_utils.py,
+ * max_admission_blocks_per_request in vllm/v1/kv_cache_interface.py). It is more
+ * than the cache attention reads (kvBytesPerSeq) in three ways:
+ *   - a sliding layer keeps window − 1 tokens plus every token in flight, two
+ *     batches of max_num_batched_tokens under async scheduling, plus one block;
+ *   - a Mamba or linear-attention layer keeps two state blocks (prefix caching's
+ *     "align" mode), and the attention layers' blocks grow to the state's page;
+ *   - each kind of layer is cut into groups of equal size, the last one padded.
+ * Checked against vLLM's own figures for Gemma 3 1B (51.0× vs 51.02×) and
+ * Granite 4.0-H Micro (23.2× vs 23.21×) in scripts/test-vllmlog.ts.
+ */
+export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens = 2048): number {
+  const perLayer = kvBytesPerLayerToken(arch, kvDtype);
+  const attn = arch.attnLayers ?? arch.numLayers;
+  const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, attn) : 0;
+  const full = attn - sliding;
+  const stateLayers = arch.stateBytesPerSeq ? arch.stateLayers ?? 0 : 0;
+  const statePerLayer = stateLayers ? arch.stateBytesPerSeq! / stateLayers : 0;
+  // One page size for every layer: an attention block holds at least one state.
+  const block = statePerLayer > 0 && perLayer > 0 ? Math.ceil(statePerLayer / perLayer / VLLM_BLOCK) * VLLM_BLOCK : VLLM_BLOCK;
+  const page = Math.max(block * perLayer, statePerLayer);
+  const kinds = [full, sliding, stateLayers].filter((n) => n > 0);
+  if (!kinds.length || !(page > 0)) return 0;
+  const lo = Math.min(...kinds);
+  const hi = Math.max(...kinds);
+  // The fewest layers of any kind sets the group, unless the kinds are close in size.
+  const group = hi < lo * 1.5 ? hi : lo;
+  const groups = (n: number) => Math.ceil(n / group);
+  const blocksOf = (tokens: number) => Math.ceil(tokens / block);
+  let blocks = 0;
+  if (full) blocks += groups(full) * blocksOf(contextLength);
+  if (sliding) blocks += groups(sliding) * (blocksOf(Math.min(arch.slidingWindow! - 1 + 2 * batchTokens, contextLength)) + 1);
+  if (stateLayers) blocks += groups(stateLayers) * 2;
+  return blocks * group * page;
+}
+
 export function calculate(input: CalcInput): CalcResult {
-  const { arch, weightDtype, kvDtype, contextLength, concurrency, overheadPct, cudaContextGiB } = input;
+  const { arch, weightDtype, kvDtype, contextLength, concurrency } = input;
+  const gpus = Math.max(1, input.gpus ?? 1);
 
   const headDim = resolveHeadDim(arch);
   const weights = weightsBytes(arch, weightDtype);
   const kvPerToken = kvBytesPerToken(arch, kvDtype);
-  const kvPerSeq = kvBytesPerSeq(arch, kvDtype, contextLength);
+  // Sized as vLLM reserves it, at the batch it profiles with.
+  const kvPerSeq = kvReservedPerSeq(arch, kvDtype, contextLength, (input.batch ?? SMALL_CARD_BATCH).tokens);
   const kvTotal = kvPerSeq * concurrency;
 
-  const activations = (weights + kvTotal) * overheadPct;
-  const cudaOverhead = cudaContextGiB * BYTES_PER_GIB;
-  const total = weights + kvTotal + activations + cudaOverhead;
+  const o = overheadPerGpu(arch, input.batch, gpus);
+  const perGpu = (weights / gpus + kvTotal / kvSplit(arch, gpus)) / BYTES_PER_GIB + o.totalGiB;
 
   return {
     weightsGiB: weights / BYTES_PER_GIB,
     kvCacheGiB: kvTotal / BYTES_PER_GIB,
     kvPerSeqGiB: kvPerSeq / BYTES_PER_GIB,
     kvPerTokenBytes: kvPerToken,
-    activationsGiB: activations / BYTES_PER_GIB,
-    cudaOverheadGiB: cudaOverhead / BYTES_PER_GIB,
-    totalGiB: total / BYTES_PER_GIB,
+    activationsGiB: o.activationGiB,
+    runtimeGiB: o.runtimeGiB + o.graphsGiB,
+    gpus,
+    batch: input.batch ?? SMALL_CARD_BATCH,
+    perGpuGiB: perGpu,
+    totalGiB: (weights + kvTotal) / BYTES_PER_GIB + gpus * o.totalGiB,
     headDim,
   };
 }
 
-/**
- * Reverse calculation: given an available VRAM budget (GiB) and everything
- * except concurrency, how many concurrent sequences fit?
- * Returns 0 if the model weights alone don't fit.
- */
-export function maxConcurrency(
-  input: Omit<CalcInput, "concurrency">,
-  availableGiB: number
-): number {
-  const { arch, weightDtype, kvDtype, contextLength, overheadPct, cudaContextGiB } = input;
-  const weights = weightsBytes(arch, weightDtype);
-  const kvPerSeq = kvBytesPerSeq(arch, kvDtype, contextLength);
-  const budget = availableGiB * BYTES_PER_GIB;
-
-  // total = (weights + n*kvPerSeq) * (1 + overheadPct) + cudaOverhead <= budget
-  const cudaOverhead = cudaContextGiB * BYTES_PER_GIB;
-  const usableForModel = (budget - cudaOverhead) / (1 + overheadPct);
-  const remainingForKv = usableForModel - weights;
-  if (remainingForKv <= 0) return 0;
-  // Guard a degenerate arch (0 KV heads / 0 context) so we never divide by zero
-  // and surface an "Infinity" in the UI.
-  if (!(kvPerSeq > 0)) return 0;
-  return Math.floor(remainingForKv / kvPerSeq);
+/** What each GPU has left for the KV cache once its share of the weights and the
+ *  overhead are in, in bytes (negative when they do not fit). */
+function kvRoom(input: Omit<CalcInput, "concurrency" | "contextLength">, usableGiB: number): number {
+  const gpus = Math.max(1, input.gpus ?? 1);
+  const o = overheadPerGpu(input.arch, input.batch, gpus);
+  return (usableGiB - o.totalGiB) * BYTES_PER_GIB - weightsBytes(input.arch, input.weightDtype) / gpus;
 }
 
 /**
- * Reverse calculation: max context length for a single sequence given a budget.
+ * Reverse calculation: given each GPU's usable memory (GiB) and everything except
+ * concurrency, how many concurrent sequences fit?
+ * Returns 0 if the model weights alone don't fit.
  */
-export function maxContextLength(
-  input: Omit<CalcInput, "contextLength">,
-  availableGiB: number
-): number {
-  const { arch, weightDtype, kvDtype, concurrency, overheadPct, cudaContextGiB } = input;
-  const weights = weightsBytes(arch, weightDtype);
-  const budget = availableGiB * BYTES_PER_GIB;
-  const cudaOverhead = cudaContextGiB * BYTES_PER_GIB;
-  const usableForModel = (budget - cudaOverhead) / (1 + overheadPct);
+export function maxConcurrency(input: Omit<CalcInput, "concurrency">, usableGiB: number): number {
+  const room = kvRoom(input, usableGiB);
+  if (room <= 0) return 0;
+  const kvPerSeq = kvReservedPerSeq(input.arch, input.kvDtype, input.contextLength, (input.batch ?? SMALL_CARD_BATCH).tokens);
+  // Guard a degenerate arch (0 KV heads / 0 context) so we never divide by zero
+  // and surface an "Infinity" in the UI.
+  if (!(kvPerSeq > 0)) return 0;
+  return Math.floor((room * kvSplit(input.arch, input.gpus ?? 1)) / kvPerSeq);
+}
+
+/**
+ * Reverse calculation: max context length for a single sequence given each GPU's
+ * usable memory.
+ */
+export function maxContextLength(input: Omit<CalcInput, "contextLength">, usableGiB: number): number {
+  const { arch, kvDtype, concurrency } = input;
   if (!(concurrency > 0)) return 0;
-  // What each sequence may hold, after its fixed state.
-  const perSeq = (usableForModel - weights) / concurrency - (arch.stateBytesPerSeq ?? 0);
-  if (perSeq <= 0) return 0;
-  const perLayer = kvBytesPerLayerToken(arch, kvDtype);
-  const layers = arch.attnLayers ?? arch.numLayers;
-  const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, layers) : 0;
-  const all = perLayer * layers;
-  if (!(all > 0)) return 0;
-  // Below the window every cache-keeping layer grows with each token…
-  const W = arch.slidingWindow ?? Infinity;
-  if (sliding === 0 || all * W >= perSeq) return Math.floor(perSeq / all);
-  // …past it only the full-attention layers do.
-  const full = perLayer * (layers - sliding);
-  if (!(full > 0)) return arch.maxContext ?? Number.MAX_SAFE_INTEGER;
-  return Math.floor((perSeq - perLayer * sliding * W) / full);
+  const perSeq = (kvRoom(input, usableGiB) * kvSplit(arch, input.gpus ?? 1)) / concurrency;
+  const tokens = (input.batch ?? SMALL_CARD_BATCH).tokens;
+  const need = (ctx: number) => kvReservedPerSeq(arch, kvDtype, ctx, tokens);
+  if (perSeq <= 0 || !(need(VLLM_BLOCK) > 0) || need(1) > perSeq) return 0;
+  // The reservation grows with the context, in steps of a block; past the
+  // sliding layers' bound only the full-attention layers keep growing, and a
+  // model with none stops growing at all.
+  const far = 2 ** 40;
+  if (need(far) <= perSeq) return arch.maxContext ?? Number.MAX_SAFE_INTEGER;
+  let lo = 1;
+  let hi = 2;
+  while (need(hi) <= perSeq) {
+    lo = hi;
+    hi *= 2;
+  }
+  while (hi - lo > 1) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (need(mid) <= perSeq) lo = mid;
+    else hi = mid;
+  }
+  return lo;
+}
+
+/** The fewest GPUs of `usableGiB` each that hold the deployment, counting the
+ *  overhead on every one; by default only sizes vLLM can split the heads across
+ *  (`validOnly` false counts memory alone). null when no size up to `limit` does. */
+export function gpusNeeded(input: CalcInput, usableGiB: number, limit = 64, validOnly = true): number | null {
+  const heads = input.arch.numAttentionHeads;
+  const kv = input.arch.numKeyValueHeads || heads;
+  for (let n = 1; n <= limit; n++) {
+    if (validOnly && n > 1 && !tpValid(n, heads, kv)) continue;
+    if (calculate({ ...input, gpus: n }).perGpuGiB <= usableGiB) return n;
+  }
+  return null;
 }

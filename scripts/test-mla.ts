@@ -67,7 +67,7 @@ check("fp8 KV halves it", kvBytesPerToken(v3, "fp8") * 2 === perTokMla);
 console.log("\n--- what it means in GiB ---");
 const at = (arch: ModelArch, ctx: number) =>
   calculate({ arch, weightDtype: "fp8", kvDtype: "fp16", contextLength: ctx,
-              concurrency: 1, overheadPct: 0.1, cudaContextGiB: 0.75 });
+              concurrency: 1 });
 const mla8k = at(v3, 8192), gqa8k = at(asIfGqa, 8192);
 check("KV at 8k is well under a GiB", mla8k.kvCacheGiB < 1, `${mla8k.kvCacheGiB.toFixed(2)} GiB`);
 check("the old path put it in the tens of GiB", gqa8k.kvCacheGiB > 13, `${gqa8k.kvCacheGiB.toFixed(1)} GiB`);

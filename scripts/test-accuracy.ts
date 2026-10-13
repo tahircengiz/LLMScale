@@ -53,7 +53,7 @@ console.log("--- Y1: quantized weights ---");
   check("shipped bytes win at the shipped precision", weightsBytes(shipped, "int4") === nvFiles);
   check("…and only there", weightsBytes(shipped, "bf16") === l70.numParams * 2);
   check("39.8 GiB of NVFP4 70B no longer fits one 32 GB card at 8k",
-    calculate({ arch: shipped, weightDtype: "int4", kvDtype: "fp16", contextLength: 8192, concurrency: 1, overheadPct: 0.1, cudaContextGiB: 0.75 }).totalGiB > 32 * 0.95);
+    calculate({ arch: shipped, weightDtype: "int4", kvDtype: "fp16", contextLength: 8192, concurrency: 1 }).totalGiB > 32 * 0.92);
 
   // Which files hold the weights.
   const oss = repo("openai_gpt-oss-20b");
@@ -103,7 +103,7 @@ for (const [name, arch] of [
   ["Qwen3-Next", archFromConfig(repo("Qwen_Qwen3-Next-80B-A3B-Instruct").config, 81.3e9)!],
   ["Llama 3.1 8B", archFromConfig(cfg("unsloth_Llama-3.1-8B-Instruct"), 8.03e9)!],
 ] as const) {
-  const input = { arch, weightDtype: "fp8" as const, kvDtype: "fp16" as const, concurrency: 4, overheadPct: 0.1, cudaContextGiB: 0.75 };
+  const input = { arch, weightDtype: "fp8" as const, kvDtype: "fp16" as const, concurrency: 4 };
   const budget = 141 * 0.95;
   const ctx = maxContextLength(input, budget);
   const at = (c: number) => calculate({ ...input, contextLength: c }).totalGiB;

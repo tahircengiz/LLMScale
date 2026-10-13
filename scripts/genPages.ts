@@ -28,9 +28,8 @@ import {
   type ModelArch,
 } from "../src/lib/calc.ts";
 import { KNOWN_MODELS, type KnownModel } from "../src/lib/models.ts";
-import { GPUS, usableGiB, type Gpu } from "../src/lib/gpus.ts";
+import { batchFor, cardsFor, DRIVER_RESERVE, GPUS, needOn, usableGiB, type Gpu } from "../src/lib/gpus.ts";
 import { estimateTraining, type TrainMode } from "../src/lib/train.ts";
-import { DEFAULT_STATE } from "../src/lib/urlState.ts";
 import { DICTS, type Lang } from "../src/lib/dict.ts";
 import { CONCEPT_FILES, CONCEPTS_HUB, FEATURED_GPU_IDS, GPUS_HUB, MODELS_HUB, gpuPageFile, modelPageFile } from "../src/lib/staticPages.ts";
 import { CONCEPTS, type Concept, type Fmt } from "./concepts.ts";
@@ -41,12 +40,13 @@ const outDir = process.argv[2] ?? "dist";
 const { href, url, page } = createShell(readSite(outDir), { feed: loadFeed().length > 0 });
 
 // ── the engine, at the calculator's own defaults ─────────────────────────────
-const WORK = { kvDtype: "fp16" as Dtype, overheadPct: DEFAULT_STATE.overheadPct, cudaContextGiB: DEFAULT_STATE.cudaContextGiB };
+const WORK = { kvDtype: "fp16" as Dtype };
 const PRECISIONS: Dtype[] = ["bf16", "fp8", "int4"];
 // The engine's labels spell out the bytes ("BF16 (2 bytes)"); a table column only needs the name.
 const LABEL: Record<string, string> = { bf16: "BF16", fp8: "FP8", int4: "INT4" };
-const size = (m: ModelArch, weightDtype: Dtype, contextLength: number, concurrency = 1) =>
-  calculate({ arch: m, weightDtype, contextLength, concurrency, ...WORK });
+/** Memory for a model, with the overhead vLLM has on device `g` (a card under 70 GiB's without one). */
+const size = (m: ModelArch, weightDtype: Dtype, contextLength: number, concurrency = 1, g?: Gpu) =>
+  calculate({ arch: m, weightDtype, contextLength, concurrency, ...WORK, batch: g ? batchFor(g) : undefined });
 /** The context the headline figures use: 8k, or the model's maximum if shorter. */
 const refCtx = (m: KnownModel) => Math.min(8192, m.maxContext ?? 8192);
 const gpu = (id: string): Gpu => {
@@ -137,21 +137,22 @@ function modelPage(lang: Lang, m: KnownModel): string {
     .join("")}</tr>`).join("")}</tbody>
 </table></div>
 <p class="note">${en
-    ? "One user, FP16 KV cache, 10% activation overhead and 0.75 GiB of CUDA context. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows."
-    : "Tek kullanıcı, FP16 KV cache, %10 aktivasyon payı ve 0,75 GiB CUDA context. Quantization ağırlıkları küçültür, KV cache'i değil; bu yüzden context büyüdükçe kazanç daralır."}</p>`;
+    ? "One user, FP16 KV cache and vLLM's overhead on one GPU at its defaults for a card under 70 GB. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows."
+    : "Tek kullanıcı, FP16 KV cache ve 70 GB altı bir kartın varsayılanlarıyla tek GPU'da vLLM'in ek yükü. Quantization ağırlıkları küçültür, KV cache'i değil; bu yüzden context büyüdükçe kazanç daralır."}</p>`;
 
   const fitItems = PRECISIONS.map((d) => {
     const need = size(m, d, ctx).totalGiB;
-    const holding = ALL_BY_SIZE.filter((g) => need <= usableGiB(g)).slice(0, 4);
+    const input = { arch: m, weightDtype: d, contextLength: ctx, concurrency: 1, ...WORK };
+    const holding = ALL_BY_SIZE.filter((g) => needOn(input, g) <= usableGiB(g)).slice(0, 4);
     const label = `<strong>${LABEL[d]}</strong> (${gib(lang, need)})`;
     if (holding.length) return `<li>${label}: ${holding.map((g) => gpuLink(lang, g)).join(", ")}</li>`;
-    const counts = MULTI_CARDS.map((g) => `${Math.ceil(need / usableGiB(g))}× ${gpuLink(lang, g)}`).join(en ? ", " : ", ");
+    const counts = MULTI_CARDS.map((g) => `${cardsFor(input, g) ?? Math.ceil(needOn(input, g) / usableGiB(g))}× ${gpuLink(lang, g)}`).join(en ? ", " : ", ");
     return `<li>${label}: ${en ? `no single GPU holds it — by memory it takes ${counts}.` : `tek bir GPU'ya sığmaz — bellek olarak ${counts} gerekir.`}</li>`;
   }).join("");
 
   const users = USER_CARDS.map((g) => ({
     g,
-    n: PRECISIONS.map((d) => maxConcurrency({ arch: m, weightDtype: d, contextLength: ctx, ...WORK }, usableGiB(g))),
+    n: PRECISIONS.map((d) => maxConcurrency({ arch: m, weightDtype: d, contextLength: ctx, ...WORK, batch: batchFor(g) }, usableGiB(g))),
   }));
   const anyUsers = users.some((u) => u.n.some((x) => x > 0));
   const usersBlock = anyUsers
@@ -173,7 +174,7 @@ function modelPage(lang: Lang, m: KnownModel): string {
   ];
   const trainRows = modes.map(({ mode, ...label }) => {
     const r = estimateTraining({ arch: m, mode, batchSize: 1, seqLength: 2048, gradientCheckpointing: true, loraRank: 16, loraTarget: "attn", overheadGiB: 1 });
-    const g = ALL_BY_SIZE.find((x) => r.totalGiB <= usableGiB(x));
+    const g = ALL_BY_SIZE.find((x) => r.totalGiB <= usableGiB(x, undefined, DRIVER_RESERVE));
     return `<tr><th scope="row">${label[lang]}</th><td>${gib(lang, r.totalGiB)}</td><td>${g ? gpuLink(lang, g) : en ? "several GPUs, sharded" : "birden çok GPU, paylaştırılmış"}</td></tr>`;
   }).join("");
 
@@ -189,8 +190,8 @@ function modelPage(lang: Lang, m: KnownModel): string {
   <div class="cap">BF16 · ${ctxK(ctx)} context · ${en ? "one user" : "tek kullanıcı"}</div>
   <div class="big">${gib(lang, bf16.totalGiB)}</div>
   <p>${en
-      ? `${gib(lang, bf16.weightsGiB)} of weights, ${gib(lang, bf16.kvCacheGiB)} of KV cache and ${gib(lang, bf16.activationsGiB + bf16.cudaOverheadGiB)} of activations and CUDA context. At INT4 the same workload needs ${gib(lang, int4.totalGiB)}.`
-      : `${gib(lang, bf16.weightsGiB)} ağırlık, ${gib(lang, bf16.kvCacheGiB)} KV cache ve ${gib(lang, bf16.activationsGiB + bf16.cudaOverheadGiB)} aktivasyon ile CUDA context. Aynı iş yükü INT4'te ${gib(lang, int4.totalGiB)} ister.`}</p>
+      ? `${gib(lang, bf16.weightsGiB)} of weights, ${gib(lang, bf16.kvCacheGiB)} of KV cache and ${gib(lang, bf16.activationsGiB + bf16.runtimeGiB)} of vLLM's overhead. At INT4 the same workload needs ${gib(lang, int4.totalGiB)}.`
+      : `${gib(lang, bf16.weightsGiB)} ağırlık, ${gib(lang, bf16.kvCacheGiB)} KV cache ve ${gib(lang, bf16.activationsGiB + bf16.runtimeGiB)} vLLM'in ek yükü. Aynı iş yükü INT4'te ${gib(lang, int4.totalGiB)} ister.`}</p>
   <ul class="spec"><li>${m.numLayers} ${en ? "layers" : "katman"}</li><li>hidden ${m.hiddenSize}</li><li>${m.numAttentionHeads}/${m.numKeyValueHeads} heads</li><li>head_dim ${bf16.headDim}</li><li>${ctxK(max)} ${en ? "max context" : "maks context"}</li>${m.isMoE ? "<li>MoE</li>" : ""}${usesMla(m) ? "<li>MLA</li>" : ""}</ul>
 </div>
 <h2>${en ? `${name} memory by precision and context` : `Hassasiyet ve context'e göre ${name} belleği`}</h2>
@@ -198,8 +199,8 @@ ${table}
 <h2>${en ? "Which single GPUs hold it" : "Onu tek başına taşıyan GPU'lar"}</h2>
 <ul class="plain">${fitItems}</ul>
 <p class="note">${en
-      ? `At ${ctxK(ctx)} context for one user, the smallest cards first. A discrete card is budgeted at 95% of its memory; a unified-memory device at the share its GPU can address.`
-      : `${ctxK(ctx)} context ve tek kullanıcı için, en küçük kartlar önce. Ayrık kartlarda belleğin %95'i, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır.`}</p>
+      ? `At ${ctxK(ctx)} context for one user, the smallest cards first. A discrete card is budgeted at vLLM's default 92% of its memory, a unified-memory device at the share its GPU can address, and each carries vLLM's overhead at its own defaults.`
+      : `${ctxK(ctx)} context ve tek kullanıcı için, en küçük kartlar önce. Ayrık kartlarda vLLM'in varsayılanı olan bellek payı %92, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır; her cihaz kendi varsayılanlarıyla vLLM'in ek yükünü taşır.`}</p>
 <h2>${en ? "How many users fit" : "Kaç kullanıcı sığar"}</h2>
 ${usersBlock}
 <h2>${en ? `Fine-tuning ${name}` : `${name} ince ayarı`}</h2>
@@ -255,7 +256,7 @@ function gpuPage(lang: Lang, g: Gpu): string {
   const usable = usableGiB(g);
   const rows = [...KNOWN_MODELS].sort((a, b) => a.numParams - b.numParams).map((m) => {
     const ctx = refCtx(m);
-    const need = PRECISIONS.map((d) => size(m, d, ctx).totalGiB);
+    const need = PRECISIONS.map((d) => size(m, d, ctx, 1, g).totalGiB);
     const best = PRECISIONS.findIndex((_, i) => need[i] <= usable);
     return { m, ctx, need, best };
   });
@@ -288,16 +289,16 @@ function gpuPage(lang: Lang, g: Gpu): string {
 <thead><tr><th scope="col">${en ? "Model" : "Model"}</th>${PRECISIONS.map((d) => `<th scope="col">${LABEL[d]}</th>`).join("")}<th scope="col">${en ? "Users" : "Kullanıcı"}</th><th scope="col">${en ? "Max context" : "Maks context"}</th></tr></thead>
 <tbody>${rows.map((r) => {
     const d = PRECISIONS[r.best];
-    const usersN = r.best < 0 ? 0 : maxConcurrency({ arch: r.m, weightDtype: d, contextLength: r.ctx, ...WORK }, usable);
-    const maxCtx = r.best < 0 ? 0 : Math.min(maxContextLength({ arch: r.m, weightDtype: d, concurrency: 1, ...WORK }, usable), r.m.maxContext ?? Infinity);
+    const usersN = r.best < 0 ? 0 : maxConcurrency({ arch: r.m, weightDtype: d, contextLength: r.ctx, ...WORK, batch: batchFor(g) }, usable);
+    const maxCtx = r.best < 0 ? 0 : Math.min(maxContextLength({ arch: r.m, weightDtype: d, concurrency: 1, ...WORK, batch: batchFor(g) }, usable), r.m.maxContext ?? Infinity);
     return `<tr><th scope="row">${modelLink(lang, r.m)}</th>${r.need.map((v) => cell(v <= usable, v)).join("")}${
       r.best < 0 ? `<td>—</td><td>—</td>` : `<td>${int(lang, usersN)}<small>${LABEL[d]}</small></td><td>${ctxK(maxCtx)}<small>${LABEL[d]}</small></td>`
     }</tr>`;
   }).join("")}</tbody>
 </table></div>
 <p class="note">${en
-      ? "Memory at 8k context for one user (the model's maximum, where that is shorter), FP16 KV cache, 10% overhead and 0.75 GiB of CUDA context. Users (each at 8k) and maximum context are for the highest precision that fits."
-      : "Bellek; 8k context ve tek kullanıcı için (modelin maksimumu daha kısaysa o), FP16 KV cache, %10 ek yük ve 0,75 GiB CUDA context ile. Kullanıcı (her biri 8k) ve maksimum context, sığan en yüksek hassasiyet içindir."}</p>`;
+      ? "Memory at 8k context for one user (the model's maximum, where that is shorter), FP16 KV cache and vLLM's overhead at this card's defaults. Users (each at 8k) and maximum context are for the highest precision that fits."
+      : "Bellek; 8k context ve tek kullanıcı (modelin maksimum context'i daha kısaysa o) için, FP16 KV cache ve bu kartın varsayılanlarıyla vLLM'in ek yüküyle hesaplanır. Kullanıcı sayısı (her biri 8k) ve maksimum context, sığan en yüksek hassasiyet içindir."}</p>`;
 
   const cat = DICTS[lang][`cat.${g.category}`] ?? g.category;
   const siblings = FEATURED.filter((x) => x.id !== g.id);
@@ -355,7 +356,7 @@ function modelsHub(lang: Lang): string {
 <thead><tr><th scope="col">Model</th><th scope="col">${en ? "Parameters" : "Parametre"}</th><th scope="col">BF16 · 8k</th><th scope="col">INT4 · 8k</th><th scope="col">${en ? "Max context" : "Maks context"}</th></tr></thead>
 <tbody>${rows}</tbody>
 </table></div>
-<p class="note">${en ? "One user, FP16 KV cache, 10% overhead and 0.75 GiB of CUDA context; models with a shorter maximum context are shown at that maximum." : "Tek kullanıcı, FP16 KV cache, %10 ek yük ve 0,75 GiB CUDA context; maksimum context'i daha kısa olan modeller o maksimumla gösterilir."}</p>
+<p class="note">${en ? "One user, FP16 KV cache and vLLM's overhead on one GPU; models with a shorter maximum context are shown at that maximum." : "Tek kullanıcı, FP16 KV cache ve tek GPU'da vLLM'in ek yükü; maksimum context'i daha kısa olan modeller o maksimumla gösterilir."}</p>
 <ul class="links"><li><a class="primary" href="${href(lang)}">${en ? "Size any Hugging Face model" : "Herhangi bir Hugging Face modelini hesapla"}</a></li><li><a href="${href(lang, GPUS_HUB)}">${en ? "Which LLMs fit on which GPU" : "Hangi GPU'ya hangi LLM sığar"}</a></li><li><a href="${href(lang, CONCEPTS_HUB)}">${en ? "How LLM memory works" : "LLM belleği nasıl çalışır"}</a></li></ul>`;
   return page({
     lang,
@@ -376,7 +377,7 @@ function gpusHub(lang: Lang): string {
   const en = lang === "en";
   const rows = FEATURED.map((g) => {
     const usable = usableGiB(g);
-    const n = (d: Dtype) => KNOWN_MODELS.filter((m) => size(m, d, refCtx(m)).totalGiB <= usable).length;
+    const n = (d: Dtype) => KNOWN_MODELS.filter((m) => size(m, d, refCtx(m), 1, g).totalGiB <= usable).length;
     return `<tr><th scope="row">${gpuLink(lang, g)}</th><td>${esc(DICTS[lang][`cat.${g.category}`] ?? g.category)}</td><td>${gib(lang, usable)}</td><td>${n("bf16")}</td><td>${n("int4")}</td></tr>`;
   }).join("");
   const body = `<p class="lede">${en
@@ -386,7 +387,7 @@ function gpusHub(lang: Lang): string {
 <thead><tr><th scope="col">GPU</th><th scope="col">${en ? "Type" : "Tür"}</th><th scope="col">${en ? "Usable" : "Kullanılabilir"}</th><th scope="col">${en ? "Models at BF16" : "BF16'da model"}</th><th scope="col">${en ? "Models at INT4" : "INT4'te model"}</th></tr></thead>
 <tbody>${rows}</tbody>
 </table></div>
-<p class="note">${en ? `Out of ${KNOWN_MODELS.length} models, at 8k context for one user. Discrete cards are budgeted at 95% of their memory; unified-memory devices at the share their GPU can address.` : `${KNOWN_MODELS.length} model içinden, 8k context ve tek kullanıcı için. Ayrık kartlarda belleğin %95'i, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır.`}</p>
+<p class="note">${en ? `Out of ${KNOWN_MODELS.length} models, at 8k context for one user. Discrete cards are budgeted at vLLM's default 92% of their memory, unified-memory devices at the share their GPU can address, each with vLLM's overhead at its own defaults.` : `${KNOWN_MODELS.length} model içinden, 8k context ve tek kullanıcı için. Ayrık kartlarda vLLM'in varsayılanı olan bellek payı %92, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır; her cihaz kendi varsayılanlarıyla vLLM'in ek yükünü taşır.`}</p>
 <ul class="links"><li><a class="primary" href="${href(lang)}">${en ? "Size a model on any GPU" : "Herhangi bir GPU'da model hesapla"}</a></li><li><a href="${href(lang, MODELS_HUB)}">${en ? "VRAM requirements by model" : "Modele göre VRAM gereksinimleri"}</a></li><li><a href="${href(lang, CONCEPTS_HUB)}">${en ? "How LLM memory works" : "LLM belleği nasıl çalışır"}</a></li></ul>`;
   return page({
     lang,

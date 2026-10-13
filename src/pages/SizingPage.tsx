@@ -2,6 +2,7 @@ import { modelPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "../components/StaticPageLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate, type ModelArch } from "../lib/calc";
+import { batchFor, GPUS } from "../lib/gpus";
 import { resolveModel } from "../lib/hf";
 import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
 import { decodeState, encodeState, isBlankStart, DEFAULT_STATE, type AppState } from "../lib/urlState";
@@ -106,10 +107,13 @@ export function SizingPage() {
 
   const result = useMemo(() => {
     if (!state.arch) return null;
+    // The overhead follows the batch vLLM profiles with on the chosen card; with
+    // none chosen yet, a card under 70 GiB's.
+    const gpu = GPUS.find((g) => g.id === state.gpuId);
     return calculate({
       arch: state.arch, weightDtype: state.weightDtype, kvDtype: state.kvDtype,
       contextLength: state.contextLength, concurrency: state.concurrency,
-      overheadPct: state.overheadPct, cudaContextGiB: state.cudaContextGiB,
+      batch: gpu ? batchFor(gpu, state.migId) : undefined,
     });
   }, [state]);
 
@@ -165,7 +169,7 @@ export function SizingPage() {
               kvDtype={state.kvDtype}
               contextLength={state.contextLength}
               concurrency={state.concurrency}
-              overheadPct={state.overheadPct}
+              gpuUtil={state.gpuUtil}
               maxContext={state.arch?.maxContext}
               onChange={patch}
             />
@@ -179,7 +183,7 @@ export function SizingPage() {
               resting state that repeats on every visit and every refresh. */}
           <Card className={"p-5" + (result ? "" : " ring-1 ring-brand-500/60")}>
             {result ? (
-              <Results result={result} />
+              <Results result={result} cardName={GPUS.find((g) => g.id === state.gpuId)?.name} />
             ) : (
               <div className="py-10 text-center">
                 <p className="text-sm font-medium text-white">{t("results.empty")}</p>
@@ -198,8 +202,7 @@ export function SizingPage() {
                 kvDtype={state.kvDtype}
                 contextLength={state.contextLength}
                 concurrency={state.concurrency}
-                overheadPct={state.overheadPct}
-                cudaContextGiB={state.cudaContextGiB}
+                gpuUtil={state.gpuUtil}
                 totalGiB={result.totalGiB}
                 gpuId={state.gpuId}
                 migId={state.migId}

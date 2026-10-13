@@ -8,7 +8,7 @@ import { TR_META } from "../src/lib/pageMeta.ts";
 import { CONCEPT_FILES, FEATURED_GPU_IDS } from "../src/lib/staticPages.ts";
 import { TASKS } from "../src/lib/fit.ts";
 import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
-import { CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
+import { batchFor, CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
 import { DTYPE_BYTES, DTYPE_LABELS, calculate } from "../src/lib/calc.ts";
 import { DEFAULT_STATE, encodeState, isBlankStart } from "../src/lib/urlState.ts";
 import { HERO_MODEL_ID, KNOWN_MODELS, findKnownByHfId } from "../src/lib/models.ts";
@@ -182,7 +182,7 @@ if (oss120) {
   const h100 = GPUS.find((g) => g.id === "h100-80")!;
   const need = calculate({
     arch: oss120, weightDtype: "int4", kvDtype: "fp16", contextLength: 8192,
-    concurrency: 1, overheadPct: 0.1, cudaContextGiB: 0.75,
+    concurrency: 1, batch: batchFor(h100),
   }).totalGiB;
   check("gpt-oss 120B fits one 80GB card at 4-bit, as its card claims",
     need <= usableGiB(h100, ""), `${need.toFixed(1)} of ${usableGiB(h100, "").toFixed(1)} GiB`);
