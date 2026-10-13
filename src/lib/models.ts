@@ -23,10 +23,12 @@ export const KNOWN_MODELS: KnownModel[] = [
   {
     id: "llama-3.2-1b", displayName: "Llama 3.2 1B Instruct", family: "Llama", hfId: "meta-llama/Llama-3.2-1B-Instruct",
     gated: true, numParams: 1.236e9, numLayers: 16, hiddenSize: 2048, numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 64, vocabSize: 128256, maxContext: 131072,
+    tieEmbeddings: true,
   },
   {
     id: "llama-3.2-3b", displayName: "Llama 3.2 3B Instruct", family: "Llama", hfId: "meta-llama/Llama-3.2-3B-Instruct",
     gated: true, numParams: 3.213e9, numLayers: 28, hiddenSize: 3072, numAttentionHeads: 24, numKeyValueHeads: 8, headDim: 128, vocabSize: 128256, maxContext: 131072,
+    tieEmbeddings: true,
   },
   {
     id: "llama-3.1-8b", displayName: "Llama 3.1 8B Instruct", family: "Llama", hfId: "meta-llama/Llama-3.1-8B-Instruct",
@@ -53,26 +55,31 @@ export const KNOWN_MODELS: KnownModel[] = [
   {
     id: "mixtral-8x7b", displayName: "Mixtral 8x7B Instruct", family: "Mistral", hfId: "mistralai/Mixtral-8x7B-Instruct-v0.1",
     gated: true, isMoE: true, numParams: 46.7e9, activeParams: 12.9e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 128, vocabSize: 32000, maxContext: 32768,
+    numExperts: 8, expertsPerToken: 2,
   },
   {
     id: "mixtral-8x22b", displayName: "Mixtral 8x22B Instruct", family: "Mistral", hfId: "mistralai/Mixtral-8x22B-Instruct-v0.1",
     gated: true, isMoE: true, numParams: 140.6e9, activeParams: 39e9, numLayers: 56, hiddenSize: 6144, numAttentionHeads: 48, numKeyValueHeads: 8, headDim: 128, vocabSize: 32768, maxContext: 65536,
+    numExperts: 8, expertsPerToken: 2,
   },
 
   // ---- Google Gemma (gated) ----
   {
     id: "gemma-2-9b", displayName: "Gemma 2 9B IT", family: "Gemma", hfId: "google/gemma-2-9b-it",
     gated: true, numParams: 9.24e9, numLayers: 42, hiddenSize: 3584, numAttentionHeads: 16, numKeyValueHeads: 8, headDim: 256, vocabSize: 256000, maxContext: 8192,
+    tieEmbeddings: true, slidingLayers: 21, slidingWindow: 4096,
   },
   {
     id: "gemma-2-27b", displayName: "Gemma 2 27B IT", family: "Gemma", hfId: "google/gemma-2-27b-it",
     gated: true, numParams: 27.2e9, numLayers: 46, hiddenSize: 4608, numAttentionHeads: 32, numKeyValueHeads: 16, headDim: 128, vocabSize: 256000, maxContext: 8192,
+    tieEmbeddings: true, slidingLayers: 23, slidingWindow: 4096,
   },
 
   // ---- Qwen (public — also useful as presets) ----
   {
     id: "qwen2.5-0.5b", displayName: "Qwen2.5 0.5B Instruct", family: "Qwen", hfId: "Qwen/Qwen2.5-0.5B-Instruct",
     numParams: 0.494e9, numLayers: 24, hiddenSize: 896, numAttentionHeads: 14, numKeyValueHeads: 2, headDim: 64, vocabSize: 151936, maxContext: 32768,
+    tieEmbeddings: true,
   },
   {
     id: "qwen2.5-7b", displayName: "Qwen2.5 7B Instruct", family: "Qwen", hfId: "Qwen/Qwen2.5-7B-Instruct",
@@ -118,6 +125,7 @@ export const KNOWN_MODELS: KnownModel[] = [
     isMoE: true, numParams: 30532122624, activeParams: 3.3e9,
     numLayers: 48, hiddenSize: 2048, intermediateSize: 6144,
     numAttentionHeads: 32, numKeyValueHeads: 4, headDim: 128, vocabSize: 151936, maxContext: 40960,
+    numExperts: 128, expertsPerToken: 8,
   },
   {
     id: "qwen3-coder-30b-a3b", displayName: "Qwen3 Coder 30B A3B", family: "Qwen",
@@ -125,6 +133,7 @@ export const KNOWN_MODELS: KnownModel[] = [
     isMoE: true, numParams: 30532122624, activeParams: 3.3e9,
     numLayers: 48, hiddenSize: 2048, intermediateSize: 6144,
     numAttentionHeads: 32, numKeyValueHeads: 4, headDim: 128, vocabSize: 151936, maxContext: 262144,
+    numExperts: 128, expertsPerToken: 8,
   },
   {
     id: "qwen2.5-coder-7b", displayName: "Qwen2.5 Coder 7B", family: "Qwen",
@@ -138,6 +147,7 @@ export const KNOWN_MODELS: KnownModel[] = [
     isMoE: true, numParams: 20914757184, activeParams: 3.6e9,
     numLayers: 24, hiddenSize: 2880, intermediateSize: 2880,
     numAttentionHeads: 64, numKeyValueHeads: 8, headDim: 64, vocabSize: 201088, maxContext: 131072,
+    numExperts: 32, expertsPerToken: 4, slidingLayers: 12, slidingWindow: 128,
   },
   {
     // "117B parameters with 5.1B active parameters" — model card.
@@ -145,6 +155,7 @@ export const KNOWN_MODELS: KnownModel[] = [
     isMoE: true, numParams: 116829156672, activeParams: 5.1e9,
     numLayers: 36, hiddenSize: 2880, intermediateSize: 2880,
     numAttentionHeads: 64, numKeyValueHeads: 8, headDim: 64, vocabSize: 201088, maxContext: 131072,
+    numExperts: 128, expertsPerToken: 4, slidingLayers: 18, slidingWindow: 128,
   },
   {
     // Multi-head latent attention: kvLoraRank + qkRopeHeadDim switch the KV
@@ -154,6 +165,7 @@ export const KNOWN_MODELS: KnownModel[] = [
     numLayers: 61, hiddenSize: 7168, intermediateSize: 18432,
     numAttentionHeads: 128, numKeyValueHeads: 128,
     kvLoraRank: 512, qkRopeHeadDim: 64, vocabSize: 129280, maxContext: 163840,
+    numExperts: 256, expertsPerToken: 8,
   },
 ];
 

@@ -117,7 +117,7 @@ KV cache           = KV bytes per token × context length × concurrent sequence
 <p>Parameter count is not what decides it. ${peerL} and ${exL} are close in size — ${f.params(peer.numParams)} and ${f.params(ex.numParams)} parameters — but ${ex.displayName} stores ${kib(f, perTok)} per token and ${peer.displayName} ${kib(f, peerTok)}, a ${f.ratio(perTok / peerTok)} difference that comes from layers and key-value heads.</p>
 <h2>Per-token cache in popular models</h2>
 ${table}
-<p class="note">FP16, one sequence. —: beyond the model's maximum context. DeepSeek V3 caches a compressed latent rather than per-head keys and values. Gemma 2 and gpt-oss are left out: they alternate sliding-window layers, which cache less than this formula counts.</p>
+<p class="note">FP16, one sequence. —: beyond the model's maximum context. DeepSeek V3 caches a compressed latent rather than per-head keys and values. Gemma 2 and gpt-oss are left out of this table: their sliding-window layers stop growing at the window, so their cost per token falls as the context grows. The calculator counts that layer by layer.</p>
 <h2>Concurrency multiplies it</h2>
 <p>Every concurrent sequence holds a cache of its own. On one ${f.gpuLink(h100.id)}, with ${f.gib(usableGiB(h100))} usable, ${ex.displayName} at BF16 leaves room for ${f.int(users[0])} users at 8k tokens each, ${f.int(users[1])} at 32k and ${f.int(users[2])} at 128k. The weights set the floor; the cache decides how many people fit above it.</p>
 <h2>What shrinks it, and what does not</h2>
@@ -145,7 +145,7 @@ KV cache             = token başına KV byte × context uzunluğu × eşzamanl�
 <p>Bunu belirleyen parametre sayısı değildir. ${peerL} ile ${exL} boyut olarak birbirine yakındır — ${f.params(peer.numParams)} ve ${f.params(ex.numParams)} parametre — ama ${ex.displayName} token başına ${kib(f, perTok)} saklar, ${peer.displayName} ise ${kib(f, peerTok)}. Aradaki ${f.ratio(perTok / peerTok)} fark katman ve key-value head sayısından gelir.</p>
 <h2>Popüler modellerde token başına önbellek</h2>
 ${table}
-<p class="note">FP16, tek dizi. —: modelin maksimum context'inin ötesi. DeepSeek V3, head başına key ve value yerine sıkıştırılmış bir latent saklar. Gemma 2 ve gpt-oss dahil edilmedi: sliding-window katmanlarıyla dönüşümlü çalışırlar ve bu katmanlar formülün saydığından az önbellek tutar.</p>
+<p class="note">FP16, tek dizi. —: modelin maksimum context'inin ötesi. DeepSeek V3, head başına key ve value yerine sıkıştırılmış bir latent saklar. Gemma 2 ve gpt-oss bu tabloya alınmadı: sliding-window katmanları pencerede büyümeyi bırakır, bu yüzden token başına maliyetleri context uzadıkça düşer. Hesaplayıcı bunu katman katman sayar.</p>
 <h2>Eşzamanlılık onu çarpar</h2>
 <p>Her eşzamanlı dizinin kendi önbelleği vardır. ${f.gib(usableGiB(h100))} kullanılabilir belleğiyle tek bir ${f.gpuLink(h100.id)} üzerinde ${ex.displayName}, BF16'da kullanıcı başına 8k token ile ${f.int(users[0])}, 32k ile ${f.int(users[1])}, 128k ile ${f.int(users[2])} kullanıcıya yer bırakır. Ağırlıklar tabanı belirler; önbellek, üstüne kaç kişinin sığacağına karar verir.</p>
 <h2>Onu ne küçültür, ne küçültmez</h2>
@@ -276,7 +276,8 @@ function quantization(f: Fmt): Concept {
     ["BF16 / FP16", "bf16", 2],
     ["FP8", "fp8", 1],
     ["INT8", "int8", 1],
-    ["INT4", "int4", 0.5],
+    // 4.25 bits: a 4-bit weight plus its share of the group or block scales.
+    ["INT4", "int4", 0.53],
   ];
   const table = `<div class="scroll"><table>
 <thead><tr><th scope="col">${en ? "Precision" : "Hassasiyet"}</th><th scope="col">${en ? "Bytes / parameter" : "Byte / parametre"}</th>${cols.map((m) => `<th scope="col">${f.modelLink(m.id)}</th>`).join("")}</tr></thead>
@@ -297,7 +298,7 @@ function quantization(f: Fmt): Concept {
 <h2>Bytes per parameter</h2>
 <p>Weights take <code>parameters × bytes per parameter</code>. BF16 and FP16 are the reference — most models are released in one of them — and every other precision is a multiple of it.</p>
 ${table}
-<p class="note">Weights only, before the KV cache and overhead.</p>
+<p class="note">Weights only, before the KV cache and overhead. At FP8, INT8 and INT4 the embedding and the output layer stay at 16 bits.</p>
 <h2>The formats you will meet</h2>
 <ul class="plain">
 <li><strong>BF16 and FP16</strong> — 16-bit floating point. BF16 keeps FP32's range with less precision, which is why training and most released checkpoints use it.</li>
@@ -309,7 +310,7 @@ ${table}
 <li><strong>NF4</strong> — QLoRA's 4-bit NormalFloat, for fine-tuning adapters on a frozen, quantized base model.</li>
 </ul>
 <h2>Why 4-bit is not exactly half a byte</h2>
-<p>LLMScale counts 4-bit weights at 0.5 bytes. Real 4-bit formats also store their scaling factors, and many keep some tensors — the embeddings, the output layer — at higher precision, so checkpoints come out somewhat larger than half of BF16. QLoRA's NF4 with double quantization measures 4.127 bits, or 0.516 bytes, per parameter, and that is the figure the fine-tuning calculator uses.</p>
+<p>Real 4-bit formats also store their scaling factors — a 16-bit scale for every group of 128 weights in AWQ and GPTQ, an 8-bit scale for every block of 32 in MXFP4 — which comes to about 4.25 bits a weight, and they keep the embedding and the output layer at 16 bits. LLMScale counts both, so its 4-bit figure comes out well above half of BF16: Qwen2.5-7B lands within 2% of Qwen's own AWQ checkpoint, and Qwen3-8B at FP8 matches RedHat's FP8 checkpoint to the hundredth of a GiB. A checkpoint that already ships quantized is sized by its own files. QLoRA's NF4 with double quantization measures 4.127 bits, or 0.516 bytes, per parameter, and that is the figure the fine-tuning calculator uses.</p>
 <h2>It does not shrink the KV cache</h2>
 <p>The KV cache has a precision of its own, set by the serving engine rather than by the weights' format. Take ${f.modelLink(long.id)} with one user at 128k context: its weights take ${f.gib(wGiB(long, "bf16"))} at BF16 and ${f.gib(longInt4)} at INT4, while the KV cache stays at ${f.gib(longKv)} in FP16${longKv > longInt4 ? " — more than the INT4 weights" : ""}. Storing the cache in FP8 is a separate choice that halves it; see ${kv}.</p>
 <h2>Mixture-of-Experts models</h2>
@@ -330,7 +331,7 @@ ${table}
 <h2>Parametre başına byte</h2>
 <p>Ağırlıklar <code>parametre × parametre başına byte</code> yer tutar. Referans BF16 ve FP16'dır — çoğu model bunlardan biriyle yayımlanır — ve diğer her hassasiyet bunun bir katıdır.</p>
 ${table}
-<p class="note">Yalnızca ağırlıklar; KV cache ve ek yük hariç.</p>
+<p class="note">Yalnızca ağırlıklar; KV cache ve ek yük hariç. FP8, INT8 ve INT4'te embedding ve çıkış katmanı 16 bitte kalır.</p>
 <h2>Karşılaşacağın formatlar</h2>
 <ul class="plain">
 <li><strong>BF16 ve FP16</strong> — 16-bit kayan nokta. BF16, FP32'nin aralığını daha düşük hassasiyetle korur; eğitimin ve yayımlanan çoğu checkpoint'in onu kullanmasının nedeni budur.</li>
@@ -342,7 +343,7 @@ ${table}
 <li><strong>NF4</strong> — QLoRA'nın 4-bit NormalFloat'ı; dondurulmuş, quantize edilmiş bir temel model üzerinde adaptör eğitmek için.</li>
 </ul>
 <h2>4-bit neden tam yarım byte değil</h2>
-<p>LLMScale 4-bit ağırlıkları 0,5 byte sayar. Gerçek 4-bit formatlar ölçek katsayılarını da saklar ve çoğu bazı tensörleri — embedding'ler, çıkış katmanı — daha yüksek hassasiyette tutar; bu yüzden checkpoint'ler BF16'nın yarısından biraz büyük çıkar. QLoRA'nın çift quantization'lı NF4'ü parametre başına 4,127 bit, yani 0,516 byte ölçülür ve ince ayar hesaplayıcısının kullandığı sayı budur.</p>
+<p>Gerçek 4-bit formatlar ölçek katsayılarını da saklar — AWQ ve GPTQ'da her 128 ağırlık için 16-bit bir ölçek, MXFP4'te her 32'lik blok için 8-bit bir ölçek — bu da ağırlık başına yaklaşık 4,25 bit eder; embedding'i ve çıkış katmanını da 16 bitte tutarlar. LLMScale ikisini de sayar, bu yüzden 4-bit sonucu BF16'nın yarısından belirgin biçimde büyük çıkar: Qwen2.5-7B, Qwen'in kendi AWQ checkpoint'inin %2 yakınına düşer; FP8'deki Qwen3-8B ise RedHat'in FP8 checkpoint'iyle GiB'ın yüzde biri hassasiyetinde örtüşür. Hazır quantize edilmiş bir checkpoint kendi dosyalarıyla boyutlandırılır. QLoRA'nın çift quantization'lı NF4'ü parametre başına 4,127 bit, yani 0,516 byte ölçülür ve ince ayar hesaplayıcısının kullandığı sayı budur.</p>
 <h2>KV cache'i küçültmez</h2>
 <p>KV cache'in kendi hassasiyeti vardır; bunu ağırlıkların formatı değil, servis motoru belirler. Tek kullanıcı ve 128k context'le ${f.modelLink(long.id)}: ağırlıkları BF16'da ${f.gib(wGiB(long, "bf16"))}, INT4'te ${f.gib(longInt4)} tutar, KV cache ise FP16'da ${f.gib(longKv)} olarak kalır${longKv > longInt4 ? " — INT4 ağırlıklardan fazla" : ""}. Önbelleği FP8'de saklamak onu yarıya indiren ayrı bir tercihtir; bkz. ${kv}.</p>
 <h2>Mixture-of-Experts modeller</h2>

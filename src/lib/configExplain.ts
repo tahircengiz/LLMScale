@@ -19,6 +19,7 @@ import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
 import type { Lang } from "./dict.ts";
 import { lookupField, type FieldGroup, type GlossaryEntry, type Relevance } from "./configGlossary.ts";
+import { activeWindow, hybridLayers } from "./layers.ts";
 
 // Configs are free-form JSON.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -450,7 +451,8 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
   // ── What does each token cost in memory?
   if (arch) {
     const dt: Dtype = "bf16";
-    const perToken = kvBytesPerToken(arch, dt);
+    // Every layer's cost first; the hybrid line below then says how much of it is real.
+    const perToken = kvBytesPerToken({ ...arch, attnLayers: undefined }, dt);
     const hd = resolveHeadDim(arch);
     const mla = usesMla(arch);
     const parts: Part[] = [{ k: "kv.perToken", v: { b: fmtBytes(perToken, lang) } }];
@@ -667,56 +669,6 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
 function ropeLabel(type: string): string {
   const names: Record<string, string> = { yarn: "YaRN", llama3: "Llama 3", linear: "linear", dynamic: "dynamic NTK", longrope: "LongRoPE", su: "LongRoPE" };
   return names[type] ?? type;
-}
-
-/** Hybrid models: how many layers keep a KV cache, and what the others are. */
-function hybridLayers(c: Json, L: number): { attention: number; other: "linear" | "mamba"; path: string } | undefined {
-  // layer_types (Granite, Qwen, gpt-oss) or layers_block_type (Nemotron-H re-saved
-  // by Transformers v5). Attention layers are counted directly, so "moe" or "mlp"
-  // entries are never mistaken for attention.
-  for (const key of ["layer_types", "layers_block_type"]) {
-    if (!Array.isArray(c[key])) continue;
-    const types: string[] = c[key].map(String);
-    const isState = (t: string) => /linear|mamba|ssm|recurrent|conv/.test(t);
-    const state = types.filter(isState);
-    if (state.length > 0) {
-      return {
-        attention: types.filter((t) => /attention/.test(t) && !isState(t)).length,
-        other: state.some((t) => /mamba|ssm/.test(t)) ? "mamba" : "linear",
-        path: key,
-      };
-    }
-  }
-  // LFM2 lists its attention layers; the rest are short convolutions.
-  if (Array.isArray(c.full_attn_idxs) && L > 0 && c.full_attn_idxs.length < L) {
-    return { attention: c.full_attn_idxs.length, other: "linear", path: "full_attn_idxs" };
-  }
-  if (typeof c.full_attention_interval === "number" && c.full_attention_interval > 1 && L > 0) {
-    return { attention: Math.floor(L / c.full_attention_interval), other: "linear", path: "full_attention_interval" };
-  }
-  if (typeof c.hybrid_override_pattern === "string") {
-    const p: string = c.hybrid_override_pattern;
-    if (p.includes("M")) return { attention: [...p].filter((ch) => ch === "*").length, other: "mamba", path: "hybrid_override_pattern" };
-  }
-  return undefined;
-}
-
-/** A sliding window that is actually in use, and how many layers use it
- *  (0 when the config does not say which). */
-function activeWindow(c: Json): { size: number; sliding: number; path: string } | undefined {
-  const size = c.sliding_window;
-  if (typeof size !== "number" || size <= 0 || c.use_sliding_window === false) return undefined;
-  // Phi-3.5-mini declares a 262,144-token window over a 131,072-token context.
-  const maxCtx = c.max_position_embeddings;
-  if (typeof maxCtx === "number" && size >= maxCtx) return undefined;
-  const types: string[] | undefined = Array.isArray(c.layer_types) ? c.layer_types.map(String) : undefined;
-  let sliding = types ? types.filter((t) => t.includes("sliding")).length : 0;
-  if (types && sliding === 0) return undefined;
-  // Gemma 3 says it as a pattern instead: every pattern-th layer is global.
-  const pattern = c.sliding_window_pattern;
-  const L = c.num_hidden_layers;
-  if (!types && typeof pattern === "number" && pattern > 1 && typeof L === "number") sliding = L - Math.floor(L / pattern);
-  return { size, sliding, path: "sliding_window" };
 }
 
 /** One sentence naming the quantization method and its settings. */

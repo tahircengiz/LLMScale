@@ -1,7 +1,7 @@
 import { modelPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "../components/StaticPageLink";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { calculate } from "../lib/calc";
+import { calculate, type ModelArch } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
 import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
 import { decodeState, encodeState, isBlankStart, DEFAULT_STATE, type AppState } from "../lib/urlState";
@@ -21,11 +21,18 @@ const SIDE_LINK =
 
 function initialState(): AppState {
   const fromUrl = decodeState(window.location.search);
-  // A link written before the URL carried active parameters decodes a MoE preset
-  // as dense; its bundled entry still knows the count.
-  if (fromUrl.arch && fromUrl.hfId && fromUrl.arch.activeParams === undefined) {
+  // A link written before the URL carried a field decodes without it — a MoE
+  // preset as dense, a Gemma as every layer at full context. Its bundled entry
+  // still knows them.
+  if (fromUrl.arch && fromUrl.hfId) {
     const known = findKnownByHfId(fromUrl.hfId);
-    if (known?.activeParams) fromUrl.arch = { ...fromUrl.arch, activeParams: known.activeParams };
+    if (known) {
+      const fill: Partial<ModelArch> = {};
+      for (const k of ["activeParams", "vocabSize", "tieEmbeddings", "slidingLayers", "slidingWindow", "numExperts", "expertsPerToken"] as const) {
+        if (fromUrl.arch[k] === undefined && known[k] !== undefined) (fill as Record<string, unknown>)[k] = known[k];
+      }
+      fromUrl.arch = { ...fromUrl.arch, ...fill };
+    }
   }
   // No seeding on a bare visit. The page used to open on a hero model and an
   // H200, which meant every visitor — and every crawler that runs JavaScript —

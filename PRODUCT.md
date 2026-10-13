@@ -121,9 +121,11 @@ generators.
   the default for a first-time visitor unless their OS asks for dark; a stored
   choice outranks both.
 - **Not modeled:** engine-specific paged-attention efficiency, prefill (time to
-  first token), and sliding-window layers such as Gemma 2's and gpt-oss's, which
-  cache less than the KV formula counts. Estimates are for capacity planning and
-  are labelled as such, not presented as guarantees.
+  first token), and the compute ceiling decode reaches at large batches. Since
+  2026-10-13 the KV cache is counted layer by layer — sliding-window layers at
+  their window, a hybrid's linear-attention and Mamba layers as a fixed state —
+  and a checkpoint that ships quantized is sized by its own files. Estimates are
+  for capacity planning and are labelled as such, not presented as guarantees.
 
 ## Brand Commitments
 

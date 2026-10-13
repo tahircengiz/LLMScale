@@ -2,6 +2,7 @@ import { FEATURED_GPU_IDS, gpuPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "./StaticPageLink";
 import { useEffect, useState } from "react";
 import { calculate, maxConcurrency, maxContextLength, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch } from "../lib/calc";
+import { nearestTp, tpValid } from "../lib/parallel";
 import { DRIVER_RESERVE, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
@@ -12,18 +13,6 @@ import { Badge, SectionTitle, Stat } from "./ui";
 
 function ctxLabel(n: number): string {
   return n >= 1048576 ? `${n / 1048576}M` : n >= 1024 ? `${n / 1024}k` : String(n);
-}
-
-/** vLLM shards the KV heads across the tensor-parallel ranks, so the TP size has
- *  to divide the head count (or be a multiple of it, where heads are replicated). */
-function tpValid(n: number, kvHeads: number): boolean {
-  return kvHeads % n === 0 || n % kvHeads === 0;
-}
-
-/** The smallest workable TP size at or above the raw card count. */
-function nearestTp(needed: number, kvHeads: number): number {
-  for (let n = needed; n <= kvHeads * 8; n++) if (tpValid(n, kvHeads)) return n;
-  return needed;
 }
 
 export function GpuFit({
@@ -85,6 +74,8 @@ export function GpuFit({
 
   const selUsage = usage(effUsable);
   const kvHeads = arch.numKeyValueHeads ?? arch.numAttentionHeads;
+  const heads = arch.numAttentionHeads;
+  const tpOk = nearestTp(selUsage.needed, heads, kvHeads);
   const maxUsers = maxConcurrency({ ...base, contextLength }, effUsable);
   const maxCtx = maxContextLength({ ...base, concurrency }, effUsable);
   // A MIG slice gets roughly its share of the memory system, so scale the
@@ -401,15 +392,17 @@ export function GpuFit({
               </div>
               <ul className="space-y-1 text-[11.5px] leading-relaxed text-slate-400">
                 <li>
-                  {tpValid(selUsage.needed, kvHeads)
-                    ? t("gpu.tpHeadsOk", { n: selUsage.needed, kv: kvHeads })
-                    : t("gpu.tpHeads", { kv: kvHeads, ok: nearestTp(selUsage.needed, kvHeads) })}
+                  {tpValid(selUsage.needed, heads, kvHeads)
+                    ? t("gpu.tpHeadsOk", { n: selUsage.needed, h: heads, kv: kvHeads })
+                    : tpOk !== null
+                      ? t("gpu.tpHeads", { h: heads, kv: kvHeads, ok: tpOk })
+                      : t("gpu.tpNone", { n: selUsage.needed, h: heads })}
                 </li>
                 {selected.category === "consumer" && <li>{t("gpu.tpNvlink")}</li>}
                 <li>{t("gpu.tpOverhead")}</li>
               </ul>
               <a
-                href={`${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${nearestTp(selUsage.needed, kvHeads)}&ctx=${contextLength}`}
+                href={`${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${tpOk ?? selUsage.needed}&ctx=${contextLength}`}
                 className="mt-2 inline-block text-[11.5px] font-medium text-brand-400 hover:underline"
               >
                 {t("gpu.tpLink")}

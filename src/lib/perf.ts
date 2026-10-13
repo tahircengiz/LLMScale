@@ -10,7 +10,7 @@
 // Prefill — time to first token — is compute bound and deliberately NOT modelled
 // here; nothing in this file should be read as a latency estimate.
 
-import { DTYPE_BYTES, kvBytesPerToken, type Dtype, type ModelArch } from "./calc.ts";
+import { kvBytesPerSeq, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
 
 /**
  * Share of peak bandwidth a good decode kernel actually reaches. Vendors quote
@@ -43,6 +43,28 @@ export interface DecodeEstimate {
 }
 
 /**
+ * Parameters one decode step reads for a batch of `n` sequences. A dense model
+ * reads all of them. A MoE reads its shared layers plus every expert at least one
+ * sequence in the batch routes to: with E experts and k per token, an expert goes
+ * unused by all n tokens with probability (1 − k/E)^n. Qwen3-30B-A3B (128 experts,
+ * 8 per token) reads 6% of its experts for one sequence and 87% for 32, so taking
+ * the active count for a whole batch overstated its throughput about threefold.
+ */
+export function paramsReadPerStep(arch: ModelArch, n: number): number {
+  const total = arch.numParams;
+  const active = arch.activeParams ?? total;
+  const E = arch.numExperts;
+  const k = arch.expertsPerToken;
+  if (!E || !k || k >= E || active >= total || n <= 1) return active;
+  // active = shared + experts·k/E and total = shared + experts, so:
+  const experts = (total - active) / (1 - k / E);
+  const shared = total - experts;
+  if (shared < 0) return active;
+  const touched = 1 - Math.pow(1 - k / E, n);
+  return Math.min(total, shared + experts * touched);
+}
+
+/**
  * A first-order decode estimate. Returns null when the device has no published
  * bandwidth, so callers can simply omit the figure rather than invent one.
  */
@@ -50,13 +72,14 @@ export function estimateDecode(i: DecodeInput): DecodeEstimate | null {
   if (!i.bandwidthGBs || i.bandwidthGBs <= 0) return null;
 
   // A Mixture-of-Experts model keeps every expert resident but routes each token
-  // through only a few, so the read per step follows the ACTIVE parameters even
-  // though the memory footprint follows the total.
-  const readParams = i.arch.activeParams ?? i.arch.numParams;
-  const weightBytes = readParams * DTYPE_BYTES[i.weightDtype];
+  // through only a few, so the read per step follows the experts the batch
+  // touches, not the total — the active count for one sequence, nearly all of
+  // them for a large batch.
+  const readShare = i.arch.numParams > 0 ? paramsReadPerStep(i.arch, i.concurrency) / i.arch.numParams : 1;
+  const weightBytes = weightsBytes(i.arch, i.weightDtype) * readShare;
 
   // Attention reads the cache for every sequence in the batch on every step.
-  const kvBytes = kvBytesPerToken(i.arch, i.kvDtype) * i.contextLength * i.concurrency;
+  const kvBytes = kvBytesPerSeq(i.arch, i.kvDtype, i.contextLength) * i.concurrency;
 
   const bytesPerStep = weightBytes + kvBytes;
   const effectiveBps = i.bandwidthGBs * 1e9 * BANDWIDTH_EFFICIENCY;

@@ -108,8 +108,9 @@ Strix Halo, 120 of 128 GB on DGX Spark.
 
 > These are **planning figures, not guarantees**. Real usage depends on the
 > serving engine — vLLM, TGI, llama.cpp — and on paged-attention efficiency.
-> Prefill (time to first token) is not modelled, and neither are sliding-window
-> layers (Gemma 2, gpt-oss), which cache less than the formula counts.
+> Prefill (time to first token) is not modelled. The KV cache is counted layer
+> by layer: sliding-window layers (Gemma 2 and 3, gpt-oss) at their window, and
+> hybrid models' linear-attention and Mamba layers as a fixed state.
 
 ## Privacy
 

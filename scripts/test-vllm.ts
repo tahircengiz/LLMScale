@@ -34,8 +34,8 @@ console.log("\n--- recommendations ---");
 const tool = recommend(base({ task: "tool" }));
 check("tool → enable-auto-tool-choice", has(tool.command, "--enable-auto-tool-choice"), "");
 check("tool → llama3_json parser", has(tool.command, "--tool-call-parser llama3_json"));
-check("chat/tool → prefix caching", has(tool.command, "--enable-prefix-caching"));
-check("always → seed", has(tool.command, "--seed 0"));
+// vLLM 0.31.0 turns prefix caching and chunked prefill on, and seeds 0, by default.
+check("defaults are left out: prefix caching, seed", !has(tool.command, "--enable-prefix-caching") && !has(tool.command, "--seed"));
 
 const thru = recommend(base({ priority: "throughput" }));
 check("throughput → batched 8192", has(thru.command, "--max-num-batched-tokens 8192"));
@@ -63,7 +63,7 @@ check("accuracy → kvfull note", acc.warnings.some((w) => w.key === "vllm.w.kvf
 const mem = recommend(base({ priority: "memory", task: "rag", maxModelLen: 131072 }));
 check("memory+long → fp8 kv", has(mem.command, "--kv-cache-dtype fp8"));
 check("memory+long → fp8 accuracy warning", mem.warnings.some((w) => w.key === "vllm.w.fp8acc"));
-check("rag/long → chunked prefill", has(mem.command, "--enable-chunked-prefill"));
+check("rag/long → no chunked-prefill flag, it is the default", !has(mem.command, "--enable-chunked-prefill"));
 
 const tp = recommend(base({ hfId: "meta-llama/Llama-3.1-405B-Instruct", arch: llama405b, gpuCount: 8 }));
 check("multi-gpu → tensor-parallel-size 8", has(tp.command, "--tensor-parallel-size 8"));
@@ -72,7 +72,14 @@ const tight = recommend(base({ hfId: "meta-llama/Llama-3.1-405B-Instruct", arch:
 check("405B on 24GB → fit warning", tight.warnings.some((w) => w.key === "vllm.w.fit"), String(tight.warnings.map((w) => w.key)));
 
 const q = recommend(base({ hfId: "Qwen/Qwen2.5-7B-Instruct", arch: qwen7b, task: "structured" }));
-check("structured → guided xgrammar", has(q.command, "--guided-decoding-backend xgrammar"));
+// --guided-decoding-backend no longer exists in vLLM 0.31.0 (vllm/engine/arg_utils.py).
+check("structured → structured-outputs xgrammar", has(q.command, "--structured-outputs-config.backend xgrammar") && !has(q.command, "--guided-decoding-backend"));
+
+// vLLM refuses a TP size that does not divide the attention heads (vllm/config/model.py).
+const qtp = recommend(base({ hfId: "Qwen/Qwen2.5-7B-Instruct", arch: qwen7b, gpuCount: 8 }));
+check("TP 8 on 28 heads → warns, suggests 4", qtp.warnings.some((w) => w.key === "vllm.w.tp" && w.vars?.ok === 4), JSON.stringify(qtp.warnings));
+check("…and the command carries 4, which vLLM accepts", has(qtp.command, "--tensor-parallel-size 4") && !has(qtp.command, "--tensor-parallel-size 8"));
+check("TP 8 on 64 heads → no warning", !tp.warnings.some((w) => w.key === "vllm.w.tp"));
 
 const mig = recommend(base({ gpuCount: 4, mig: true, gpuVramGiB: 40 }));
 check("MIG → no tensor-parallel", !has(mig.command, "--tensor-parallel-size"));
@@ -83,7 +90,7 @@ const k8s = recommend(base({ task: "tool" }));
 check("k8s uses --key=value", k8s.k8sArgs.includes("--max-model-len=8192"));
 check("k8s no leading whitespace", k8s.k8sArgs.split("\n").every((l) => l === l.trimStart()));
 check("k8s omits 'vllm serve' + model", !k8s.k8sArgs.includes("vllm serve") && !k8s.k8sArgs.includes("Llama-3.1-8B"));
-check("k8s keeps bare boolean flags", k8s.k8sArgs.split("\n").includes("--enable-prefix-caching"));
+check("k8s keeps bare boolean flags", k8s.k8sArgs.split("\n").includes("--enable-auto-tool-choice"));
 console.log("\n--- sample k8s args ---\n" + k8s.k8sArgs);
 
 console.log("\n--- sample command (tool, balanced) ---\n" + tool.command);

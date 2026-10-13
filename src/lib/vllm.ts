@@ -2,7 +2,8 @@
 // Rules are grounded in the current vLLM V1 docs (engine args, optimization,
 // tool calling, quantized KV cache). Reason/warning strings are i18n keys.
 
-import { weightsBytes, kvBytesPerToken, BYTES_PER_GIB } from "./calc.ts";
+import { weightsBytes, kvBytesPerSeq, BYTES_PER_GIB } from "./calc.ts";
+import { largestTpAtMost, nearestTp, tpValid } from "./parallel.ts";
 import type { Dtype, ModelArch } from "./calc";
 
 export type Priority = "balanced" | "throughput" | "latency" | "accuracy" | "memory";
@@ -102,7 +103,13 @@ export function recommend(i: VllmInput): VllmRec {
   if (i.mig) {
     warnings.push({ key: "vllm.w.mig" });
   } else if (i.gpuCount > 1) {
-    flags.push({ flag: "--tensor-parallel-size", value: String(i.gpuCount), reasonKey: "vllm.r.tp" });
+    // vLLM refuses a size that does not divide the heads, so the command never
+    // carries one: it uses the largest that works and the warning says so.
+    const heads = i.arch.numAttentionHeads;
+    const kv = i.arch.numKeyValueHeads ?? heads;
+    const tp = tpValid(i.gpuCount, heads, kv) ? i.gpuCount : largestTpAtMost(i.gpuCount, heads, kv);
+    if (tp !== i.gpuCount) warnings.push({ key: "vllm.w.tp", vars: { n: i.gpuCount, h: heads, ok: tp } });
+    if (tp > 1) flags.push({ flag: "--tensor-parallel-size", value: String(tp), reasonKey: "vllm.r.tp" });
     if (i.isMoE) flags.push({ flag: "--enable-expert-parallel", reasonKey: "vllm.r.ep" });
   }
 
@@ -128,7 +135,7 @@ export function recommend(i: VllmInput): VllmRec {
   // the name-based detectQuant misses); fall back to the name-based guess.
   const wDtype = i.weightDtype ?? quantToDtype(quant);
   const weightsGiB = weightsBytes(i.arch, wDtype) / BYTES_PER_GIB;
-  const kvSeqGiB = (kvBytesPerToken(i.arch, kvDtype) * i.maxModelLen) / BYTES_PER_GIB;
+  const kvSeqGiB = kvBytesPerSeq(i.arch, kvDtype, i.maxModelLen) / BYTES_PER_GIB;
   const budgetGiB = i.gpuCount * i.gpuVramGiB * util;
   /** Full-length sequences the KV cache can hold once the weights are resident. */
   const seqCap = Math.max(1, Math.floor(((budgetGiB - 1) / 1.1 - weightsGiB) / kvSeqGiB));
@@ -158,10 +165,8 @@ export function recommend(i: VllmInput): VllmRec {
     });
   }
 
-  // --- prefill / caching ---
-  if (longCtx) flags.push({ flag: "--enable-chunked-prefill", reasonKey: "vllm.r.chunked" });
-  if (i.task === "chat" || i.task === "rag" || i.task === "tool" || i.task === "reasoning")
-    flags.push({ flag: "--enable-prefix-caching", reasonKey: "vllm.r.prefix" });
+  // Chunked prefill, prefix caching and seed 0 are vLLM 0.31.0's defaults
+  // (SchedulerConfig, CacheConfig, ModelConfig), so the command leaves them out.
 
   // --- task specifics ---
   if (i.task === "tool") {
@@ -174,7 +179,8 @@ export function recommend(i: VllmInput): VllmRec {
       warnings.push({ key: "vllm.w.parserUnknown" });
     }
   }
-  if (i.task === "structured") flags.push({ flag: "--guided-decoding-backend", value: "xgrammar", reasonKey: "vllm.r.guided" });
+  // --guided-decoding-backend is gone; structured output is configured here now.
+  if (i.task === "structured") flags.push({ flag: "--structured-outputs-config.backend", value: "xgrammar", reasonKey: "vllm.r.guided" });
   if (i.task === "vision" || i.vision) {
     flags.push({ flag: "--limit-mm-per-prompt", value: `'{"image":1}'`, reasonKey: "vllm.r.mm" });
     warnings.push({ key: "vllm.w.trust" });
@@ -185,9 +191,6 @@ export function recommend(i: VllmInput): VllmRec {
     flags.push({ flag: "--dtype", value: "bfloat16", reasonKey: "vllm.r.dtype" });
   }
 
-  // --- reproducibility / reliability ---
-  flags.push({ flag: "--seed", value: "0", reasonKey: "vllm.r.seed" });
-
   // --- quantization notes ---
   if (quant === "gguf") warnings.push({ key: "vllm.w.gguf" });
   else if (quant) warnings.push({ key: "vllm.w.quant", vars: { q: quant.toUpperCase() } });
@@ -197,7 +200,15 @@ export function recommend(i: VllmInput): VllmRec {
   if (required > budgetGiB) {
     warnings.push({
       key: "vllm.w.fit",
-      vars: { need: required.toFixed(1), have: budgetGiB.toFixed(1), gpus: Math.max(2, Math.ceil(required / (i.gpuVramGiB * util))) },
+      vars: {
+        need: required.toFixed(1),
+        have: budgetGiB.toFixed(1),
+        // A GPU count vLLM can split the heads across, not just enough memory.
+        gpus: (() => {
+          const raw = Math.max(2, Math.ceil(required / (i.gpuVramGiB * util)));
+          return nearestTp(raw, i.arch.numAttentionHeads, i.arch.numKeyValueHeads ?? i.arch.numAttentionHeads) ?? raw;
+        })(),
+      },
     });
   }
 

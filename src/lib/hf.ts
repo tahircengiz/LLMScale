@@ -5,7 +5,8 @@
 
 import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
-import { activeParamsOf, expertCount } from "./moe.ts";
+import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
+import { layerPlan } from "./layers.ts";
 
 const HF = "https://huggingface.co";
 
@@ -53,6 +54,19 @@ export interface HfModelInfo {
   lastModified?: string;
   /** Total on-disk repo size in bytes. */
   usedStorage?: number;
+  /** Bytes in the repository's top-level safetensors weight files. */
+  weightFileBytes?: number;
+}
+
+/** Bytes in a repository's weight files: its top-level .safetensors, without an
+ *  adapter's and, when the Hugging Face layout is there too, without Mistral's
+ *  consolidated copy (subfolders such as gpt-oss's original/ hold other copies). */
+export function weightFileBytes(files: { name: string; size?: number }[]): number | undefined {
+  const st = files.filter((f) => !f.name.includes("/") && f.name.endsWith(".safetensors") && !f.name.startsWith("adapter_model"));
+  const hf = st.filter((f) => !f.name.startsWith("consolidated"));
+  const use = hf.length ? hf : st;
+  if (!use.length || use.some((f) => typeof f.size !== "number")) return undefined;
+  return use.reduce((a, f) => a + (f.size as number), 0);
 }
 
 /** Extract the base model id from cardData.base_model or a base_model:* tag. */
@@ -122,7 +136,8 @@ export async function searchModels(query: string, limit = 15): Promise<HfSearchR
 
 /** Fetch model metadata (param count + gated flag) — works even for gated models. */
 export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
-  const res = await fetchWithTimeout(`${HF}/api/models/${hfId}`, 8000);
+  // blobs=true adds each file's size, which sizes a quantized checkpoint exactly.
+  const res = await fetchWithTimeout(`${HF}/api/models/${hfId}?blobs=true`, 8000);
   if (!res.ok) throw new Error(`Model not found: ${res.status}`);
   const d = await res.json();
   // GGUF repos expose params under `gguf.total` instead of `safetensors.total`.
@@ -148,6 +163,9 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
     createdAt: d?.createdAt,
     lastModified: d?.lastModified,
     usedStorage: typeof d?.usedStorage === "number" ? d.usedStorage : undefined,
+    weightFileBytes: Array.isArray(d?.siblings)
+      ? weightFileBytes(d.siblings.map((x: any) => ({ name: String(x.rfilename), size: x.size })))
+      : undefined,
   };
 }
 
@@ -179,6 +197,18 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   // Decode speed reads the ACTIVE parameters (perf.ts). Nothing set them for a
   // model resolved from its config, so every live MoE was estimated as if dense.
   arch.activeParams = activeParamsOf(arch, c);
+  const experts = expertCount(c);
+  const perTok = expertsPerToken(c);
+  if (experts && experts > 1 && perTok) [arch.numExperts, arch.expertsPerToken] = [experts, perTok];
+  // An absent flag counts as untied: the larger, safer figure for a quantized estimate.
+  arch.tieEmbeddings = (c.tie_word_embeddings ?? cfg?.tie_word_embeddings) === true;
+  // Sliding windows and hybrid layers cache less than every layer at full context.
+  const plan = layerPlan(c);
+  if (plan) {
+    if (plan.attention !== numLayers) arch.attnLayers = plan.attention;
+    if (plan.sliding && plan.window) [arch.slidingLayers, arch.slidingWindow] = [plan.sliding, plan.window];
+    if (plan.stateBytesPerSeq) arch.stateBytesPerSeq = plan.stateBytesPerSeq;
+  }
   return arch;
 }
 
@@ -265,6 +295,22 @@ function detectKvDtype(cfg: any): Dtype | undefined {
   return undefined;
 }
 
+/** A checkpoint that ships quantized is sized by its own files, which hold the
+ *  scales and the layers left in 16-bit that a per-parameter estimate misses: a
+ *  third of Qwen2.5-7B-Instruct-AWQ's 5.2 GiB. For packed 4-bit formats the Hub's
+ *  count is of stored elements, not parameters — 40.6 billion for an NVFP4 Llama
+ *  3.3 70B — so when the files hold more than 0.8 bytes per counted parameter, a
+ *  4-bit checkpoint takes its parameter count from its base model. */
+async function sizeShipped(arch: ModelArch, info: HfModelInfo | null, dtype: Dtype | undefined): Promise<void> {
+  const bytes = info?.weightFileBytes;
+  if (!bytes || (dtype !== "int4" && dtype !== "int8" && dtype !== "fp8")) return;
+  arch.shipped = { dtype, bytes };
+  if (dtype === "int4" && arch.numParams > 0 && bytes / arch.numParams > 0.8 && info?.baseModel) {
+    const base = await fetchModelInfo(info.baseModel).catch(() => null);
+    if (base?.numParams && base.numParams > arch.numParams) arch.numParams = base.numParams;
+  }
+}
+
 /**
  * Full resolution pipeline:
  *  1. metadata (param count, gated) — always works
@@ -291,6 +337,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     if (arch && arch.numParams > 0) {
       // A preset's active count comes from its model card; prefer it to the estimate.
       if (known?.activeParams) arch.activeParams = known.activeParams;
+      await sizeShipped(arch, info, weightDtype);
       const modelType = cfg.text_config?.model_type ?? cfg.model_type ?? info?.modelType;
       return {
         hfId,

@@ -135,7 +135,9 @@ check("usage is counted", sres.usage.input === 100 && sres.kept === 1);
 console.log("\n--- engine figures ---");
 const oss = KNOWN_MODELS.find((m) => m.id === "gpt-oss-120b")!;
 const fig = engineFigures(oss.displayName, oss.hfId, oss, oss.maxContext);
-check("figures match the feed's memory card", fig.includes("BF16: 240.7 GiB") && fig.includes("Apple M3 Ultra (512GB)") && fig.includes("INT4: 61.21 GiB") && fig.includes("A100 80GB"), fig.split("\n")[2]);
+// INT4 keeps the embedding and the output head in 16-bit, and gpt-oss's sliding
+// layers cache only their 128-token window (src/lib/calc.ts, layers.ts).
+check("figures match the feed's memory card", fig.includes("BF16: 240.4 GiB") && fig.includes("Apple M3 Ultra (512GB)") && fig.includes("INT4: 66.39 GiB") && fig.includes("A100 80GB"), fig.split("\n")[2]);
 check("…and name the context they assume", fig.includes("one user at 8192 tokens"));
 
 console.log("\n--- gather and build ---");
@@ -145,7 +147,7 @@ const g = await gather(cand, async (u) => {
   throw new Error("unexpected fetch " + u);
 });
 check("a model's text is its card, without front matter", g.text.startsWith("# gpt-oss-120b"));
-check("a bundled model is recognised and gets its figures", g.knownId === "gpt-oss-120b" && !!g.figures?.includes("240.7 GiB"));
+check("a bundled model is recognised and gets its figures", g.knownId === "gpt-oss-120b" && !!g.figures?.includes("240.4 GiB"));
 check("allowed links: the item and primary sources, not other hosts", g.allowed.includes("https://huggingface.co/openai/gpt-oss-120b") && g.allowed.includes("https://openai.com/index/introducing-gpt-oss") && !g.allowed.some((u) => u.includes("evil")));
 
 const out: WriterOutput = {

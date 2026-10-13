@@ -66,6 +66,27 @@ export function encodeState(s: AppState): string {
     // Without it a MoE model decodes back as dense on every reload and shared link,
     // and its decode estimate reads every expert instead of the routed few.
     if (s.arch.activeParams) p.set("ap", String(Math.round(s.arch.activeParams)));
+    // The same for everything else the sizing reads (calc.ts, perf.ts): without
+    // them a reload or a shared link counts every layer at full context again,
+    // sizes a quantized checkpoint per parameter, and reads every MoE expert as
+    // if the batch were one sequence.
+    const a = s.arch;
+    if (a.vocabSize) p.set("v", String(a.vocabSize));
+    if (a.tieEmbeddings) p.set("te", "1");
+    if (a.attnLayers !== undefined) p.set("al", String(a.attnLayers));
+    if (a.slidingLayers && a.slidingWindow) {
+      p.set("sl", String(a.slidingLayers));
+      p.set("sw", String(a.slidingWindow));
+    }
+    if (a.stateBytesPerSeq) p.set("st", String(a.stateBytesPerSeq));
+    if (a.numExperts && a.expertsPerToken) {
+      p.set("ne", String(a.numExperts));
+      p.set("ek", String(a.expertsPerToken));
+    }
+    if (a.shipped) {
+      p.set("sd", a.shipped.dtype);
+      p.set("sb", String(a.shipped.bytes));
+    }
   }
   p.set("wd", s.weightDtype);
   p.set("kd", s.kvDtype);
@@ -106,7 +127,20 @@ export function decodeState(search: string): Partial<AppState> {
       kvLoraRank: num(p.get("kl")),
       qkRopeHeadDim: num(p.get("qr")),
       activeParams: num(p.get("ap")),
+      vocabSize: num(p.get("v")),
+      tieEmbeddings: p.get("te") === "1" ? true : undefined,
+      attnLayers: num(p.get("al")),
+      slidingLayers: num(p.get("sl")),
+      slidingWindow: num(p.get("sw")),
+      stateBytesPerSeq: num(p.get("st")),
+      numExperts: num(p.get("ne")),
+      expertsPerToken: num(p.get("ek")),
     } as ModelArch;
+    const sd = p.get("sd") as Dtype | null;
+    const sb = num(p.get("sb"));
+    if (sd && sb) out.arch.shipped = { dtype: sd, bytes: sb };
+    // Drop what the URL did not carry, so a decoded arch has no undefined keys.
+    for (const k of Object.keys(out.arch) as (keyof ModelArch)[]) if (out.arch[k] === undefined) delete out.arch[k];
   }
 
   const wd = p.get("wd") as Dtype | null;
