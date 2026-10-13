@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mistral 7B Instruct v0.3 Kaç GB VRAM İster? | LLMScale</title>
-<meta name="description" content="Mistral 7B Instruct v0.3, 8k context'te tek kullanıcı için BF16'da 16,70 GiB, INT4'te 5,56 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta name="description" content="Mistral 7B Instruct v0.3, 8k context'te tek kullanıcı için BF16'da 16,70 GiB, INT4'te 6,20 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/models/mistral-7b-v0.3.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/mistral-7b-v0.3.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/mistral-7b-v0.3.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Mistral 7B Instruct v0.3 kaç GB VRAM ister?">
-<meta property="og:description" content="Mistral 7B Instruct v0.3, 8k context'te tek kullanıcı için BF16'da 16,70 GiB, INT4'te 5,56 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta property="og:description" content="Mistral 7B Instruct v0.3, 8k context'te tek kullanıcı için BF16'da 16,70 GiB, INT4'te 6,20 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/models/mistral-7b-v0.3.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Mistral 7B Instruct v0.3 kaç GB VRAM ister?">
-<meta name="twitter:description" content="Mistral 7B Instruct v0.3, 8k context'te tek kullanıcı için BF16'da 16,70 GiB, INT4'te 5,56 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta name="twitter:description" content="Mistral 7B Instruct v0.3, 8k context'te tek kullanıcı için BF16'da 16,70 GiB, INT4'te 6,20 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -161,22 +161,22 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <div class="answer">
   <div class="cap">BF16 · 8k context · tek kullanıcı</div>
   <div class="big">16,70 GiB</div>
-  <p>13,50 GiB ağırlık, 1,00 GiB KV cache ve 2,20 GiB aktivasyon ile CUDA context. Aynı iş yükü INT4'te 5,56 GiB ister.</p>
+  <p>13,50 GiB ağırlık, 1,00 GiB KV cache ve 2,20 GiB aktivasyon ile CUDA context. Aynı iş yükü INT4'te 6,20 GiB ister.</p>
   <ul class="spec"><li>32 katman</li><li>hidden 4096</li><li>32/8 heads</li><li>head_dim 128</li><li>32k maks context</li></ul>
 </div>
 <h2>Hassasiyet ve context'e göre Mistral 7B Instruct v0.3 belleği</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Hassasiyet</th><th scope="col">8k context</th><th scope="col">32k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>16,70 GiB<small>KV cache 1,00 GiB</small></td><td>20,00 GiB<small>KV cache 4,00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>9,28 GiB<small>KV cache 1,00 GiB</small></td><td>12,58 GiB<small>KV cache 4,00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>5,56 GiB<small>KV cache 1,00 GiB</small></td><td>8,86 GiB<small>KV cache 4,00 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>16,70 GiB<small>KV cache 1,00 GiB</small></td><td>20,00 GiB<small>KV cache 4,00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>9,55 GiB<small>KV cache 1,00 GiB</small></td><td>12,85 GiB<small>KV cache 4,00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>6,20 GiB<small>KV cache 1,00 GiB</small></td><td>9,50 GiB<small>KV cache 4,00 GiB</small></td></tr></tbody>
 </table></div>
 <p class="note">Tek kullanıcı, FP16 KV cache, %10 aktivasyon payı ve 0,75 GiB CUDA context. Quantization ağırlıkları küçültür, KV cache'i değil; bu yüzden context büyüdükçe kazanç daralır.</p>
 <h2>Onu tek başına taşıyan GPU'lar</h2>
-<ul class="plain"><li><strong>BF16</strong> (16,70 GiB): <a href="/LLMScale/tr/gpus/rtx3090-24.html">RTX 3090 / Ti</a>, <a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a>, <a href="/LLMScale/tr/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a>, NVIDIA L4</li><li><strong>FP8</strong> (9,28 GiB): <a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li><li><strong>INT4</strong> (5,56 GiB): <a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
+<ul class="plain"><li><strong>BF16</strong> (16,70 GiB): <a href="/LLMScale/tr/gpus/rtx3090-24.html">RTX 3090 / Ti</a>, <a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a>, <a href="/LLMScale/tr/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a>, NVIDIA L4</li><li><strong>FP8</strong> (9,55 GiB): <a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li><li><strong>INT4</strong> (6,20 GiB): <a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
 <p class="note">8k context ve tek kullanıcı için, en küçük kartlar önce. Ayrık kartlarda belleğin %95'i, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır.</p>
 <h2>Kaç kullanıcı sığar</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
-<tbody><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a></th><td>6</td><td>13</td><td>16</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></th><td>13</td><td>20</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>27</td><td>34</td><td>37</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>54</td><td>61</td><td>65</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>68</td><td>75</td><td>78</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>73</td><td>79</td><td>83</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a></th><td>107</td><td>114</td><td>117</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/b200-192.html">B200 192GB</a></th><td>151</td><td>158</td><td>161</td></tr></tbody>
+<tbody><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a></th><td>6</td><td>13</td><td>16</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></th><td>13</td><td>19</td><td>23</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>27</td><td>33</td><td>36</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>54</td><td>61</td><td>64</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>68</td><td>75</td><td>78</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>73</td><td>79</td><td>82</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a></th><td>107</td><td>114</td><td>117</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/b200-192.html">B200 192GB</a></th><td>151</td><td>158</td><td>161</td></tr></tbody>
 </table></div>
 <p class="note">Kullanıcı başına 8k context ile, tek kartta. ✗: ağırlıklar tek bir kullanıcıya bile yer bırakmıyor.</p>
 <h2>Mistral 7B Instruct v0.3 ince ayarı</h2>

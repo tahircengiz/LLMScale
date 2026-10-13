@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gemma 2 9B IT Kaç GB VRAM İster? | LLMScale</title>
-<meta name="description" content="Gemma 2 9B IT, 8k context'te tek kullanıcı için BF16'da 22,57 GiB, INT4'te 8,37 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta name="description" content="Gemma 2 9B IT, 8k context'te tek kullanıcı için BF16'da 21,85 GiB, INT4'te 9,32 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/models/gemma-2-9b.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/gemma-2-9b.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/gemma-2-9b.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Gemma 2 9B IT kaç GB VRAM ister?">
-<meta property="og:description" content="Gemma 2 9B IT, 8k context'te tek kullanıcı için BF16'da 22,57 GiB, INT4'te 8,37 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta property="og:description" content="Gemma 2 9B IT, 8k context'te tek kullanıcı için BF16'da 21,85 GiB, INT4'te 9,32 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/models/gemma-2-9b.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Gemma 2 9B IT kaç GB VRAM ister?">
-<meta name="twitter:description" content="Gemma 2 9B IT, 8k context'te tek kullanıcı için BF16'da 22,57 GiB, INT4'te 8,37 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta name="twitter:description" content="Gemma 2 9B IT, 8k context'te tek kullanıcı için BF16'da 21,85 GiB, INT4'te 9,32 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -157,26 +157,26 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <div class="guide card">
 <nav class="crumbs" aria-label="Konum"><a href="/LLMScale/tr/">LLMScale</a> › <a href="/LLMScale/tr/models/">Modeller</a> › Gemma 2 9B IT</nav>
 <h1>Gemma 2 9B IT kaç GB VRAM ister?</h1>
-<p class="lede">Gemma 2 9B IT, 42 katmanda 9,24B parametreye sahiptir. Grouped-query attention kullanır: 16 query head, 8 key-value head'i paylaşır; bu yüzden KV cache'i tam multi-head attention'a göre 2× küçüktür. En fazla 8.192 token context alır; bu uzunlukta tek bir kullanıcı, ağırlıkların üstüne FP16'da 2,63 GiB KV cache ister. Hugging Face deposu erişim onayı gerektirdiği için LLMScale mimarisini yerleşik veritabanında taşır.</p>
+<p class="lede">Gemma 2 9B IT, 42 katmanda 9,24B parametreye sahiptir. Grouped-query attention kullanır: 16 query head, 8 key-value head'i paylaşır; bu yüzden KV cache'i tam multi-head attention'a göre 2× küçüktür. En fazla 8.192 token context alır; bu uzunlukta tek bir kullanıcı, ağırlıkların üstüne FP16'da 1,97 GiB KV cache ister. Hugging Face deposu erişim onayı gerektirdiği için LLMScale mimarisini yerleşik veritabanında taşır.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · tek kullanıcı</div>
-  <div class="big">22,57 GiB</div>
-  <p>17,21 GiB ağırlık, 2,63 GiB KV cache ve 2,73 GiB aktivasyon ile CUDA context. Aynı iş yükü INT4'te 8,37 GiB ister.</p>
+  <div class="big">21,85 GiB</div>
+  <p>17,21 GiB ağırlık, 1,97 GiB KV cache ve 2,67 GiB aktivasyon ile CUDA context. Aynı iş yükü INT4'te 9,32 GiB ister.</p>
   <ul class="spec"><li>42 katman</li><li>hidden 3584</li><li>16/8 heads</li><li>head_dim 256</li><li>8k maks context</li></ul>
 </div>
 <h2>Hassasiyet ve context'e göre Gemma 2 9B IT belleği</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Hassasiyet</th><th scope="col">8k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>22,57 GiB<small>KV cache 2,63 GiB</small></td></tr><tr><th scope="row">FP8</th><td>13,10 GiB<small>KV cache 2,63 GiB</small></td></tr><tr><th scope="row">INT4</th><td>8,37 GiB<small>KV cache 2,63 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>21,85 GiB<small>KV cache 1,97 GiB</small></td></tr><tr><th scope="row">FP8</th><td>13,32 GiB<small>KV cache 1,97 GiB</small></td></tr><tr><th scope="row">INT4</th><td>9,32 GiB<small>KV cache 1,97 GiB</small></td></tr></tbody>
 </table></div>
 <p class="note">Tek kullanıcı, FP16 KV cache, %10 aktivasyon payı ve 0,75 GiB CUDA context. Quantization ağırlıkları küçültür, KV cache'i değil; bu yüzden context büyüdükçe kazanç daralır.</p>
 <h2>Onu tek başına taşıyan GPU'lar</h2>
-<ul class="plain"><li><strong>BF16</strong> (22,57 GiB): <a href="/LLMScale/tr/gpus/rtx3090-24.html">RTX 3090 / Ti</a>, <a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a>, <a href="/LLMScale/tr/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a>, NVIDIA L4</li><li><strong>FP8</strong> (13,10 GiB): <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super, RTX 5070 Ti</li><li><strong>INT4</strong> (8,37 GiB): <a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
+<ul class="plain"><li><strong>BF16</strong> (21,85 GiB): <a href="/LLMScale/tr/gpus/rtx3090-24.html">RTX 3090 / Ti</a>, <a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a>, <a href="/LLMScale/tr/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a>, NVIDIA L4</li><li><strong>FP8</strong> (13,32 GiB): <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super, RTX 5070 Ti</li><li><strong>INT4</strong> (9,32 GiB): <a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
 <p class="note">8k context ve tek kullanıcı için, en küçük kartlar önce. Ayrık kartlarda belleğin %95'i, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır.</p>
 <h2>Kaç kullanıcı sığar</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
-<tbody><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a></th><td>1</td><td>4</td><td>5</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></th><td>3</td><td>6</td><td>8</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>8</td><td>12</td><td>13</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>19</td><td>22</td><td>24</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>24</td><td>28</td><td>29</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>26</td><td>29</td><td>31</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a></th><td>39</td><td>42</td><td>44</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/b200-192.html">B200 192GB</a></th><td>56</td><td>59</td><td>61</td></tr></tbody>
+<tbody><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a></th><td>1</td><td>5</td><td>7</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></th><td>4</td><td>8</td><td>10</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>11</td><td>15</td><td>17</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>26</td><td>29</td><td>31</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>33</td><td>36</td><td>38</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>35</td><td>39</td><td>41</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a></th><td>52</td><td>56</td><td>58</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/b200-192.html">B200 192GB</a></th><td>75</td><td>79</td><td>80</td></tr></tbody>
 </table></div>
 <p class="note">Kullanıcı başına 8k context ile, tek kartta. ✗: ağırlıklar tek bir kullanıcıya bile yer bırakmıyor.</p>
 <h2>Gemma 2 9B IT ince ayarı</h2>

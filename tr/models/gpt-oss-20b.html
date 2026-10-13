@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>gpt-oss 20B Kaç GB VRAM İster? | LLMScale</title>
-<meta name="description" content="gpt-oss 20B, 8k context'te tek kullanıcı için BF16'da 44,01 GiB, INT4'te 11,88 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta name="description" content="gpt-oss 20B, 8k context'te tek kullanıcı için BF16'da 43,81 GiB, INT4'te 14,08 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/models/gpt-oss-20b.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/gpt-oss-20b.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/gpt-oss-20b.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="gpt-oss 20B kaç GB VRAM ister?">
-<meta property="og:description" content="gpt-oss 20B, 8k context'te tek kullanıcı için BF16'da 44,01 GiB, INT4'te 11,88 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta property="og:description" content="gpt-oss 20B, 8k context'te tek kullanıcı için BF16'da 43,81 GiB, INT4'te 14,08 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/models/gpt-oss-20b.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="gpt-oss 20B kaç GB VRAM ister?">
-<meta name="twitter:description" content="gpt-oss 20B, 8k context'te tek kullanıcı için BF16'da 44,01 GiB, INT4'te 11,88 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta name="twitter:description" content="gpt-oss 20B, 8k context'te tek kullanıcı için BF16'da 43,81 GiB, INT4'te 14,08 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -157,26 +157,26 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <div class="guide card">
 <nav class="crumbs" aria-label="Konum"><a href="/LLMScale/tr/">LLMScale</a> › <a href="/LLMScale/tr/models/">Modeller</a> › gpt-oss 20B</nav>
 <h1>gpt-oss 20B kaç GB VRAM ister?</h1>
-<p class="lede">gpt-oss 20B, 24 katmanda 20,91B parametreye sahiptir. Grouped-query attention kullanır: 64 query head, 8 key-value head'i paylaşır; bu yüzden KV cache'i tam multi-head attention'a göre 8× küçüktür. Mixture-of-Experts modelidir: toplam 20,91B parametrenin token başına yaklaşık 3,60B kadarı aktiftir; bellek hepsini tutmak zorundadır, her token ise yalnızca aktif kısımdan geçer. En fazla 131.072 token context alır; bu uzunlukta tek bir kullanıcı, ağırlıkların üstüne FP16'da 6,00 GiB KV cache ister.</p>
+<p class="lede">gpt-oss 20B, 24 katmanda 20,91B parametreye sahiptir. Grouped-query attention kullanır: 64 query head, 8 key-value head'i paylaşır; bu yüzden KV cache'i tam multi-head attention'a göre 8× küçüktür. Mixture-of-Experts modelidir: toplam 20,91B parametrenin token başına yaklaşık 3,60B kadarı aktiftir; bellek hepsini tutmak zorundadır, her token ise yalnızca aktif kısımdan geçer. En fazla 131.072 token context alır; bu uzunlukta tek bir kullanıcı, ağırlıkların üstüne FP16'da 3,00 GiB KV cache ister.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · tek kullanıcı</div>
-  <div class="big">44,01 GiB</div>
-  <p>38,96 GiB ağırlık, 384 MiB KV cache ve 4,68 GiB aktivasyon ile CUDA context. Aynı iş yükü INT4'te 11,88 GiB ister.</p>
+  <div class="big">43,81 GiB</div>
+  <p>38,96 GiB ağırlık, 195 MiB KV cache ve 4,66 GiB aktivasyon ile CUDA context. Aynı iş yükü INT4'te 14,08 GiB ister.</p>
   <ul class="spec"><li>24 katman</li><li>hidden 2880</li><li>64/8 heads</li><li>head_dim 64</li><li>128k maks context</li><li>MoE</li></ul>
 </div>
 <h2>Hassasiyet ve context'e göre gpt-oss 20B belleği</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Hassasiyet</th><th scope="col">8k context</th><th scope="col">32k context</th><th scope="col">128k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>44,01 GiB<small>KV cache 384 MiB</small></td><td>45,25 GiB<small>KV cache 1,50 GiB</small></td><td>50,20 GiB<small>KV cache 6,00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>22,59 GiB<small>KV cache 384 MiB</small></td><td>23,83 GiB<small>KV cache 1,50 GiB</small></td><td>28,78 GiB<small>KV cache 6,00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>11,88 GiB<small>KV cache 384 MiB</small></td><td>13,11 GiB<small>KV cache 1,50 GiB</small></td><td>18,06 GiB<small>KV cache 6,00 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>43,81 GiB<small>KV cache 195 MiB</small></td><td>44,43 GiB<small>KV cache 771 MiB</small></td><td>46,91 GiB<small>KV cache 3,00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>23,57 GiB<small>KV cache 195 MiB</small></td><td>24,19 GiB<small>KV cache 771 MiB</small></td><td>26,67 GiB<small>KV cache 3,00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>14,08 GiB<small>KV cache 195 MiB</small></td><td>14,70 GiB<small>KV cache 771 MiB</small></td><td>17,18 GiB<small>KV cache 3,00 GiB</small></td></tr></tbody>
 </table></div>
 <p class="note">Tek kullanıcı, FP16 KV cache, %10 aktivasyon payı ve 0,75 GiB CUDA context. Quantization ağırlıkları küçültür, KV cache'i değil; bu yüzden context büyüdükçe kazanç daralır.</p>
 <h2>Onu tek başına taşıyan GPU'lar</h2>
-<ul class="plain"><li><strong>BF16</strong> (44,01 GiB): <a href="/LLMScale/tr/gpus/a6000-48.html">RTX A6000</a>, <a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a>, <a href="/LLMScale/tr/gpus/l40s-48.html">NVIDIA L40S</a>, Apple M4 Max (64GB)</li><li><strong>FP8</strong> (22,59 GiB): <a href="/LLMScale/tr/gpus/rtx3090-24.html">RTX 3090 / Ti</a>, <a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a>, <a href="/LLMScale/tr/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a>, NVIDIA L4</li><li><strong>INT4</strong> (11,88 GiB): <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super, RTX 5070 Ti</li></ul>
+<ul class="plain"><li><strong>BF16</strong> (43,81 GiB): <a href="/LLMScale/tr/gpus/a6000-48.html">RTX A6000</a>, <a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a>, <a href="/LLMScale/tr/gpus/l40s-48.html">NVIDIA L40S</a>, Apple M4 Max (64GB)</li><li><strong>FP8</strong> (23,57 GiB): Apple M4, <a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro</li><li><strong>INT4</strong> (14,08 GiB): <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super, RTX 5070 Ti</li></ul>
 <p class="note">8k context ve tek kullanıcı için, en küçük kartlar önce. Ayrık kartlarda belleğin %95'i, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır.</p>
 <h2>Kaç kullanıcı sığar</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
-<tbody><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td>1</td><td>27</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td>19</td><td>45</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>4</td><td>56</td><td>82</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>78</td><td>130</td><td>156</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>115</td><td>167</td><td>193</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>127</td><td>178</td><td>204</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a></th><td>219</td><td>270</td><td>296</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/b200-192.html">B200 192GB</a></th><td>336</td><td>388</td><td>414</td></tr></tbody>
+<tbody><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td>42</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td>33</td><td>78</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>9</td><td>106</td><td>151</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>154</td><td>251</td><td>296</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>227</td><td>323</td><td>369</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>250</td><td>346</td><td>392</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a></th><td>431</td><td>527</td><td>573</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/b200-192.html">B200 192GB</a></th><td>662</td><td>759</td><td>804</td></tr></tbody>
 </table></div>
 <p class="note">Kullanıcı başına 8k context ile, tek kartta. ✗: ağırlıklar tek bir kullanıcıya bile yer bırakmıyor.</p>
 <h2>gpt-oss 20B ince ayarı</h2>
