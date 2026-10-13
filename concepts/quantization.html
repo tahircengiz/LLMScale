@@ -172,7 +172,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <li><strong>INT8</strong> — 8-bit integers with scaling factors, one byte per weight.</li>
 <li><strong>AWQ and GPTQ</strong> — 4-bit, weight-only methods: weights are stored in 4 bits and computed at 16. They ship as safetensors and aim at GPU serving engines such as vLLM.</li>
 <li><strong>GGUF</strong> — llama.cpp's file format, with quantization levels named by bits (Q4, Q5, Q8…), used on CPUs, Apple Silicon and consumer GPUs.</li>
-<li><strong>NVFP4 and MXFP4</strong> — 4-bit floating-point formats with shared scales. gpt-oss ships its expert weights in MXFP4, which is how <a href="/LLMScale/models/gpt-oss-120b.html">gpt-oss 120B</a> fits on a single 80 GB GPU: 66.39 GiB at 8k context for one user, against 76.00 GiB usable on an <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>.</li>
+<li><strong>NVFP4 and MXFP4</strong> — 4-bit floating-point formats with shared scales. gpt-oss ships its expert weights in MXFP4, which is how <a href="/LLMScale/models/gpt-oss-120b.html">gpt-oss 120B</a> fits on a single 80 GB GPU: 62.39 GiB at 8k context for one user, against 73.60 GiB usable on an <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>.</li>
 <li><strong>NF4</strong> — QLoRA's 4-bit NormalFloat, for fine-tuning adapters on a frozen, quantized base model.</li>
 </ul>
 <h2>Why 4-bit is not exactly half a byte</h2>

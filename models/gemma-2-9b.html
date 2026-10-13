@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gemma 2 9B IT VRAM Requirements | LLMScale</title>
-<meta name="description" content="Gemma 2 9B IT needs 21.85 GiB of GPU memory at BF16 and 9.32 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="description" content="Gemma 2 9B IT needs 22.48 GiB of GPU memory at BF16 and 11.09 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/models/gemma-2-9b.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/gemma-2-9b.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/gemma-2-9b.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Gemma 2 9B IT: how much VRAM does it need?">
-<meta property="og:description" content="Gemma 2 9B IT needs 21.85 GiB of GPU memory at BF16 and 9.32 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta property="og:description" content="Gemma 2 9B IT needs 22.48 GiB of GPU memory at BF16 and 11.09 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/models/gemma-2-9b.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Gemma 2 9B IT: how much VRAM does it need?">
-<meta name="twitter:description" content="Gemma 2 9B IT needs 21.85 GiB of GPU memory at BF16 and 9.32 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="twitter:description" content="Gemma 2 9B IT needs 22.48 GiB of GPU memory at BF16 and 11.09 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -157,26 +157,26 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <div class="guide card">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/LLMScale/">LLMScale</a> › <a href="/LLMScale/models/">Models</a> › Gemma 2 9B IT</nav>
 <h1>Gemma 2 9B IT: how much VRAM does it need?</h1>
-<p class="lede">Gemma 2 9B IT has 9.24B parameters in 42 layers. It uses grouped-query attention: 16 query heads share 8 key-value heads, so its KV cache is 2× smaller than full multi-head attention would need. It takes up to 8,192 tokens of context; one user at that length needs 1.97 GiB of KV cache at FP16 on top of the weights. Its repository is gated on Hugging Face, so LLMScale ships its architecture in a bundled database.</p>
+<p class="lede">Gemma 2 9B IT has 9.24B parameters in 42 layers. It uses grouped-query attention: 16 query heads share 8 key-value heads, so its KV cache is 2× smaller than full multi-head attention would need. It takes up to 8,192 tokens of context; one user at that length needs 2.63 GiB of KV cache at FP16 on top of the weights. Its repository is gated on Hugging Face, so LLMScale ships its architecture in a bundled database.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · one user</div>
-  <div class="big">21.85 GiB</div>
-  <p>17.21 GiB of weights, 1.97 GiB of KV cache and 2.67 GiB of activations and CUDA context. At INT4 the same workload needs 9.32 GiB.</p>
+  <div class="big">22.48 GiB</div>
+  <p>17.21 GiB of weights, 2.63 GiB of KV cache and 2.64 GiB of vLLM's overhead. At INT4 the same workload needs 11.09 GiB.</p>
   <ul class="spec"><li>42 layers</li><li>hidden 3584</li><li>16/8 heads</li><li>head_dim 256</li><li>8k max context</li></ul>
 </div>
 <h2>Gemma 2 9B IT memory by precision and context</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Precision</th><th scope="col">8k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>21.85 GiB<small>KV cache 1.97 GiB</small></td></tr><tr><th scope="row">FP8</th><td>13.32 GiB<small>KV cache 1.97 GiB</small></td></tr><tr><th scope="row">INT4</th><td>9.32 GiB<small>KV cache 1.97 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>22.48 GiB<small>KV cache 2.63 GiB</small></td></tr><tr><th scope="row">FP8</th><td>14.73 GiB<small>KV cache 2.63 GiB</small></td></tr><tr><th scope="row">INT4</th><td>11.09 GiB<small>KV cache 2.63 GiB</small></td></tr></tbody>
 </table></div>
-<p class="note">One user, FP16 KV cache, 10% activation overhead and 0.75 GiB of CUDA context. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
+<p class="note">One user, FP16 KV cache and vLLM's overhead on one GPU at its defaults for a card under 70 GB. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
 <h2>Which single GPUs hold it</h2>
-<ul class="plain"><li><strong>BF16</strong> (21.85 GiB): <a href="/LLMScale/gpus/rtx3090-24.html">RTX 3090 / Ti</a>, <a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a>, <a href="/LLMScale/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a>, NVIDIA L4</li><li><strong>FP8</strong> (13.32 GiB): <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super, RTX 5070 Ti</li><li><strong>INT4</strong> (9.32 GiB): <a href="/LLMScale/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
-<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at 95% of its memory; a unified-memory device at the share its GPU can address.</p>
+<ul class="plain"><li><strong>BF16</strong> (22.48 GiB): Apple M4, <a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro</li><li><strong>FP8</strong> (14.73 GiB): <a href="/LLMScale/gpus/rtx3090-24.html">RTX 3090 / Ti</a>, <a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a>, <a href="/LLMScale/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a>, NVIDIA L4</li><li><strong>INT4</strong> (11.09 GiB): <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super, RTX 5070 Ti</li></ul>
+<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at vLLM's default 92% of its memory, a unified-memory device at the share its GPU can address, and each carries vLLM's overhead at its own defaults.</p>
 <h2>How many users fit</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
-<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td>1</td><td>5</td><td>7</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td>4</td><td>8</td><td>10</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>11</td><td>15</td><td>17</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>26</td><td>29</td><td>31</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>33</td><td>36</td><td>38</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>35</td><td>39</td><td>41</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>52</td><td>56</td><td>58</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>75</td><td>79</td><td>80</td></tr></tbody>
+<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>3</td><td>5</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td>3</td><td>6</td><td>7</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>9</td><td>12</td><td>13</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>20</td><td>23</td><td>24</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>25</td><td>28</td><td>30</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>28</td><td>31</td><td>33</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>41</td><td>44</td><td>45</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>59</td><td>62</td><td>63</td></tr></tbody>
 </table></div>
 <p class="note">Users at 8k context each, on one card. ✗: the weights leave no room for even one.</p>
 <h2>Fine-tuning Gemma 2 9B IT</h2>

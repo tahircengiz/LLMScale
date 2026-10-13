@@ -173,7 +173,7 @@ KV cache             = token başına KV byte × context uzunluğu × eşzamanl�
 </table></div>
 <p class="note">FP16, tek dizi. —: modelin maksimum context'inin ötesi. DeepSeek V3, head başına key ve value yerine sıkıştırılmış bir latent saklar. Gemma 2 ve gpt-oss bu tabloya alınmadı: sliding-window katmanları pencerede büyümeyi bırakır, bu yüzden token başına maliyetleri context uzadıkça düşer. Hesaplayıcı bunu katman katman sayar.</p>
 <h2>Eşzamanlılık onu çarpar</h2>
-<p>Her eşzamanlı dizinin kendi önbelleği vardır. 76,00 GiB kullanılabilir belleğiyle tek bir <a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a> üzerinde Llama 3.1 8B Instruct, BF16'da kullanıcı başına 8k token ile 53, 32k ile 13, 128k ile 3 kullanıcıya yer bırakır. Ağırlıklar tabanı belirler; önbellek, üstüne kaç kişinin sığacağına karar verir.</p>
+<p>Her eşzamanlı dizinin kendi önbelleği vardır. 73,60 GiB kullanılabilir belleğiyle tek bir <a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a> üzerinde Llama 3.1 8B Instruct, BF16'da kullanıcı başına 8k token ile 56, 32k ile 14, 128k ile 3 kullanıcıya yer bırakır. Ağırlıklar tabanı belirler; önbellek, üstüne kaç kişinin sığacağına karar verir.</p>
 <h2>Onu ne küçültür, ne küçültmez</h2>
 <ul class="plain">
 <li><strong>Daha az key-value head.</strong> Grouped-query ve multi-query attention key-value head'leri query head'ler arasında paylaştırır; multi-head latent attention sıkıştırılmış bir latent saklar. Bu, seçtiğin modelle birlikte gelir.</li>

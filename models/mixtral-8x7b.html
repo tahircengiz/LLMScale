@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mixtral 8x7B Instruct VRAM Requirements | LLMScale</title>
-<meta name="description" content="Mixtral 8x7B Instruct needs 97.53 GiB of GPU memory at BF16 and 27.66 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="description" content="Mixtral 8x7B Instruct needs 89.17 GiB of GPU memory at BF16 and 25.64 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/models/mixtral-8x7b.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/mixtral-8x7b.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/mixtral-8x7b.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Mixtral 8x7B Instruct: how much VRAM does it need?">
-<meta property="og:description" content="Mixtral 8x7B Instruct needs 97.53 GiB of GPU memory at BF16 and 27.66 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta property="og:description" content="Mixtral 8x7B Instruct needs 89.17 GiB of GPU memory at BF16 and 25.64 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/models/mixtral-8x7b.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Mixtral 8x7B Instruct: how much VRAM does it need?">
-<meta name="twitter:description" content="Mixtral 8x7B Instruct needs 97.53 GiB of GPU memory at BF16 and 27.66 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="twitter:description" content="Mixtral 8x7B Instruct needs 89.17 GiB of GPU memory at BF16 and 25.64 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -160,23 +160,23 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <p class="lede">Mixtral 8x7B Instruct has 46.70B parameters in 32 layers. It uses grouped-query attention: 32 query heads share 8 key-value heads, so its KV cache is 4× smaller than full multi-head attention would need. It is a Mixture-of-Experts model with about 12.90B of its 46.70B parameters active per token: memory has to hold all of them, while each token passes through only the active share. It takes up to 32,768 tokens of context; one user at that length needs 4.00 GiB of KV cache at FP16 on top of the weights. Its repository is gated on Hugging Face, so LLMScale ships its architecture in a bundled database.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · one user</div>
-  <div class="big">97.53 GiB</div>
-  <p>86.99 GiB of weights, 1.00 GiB of KV cache and 9.55 GiB of activations and CUDA context. At INT4 the same workload needs 27.66 GiB.</p>
+  <div class="big">89.17 GiB</div>
+  <p>86.99 GiB of weights, 1.00 GiB of KV cache and 1.18 GiB of vLLM's overhead. At INT4 the same workload needs 25.64 GiB.</p>
   <ul class="spec"><li>32 layers</li><li>hidden 4096</li><li>32/8 heads</li><li>head_dim 128</li><li>32k max context</li><li>MoE</li></ul>
 </div>
 <h2>Mixtral 8x7B Instruct memory by precision and context</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Precision</th><th scope="col">8k context</th><th scope="col">32k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>97.53 GiB<small>KV cache 1.00 GiB</small></td><td>100.8 GiB<small>KV cache 4.00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>49.96 GiB<small>KV cache 1.00 GiB</small></td><td>53.26 GiB<small>KV cache 4.00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>27.66 GiB<small>KV cache 1.00 GiB</small></td><td>30.96 GiB<small>KV cache 4.00 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>89.17 GiB<small>KV cache 1.00 GiB</small></td><td>92.17 GiB<small>KV cache 4.00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>45.92 GiB<small>KV cache 1.00 GiB</small></td><td>48.92 GiB<small>KV cache 4.00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>25.64 GiB<small>KV cache 1.00 GiB</small></td><td>28.64 GiB<small>KV cache 4.00 GiB</small></td></tr></tbody>
 </table></div>
-<p class="note">One user, FP16 KV cache, 10% activation overhead and 0.75 GiB of CUDA context. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
+<p class="note">One user, FP16 KV cache and vLLM's overhead on one GPU at its defaults for a card under 70 GB. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
 <h2>Which single GPUs hold it</h2>
-<ul class="plain"><li><strong>BF16</strong> (97.53 GiB): <a href="/LLMScale/gpus/nv-dgxspark-128.html">NVIDIA DGX Spark (GB10)</a>, <a href="/LLMScale/gpus/h200-141.html">H200 141GB</a>, Apple M2 Ultra, <a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></li><li><strong>FP8</strong> (49.96 GiB): NVIDIA Jetson AGX Orin (64GB), AMD MI210, RTX PRO 5000 Blackwell (72GB), <a href="/LLMScale/gpus/a100-80.html">A100 80GB</a></li><li><strong>INT4</strong> (27.66 GiB): <a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro, A100 40GB</li></ul>
-<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at 95% of its memory; a unified-memory device at the share its GPU can address.</p>
+<ul class="plain"><li><strong>BF16</strong> (89.17 GiB): <a href="/LLMScale/gpus/apple-m4max-128.html">Apple M4 Max (128GB)</a>, <a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a>, <a href="/LLMScale/gpus/nv-dgxspark-128.html">NVIDIA DGX Spark (GB10)</a>, <a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></li><li><strong>FP8</strong> (45.92 GiB): Apple M4 Max (64GB), AMD Ryzen AI Max+ 395 (64GB), NVIDIA Jetson AGX Orin (64GB), AMD MI210</li><li><strong>INT4</strong> (25.64 GiB): <a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro, A100 40GB</li></ul>
+<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at vLLM's default 92% of its memory, a unified-memory device at the share its GPU can address, and each carries vLLM's overhead at its own defaults.</p>
 <h2>How many users fit</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
-<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>3</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>17</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>24</td><td>44</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>38</td><td>58</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>42</td><td>63</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>34</td><td>77</td><td>97</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>78</td><td>121</td><td>141</td></tr></tbody>
+<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>4</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>19</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>27</td><td>47</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>41</td><td>62</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>6</td><td>49</td><td>69</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>39</td><td>83</td><td>103</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>84</td><td>127</td><td>147</td></tr></tbody>
 </table></div>
 <p class="note">Users at 8k context each, on one card. ✗: the weights leave no room for even one.</p>
 <h2>Fine-tuning Mixtral 8x7B Instruct</h2>

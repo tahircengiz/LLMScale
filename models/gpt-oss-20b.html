@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>gpt-oss 20B VRAM Requirements | LLMScale</title>
-<meta name="description" content="gpt-oss 20B needs 43.81 GiB of GPU memory at BF16 and 14.08 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="description" content="gpt-oss 20B needs 41.04 GiB of GPU memory at BF16 and 14.02 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/models/gpt-oss-20b.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/gpt-oss-20b.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/gpt-oss-20b.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="gpt-oss 20B: how much VRAM does it need?">
-<meta property="og:description" content="gpt-oss 20B needs 43.81 GiB of GPU memory at BF16 and 14.08 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta property="og:description" content="gpt-oss 20B needs 41.04 GiB of GPU memory at BF16 and 14.02 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/models/gpt-oss-20b.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="gpt-oss 20B: how much VRAM does it need?">
-<meta name="twitter:description" content="gpt-oss 20B needs 43.81 GiB of GPU memory at BF16 and 14.08 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="twitter:description" content="gpt-oss 20B needs 41.04 GiB of GPU memory at BF16 and 14.02 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -157,26 +157,26 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <div class="guide card">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/LLMScale/">LLMScale</a> › <a href="/LLMScale/models/">Models</a> › gpt-oss 20B</nav>
 <h1>gpt-oss 20B: how much VRAM does it need?</h1>
-<p class="lede">gpt-oss 20B has 20.91B parameters in 24 layers. It uses grouped-query attention: 64 query heads share 8 key-value heads, so its KV cache is 8× smaller than full multi-head attention would need. It is a Mixture-of-Experts model with about 3.60B of its 20.91B parameters active per token: memory has to hold all of them, while each token passes through only the active share. It takes up to 131,072 tokens of context; one user at that length needs 3.00 GiB of KV cache at FP16 on top of the weights.</p>
+<p class="lede">gpt-oss 20B has 20.91B parameters in 24 layers. It uses grouped-query attention: 64 query heads share 8 key-value heads, so its KV cache is 8× smaller than full multi-head attention would need. It is a Mixture-of-Experts model with about 3.60B of its 20.91B parameters active per token: memory has to hold all of them, while each token passes through only the active share. It takes up to 131,072 tokens of context; one user at that length needs 3.10 GiB of KV cache at FP16 on top of the weights.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · one user</div>
-  <div class="big">43.81 GiB</div>
-  <p>38.96 GiB of weights, 195 MiB of KV cache and 4.66 GiB of activations and CUDA context. At INT4 the same workload needs 14.08 GiB.</p>
+  <div class="big">41.04 GiB</div>
+  <p>38.96 GiB of weights, 291 MiB of KV cache and 1.80 GiB of vLLM's overhead. At INT4 the same workload needs 14.02 GiB.</p>
   <ul class="spec"><li>24 layers</li><li>hidden 2880</li><li>64/8 heads</li><li>head_dim 64</li><li>128k max context</li><li>MoE</li></ul>
 </div>
 <h2>gpt-oss 20B memory by precision and context</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Precision</th><th scope="col">8k context</th><th scope="col">32k context</th><th scope="col">128k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>43.81 GiB<small>KV cache 195 MiB</small></td><td>44.43 GiB<small>KV cache 771 MiB</small></td><td>46.91 GiB<small>KV cache 3.00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>23.57 GiB<small>KV cache 195 MiB</small></td><td>24.19 GiB<small>KV cache 771 MiB</small></td><td>26.67 GiB<small>KV cache 3.00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>14.08 GiB<small>KV cache 195 MiB</small></td><td>14.70 GiB<small>KV cache 771 MiB</small></td><td>17.18 GiB<small>KV cache 3.00 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>41.04 GiB<small>KV cache 291 MiB</small></td><td>41.61 GiB<small>KV cache 867 MiB</small></td><td>43.86 GiB<small>KV cache 3.10 GiB</small></td></tr><tr><th scope="row">FP8</th><td>22.64 GiB<small>KV cache 291 MiB</small></td><td>23.21 GiB<small>KV cache 867 MiB</small></td><td>25.46 GiB<small>KV cache 3.10 GiB</small></td></tr><tr><th scope="row">INT4</th><td>14.02 GiB<small>KV cache 291 MiB</small></td><td>14.58 GiB<small>KV cache 867 MiB</small></td><td>16.83 GiB<small>KV cache 3.10 GiB</small></td></tr></tbody>
 </table></div>
-<p class="note">One user, FP16 KV cache, 10% activation overhead and 0.75 GiB of CUDA context. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
+<p class="note">One user, FP16 KV cache and vLLM's overhead on one GPU at its defaults for a card under 70 GB. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
 <h2>Which single GPUs hold it</h2>
-<ul class="plain"><li><strong>BF16</strong> (43.81 GiB): <a href="/LLMScale/gpus/a6000-48.html">RTX A6000</a>, <a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a>, <a href="/LLMScale/gpus/l40s-48.html">NVIDIA L40S</a>, Apple M4 Max (64GB)</li><li><strong>FP8</strong> (23.57 GiB): Apple M4, <a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro</li><li><strong>INT4</strong> (14.08 GiB): <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super, RTX 5070 Ti</li></ul>
-<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at 95% of its memory; a unified-memory device at the share its GPU can address.</p>
+<ul class="plain"><li><strong>BF16</strong> (41.04 GiB): <a href="/LLMScale/gpus/a6000-48.html">RTX A6000</a>, <a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a>, <a href="/LLMScale/gpus/l40s-48.html">NVIDIA L40S</a>, Apple M4 Max (64GB)</li><li><strong>FP8</strong> (22.64 GiB): Apple M4, <a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro</li><li><strong>INT4</strong> (14.02 GiB): <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super, RTX 5070 Ti</li></ul>
+<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at vLLM's default 92% of its memory, a unified-memory device at the share its GPU can address, and each carries vLLM's overhead at its own defaults.</p>
 <h2>How many users fit</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
-<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>42</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>33</td><td>78</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>9</td><td>106</td><td>151</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>154</td><td>251</td><td>296</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>227</td><td>323</td><td>369</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>250</td><td>346</td><td>392</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>431</td><td>527</td><td>573</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>662</td><td>759</td><td>804</td></tr></tbody>
+<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>29</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>24</td><td>55</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>11</td><td>76</td><td>106</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>85</td><td>134</td><td>157</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>125</td><td>174</td><td>197</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>145</td><td>194</td><td>217</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>235</td><td>284</td><td>307</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>358</td><td>407</td><td>430</td></tr></tbody>
 </table></div>
 <p class="note">Users at 8k context each, on one card. ✗: the weights leave no room for even one.</p>
 <h2>Fine-tuning gpt-oss 20B</h2>

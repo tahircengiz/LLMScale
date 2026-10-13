@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Qwen2.5 32B Instruct VRAM Requirements | LLMScale</title>
-<meta name="description" content="Qwen2.5 32B Instruct needs 70.07 GiB of GPU memory at BF16 and 23.12 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="description" content="Qwen2.5 32B Instruct needs 65.64 GiB of GPU memory at BF16 and 22.96 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/models/qwen2.5-32b.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/qwen2.5-32b.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/qwen2.5-32b.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Qwen2.5 32B Instruct: how much VRAM does it need?">
-<meta property="og:description" content="Qwen2.5 32B Instruct needs 70.07 GiB of GPU memory at BF16 and 23.12 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta property="og:description" content="Qwen2.5 32B Instruct needs 65.64 GiB of GPU memory at BF16 and 22.96 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/models/qwen2.5-32b.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Qwen2.5 32B Instruct: how much VRAM does it need?">
-<meta name="twitter:description" content="Qwen2.5 32B Instruct needs 70.07 GiB of GPU memory at BF16 and 23.12 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="twitter:description" content="Qwen2.5 32B Instruct needs 65.64 GiB of GPU memory at BF16 and 22.96 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -160,23 +160,23 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <p class="lede">Qwen2.5 32B Instruct has 32.76B parameters in 64 layers. It uses grouped-query attention: 40 query heads share 8 key-value heads, so its KV cache is 5× smaller than full multi-head attention would need. It takes up to 32,768 tokens of context; one user at that length needs 8.00 GiB of KV cache at FP16 on top of the weights.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · one user</div>
-  <div class="big">70.07 GiB</div>
-  <p>61.02 GiB of weights, 2.00 GiB of KV cache and 7.05 GiB of activations and CUDA context. At INT4 the same workload needs 23.12 GiB.</p>
+  <div class="big">65.64 GiB</div>
+  <p>61.02 GiB of weights, 2.00 GiB of KV cache and 2.62 GiB of vLLM's overhead. At INT4 the same workload needs 22.96 GiB.</p>
   <ul class="spec"><li>64 layers</li><li>hidden 5120</li><li>40/8 heads</li><li>head_dim 128</li><li>32k max context</li></ul>
 </div>
 <h2>Qwen2.5 32B Instruct memory by precision and context</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Precision</th><th scope="col">8k context</th><th scope="col">32k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>70.07 GiB<small>KV cache 2.00 GiB</small></td><td>76.67 GiB<small>KV cache 8.00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>38.11 GiB<small>KV cache 2.00 GiB</small></td><td>44.71 GiB<small>KV cache 8.00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>23.12 GiB<small>KV cache 2.00 GiB</small></td><td>29.72 GiB<small>KV cache 8.00 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>65.64 GiB<small>KV cache 2.00 GiB</small></td><td>71.64 GiB<small>KV cache 8.00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>36.58 GiB<small>KV cache 2.00 GiB</small></td><td>42.58 GiB<small>KV cache 8.00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>22.96 GiB<small>KV cache 2.00 GiB</small></td><td>28.96 GiB<small>KV cache 8.00 GiB</small></td></tr></tbody>
 </table></div>
-<p class="note">One user, FP16 KV cache, 10% activation overhead and 0.75 GiB of CUDA context. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
+<p class="note">One user, FP16 KV cache and vLLM's overhead on one GPU at its defaults for a card under 70 GB. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
 <h2>Which single GPUs hold it</h2>
-<ul class="plain"><li><strong>BF16</strong> (70.07 GiB): <a href="/LLMScale/gpus/a100-80.html">A100 80GB</a>, <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, H100 NVL 94GB, GH200 96GB</li><li><strong>FP8</strong> (38.11 GiB): <a href="/LLMScale/gpus/a6000-48.html">RTX A6000</a>, <a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a>, <a href="/LLMScale/gpus/l40s-48.html">NVIDIA L40S</a>, Apple M4 Max (64GB)</li><li><strong>INT4</strong> (23.12 GiB): Apple M4, <a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro</li></ul>
-<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at 95% of its memory; a unified-memory device at the share its GPU can address.</p>
+<ul class="plain"><li><strong>BF16</strong> (65.64 GiB): RTX PRO 5000 Blackwell (72GB), <a href="/LLMScale/gpus/a100-80.html">A100 80GB</a>, <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, H100 NVL 94GB</li><li><strong>FP8</strong> (36.58 GiB): A100 40GB, <a href="/LLMScale/gpus/a6000-48.html">RTX A6000</a>, <a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a>, <a href="/LLMScale/gpus/l40s-48.html">NVIDIA L40S</a></li><li><strong>INT4</strong> (22.96 GiB): Apple M4, <a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro</li></ul>
+<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at vLLM's default 92% of its memory, a unified-memory device at the share its GPU can address, and each carries vLLM's overhead at its own defaults.</p>
 <h2>How many users fit</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
-<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>4</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>4</td><td>11</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>3</td><td>18</td><td>25</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>10</td><td>25</td><td>31</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>12</td><td>27</td><td>34</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>30</td><td>44</td><td>51</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>52</td><td>66</td><td>73</td></tr></tbody>
+<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>4</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>4</td><td>11</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>4</td><td>19</td><td>26</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>12</td><td>26</td><td>33</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>15</td><td>30</td><td>37</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>32</td><td>47</td><td>54</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>55</td><td>69</td><td>76</td></tr></tbody>
 </table></div>
 <p class="note">Users at 8k context each, on one card. ✗: the weights leave no room for even one.</p>
 <h2>Fine-tuning Qwen2.5 32B Instruct</h2>

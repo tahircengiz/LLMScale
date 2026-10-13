@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Llama 3.2 1B Instruct VRAM Requirements | LLMScale</title>
-<meta name="description" content="Llama 3.2 1B Instruct needs 3.56 GiB of GPU memory at BF16 and 2.09 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="description" content="Llama 3.2 1B Instruct needs 3.63 GiB of GPU memory at BF16 and 2.29 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/models/llama-3.2-1b.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/llama-3.2-1b.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/llama-3.2-1b.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Llama 3.2 1B Instruct: how much VRAM does it need?">
-<meta property="og:description" content="Llama 3.2 1B Instruct needs 3.56 GiB of GPU memory at BF16 and 2.09 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta property="og:description" content="Llama 3.2 1B Instruct needs 3.63 GiB of GPU memory at BF16 and 2.29 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/models/llama-3.2-1b.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Llama 3.2 1B Instruct: how much VRAM does it need?">
-<meta name="twitter:description" content="Llama 3.2 1B Instruct needs 3.56 GiB of GPU memory at BF16 and 2.09 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="twitter:description" content="Llama 3.2 1B Instruct needs 3.63 GiB of GPU memory at BF16 and 2.29 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -160,23 +160,23 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <p class="lede">Llama 3.2 1B Instruct has 1.24B parameters in 16 layers. It uses grouped-query attention: 32 query heads share 8 key-value heads, so its KV cache is 4× smaller than full multi-head attention would need. It takes up to 131,072 tokens of context; one user at that length needs 4.00 GiB of KV cache at FP16 on top of the weights. Its repository is gated on Hugging Face, so LLMScale ships its architecture in a bundled database.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · one user</div>
-  <div class="big">3.56 GiB</div>
-  <p>2.30 GiB of weights, 256 MiB of KV cache and 1.01 GiB of activations and CUDA context. At INT4 the same workload needs 2.09 GiB.</p>
+  <div class="big">3.63 GiB</div>
+  <p>2.30 GiB of weights, 256 MiB of KV cache and 1.07 GiB of vLLM's overhead. At INT4 the same workload needs 2.29 GiB.</p>
   <ul class="spec"><li>16 layers</li><li>hidden 2048</li><li>32/8 heads</li><li>head_dim 64</li><li>128k max context</li></ul>
 </div>
 <h2>Llama 3.2 1B Instruct memory by precision and context</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Precision</th><th scope="col">8k context</th><th scope="col">32k context</th><th scope="col">128k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>3.56 GiB<small>KV cache 256 MiB</small></td><td>4.38 GiB<small>KV cache 1.00 GiB</small></td><td>7.68 GiB<small>KV cache 4.00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>2.56 GiB<small>KV cache 256 MiB</small></td><td>3.39 GiB<small>KV cache 1.00 GiB</small></td><td>6.69 GiB<small>KV cache 4.00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>2.09 GiB<small>KV cache 256 MiB</small></td><td>2.92 GiB<small>KV cache 1.00 GiB</small></td><td>6.22 GiB<small>KV cache 4.00 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>3.63 GiB<small>KV cache 256 MiB</small></td><td>4.38 GiB<small>KV cache 1.00 GiB</small></td><td>7.38 GiB<small>KV cache 4.00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>2.72 GiB<small>KV cache 256 MiB</small></td><td>3.47 GiB<small>KV cache 1.00 GiB</small></td><td>6.47 GiB<small>KV cache 4.00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>2.29 GiB<small>KV cache 256 MiB</small></td><td>3.04 GiB<small>KV cache 1.00 GiB</small></td><td>6.04 GiB<small>KV cache 4.00 GiB</small></td></tr></tbody>
 </table></div>
-<p class="note">One user, FP16 KV cache, 10% activation overhead and 0.75 GiB of CUDA context. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
+<p class="note">One user, FP16 KV cache and vLLM's overhead on one GPU at its defaults for a card under 70 GB. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
 <h2>Which single GPUs hold it</h2>
-<ul class="plain"><li><strong>BF16</strong> (3.56 GiB): <a href="/LLMScale/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li><li><strong>FP8</strong> (2.56 GiB): <a href="/LLMScale/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li><li><strong>INT4</strong> (2.09 GiB): <a href="/LLMScale/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
-<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at 95% of its memory; a unified-memory device at the share its GPU can address.</p>
+<ul class="plain"><li><strong>BF16</strong> (3.63 GiB): <a href="/LLMScale/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li><li><strong>FP8</strong> (2.72 GiB): <a href="/LLMScale/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li><li><strong>INT4</strong> (2.29 GiB): <a href="/LLMScale/gpus/rtx3060-12.html">RTX 3060</a>, <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
+<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at vLLM's default 92% of its memory, a unified-memory device at the share its GPU can address, and each carries vLLM's overhead at its own defaults.</p>
 <h2>How many users fit</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
-<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td>70</td><td>74</td><td>76</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td>98</td><td>102</td><td>103</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>153</td><td>157</td><td>159</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>264</td><td>268</td><td>269</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>319</td><td>323</td><td>325</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>337</td><td>340</td><td>342</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>475</td><td>478</td><td>480</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>651</td><td>654</td><td>656</td></tr></tbody>
+<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td>74</td><td>78</td><td>80</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td>104</td><td>107</td><td>109</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td>163</td><td>166</td><td>168</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a></th><td>279</td><td>283</td><td>284</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>338</td><td>341</td><td>343</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>368</td><td>372</td><td>374</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>503</td><td>507</td><td>509</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 192GB</a></th><td>688</td><td>692</td><td>693</td></tr></tbody>
 </table></div>
 <p class="note">Users at 8k context each, on one card. ✗: the weights leave no room for even one.</p>
 <h2>Fine-tuning Llama 3.2 1B Instruct</h2>

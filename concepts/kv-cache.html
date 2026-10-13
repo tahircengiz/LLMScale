@@ -173,7 +173,7 @@ KV cache           = KV bytes per token × context length × concurrent sequence
 </table></div>
 <p class="note">FP16, one sequence. —: beyond the model's maximum context. DeepSeek V3 caches a compressed latent rather than per-head keys and values. Gemma 2 and gpt-oss are left out of this table: their sliding-window layers stop growing at the window, so their cost per token falls as the context grows. The calculator counts that layer by layer.</p>
 <h2>Concurrency multiplies it</h2>
-<p>Every concurrent sequence holds a cache of its own. On one <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, with 76.00 GiB usable, Llama 3.1 8B Instruct at BF16 leaves room for 53 users at 8k tokens each, 13 at 32k and 3 at 128k. The weights set the floor; the cache decides how many people fit above it.</p>
+<p>Every concurrent sequence holds a cache of its own. On one <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, with 73.60 GiB usable, Llama 3.1 8B Instruct at BF16 leaves room for 56 users at 8k tokens each, 14 at 32k and 3 at 128k. The weights set the floor; the cache decides how many people fit above it.</p>
 <h2>What shrinks it, and what does not</h2>
 <ul class="plain">
 <li><strong>Fewer key-value heads.</strong> Grouped-query and multi-query attention share key-value heads across query heads, and multi-head latent attention caches a compressed latent. This comes with the model you choose.</li>

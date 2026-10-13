@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DeepSeek V3 VRAM Requirements | LLMScale</title>
-<meta name="description" content="DeepSeek V3 needs 1403.9 GiB of GPU memory at BF16 and 376.7 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="description" content="DeepSeek V3 needs 1279.2 GiB of GPU memory at BF16 and 345.4 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/models/deepseek-v3.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/deepseek-v3.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/deepseek-v3.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DeepSeek V3: how much VRAM does it need?">
-<meta property="og:description" content="DeepSeek V3 needs 1403.9 GiB of GPU memory at BF16 and 376.7 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta property="og:description" content="DeepSeek V3 needs 1279.2 GiB of GPU memory at BF16 and 345.4 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/models/deepseek-v3.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="DeepSeek V3: how much VRAM does it need?">
-<meta name="twitter:description" content="DeepSeek V3 needs 1403.9 GiB of GPU memory at BF16 and 376.7 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="twitter:description" content="DeepSeek V3 needs 1279.2 GiB of GPU memory at BF16 and 345.4 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -160,19 +160,19 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <p class="lede">DeepSeek V3 has 684.53B parameters in 61 layers. It uses multi-head latent attention (MLA): each layer caches one compressed 576-dimensional latent per token instead of keys and values for every head, which makes its KV cache 24.9× smaller than the usual formula would give. It is a Mixture-of-Experts model with about 37.00B of its 684.53B parameters active per token: memory has to hold all of them, while each token passes through only the active share. It takes up to 163,840 tokens of context; one user at that length needs 10.72 GiB of KV cache at FP16 on top of the weights.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · one user</div>
-  <div class="big">1403.9 GiB</div>
-  <p>1275.0 GiB of weights, 549 MiB of KV cache and 128.3 GiB of activations and CUDA context. At INT4 the same workload needs 376.7 GiB.</p>
+  <div class="big">1279.2 GiB</div>
+  <p>1275.0 GiB of weights, 549 MiB of KV cache and 3.61 GiB of vLLM's overhead. At INT4 the same workload needs 345.4 GiB.</p>
   <ul class="spec"><li>61 layers</li><li>hidden 7168</li><li>128/128 heads</li><li>head_dim 56</li><li>160k max context</li><li>MoE</li><li>MLA</li></ul>
 </div>
 <h2>DeepSeek V3 memory by precision and context</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Precision</th><th scope="col">8k context</th><th scope="col">32k context</th><th scope="col">128k context</th><th scope="col">160k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>1403.9 GiB<small>KV cache 549 MiB</small></td><td>1405.7 GiB<small>KV cache 2.14 GiB</small></td><td>1412.7 GiB<small>KV cache 8.58 GiB</small></td><td>1415.1 GiB<small>KV cache 10.72 GiB</small></td></tr><tr><th scope="row">FP8</th><td>704.5 GiB<small>KV cache 549 MiB</small></td><td>706.3 GiB<small>KV cache 2.14 GiB</small></td><td>713.4 GiB<small>KV cache 8.58 GiB</small></td><td>715.7 GiB<small>KV cache 10.72 GiB</small></td></tr><tr><th scope="row">INT4</th><td>376.7 GiB<small>KV cache 549 MiB</small></td><td>378.4 GiB<small>KV cache 2.14 GiB</small></td><td>385.5 GiB<small>KV cache 8.58 GiB</small></td><td>387.9 GiB<small>KV cache 10.72 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>1279.2 GiB<small>KV cache 549 MiB</small></td><td>1280.8 GiB<small>KV cache 2.14 GiB</small></td><td>1287.2 GiB<small>KV cache 8.58 GiB</small></td><td>1289.4 GiB<small>KV cache 10.72 GiB</small></td></tr><tr><th scope="row">FP8</th><td>643.4 GiB<small>KV cache 549 MiB</small></td><td>645.0 GiB<small>KV cache 2.14 GiB</small></td><td>651.4 GiB<small>KV cache 8.58 GiB</small></td><td>653.6 GiB<small>KV cache 10.72 GiB</small></td></tr><tr><th scope="row">INT4</th><td>345.4 GiB<small>KV cache 549 MiB</small></td><td>347.0 GiB<small>KV cache 2.14 GiB</small></td><td>353.4 GiB<small>KV cache 8.58 GiB</small></td><td>355.5 GiB<small>KV cache 10.72 GiB</small></td></tr></tbody>
 </table></div>
-<p class="note">One user, FP16 KV cache, 10% activation overhead and 0.75 GiB of CUDA context. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
+<p class="note">One user, FP16 KV cache and vLLM's overhead on one GPU at its defaults for a card under 70 GB. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
 <h2>Which single GPUs hold it</h2>
-<ul class="plain"><li><strong>BF16</strong> (1403.9 GiB): no single GPU holds it — by memory it takes 19× <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, 11× <a href="/LLMScale/gpus/h200-141.html">H200 141GB</a>, 8× <a href="/LLMScale/gpus/b200-192.html">B200 192GB</a>.</li><li><strong>FP8</strong> (704.5 GiB): no single GPU holds it — by memory it takes 10× <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, 6× <a href="/LLMScale/gpus/h200-141.html">H200 141GB</a>, 4× <a href="/LLMScale/gpus/b200-192.html">B200 192GB</a>.</li><li><strong>INT4</strong> (376.7 GiB): <a href="/LLMScale/gpus/apple-m3ultra-512.html">Apple M3 Ultra (512GB)</a></li></ul>
-<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at 95% of its memory; a unified-memory device at the share its GPU can address.</p>
+<ul class="plain"><li><strong>BF16</strong> (1279.2 GiB): no single GPU holds it — by memory it takes 32× <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, 16× <a href="/LLMScale/gpus/h200-141.html">H200 141GB</a>, 8× <a href="/LLMScale/gpus/b200-192.html">B200 192GB</a>.</li><li><strong>FP8</strong> (643.4 GiB): no single GPU holds it — by memory it takes 16× <a href="/LLMScale/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, 8× <a href="/LLMScale/gpus/h200-141.html">H200 141GB</a>, 4× <a href="/LLMScale/gpus/b200-192.html">B200 192GB</a>.</li><li><strong>INT4</strong> (345.4 GiB): <a href="/LLMScale/gpus/apple-m3ultra-512.html">Apple M3 Ultra (512GB)</a></li></ul>
+<p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at vLLM's default 92% of its memory, a unified-memory device at the share its GPU can address, and each carries vLLM's overhead at its own defaults.</p>
 <h2>How many users fit</h2>
 <p>No single card here holds it at any precision; serving it means splitting it across several GPUs with tensor parallelism.</p>
 <h2>Fine-tuning DeepSeek V3</h2>
