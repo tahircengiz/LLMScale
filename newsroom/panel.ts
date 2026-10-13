@@ -182,7 +182,7 @@ main{padding-block:1.5rem 3rem}
 .actions form{margin:0}
 .btn{display:inline-block;border:1px solid var(--line);border-radius:.6rem;padding:.4rem .85rem;background:var(--inset);color:var(--text);font:inherit;font-size:.875rem;cursor:pointer;text-decoration:none}
 .btn:hover{border-color:var(--brand)}
-.btn.primary{background:var(--button,#4a4cd4);border-color:transparent;color:#fff}
+.btn.primary{background:var(--button,#1f63e6);border-color:transparent;color:#fff}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .edit label{display:block;font-size:.78rem;color:var(--faint);margin:.75rem 0 .25rem}
 .edit input,.edit textarea,.edit select{width:100%;font:inherit;font-size:.9rem;color:var(--text);background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.45rem .6rem}

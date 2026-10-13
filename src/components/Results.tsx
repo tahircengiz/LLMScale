@@ -1,11 +1,11 @@
 import type { CalcResult } from "../lib/calc";
 import { formatBytes, formatGiB, formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
-import { AMBER, GREEN, GREY, INDIGO } from "../lib/palette";
+import { AMBER, COBALT, GREEN, GREY } from "../lib/palette";
 import { SectionTitle, Stat } from "./ui";
 
 const SEGMENTS = [
-  { key: "weights", i18n: "seg.weights", color: INDIGO },
+  { key: "weights", i18n: "seg.weights", color: COBALT },
   { key: "kv", i18n: "seg.kv", color: GREEN },
   { key: "act", i18n: "seg.act", color: AMBER },
   { key: "runtime", i18n: "seg.runtime", color: GREY },

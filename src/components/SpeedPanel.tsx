@@ -1,7 +1,7 @@
 import type { Dtype, ModelArch } from "../lib/calc";
 import { formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
-import { AMBER, GREEN, INDIGO } from "../lib/palette";
+import { AMBER, COBALT, GREEN } from "../lib/palette";
 import { BANDWIDTH_EFFICIENCY, COMPUTE_EFFICIENCY, decodeCurve, prefillTime, type DecodePoint, type Tflops } from "../lib/perf";
 
 // How fast one device serves the model: time to the first token for a prompt,
@@ -100,7 +100,7 @@ export function SpeedPanel({
       {/* One above the other: the card is half the page wide, and side by side the
           axis labels would shrink below reading size. */}
       <div className="grid grid-cols-1 gap-3">
-        <Chart points={curve} pick={(p) => p.perUser} color={INDIGO} label={t("speed.perUser")} />
+        <Chart points={curve} pick={(p) => p.perUser} color={COBALT} label={t("speed.perUser")} />
         <Chart points={curve} pick={(p) => p.total} color={GREEN} label={t("speed.total")} />
       </div>
       <p className="mt-2 text-[11px] leading-relaxed text-slate-400">

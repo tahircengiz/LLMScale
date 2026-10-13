@@ -5,7 +5,7 @@ import { fetchAnatomy, type Anatomy } from "../lib/anatomy";
 import { extractCaps, scoreFit, TASKS, type Caps } from "../lib/fit";
 import { searchModels, type HfSearchResult } from "../lib/hf";
 import { useLang } from "../lib/i18n";
-import { AMBER, GREEN, GREEN_DEEP, RED } from "../lib/palette";
+import { AMBER, AMBER_TEXT, GREEN, GREEN_DEEP, GREEN_TEXT, RED, RED_TEXT } from "../lib/palette";
 import { formatBytes, formatGiB, formatInt, formatParams } from "../lib/format";
 import { Badge, Card, SectionTitle } from "../components/ui";
 
@@ -30,6 +30,10 @@ function initialIds(): string[] {
 
 function scoreColor(o: number): string {
   return o >= 80 ? GREEN : o >= 60 ? GREEN_DEEP : o >= 40 ? AMBER : RED;
+}
+// The score as a number: the same tiers in the text tokens, which hold 4.5:1.
+function scoreText(o: number): string {
+  return o >= 60 ? GREEN_TEXT : o >= 40 ? AMBER_TEXT : RED_TEXT;
 }
 
 /** Indices that hold the best value; empty when all equal or <2 comparable. */
@@ -211,7 +215,7 @@ function InfoTip({ text }: { text: string }) {
         onBlur={hide}
         tabIndex={0}
         aria-label={text}
-        className="cursor-help select-none text-[11px] leading-none text-slate-600 outline-none transition-colors hover:text-brand-400 focus-visible:text-brand-400"
+        className="cursor-help select-none text-[11px] leading-none text-slate-500 outline-none transition-colors hover:text-brand-400 focus-visible:text-brand-400"
       >
         ⓘ
       </span>
@@ -250,8 +254,8 @@ function DataCell({ children, win }: { children: ReactNode; win?: boolean }) {
 }
 
 function Placeholder({ entry }: { entry?: Entry }) {
-  if (entry?.loading) return <span className="text-slate-600">…</span>;
-  return <span className="text-slate-600">—</span>;
+  if (entry?.loading) return <span className="text-slate-500">…</span>;
+  return <span className="text-slate-500">—</span>;
 }
 
 function Section({ title, span, hint }: { title: string; span: number; hint?: string }) {
@@ -302,7 +306,7 @@ function CapRow({ label, cols, get, tip }: { label: string; cols: Col[]; get: (c
       {cols.map((c) => (
         <DataCell key={c.id}>
           {c.entry?.caps ? (
-            get(c.entry.caps) ? <span className="text-accent-400">✓</span> : <span className="text-slate-600">✗</span>
+            get(c.entry.caps) ? <span className="text-accent-400">✓</span> : <span className="text-slate-500">✗</span>
           ) : (
             <Placeholder entry={c.entry} />
           )}
@@ -327,7 +331,7 @@ function TaskRow({ label, cols, task, tip }: { label: string; cols: Col[]; task:
                 <div className="h-1.5 w-full max-w-[90px] overflow-hidden rounded-full bg-ink-800">
                   <div className="h-full rounded-full" style={{ width: `${s}%`, backgroundColor: scoreColor(s) }} />
                 </div>
-                <span className="w-6 shrink-0 text-xs tabular-nums" style={{ color: scoreColor(s) }}>{s}</span>
+                <span className="w-6 shrink-0 text-xs tabular-nums" style={{ color: scoreText(s) }}>{s}</span>
               </div>
             ) : (
               <Placeholder entry={c.entry} />

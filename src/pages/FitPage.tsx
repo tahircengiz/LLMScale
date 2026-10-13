@@ -5,7 +5,7 @@ import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
 import { extractCaps, scoreFit, TASKS, type Status, type TaskId } from "../lib/fit";
 import { useLang } from "../lib/i18n";
 import { Tip } from "../components/tip";
-import { AMBER, GREEN, GREEN_DEEP, RED } from "../lib/palette";
+import { AMBER, AMBER_TEXT, GREEN, GREEN_DEEP, GREEN_TEXT, RED, RED_TEXT } from "../lib/palette";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, SectionTitle } from "../components/ui";
 
@@ -15,6 +15,10 @@ const STATUS_COLOR: Record<Status, string> = { good: GREEN, ok: AMBER, bad: RED 
 
 function scoreColor(o: number): string {
   return o >= 80 ? GREEN : o >= 60 ? GREEN_DEEP : o >= 40 ? AMBER : RED;
+}
+// The score as a number: the same tiers in the text tokens, which hold 4.5:1.
+function scoreText(o: number): string {
+  return o >= 60 ? GREEN_TEXT : o >= 40 ? AMBER_TEXT : RED_TEXT;
 }
 function verdictTone(v: string): "good" | "warn" | "bad" {
   return v === "great" || v === "good" ? "good" : v === "weak" ? "warn" : "bad";
@@ -115,7 +119,7 @@ export function FitPage() {
                 <div className="flex items-start justify-between">
                   <SectionTitle title={t("fit.scoreLabel")} />
                   <div className="text-right">
-                    <div className="text-3xl font-bold leading-none" style={{ color: scoreColor(result.overall) }}>
+                    <div className="text-3xl font-bold leading-none" style={{ color: scoreText(result.overall) }}>
                       {result.overall}
                       <span className="text-base font-normal text-slate-500">/100</span>
                     </div>

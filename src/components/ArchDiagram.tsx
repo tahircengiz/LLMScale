@@ -4,7 +4,7 @@
 // real dimensions. Data flows bottom → top, matching the reference style.
 
 import { useLang } from "../lib/i18n";
-import { AMBER, BLUE, GREEN, GREY, INDIGO } from "../lib/palette";
+import { AMBER, BLUE, COBALT, COBALT_TEXT, GREEN, GREY, tint } from "../lib/palette";
 import { formatInt, formatParams } from "../lib/format";
 import type { Anatomy } from "../lib/anatomy";
 
@@ -12,7 +12,7 @@ const COL = {
   io: GREY,
   embed: GREEN,
   norm: GREY,
-  attn: INDIGO,
+  attn: COBALT,
   ffn: AMBER,
   out: BLUE,
 } as const;
@@ -48,7 +48,7 @@ function Box({
 }) {
   return (
     <g>
-      <rect x={x} y={y} width={w} height={h} rx={9} fill={`${color}24`} stroke={`${color}99`} strokeWidth={1.2} />
+      <rect x={x} y={y} width={w} height={h} rx={9} fill={tint(color, 14)} stroke={tint(color, 60)} strokeWidth={1.2} />
       <rect x={x + 1.2} y={y + 1.2} width={4} height={h - 2.4} rx={2} fill={color} />
       <text
         x={x + w / 2 + 3}
@@ -108,7 +108,7 @@ function Callout({
         y={y - 2}
         textAnchor={anchor}
         className={accent ? "" : "fill-white"}
-        fill={accent ? COL.attn : undefined}
+        fill={accent ? COBALT_TEXT : undefined}
         style={{ fontSize: 12.5, fontWeight: 700 }}
       >
         {value}
@@ -191,7 +191,7 @@ export function ArchDiagram({ a }: { a: Anatomy }) {
         <text x={cx} y={26} textAnchor="middle" style={{ fontSize: 13 }}>
           {a.isMoE && knownActive != null ? (
             <>
-              <tspan fill={COL.attn} style={{ fontWeight: 700 }}>{formatParams(knownActive)}</tspan>
+              <tspan fill={COBALT_TEXT} style={{ fontWeight: 700 }}>{formatParams(knownActive)}</tspan>
               <tspan className="fill-slate-400"> {t("anatomy.diagram.activeSub")} · </tspan>
               <tspan className="fill-white" style={{ fontWeight: 700 }}>{formatParams(d.total)}</tspan>
               <tspan className="fill-slate-400"> {t("anatomy.diagram.totalSub")}</tspan>
@@ -238,9 +238,8 @@ export function ArchDiagram({ a }: { a: Anatomy }) {
           width={colW + 28}
           height={blkBot - blkTop}
           rx={14}
-          fill="#ffffff"
+          className="fill-white stroke-white"
           fillOpacity={0.02}
-          stroke="#ffffff"
           strokeOpacity={0.14}
           strokeDasharray="4 4"
         />
@@ -248,8 +247,8 @@ export function ArchDiagram({ a }: { a: Anatomy }) {
           {t("anatomy.diagram.block").toUpperCase()}
         </text>
         <g>
-          <rect x={colR - 46} y={blkTop + 5} width={52} height={17} rx={8.5} fill={`${COL.attn}33`} stroke={`${COL.attn}88`} />
-          <text x={colR - 20} y={blkTop + 13.5} textAnchor="middle" dominantBaseline="central" fill={COL.attn} style={{ fontSize: 10.5, fontWeight: 700 }}>
+          <rect x={colR - 46} y={blkTop + 5} width={52} height={17} rx={8.5} fill={tint(COL.attn, 20)} stroke={tint(COL.attn, 53)} />
+          <text x={colR - 20} y={blkTop + 13.5} textAnchor="middle" dominantBaseline="central" fill={COBALT_TEXT} style={{ fontSize: 10.5, fontWeight: 700 }}>
             {t("anatomy.diagram.blockN", { n: ar.numLayers })}
           </text>
         </g>

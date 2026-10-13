@@ -31,7 +31,7 @@ const day = (iso: string) => (iso ? iso.slice(0, 10) : "—");
 export function renderEmailHtml(r: Report): string {
   const s = r.sessions;
   const INK = "#101828", MUT = "#667085", LINE = "#eaecf0";
-  const INDIGO = "#4a4cd4", GREEN = "#0b7d57", TRACK = "#eef0f4";
+  const COBALT = "#0f5be0", GREEN = "#0e8159", TRACK = "#eef0f4";
 
   const tile = (label: string, value: string | number, sub: string, colour = INK) => `
     <td width="50%" style="padding:0 6px 12px">
@@ -67,7 +67,7 @@ export function renderEmailHtml(r: Report): string {
     }).join("");
   };
 
-  const section = (title: string, rows: Tally[], empty: string, colour = INDIGO) => `
+  const section = (title: string, rows: Tally[], empty: string, colour = COBALT) => `
     <tr><td style="padding:14px 0 2px;font-size:14px;font-weight:650;color:${INK};
                    border-top:1px solid ${LINE}">${esc(title)}</td></tr>
     <tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -83,8 +83,8 @@ export function renderEmailHtml(r: Report): string {
   </td></tr>
 
   <tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-    ${tile("Model seçti", r.changedModel, `${pct(r.changedModel, s)}% kendi modelini seçti`, INDIGO)}
-    ${tile("Cihaz seçti", r.changedDevice, `${pct(r.changedDevice, s)}%`, INDIGO)}
+    ${tile("Model seçti", r.changedModel, `${pct(r.changedModel, s)}% kendi modelini seçti`, COBALT)}
+    ${tile("Cihaz seçti", r.changedDevice, `${pct(r.changedDevice, s)}%`, COBALT)}
   </tr><tr>
     ${tile("Boş sayfayla karşılaştı", r.blankStart, `hesap makinesini açan ${r.sizingSessions} oturumun ${pct(r.blankStart, r.sizingSessions)}%'i`, MUT)}
     ${tile("Sonra seçim yaptı", r.blankActivated, `bunların ${pct(r.blankActivated, r.blankStart)}%'i`, GREEN)}

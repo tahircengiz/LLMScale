@@ -59,7 +59,7 @@ export function LogCheck({
         spellCheck={false}
         aria-label={t("logcheck.label")}
         placeholder={t("logcheck.placeholder")}
-        className="w-full rounded-xl bg-ink-950 p-3 font-mono text-[11px] leading-relaxed text-slate-200 ring-1 ring-control outline-none placeholder:text-slate-600 focus:ring-brand-500/60"
+        className="w-full rounded-xl bg-ink-950 p-3 font-mono text-[11px] leading-relaxed text-slate-200 ring-1 ring-control outline-none placeholder:text-slate-500 focus:ring-brand-500/60"
       />
 
       {log && check && check.rows.length === 0 && (
@@ -67,7 +67,7 @@ export function LogCheck({
       )}
 
       {otherModel && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-warn ring-1 ring-amber-500/20">
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-warn/10 px-3 py-2 text-xs text-warn ring-1 ring-warn/20">
           <span>{t("logcheck.otherModel", { log: otherModel, page: hfId })}</span>
           <button
             type="button"

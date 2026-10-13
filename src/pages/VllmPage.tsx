@@ -305,7 +305,7 @@ export function VllmPage() {
                     <div className="mt-4 text-[11px] uppercase tracking-wide text-slate-400">{t("vllm.warningsTitle")}</div>
                     <ul className="mt-2 space-y-1.5">
                       {rec.warnings.map((w, idx) => (
-                        <li key={idx} className="flex items-start gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-warn ring-1 ring-amber-500/20">
+                        <li key={idx} className="flex items-start gap-2 rounded-lg bg-warn/10 px-3 py-2 text-xs text-warn ring-1 ring-warn/20">
                           <span aria-hidden>⚠</span>
                           <span>{t(w.key, w.vars)}</span>
                         </li>

@@ -174,7 +174,7 @@ export function GpuFit({
         className={
           "gpu-card rounded-xl p-2.5 text-left ring-1 transition " +
           (overBudget
-            ? "ring-rose-500/50 bg-rose-500/10"
+            ? "ring-bad/50 bg-bad/10"
             : g.id === gpuId
               ? "ring-brand-500/60 bg-brand-600/10"
               : "ring-white/10 bg-ink-850/40 hover:bg-white/5")

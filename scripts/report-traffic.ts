@@ -65,17 +65,17 @@ function render(r: Report, note: string): string {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LLMScale — traffic report</title>
 <style>
-  :root{--void:#090b10;--card:#14171f;--inset:#1b1f2a;--well:#232834;--line:#333a49;
-    --indigo:#5d5fef;--green:#00e096;--fg:#e7e9ef;--mut:#a1a8b8;--dim:#868ea0}
+  :root{--void:#0e1013;--card:#16181d;--inset:#1d2026;--well:#262a31;--line:#353a44;
+    --cobalt:#4d8bff;--green:#3dc28c;--fg:#e4e7ec;--mut:#a1a7b2;--dim:#8a919d}
   *{box-sizing:border-box}
   body{margin:0;padding:2rem 1.25rem 4rem;background:
-    radial-gradient(1100px 620px at 18% -14%,rgba(93,95,239,.1),transparent 62%),var(--void);
+    radial-gradient(1100px 620px at 18% -14%,rgba(77,139,255,.08),transparent 62%),var(--void);
     color:var(--fg);font:400 14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     -webkit-font-smoothing:antialiased}
   main{max-width:1100px;margin:0 auto}
   h1{font-size:1.875rem;font-weight:700;line-height:1;margin:0 0 .25rem}
   .sub{color:var(--mut);margin:0 0 1.5rem}
-  .note{background:rgba(93,95,239,.1);border:1px solid rgba(93,95,239,.35);
+  .note{background:rgba(77,139,255,.08);border:1px solid rgba(93,95,239,.35);
     border-radius:.75rem;padding:.625rem .875rem;color:var(--mut);margin:0 0 1.5rem;font-size:0.875rem}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
   .card{background:rgba(20,23,31,.7);border:1px solid rgba(255,255,255,.1);border-radius:1rem;
@@ -92,7 +92,7 @@ function render(r: Report, note: string): string {
   ol.bars li{display:grid;grid-template-columns:minmax(90px,10rem) 1fr auto;align-items:center;gap:.625rem}
   .k{font-size:0.875rem;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .track{height:.5rem;border-radius:9999px;background:var(--well);overflow:hidden}
-  .fill{display:block;height:100%;border-radius:9999px;background:var(--indigo)}
+  .fill{display:block;height:100%;border-radius:9999px;background:var(--cobalt)}
   .v{font-size:.75rem;color:var(--mut);font-variant-numeric:tabular-nums}
   .v small{color:var(--dim)}
   .empty{color:var(--dim);font-size:0.875rem;margin:0}

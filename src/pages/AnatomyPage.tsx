@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { BYTES_PER_GIB, DTYPE_BYTES, kvBytesPerToken, type ModelArch } from "../lib/calc";
 import { fetchAnatomy, tierOf, type Anatomy, type DtypeTier } from "../lib/anatomy";
 import { useLang } from "../lib/i18n";
-import { AMBER, BLUE, GREEN, GREY, INDIGO, PURPLE, RED } from "../lib/palette";
+import { AMBER, BLUE, COBALT, GREEN, GREY, PURPLE, RED } from "../lib/palette";
 import { formatGiB, formatInt, formatParams } from "../lib/format";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Donut, HBars, LineChart, type DonutSeg } from "../components/charts";
@@ -13,7 +13,7 @@ const DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct";
 
 const TIER_COLOR: Record<DtypeTier, string> = {
   full: BLUE,
-  half: INDIGO,
+  half: COBALT,
   fp8: AMBER,
   int8: RED,
   int4: PURPLE,
@@ -153,7 +153,7 @@ function ParamCard({ a }: { a: Anatomy }) {
   const ffnLabel = d.ffnLabel === "experts" ? t("anatomy.params.experts") : t("anatomy.params.mlp");
   const segs: DonutSeg[] = [
     { label: t("anatomy.params.embeddings"), value: d.embeddings, color: GREEN, sub: formatParams(d.embeddings) },
-    { label: t("anatomy.params.attention"), value: d.attention, color: INDIGO, sub: formatParams(d.attention) },
+    { label: t("anatomy.params.attention"), value: d.attention, color: COBALT, sub: formatParams(d.attention) },
     { label: ffnLabel, value: d.ffn, color: AMBER, sub: formatParams(d.ffn) },
   ].filter((s) => s.value > 0);
 
@@ -177,7 +177,7 @@ function PrecisionCard({ a }: { a: Anatomy }) {
   const bars = rows.map((b) => {
     const gib = (p * b.bytes) / BYTES_PER_GIB;
     const native = a.weightDtype ? b.tiers.includes(tierOf(a.weightDtype)) : false;
-    return { label: b.label, value: gib, valueLabel: formatGiB(gib), color: INDIGO, highlight: native };
+    return { label: b.label, value: gib, valueLabel: formatGiB(gib), color: COBALT, highlight: native };
   });
 
   return (
@@ -213,9 +213,9 @@ function KvCard({ a }: { a: Anatomy }) {
   const series = gqa
     ? [
         { points: mhaSeries, color: GREY, dashed: true },
-        { points: gqaSeries, color: INDIGO },
+        { points: gqaSeries, color: COBALT },
       ]
-    : [{ points: gqaSeries, color: INDIGO }];
+    : [{ points: gqaSeries, color: COBALT }];
   const ticks = [0, maxCtx / 2, maxCtx];
   const fmtX = (x: number) => (x >= 1024 ? `${Math.round(x / 1024)}k` : String(Math.round(x)));
 
@@ -225,7 +225,7 @@ function KvCard({ a }: { a: Anatomy }) {
         <h3 className="text-sm font-semibold tracking-tight text-white">{t("anatomy.kv.title")}</h3>
         <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-4 rounded-full" style={{ backgroundColor: INDIGO }} />
+            <span className="h-2 w-4 rounded-full" style={{ backgroundColor: COBALT }} />
             {t("anatomy.kv.gqaLegend")}
           </span>
           {gqa && (

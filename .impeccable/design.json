@@ -1,112 +1,112 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-05T07:30:00.000Z",
+  "generatedAt": "2026-10-14T00:00:00.000Z",
   "title": "Design System: LLMScale",
   "extensions": {
     "colorMeta": {
-      "signal-indigo": {
+      "signal-cobalt": {
         "role": "primary",
-        "displayName": "Signal Indigo",
-        "canonical": "oklch(56.8% 0.211 276.7)",
+        "displayName": "Signal Cobalt",
+        "canonical": "oklch(65.4% 0.184 261.6)",
         "tonalRamp": [
-          "#180062",
-          "#200086",
-          "#3115ab",
-          "#4842d0",
-          "#6366f7",
-          "#818aff",
-          "#a7b5ff",
-          "#ccddff"
+          "#03102c",
+          "#0d244f",
+          "#1c3c79",
+          "#2c57a6",
+          "#3e73d6",
+          "#5d95fd",
+          "#9bbefe",
+          "#d2e2fe"
         ]
       },
       "readout-green": {
         "role": "secondary",
         "displayName": "Readout Green",
-        "canonical": "oklch(80.0% 0.180 160.5)",
+        "canonical": "oklch(72.9% 0.140 162.0)",
         "tonalRamp": [
-          "#001a00",
-          "#003800",
-          "#005819",
-          "#007938",
-          "#009b57",
-          "#00bf77",
-          "#26ea9f",
-          "#65ffc5"
+          "#02160d",
+          "#0a2e1f",
+          "#144b34",
+          "#1f6a4b",
+          "#2a8b63",
+          "#37b17f",
+          "#68d7a5",
+          "#a0f7cc"
         ]
       },
       "caution-amber": {
         "role": "tertiary",
         "displayName": "Caution Amber",
-        "canonical": "oklch(87.9% 0.153 91.6)",
+        "canonical": "oklch(87.0% 0.156 87.8)",
         "tonalRamp": [
-          "#210000",
-          "#3e1900",
-          "#5d3700",
-          "#7d5700",
-          "#9f7700",
-          "#c19900",
-          "#ecc339",
-          "#ffeb68"
+          "#181001",
+          "#2e250e",
+          "#4a3e21",
+          "#6b582a",
+          "#8e7432",
+          "#b69439",
+          "#e4b841",
+          "#fede90"
         ]
       },
-      "fault-rose": {
+      "fault-red": {
         "role": "tertiary",
-        "displayName": "Fault Rose",
-        "canonical": "oklch(81.0% 0.106 11.6)",
+        "displayName": "Fault Red",
+        "canonical": "oklch(69.3% 0.167 22.4)",
         "tonalRamp": [
-          "#290002",
-          "#4a0016",
-          "#6c2231",
-          "#8f414e",
-          "#b3616d",
-          "#d7828d",
-          "#ffaab5",
-          "#ffd1dc"
+          "#230708",
+          "#421616",
+          "#682829",
+          "#903c3c",
+          "#bb5051",
+          "#ec6868",
+          "#ffa09c",
+          "#fed6d4"
         ]
       },
       "control-edge": {
         "role": "neutral",
         "displayName": "Control Edge",
-        "canonical": "oklch(53.5% 0.035 266.9)",
+        "canonical": "oklch(55.8% 0.025 265.6)",
         "tonalRamp": [
-          "#050a1a",
-          "#1c2435",
-          "#373f53",
-          "#555d72",
-          "#747d93",
-          "#959eb5",
-          "#bdc7df",
-          "#e4eeff"
+          "#0f1217",
+          "#23262e",
+          "#3b404a",
+          "#555b67",
+          "#707786",
+          "#9298a5",
+          "#b9bec9",
+          "#dde1ea"
         ]
       },
       "ink-void": {
         "role": "neutral",
         "displayName": "Ink Void",
-        "canonical": "#090b10",
+        "canonical": "#0e1013",
         "tonalRamp": [
-          "#090b10",
-          "#14171f",
-          "#1b1f2a",
-          "#232834",
-          "#333a49",
-          "#868ea0",
-          "#c3c8d4",
-          "#e7e9ef"
+          "#0e1013",
+          "#16181d",
+          "#1d2026",
+          "#262a31",
+          "#353a44",
+          "#8a919d",
+          "#c1c6cf",
+          "#e4e7ec"
         ]
       },
       "text-primary": {
         "role": "neutral",
         "displayName": "Instrument White",
-        "canonical": "oklch(93.4% 0.008 271.3)",
+        "canonical": "oklch(92.7% 0.007 260.7)",
         "tonalRamp": [
-          "#0a0b0f",
-          "#222428",
-          "#3e4044",
-          "#5c5d62",
-          "#7b7d82",
-          "#9c9ea4",
-          "#c5c7cd",
-          "#eceef4"
+          "#111212",
+          "#262627",
+          "#3f4041",
+          "#5a5b5c",
+          "#76777a",
+          "#96989b",
+          "#bbbec2",
+          "#dee1e6"
         ]
       }
     },
@@ -144,8 +144,8 @@
       },
       {
         "name": "signal-glow",
-        "value": "0 10px 15px -3px rgb(74 76 212 / 0.3)",
-        "purpose": "Under a solid indigo primary action only, so the committing button sits slightly forward."
+        "value": "0 10px 15px -3px rgb(31 99 230 / 0.3)",
+        "purpose": "Under a solid cobalt primary action only, so the committing button sits slightly forward."
       },
       {
         "name": "glass-pane",
@@ -181,9 +181,9 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The one committing action on a surface. Solid indigo, white text, soft indigo glow.",
+      "description": "The one committing action on a surface. Solid cobalt, white text, soft cobalt glow.",
       "html": "<button class=\"ds-btn-primary\">Share this estimate</button>",
-      "css": ".ds-btn-primary { background: var(--color-brand-600, #4a4cd4); color: var(--color-onbrand, #fff); border: none; border-radius: 0.75rem; padding: 0.375rem 0.75rem; font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; box-shadow: 0 10px 15px -3px rgb(74 76 212 / 0.3); cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: var(--color-brand-500, #5d5fef); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-brand-500, #5d5fef); outline-offset: 2px; }"
+      "css": ".ds-btn-primary { background: var(--color-brand-600, #1f63e6); color: var(--color-onbrand, #fff); border: none; border-radius: 0.75rem; padding: 0.375rem 0.75rem; font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; box-shadow: 0 10px 15px -3px rgb(31 99 230 / 0.3); cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: var(--color-brand-500, #4d8bff); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-brand-500, #4d8bff); outline-offset: 2px; }"
     },
     {
       "name": "Segmented Control",
@@ -191,7 +191,7 @@
       "refersTo": "segmented-option-active",
       "description": "The signature control. Any short mutually-exclusive choice — precision, dtype, language, theme — is this, not a dropdown.",
       "html": "<div class=\"ds-seg\"><button class=\"ds-seg-opt ds-seg-on\">BF16</button><button class=\"ds-seg-opt\">FP8</button><button class=\"ds-seg-opt\">INT8</button></div>",
-      "css": ".ds-seg { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; border-radius: 0.75rem; background: var(--color-ink-850, #1b1f2a); padding: 0.25rem; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-seg-opt { border: none; background: transparent; color: var(--color-slate-300, #c3c8d4); border-radius: 0.5rem; padding: 0.25rem 0.625rem; font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-seg-opt:hover { background: rgb(255 255 255 / 0.05); } .ds-seg-on, .ds-seg-on:hover { background: var(--color-brand-600, #4a4cd4); color: var(--color-onbrand, #fff); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); } .ds-seg-opt:focus-visible { outline: 2px solid var(--color-brand-500, #5d5fef); outline-offset: 1px; }"
+      "css": ".ds-seg { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; border-radius: 0.75rem; background: var(--color-ink-850, #1d2026); padding: 0.25rem; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-seg-opt { border: none; background: transparent; color: var(--color-slate-300, #c1c6cf); border-radius: 0.5rem; padding: 0.25rem 0.625rem; font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-seg-opt:hover { background: rgb(255 255 255 / 0.05); } .ds-seg-on, .ds-seg-on:hover { background: var(--color-brand-600, #1f63e6); color: var(--color-onbrand, #fff); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); } .ds-seg-opt:focus-visible { outline: 2px solid var(--color-brand-500, #4d8bff); outline-offset: 1px; }"
     },
     {
       "name": "Card",
@@ -199,7 +199,7 @@
       "refersTo": "card",
       "description": "Every major surface. Raised by tone, bounded by a hairline, carrying the one ambient shadow.",
       "html": "<div class=\"ds-card\"><div class=\"ds-card-title\"><span class=\"ds-step\">1</span><h2>Choose a model</h2></div><p class=\"ds-card-body\">Model architecture resolves live from the Hugging Face Hub.</p></div>",
-      "css": ".ds-card { background: color-mix(in srgb, var(--color-ink-900, #14171f) 70%, transparent); border: 1px solid rgb(255 255 255 / 0.1); border-radius: 1rem; padding: 1rem; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3); backdrop-filter: blur(4px); } .ds-card-title { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 1rem; } .ds-card-title h2 { margin: 0; font: 600 1rem/1.5rem ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--color-fg, #e7e9ef); } .ds-step { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; flex-shrink: 0; border-radius: 9999px; background: color-mix(in srgb, var(--color-brand-600, #4a4cd4) 30%, transparent); color: var(--color-brand-400, #9698f7); font: 700 0.75rem/1 ui-sans-serif, system-ui, sans-serif; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500, #5d5fef) 40%, transparent); } .ds-card-body { margin: 0; font: 400 0.875rem/1.5 ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-400, #a1a8b8); }"
+      "css": ".ds-card { background: color-mix(in srgb, var(--color-ink-900, #16181d) 70%, transparent); border: 1px solid rgb(255 255 255 / 0.1); border-radius: 1rem; padding: 1rem; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3); backdrop-filter: blur(4px); } .ds-card-title { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 1rem; } .ds-card-title h2 { margin: 0; font: 600 1rem/1.5rem ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.015em; color: var(--color-fg, #e4e7ec); } .ds-step { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; flex-shrink: 0; border-radius: 9999px; background: color-mix(in srgb, var(--color-brand-600, #1f63e6) 30%, transparent); color: var(--color-brand-400, #7eaaff); font: 700 0.75rem/1 ui-sans-serif, system-ui, sans-serif; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500, #4d8bff) 40%, transparent); } .ds-card-body { margin: 0; font: 400 0.875rem/1.5 ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-400, #a1a7b2); }"
     },
     {
       "name": "Stat Tile",
@@ -207,7 +207,7 @@
       "refersTo": "stat-tile",
       "description": "The unit the results side is built from: uppercase caption, headline value, optional quiet sub-line.",
       "html": "<div class=\"ds-stat\"><div class=\"ds-stat-label\">KV cache (total)</div><div class=\"ds-stat-value ds-stat-accent\">2.00 GiB</div><div class=\"ds-stat-sub\">at 8k ctx</div></div>",
-      "css": ".ds-stat { background: color-mix(in srgb, var(--color-ink-850, #1b1f2a) 60%, transparent); border-radius: 0.75rem; padding: 0.75rem; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05); } .ds-stat-label { font: 400 0.6875rem/1rem ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.025em; color: var(--color-slate-400, #a1a8b8); } .ds-stat-value { margin-top: 0.125rem; font: 600 1.125rem/1.5rem ui-sans-serif, system-ui, sans-serif; color: var(--color-fg, #e7e9ef); } .ds-stat-accent { color: var(--color-accent-400, #00e096); } .ds-stat-sub { font: 400 0.6875rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #868ea0); }"
+      "css": ".ds-stat { background: color-mix(in srgb, var(--color-ink-850, #1d2026) 60%, transparent); border-radius: 0.75rem; padding: 0.75rem; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05); } .ds-stat-label { font: 400 0.6875rem/1rem ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.025em; color: var(--color-slate-400, #a1a7b2); } .ds-stat-value { margin-top: 0.125rem; font: 600 1.125rem/1.5rem ui-sans-serif, system-ui, sans-serif; color: var(--color-fg, #e4e7ec); } .ds-stat-accent { color: var(--color-accent-400, #29c48a); } .ds-stat-sub { font: 400 0.6875rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #8a919d); }"
     },
     {
       "name": "Number Input",
@@ -215,7 +215,7 @@
       "refersTo": "input-number",
       "description": "Inset surface with a deliberately more visible edge than a card, because an input must announce that it is operable. Focus lights the whole field, not the text box.",
       "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Context window (tokens / sequence)</span><span class=\"ds-input\"><input type=\"text\" value=\"8192\" /><span class=\"ds-input-suffix\">tok</span></span></label>",
-      "css": ".ds-field { display: block; } .ds-field-label { display: block; margin-bottom: 0.25rem; font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.025em; color: var(--color-slate-400, #a1a8b8); } .ds-input { display: flex; align-items: center; border-radius: 0.75rem; background: var(--color-ink-850, #1b1f2a); box-shadow: inset 0 0 0 1px var(--color-control, #646d82); transition: box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-input:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500, #5d5fef) 60%, transparent); } .ds-input input { width: 100%; background: transparent; border: none; outline: none; padding: 0.5rem 0.75rem; font: 400 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; color: var(--color-fg, #e7e9ef); } .ds-input-suffix { padding-right: 0.75rem; font: 400 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #868ea0); }"
+      "css": ".ds-field { display: block; } .ds-field-label { display: block; margin-bottom: 0.25rem; font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.025em; color: var(--color-slate-400, #a1a7b2); } .ds-input { display: flex; align-items: center; border-radius: 0.75rem; background: var(--color-ink-850, #1d2026); box-shadow: inset 0 0 0 1px var(--color-control, #6d7483); transition: box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-input:focus-within { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500, #4d8bff) 60%, transparent); } .ds-input input { width: 100%; background: transparent; border: none; outline: none; padding: 0.5rem 0.75rem; font: 400 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; color: var(--color-fg, #e4e7ec); } .ds-input-suffix { padding-right: 0.75rem; font: 400 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #8a919d); }"
     },
     {
       "name": "Badge",
@@ -223,7 +223,7 @@
       "refersTo": "badge-good",
       "description": "Fully round, label typography, hairline ring in the tone's own colour. Tone is semantic: the colour states a fact about the thing it labels.",
       "html": "<span class=\"ds-badge ds-badge-good\">live Hugging Face data</span> <span class=\"ds-badge\">built-in DB</span> <span class=\"ds-badge ds-badge-bad\">doesn't fit</span>",
-      "css": ".ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.125rem 0.5rem; font: 500 0.6875rem/1rem ui-sans-serif, system-ui, sans-serif; background: rgb(255 255 255 / 0.05); color: var(--color-slate-300, #c3c8d4); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-badge-good { background: color-mix(in srgb, var(--color-accent-500, #00c886) 15%, transparent); color: var(--color-accent-400, #00e096); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent-500, #00c886) 30%, transparent); } .ds-badge-bad { background: color-mix(in srgb, #f43f5e 15%, transparent); color: var(--color-bad, #fda4af); box-shadow: inset 0 0 0 1px color-mix(in srgb, #f43f5e 30%, transparent); }"
+      "css": ".ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.125rem 0.5rem; font: 500 0.6875rem/1rem ui-sans-serif, system-ui, sans-serif; background: rgb(255 255 255 / 0.05); color: var(--color-slate-300, #c1c6cf); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-badge-good { background: color-mix(in srgb, var(--color-accent-500, #3dc28c) 15%, transparent); color: var(--color-accent-400, #29c48a); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent-500, #3dc28c) 30%, transparent); } .ds-badge-bad { background: color-mix(in srgb, #f43f5e 15%, transparent); color: var(--color-bad, #f26b6b); box-shadow: inset 0 0 0 1px color-mix(in srgb, #f43f5e 30%, transparent); }"
     },
     {
       "name": "Navigation Pill",
@@ -231,20 +231,20 @@
       "refersTo": "segmented-option-active",
       "description": "A single centred pill holding every destination, split into semantic groups by thin vertical rules: size, choose, serve, learn. It wraps whole groups rather than scrolling; below sm it folds to the current page and a Menu button that opens the groups as rows.",
       "html": "<nav class=\"ds-nav\"><div class=\"ds-nav-group\"><a class=\"ds-nav-link ds-nav-on\">VRAM Sizing</a><a class=\"ds-nav-link\">Fine-tune</a></div><span class=\"ds-nav-rule\"></span><div class=\"ds-nav-group\"><a class=\"ds-nav-link\">Task Fit</a><a class=\"ds-nav-link\">Model Anatomy</a></div><span class=\"ds-nav-rule\"></span><div class=\"ds-nav-group\"><a class=\"ds-nav-link\">LLM 101</a></div></nav>",
-      "css": ".ds-nav { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; border-radius: 0.75rem; background: var(--color-ink-850, #1b1f2a); padding: 0.25rem; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-nav-group { display: flex; align-items: center; gap: 0.25rem; } .ds-nav-rule { width: 1px; height: 1rem; margin: 0 0.25rem; background: rgb(255 255 255 / 0.15); } .ds-nav-link { border-radius: 0.5rem; padding: 0.25rem 0.625rem; font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; white-space: nowrap; color: var(--color-slate-300, #c3c8d4); text-decoration: none; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-nav-link:hover { background: rgb(255 255 255 / 0.05); } .ds-nav-on, .ds-nav-on:hover { background: var(--color-brand-600, #4a4cd4); color: var(--color-onbrand, #fff); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); }"
+      "css": ".ds-nav { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; border-radius: 0.75rem; background: var(--color-ink-850, #1d2026); padding: 0.25rem; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-nav-group { display: flex; align-items: center; gap: 0.25rem; } .ds-nav-rule { width: 1px; height: 1rem; margin: 0 0.25rem; background: rgb(255 255 255 / 0.15); } .ds-nav-link { border-radius: 0.5rem; padding: 0.25rem 0.625rem; font: 500 0.875rem/1.25rem ui-sans-serif, system-ui, sans-serif; white-space: nowrap; color: var(--color-slate-300, #c1c6cf); text-decoration: none; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-nav-link:hover { background: rgb(255 255 255 / 0.05); } .ds-nav-on, .ds-nav-on:hover { background: var(--color-brand-600, #1f63e6); color: var(--color-onbrand, #fff); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); }"
     },
     {
       "name": "Device Card",
       "kind": "custom",
       "refersTo": "card",
-      "description": "The signature component. States its own verdict before you read it: the meter is green when the model fits and rose when it does not. Selection is a ring plus a tinted fill, and aria-pressed announces it.",
+      "description": "The signature component. States its own verdict before you read it: the meter is green when the model fits and red when it does not. Selection is a ring plus a tinted fill, and aria-pressed announces it.",
       "html": "<div class=\"ds-devices\"><button class=\"ds-device ds-device-on\" aria-pressed=\"true\"><span class=\"ds-device-head\"><span class=\"ds-device-name\">H200 141GB</span><span class=\"ds-device-mem\">141GB</span></span><span class=\"ds-meter\"><span class=\"ds-meter-fill\" style=\"width:52%\"></span></span><span class=\"ds-device-note\">fits &middot; 52%</span></button><button class=\"ds-device\" aria-pressed=\"false\"><span class=\"ds-device-head\"><span class=\"ds-device-name\">A100 80GB</span><span class=\"ds-device-mem\">80GB</span></span><span class=\"ds-meter\"><span class=\"ds-meter-fill ds-meter-over\" style=\"width:100%\"></span></span><span class=\"ds-device-note\">doesn't fit</span></button></div>",
-      "css": ".ds-devices { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.5rem; } .ds-device { display: block; text-align: left; border: none; cursor: pointer; border-radius: 0.75rem; padding: 0.625rem; background: color-mix(in srgb, var(--color-ink-850, #1b1f2a) 40%, transparent); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); transition: background 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-device:hover { background: rgb(255 255 255 / 0.05); } .ds-device-on { background: color-mix(in srgb, var(--color-brand-600, #4a4cd4) 10%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500, #5d5fef) 60%, transparent); } .ds-device-head { display: flex; align-items: center; justify-content: space-between; } .ds-device-name { font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-200, #e7e9ef); } .ds-device-mem { font: 400 0.625rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #868ea0); } .ds-meter { display: block; height: 0.375rem; margin-top: 0.375rem; border-radius: 9999px; background: var(--color-ink-800, #232834); overflow: hidden; } .ds-meter-fill { display: block; height: 100%; border-radius: 9999px; background: var(--color-accent-400, #00e096); } .ds-meter-over { background: var(--color-bad, #fda4af); } .ds-device-note { display: block; margin-top: 0.25rem; font: 400 0.625rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #868ea0); }"
+      "css": ".ds-devices { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.5rem; } .ds-device { display: block; text-align: left; border: none; cursor: pointer; border-radius: 0.75rem; padding: 0.625rem; background: color-mix(in srgb, var(--color-ink-850, #1d2026) 40%, transparent); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); transition: background 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-device:hover { background: rgb(255 255 255 / 0.05); } .ds-device-on { background: color-mix(in srgb, var(--color-brand-600, #1f63e6) 10%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-brand-500, #4d8bff) 60%, transparent); } .ds-device-head { display: flex; align-items: center; justify-content: space-between; } .ds-device-name { font: 500 0.75rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-200, #e4e7ec); } .ds-device-mem { font: 400 0.625rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #8a919d); } .ds-meter { display: block; height: 0.375rem; margin-top: 0.375rem; border-radius: 9999px; background: var(--color-ink-800, #262a31); overflow: hidden; } .ds-meter-fill { display: block; height: 100%; border-radius: 9999px; background: var(--color-accent-400, #29c48a); } .ds-meter-over { background: var(--color-bad, #f26b6b); } .ds-device-note { display: block; margin-top: 0.25rem; font: 400 0.625rem/1rem ui-sans-serif, system-ui, sans-serif; color: var(--color-slate-500, #8a919d); }"
     }
   ],
   "narrative": {
     "northStar": "The Calibrated Instrument",
-    "overview": "This is a panel you trust because it shows its own tolerances. Every figure on screen is traceable to a formula the page will name if asked, and the surface it sits on is deliberately quiet so the figure is the loudest thing in view. The system reads as instrumentation rather than as an app: near-neutral surfaces stepped by luminance, hairline boundaries, and colour spent only where it carries a reading.\n\nThe colour discipline is the whole personality. Surfaces are a five-step near-neutral ink ramp — the layering model behind IBM Carbon's g100 and Material's dark theme — with saturation held near zero. An earlier version made every surface a saturated navy; the result read as one colour and left the brand indigo nowhere to land. Desaturating the surfaces is what gives the indigo and the green their meaning: when something is indigo it is interactive, when something is green it fits, and neither has to compete with the background for attention.\n\nThree themes exist and they are not three skins. Dark is the baseline the tokens are defined on. Light overrides those tokens. Glass is a material, not a colour scheme: translucent panes blurred and saturated over a fixed colour field, so what a pane shows depends on what is behind it. That difference is load-bearing — contrast in glass has to be measured against the composited result, never assumed from a token.",
+    "overview": "This is a panel you trust because it shows its own tolerances. Every figure on screen is traceable to a formula the page will name if asked, and the surface it sits on is deliberately quiet so the figure is the loudest thing in view. The system reads as instrumentation rather than as an app: near-neutral surfaces stepped by luminance, hairline boundaries, and colour spent only where it carries a reading.\n\nThe colour discipline is the whole personality. Surfaces are a five-step near-neutral ink ramp — the layering model behind IBM Carbon's g100 and Material's dark theme — with saturation held near zero. An earlier version made every surface a saturated navy; the result read as one colour and left the brand cobalt nowhere to land. Desaturating the surfaces is what gives the cobalt and the green their meaning: when something is cobalt it is interactive, when something is green it fits, and neither has to compete with the background for attention.\n\nThree themes exist and they are not three skins. Dark is the baseline the tokens are defined on. Light overrides those tokens. Glass is a material, not a colour scheme: translucent panes blurred and saturated over a fixed colour field, so what a pane shows depends on what is behind it. That difference is load-bearing — contrast in glass has to be measured against the composited result, never assumed from a token.",
     "keyCharacteristics": [
       "Near-neutral surfaces; colour reserved for signal",
       "No web fonts — the system UI stack, loaded instantly",
@@ -255,7 +255,7 @@
     "rules": [
       {
         "name": "The Signal Rule",
-        "body": "Indigo means interactive, green means fits, amber means approaching a limit, rose means over budget. A colour never appears for decoration, and never carries a second meaning on another screen.",
+        "body": "Cobalt means interactive, green means fits, amber means approaching a limit, red means over budget. A colour never appears for decoration, and never carries a second meaning on another screen.",
         "section": "colors"
       },
       {

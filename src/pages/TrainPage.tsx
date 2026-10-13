@@ -6,7 +6,7 @@ import { DRIVER_RESERVE, GPUS, GPU_CATEGORIES, usableGiB, type GpuCategory } fro
 import { estimateTraining, type LoraTarget, type TrainMode } from "../lib/train";
 import { formatGiB, formatInt, formatParams } from "../lib/format";
 import { useLang } from "../lib/i18n";
-import { AMBER, GREY, GREEN, INDIGO, PURPLE, RED } from "../lib/palette";
+import { AMBER, COBALT, GREEN, GREY, PURPLE, RED } from "../lib/palette";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, Field, SectionTitle, Segmented } from "../components/ui";
 import { AdvancedToggle, PickField, Select } from "../components/choice";
@@ -96,7 +96,7 @@ export function TrainPage() {
 
   const segments = result
     ? [
-        { key: "base", v: result.baseWeightsGiB, c: INDIGO },
+        { key: "base", v: result.baseWeightsGiB, c: COBALT },
         { key: "grads", v: result.gradientsGiB, c: GREEN },
         { key: "optim", v: result.optimizerGiB, c: PURPLE },
         { key: "act", v: result.activationsGiB, c: AMBER },

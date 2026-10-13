@@ -2,6 +2,13 @@ import { useMemo, useState } from "react";
 import { KIND_INFO, parseModelName } from "../lib/modelName";
 import { useLang } from "../lib/i18n";
 import { Card, SectionTitle } from "../components/ui";
+import { tint } from "../lib/palette";
+
+// A kind's colour is one mid-tone hex for every theme. As text it is pulled
+// toward the theme's foreground so it reads on a near-black card and a white
+// one alike; as the fill behind white text it is taken darker.
+const ink = (c: string) => `color-mix(in oklab, ${c} 58%, var(--color-fg))`;
+const solid = (c: string) => `color-mix(in oklab, ${c} 72%, black)`;
 
 const EXAMPLES = [
   "RedHatAI/Qwen3.6-35B-A3B-NVFP4",
@@ -74,8 +81,8 @@ export function DecodePage() {
                   className="rounded-md border px-2 py-1 font-mono text-sm font-semibold transition"
                   style={
                     on
-                      ? { backgroundColor: color, color: "#fff", borderColor: color }
-                      : { backgroundColor: `${color}22`, color, borderColor: `${color}55` }
+                      ? { backgroundColor: solid(color), color: "#fff", borderColor: solid(color) }
+                      : { backgroundColor: tint(color, 13), color: ink(color), borderColor: tint(color, 33) }
                   }
                 >
                   {s.text}
@@ -96,11 +103,11 @@ export function DecodePage() {
                   onMouseEnter={() => setActive(i)}
                   onMouseLeave={() => setActive(null)}
                   className="rounded-xl border bg-ink-850/40 p-3 transition"
-                  style={on ? { borderColor: info.color, backgroundColor: `${info.color}14` } : { borderColor: "transparent" }}
+                  style={on ? { borderColor: info.color, backgroundColor: tint(info.color, 8) } : { borderColor: "transparent" }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: info.color }} />
-                    <code className="font-mono text-sm font-semibold" style={{ color: info.color }}>
+                    <code className="font-mono text-sm font-semibold" style={{ color: ink(info.color) }}>
                       {tok.text}
                     </code>
                     <span className="text-xs font-medium text-slate-300">{info.title[lang]}</span>

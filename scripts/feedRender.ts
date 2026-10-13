@@ -250,7 +250,7 @@ export function postLd(ctx: RenderCtx, lang: Lang, p: FeedPost): object {
 // ── the feed's styles and script ──────────────────────────────────────────────
 // One column like a timeline: the column is the card, posts are rows in it split
 // by hairlines (DESIGN.md: rings and tone, not boxes inside boxes). Muted text
-// for everything that is not the post or a link; indigo only where you can click.
+// for everything that is not the post or a link; cobalt only where you can click.
 export const CSS = `
 .stream{max-width:38rem;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:1rem}
 .topbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:3.25rem;padding:.5rem 1rem;border-bottom:1px solid var(--line);border-radius:1rem 1rem 0 0;background:color-mix(in srgb,var(--card) 86%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}

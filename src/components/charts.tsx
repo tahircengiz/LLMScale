@@ -1,9 +1,9 @@
 // Dependency-free, theme-aware chart primitives (inline SVG / HTML).
-// Shapes use explicit hex colours; text/grid use Tailwind fill-*/stroke-*
+// Shapes take colours from src/lib/palette.ts (per-theme CSS variables); text/grid use Tailwind fill-*/stroke-*
 // utilities so they flip with the light/dark CSS variables.
 
 import type { ReactNode } from "react";
-import { CATEGORICAL } from "../lib/palette";
+import { CATEGORICAL, tint } from "../lib/palette";
 
 export interface DonutSeg {
   label: string;
@@ -214,7 +214,7 @@ export function GqaDiagram({ attnHeads, kvHeads }: { attnHeads: number; kvHeads:
         <div
           key={g}
           className="flex items-center gap-1 rounded-lg p-1.5 ring-1 ring-white/10"
-          style={{ backgroundColor: `${GROUP_COLORS[g % GROUP_COLORS.length]}14` }}
+          style={{ backgroundColor: tint(GROUP_COLORS[g % GROUP_COLORS.length], 8) }}
         >
           <span
             className="h-4 w-4 rounded-sm"
@@ -228,7 +228,7 @@ export function GqaDiagram({ attnHeads, kvHeads }: { attnHeads: number; kvHeads:
                 key={q}
                 className="h-4 w-2 rounded-[2px]"
                 title="query head"
-                style={{ backgroundColor: `${GROUP_COLORS[g % GROUP_COLORS.length]}88` }}
+                style={{ backgroundColor: tint(GROUP_COLORS[g % GROUP_COLORS.length], 53) }}
               />
             ))}
           </div>

@@ -1,37 +1,52 @@
 @import "tailwindcss";
 
-/* Palette reference: the "Dabang" dashboard — vivid indigo/violet primary,
- * navy ink, grey-blue muted text, soft pastel status hues. Data-viz colours
- * that must be inlined live in `src/lib/palette.ts`. */
+/* Palette: "Kobalt" — neutral graphite surfaces, one cobalt blue for anything
+ * interactive, and a green / amber / red signal set tuned to stay apart under
+ * red-green colour blindness. The lineage is the observability consoles and
+ * IBM Carbon that infrastructure teams read daily. Data-viz colours live below
+ * as --chart-* variables, one set per theme, and src/lib/palette.ts names them. */
 @theme {
-  --color-ink-950: #090b10;
-  --color-ink-900: #14171f;
-  --color-ink-850: #1b1f2a;
-  --color-ink-800: #232834;
-  --color-ink-700: #333a49;
-  --color-brand-400: #9698f7;
-  --color-brand-500: #5d5fef;
-  --color-brand-600: #4a4cd4;
-  --color-accent-400: #00e096;
-  --color-accent-500: #00c886;
+  --color-ink-950: #0e1013;
+  --color-ink-900: #16181d;
+  --color-ink-850: #1d2026;
+  --color-ink-800: #262a31;
+  --color-ink-700: #353a44;
+  --color-brand-400: #7eaaff;
+  --color-brand-500: #4d8bff;
+  --color-brand-600: #1f63e6;
+  --color-accent-400: #29c48a;
+  --color-accent-500: #3dc28c;
   /* Semantic warn / bad text — flip with the theme so badges stay readable. */
-  --color-warn: #fcd34d;
-  --color-bad: #fda4af;
+  --color-warn: #ffcd45;
+  --color-bad: #f26b6b;
   /* Boundary of an interactive control — WCAG 1.4.11 asks for 3:1 against the
    * control's own fill and the surface behind it. Card edges stay subtle. */
-  --color-control: #646d82;
+  --color-control: #6d7483;
   /* Muted text ramp — lifted so sub-labels clear 4.5:1 on a card surface. */
-  --color-slate-300: #c3c8d4;
-  --color-slate-400: #a1a8b8;
-  --color-slate-500: #868ea0;
+  --color-slate-300: #c1c6cf;
+  --color-slate-400: #a1a7b2;
+  --color-slate-500: #8a919d;
   /* Primary foreground (headings/body) — flips with the theme. */
-  --color-fg: #e7e9ef;
+  --color-fg: #e4e7ec;
   /* Always-white text that sits on a solid brand button. */
   --color-onbrand: #ffffff;
 }
 
 :root {
   color-scheme: dark;
+  /* Chart series, dark theme. Each clears 3:1 on the card and the meter track. */
+  --chart-cobalt: #4d8bff;
+  --chart-cobalt-soft: #a6c8ff;
+  --chart-green: #3dc28c;
+  --chart-green-deep: #24a148;
+  --chart-amber: #fdce4e;
+  --chart-orange: #ff832b;
+  --chart-red: #dd5654;
+  --chart-purple: #a56eff;
+  --chart-purple-deep: #8a3ffc;
+  --chart-blue: #33b1ff;
+  --chart-teal: #08bdba;
+  --chart-grey: #8b919c;
 }
 
 /* #root arrives holding the page prerendered at build time, in its URL's language
@@ -44,7 +59,7 @@
 /* Dark surfaces follow the layering model used by IBM Carbon (g100) and
  * Material's dark theme: near-neutral greys stepped by luminance, with colour
  * reserved for accents. Keeping every surface a saturated navy made the whole
- * UI read as one colour and left no room for the brand indigo to register. */
+ * UI read as one colour and left no room for the brand colour to register. */
 
 /* Light theme: override the design tokens. Because every utility references
  * these CSS variables, surfaces, text, borders and insets all flip with no
@@ -52,23 +67,39 @@
  * goes dark in light mode; solid brand buttons use --color-onbrand instead. */
 .light {
   color-scheme: light;
-  --color-ink-950: #eaeef6;
+  --color-ink-950: #eef1f5;
   --color-ink-900: #ffffff;
-  --color-ink-850: #f4f6fb;
-  --color-ink-800: #e9edf6;
-  --color-ink-700: #dce1ee;
-  --color-white: #151d48;
-  --color-fg: #151d48;
-  --color-slate-100: #151d48;
-  --color-slate-200: #262e52;
-  --color-slate-300: #39405c;
-  --color-slate-400: #555b73;
-  --color-slate-500: #6b7188;
-  --color-brand-400: #4a4cd4;
-  --color-accent-400: #0b7d57;
-  --color-warn: #8a5a06;
-  --color-bad: #b3123c;
-  --color-control: #7d8494;
+  --color-ink-850: #f5f7fa;
+  --color-ink-800: #eaedf2;
+  --color-ink-700: #d9dee6;
+  --color-white: #121620;
+  --color-fg: #121620;
+  --color-slate-100: #121620;
+  --color-slate-200: #232935;
+  --color-slate-300: #343a46;
+  --color-slate-400: #4a515e;
+  --color-slate-500: #5c6471;
+  --color-brand-400: #0a47b0;
+  --color-brand-500: #0f62fe;
+  --color-brand-600: #0f5be0;
+  --color-accent-400: #0b6e4a;
+  --color-accent-500: #0a8f62;
+  --color-warn: #735800;
+  --color-bad: #be212d;
+  --color-control: #7d8593;
+  /* Chart series, light theme: darker than dark's so each still clears 3:1 on white. */
+  --chart-cobalt: #0f62fe;
+  --chart-cobalt-soft: #4589ff;
+  --chart-green: #0a8f62;
+  --chart-green-deep: #0e6027;
+  --chart-amber: #977502;
+  --chart-orange: #ba4e00;
+  --chart-red: #b63135;
+  --chart-purple: #8a3ffc;
+  --chart-purple-deep: #6929c4;
+  --chart-blue: #0072c3;
+  --chart-teal: #007d79;
+  --chart-grey: #6f7682;
 }
 
 html,
@@ -81,7 +112,7 @@ body {
   margin: 0;
   /* One quiet wash, not two competing ones — the cards carry the colour. */
   background:
-    radial-gradient(1100px 620px at 18% -14%, rgba(93, 95, 239, 0.1), transparent 62%),
+    radial-gradient(1100px 620px at 18% -14%, rgba(77, 139, 255, 0.08), transparent 62%),
     var(--color-ink-950);
   color: var(--color-fg);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
@@ -105,7 +136,7 @@ input[type="range"]::-webkit-slider-thumb {
   height: 18px;
   border-radius: 9999px;
   background: var(--color-brand-500);
-  border: 2px solid #c5c6fa;
+  border: 2px solid #a6c8ff;
   cursor: pointer;
 }
 input[type="range"]::-moz-range-thumb {
@@ -113,7 +144,7 @@ input[type="range"]::-moz-range-thumb {
   height: 18px;
   border-radius: 9999px;
   background: var(--color-brand-500);
-  border: 2px solid #c5c6fa;
+  border: 2px solid #a6c8ff;
   cursor: pointer;
 }
 
@@ -151,47 +182,62 @@ input[type="number"] {
  *
  * The muted text ramp is darker here than in the light theme, and the field's
  * peak alpha is capped, because the two together decide contrast. The binding
- * case is the header — the thinnest pane, 46% white — sitting over the indigo
- * blob. Measured by compositing each blob under each surface's own filter, the
- * worst muted-text ratio across every blob/surface pair is 4.76:1 and body text
- * is 9.4:1. The light theme's #6b7188 would read 4.0:1 in that same spot, which
- * is why this ramp is darker. Blur only averages the field, so these are the
- * conservative bounds rather than the typical case. Re-measure before making
- * any pane thinner or any blob stronger.
+ * case is the header — the thinnest pane, 46% white — sitting over the cobalt
+ * blob. Measured by compositing each blob at its peak under each surface's own
+ * filter (sRGB and linear, the worse kept), the worst muted-text ratio across
+ * every blob/surface pair is 5.89:1 and body text is 11.2:1; the signal text
+ * (green, amber, red) bottoms out at 4.56:1 and brand-400 at 4.95:1. Blur only
+ * averages the field, so these are the conservative bounds rather than the
+ * typical case. Re-measure before making any pane thinner or any blob stronger.
  *
- * brand-400 is darker here than in the light theme for the same reason: it
- * paints the numbered step badges at 12px over their own tinted disc, where
- * the light theme's #4a4cd4 measures 4.47:1 — just under the bar. #3b39ba
- * reads 4.82:1 on the same badge. */
+ * brand-400 and the signal colours are darker here than in the light theme for
+ * the same reason: translucency over the field eats the margin the light
+ * theme's values have on white. The chart series get their own darker set. */
 .glass {
   color-scheme: light;
-  --color-ink-950: #dfe6fa;
+  --color-ink-950: #e2e8f2;
   --color-ink-900: #ffffff;
-  --color-ink-850: #f2f5fd;
-  --color-ink-800: #e8ecf8;
-  --color-ink-700: #cfd7ee;
-  --color-white: #101736;
-  --color-fg: #101736;
-  --color-slate-100: #101736;
-  --color-slate-200: #1e2750;
-  --color-slate-300: #333c68;
-  --color-slate-400: #3e4668;
-  --color-slate-500: #434b6e;
-  --color-brand-400: #3b39ba;
-  --color-accent-400: #0a6f4d;
-  --color-warn: #7a4f05;
-  --color-bad: #a30f36;
-  --color-control: #737a99;
+  --color-ink-850: #f2f5fa;
+  --color-ink-800: #e7ecf4;
+  --color-ink-700: #ccd5e3;
+  --color-white: #0d1422;
+  --color-fg: #0d1422;
+  --color-slate-100: #0d1422;
+  --color-slate-200: #1c2538;
+  --color-slate-300: #29324a;
+  --color-slate-400: #333d58;
+  --color-slate-500: #39445f;
+  --color-brand-400: #0946b8;
+  --color-brand-500: #0f62fe;
+  --color-brand-600: #0f5be0;
+  --color-accent-400: #03553a;
+  --color-accent-500: #046443;
+  --color-warn: #5a4505;
+  --color-bad: #ad011e;
+  --color-control: #6e7990;
+  /* Chart series, glass: measured on the card composited over the worst blob. */
+  --chart-cobalt: #0b55d9;
+  --chart-cobalt-soft: #2858c4;
+  --chart-green: #046443;
+  --chart-green-deep: #0b4f22;
+  --chart-amber: #906f02;
+  --chart-orange: #9a3f00;
+  --chart-red: #a92229;
+  --chart-purple: #7330e0;
+  --chart-purple-deep: #5a22ad;
+  --chart-blue: #00639e;
+  --chart-teal: #00625f;
+  --chart-grey: #5c636e;
 }
 
 /* The colour field the panes refract. Fixed so it does not slide under scroll. */
 .glass body {
   background:
-    radial-gradient(46% 42% at 8% 2%, rgba(99, 102, 241, 0.72) 0%, transparent 60%),
-    radial-gradient(40% 40% at 96% 6%, rgba(34, 211, 238, 0.68) 0%, transparent 62%),
-    radial-gradient(44% 44% at 84% 96%, rgba(167, 139, 250, 0.72) 0%, transparent 60%),
-    radial-gradient(38% 38% at 6% 92%, rgba(45, 212, 191, 0.66) 0%, transparent 60%),
-    radial-gradient(34% 30% at 50% 46%, rgba(244, 114, 182, 0.4) 0%, transparent 66%),
+    radial-gradient(46% 42% at 8% 2%, rgba(47, 107, 255, 0.55) 0%, transparent 60%),
+    radial-gradient(40% 40% at 96% 6%, rgba(111, 179, 255, 0.52) 0%, transparent 62%),
+    radial-gradient(44% 44% at 84% 96%, rgba(19, 176, 170, 0.42) 0%, transparent 60%),
+    radial-gradient(38% 38% at 6% 92%, rgba(142, 166, 212, 0.5) 0%, transparent 60%),
+    radial-gradient(34% 30% at 50% 46%, rgba(169, 212, 255, 0.35) 0%, transparent 66%),
     var(--color-ink-950);
   background-attachment: fixed;
 }
@@ -274,15 +320,15 @@ input[type="number"] {
 }
 
 /* Selected device card, glass only. The shared ring inverts on a pale pane:
- * `ring-white/10` resolves to a dark hairline reading 3.40:1, while the selected
- * `ring-brand-500/60` washes out to 2.07:1 — so every unselected card was
- * outlined more strongly than the selected one, and the 10% brand fill separated
- * them by 1.02:1, which is nothing. A 2px opaque ring plus a fill that carries
- * some of the state fixes both; dark and light are untouched, where the same
- * classes already read correctly. */
+ * `ring-white/10` resolves to a dark hairline, while the selected
+ * `ring-brand-500/60` washes out (measured with the earlier indigo at 3.40:1
+ * against 2.07:1 — the inversion belongs to the pale pane, not to the hue), so
+ * every unselected card was outlined more strongly than the selected one. A 2px
+ * opaque ring plus a fill that carries some of the state fixes both; dark and
+ * light are untouched, where the same classes already read correctly. */
 .glass .gpu-card[aria-pressed="true"] {
   box-shadow: 0 0 0 2px var(--color-brand-400);
-  background: rgba(59, 57, 186, 0.16);
+  background: color-mix(in srgb, var(--color-brand-400) 14%, transparent);
 }
 
 /* A selected device the model has outgrown stays in the visible grid, so the
@@ -290,5 +336,5 @@ input[type="number"] {
  * one. Later rule, same specificity — this wins. */
 .glass .gpu-card[data-over-budget="true"] {
   box-shadow: 0 0 0 2px var(--color-bad);
-  background: rgba(250, 90, 125, 0.14);
+  background: color-mix(in srgb, var(--chart-red) 12%, transparent);
 }

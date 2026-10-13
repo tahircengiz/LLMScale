@@ -1,35 +1,46 @@
 // Single source of truth for data-visualisation colours.
 //
-// Palette taken from the "Dabang" dashboard reference: a vivid indigo/violet
-// primary, soft pastel status hues and a navy/grey-blue text ramp. Surface,
-// text and border colours live in `src/index.css` as CSS-variable design
-// tokens; this file only covers the values that must be inlined (SVG fills,
-// canvas strokes, inline bar styles) where a Tailwind utility can't be used.
+// Palette: "Kobalt" — a cobalt interactive blue on neutral graphite, in the line
+// of IBM Carbon and the observability consoles infrastructure teams read daily.
+// Every value here is a CSS variable, defined per theme in `src/index.css`, so a
+// series keeps 3:1 against the card in dark, light and glass alike; a single hex
+// cannot do that on both a near-black card and a white one. Surface, text and
+// border colours stay Tailwind tokens in index.css; this file covers the values
+// that must be inlined (SVG fills, canvas strokes, inline bar styles).
 
-/** Primary indigo/violet — headline series, "weights", attention. */
-export const INDIGO = "#5d5fef";
-/** Lighter indigo, for a secondary series next to INDIGO. */
-export const INDIGO_SOFT = "#8b8cf5";
-/** Green — good/fits, KV cache, embeddings. */
-export const GREEN = "#00e096";
-/** Slightly deeper green for "very good" on light surfaces. */
-export const GREEN_DEEP = "#3cd856";
+/** Cobalt — headline series, "weights", attention. Also the interactive colour. */
+export const COBALT = "var(--chart-cobalt)";
+/** Lighter cobalt, for a secondary series next to COBALT. */
+export const COBALT_SOFT = "var(--chart-cobalt-soft)";
+/** Green — good/fits, KV cache, embeddings. Leans blue so it stays apart from RED under red-green colour blindness. */
+export const GREEN = "var(--chart-green)";
+/** Deeper green — the tier between GREEN and AMBER in a score. */
+export const GREEN_DEEP = "var(--chart-green-deep)";
 /** Amber/yellow — warnings, activation, FP8. */
-export const AMBER = "#f5c33b";
+export const AMBER = "var(--chart-amber)";
 /** Orange — secondary warm accent. */
-export const ORANGE = "#ff947a";
-/** Pink/red — bad/doesn't fit, INT8. */
-export const RED = "#fa5a7d";
-/** Purple — INT4, extra categorical series. */
-export const PURPLE = "#bf83ff";
+export const ORANGE = "var(--chart-orange)";
+/** Red — bad/doesn't fit, INT8. */
+export const RED = "var(--chart-red)";
+/** Purple — INT4, optimizer state, extra categorical series. */
+export const PURPLE = "var(--chart-purple)";
 /** Strong purple for categorical charts needing more contrast. */
-export const PURPLE_DEEP = "#a700ff";
-/** Blue — full precision, informational series. */
-export const BLUE = "#0095ff";
+export const PURPLE_DEEP = "var(--chart-purple-deep)";
+/** Cyan-blue — full precision, output head, informational series. */
+export const BLUE = "var(--chart-blue)";
 /** Teal — extra categorical series. */
-export const TEAL = "#00b8d9";
-/** Neutral grey-blue — muted/other/baseline series. */
-export const GREY = "#737791";
+export const TEAL = "var(--chart-teal)";
+/** Neutral graphite — muted/other/baseline series. */
+export const GREY = "var(--chart-grey)";
+
+/** Cobalt and the three signals as text: these clear 4.5:1 where the fills above only promise 3:1. */
+export const COBALT_TEXT = "var(--color-brand-400)";
+export const GREEN_TEXT = "var(--color-accent-400)";
+export const AMBER_TEXT = "var(--color-warn)";
+export const RED_TEXT = "var(--color-bad)";
+
+/** A colour at `pct` percent over transparent — the variable-safe form of a hex alpha suffix. */
+export const tint = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
 
 /** Categorical ramp for charts with an arbitrary number of series. */
-export const CATEGORICAL = [INDIGO, PURPLE_DEEP, BLUE, GREEN, AMBER, RED, TEAL, PURPLE];
+export const CATEGORICAL = [COBALT, PURPLE_DEEP, BLUE, GREEN, AMBER, RED, TEAL, PURPLE];

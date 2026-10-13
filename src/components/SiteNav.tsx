@@ -31,7 +31,7 @@ function Chevron({ open }: { open: boolean }) {
 }
 
 /** The header nav. From sm up: the calculator as a direct link, then three menus
- *  by intent, the current page's menu solid indigo and naming the page. A menu
+ *  by intent, the current page's menu solid cobalt and naming the page. A menu
  *  opens when the pointer rests on it, or on a click or Enter; beside its list it
  *  says what the entry under the pointer or focus holds. Below sm: the current page
  *  and a Menu button that lists everything. Every link is in the DOM from the first
@@ -153,7 +153,7 @@ export function SiteNav({ page }: { page: string }) {
                 >
                   {here && currentItem ? (
                     <>
-                      <span className="text-onbrand/75">{t(m.label)}</span>
+                      <span className="text-onbrand/90">{t(m.label)}</span>
                       <span aria-hidden="true" className="text-onbrand/50">
                         ·
                       </span>

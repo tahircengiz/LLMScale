@@ -2,34 +2,40 @@
 name: LLMScale
 description: A calibrated readout for GPU memory — near-neutral surfaces, colour reserved for signal, every figure traceable to its formula.
 colors:
-  ink-void: "#090b10"
-  ink-card: "#14171f"
-  ink-inset: "#1b1f2a"
-  ink-well: "#232834"
-  ink-line: "#333a49"
-  signal-indigo: "#5d5fef"
-  signal-indigo-light: "#9698f7"
-  signal-indigo-deep: "#4a4cd4"
-  readout-green: "#00e096"
-  readout-green-deep: "#00c886"
-  caution-amber: "#fcd34d"
-  fault-rose: "#fda4af"
-  control-edge: "#646d82"
-  text-primary: "#e7e9ef"
-  text-muted-high: "#c3c8d4"
-  text-muted-mid: "#a1a8b8"
-  text-muted-low: "#868ea0"
+  ink-void: "#0e1013"
+  ink-card: "#16181d"
+  ink-inset: "#1d2026"
+  ink-well: "#262a31"
+  ink-line: "#353a44"
+  signal-cobalt: "#4d8bff"
+  signal-cobalt-light: "#7eaaff"
+  signal-cobalt-deep: "#1f63e6"
+  readout-green: "#29c48a"
+  readout-green-fill: "#3dc28c"
+  caution-amber: "#ffcd45"
+  fault-red: "#f26b6b"
+  control-edge: "#6d7483"
+  text-primary: "#e4e7ec"
+  text-muted-high: "#c1c6cf"
+  text-muted-mid: "#a1a7b2"
+  text-muted-low: "#8a919d"
   on-signal: "#ffffff"
-  chart-indigo-soft: "#8b8cf5"
-  chart-green-deep: "#3cd856"
-  chart-amber: "#f5c33b"
-  chart-orange: "#ff947a"
-  chart-rose: "#fa5a7d"
-  chart-violet: "#bf83ff"
-  chart-violet-deep: "#a700ff"
-  chart-blue: "#0095ff"
-  chart-teal: "#00b8d9"
-  chart-grey: "#737791"
+  chart-cobalt-soft: "#a6c8ff"
+  chart-green-deep: "#24a148"
+  chart-amber: "#fdce4e"
+  chart-orange: "#ff832b"
+  chart-red: "#dd5654"
+  chart-purple: "#a56eff"
+  chart-purple-deep: "#8a3ffc"
+  chart-blue: "#33b1ff"
+  chart-teal: "#08bdba"
+  chart-grey: "#8b919c"
+  wash-cobalt: "rgba(77, 139, 255, 0.08)"
+  glass-field-cobalt: "rgba(47, 107, 255, 0.55)"
+  glass-field-sky: "rgba(111, 179, 255, 0.52)"
+  glass-field-teal: "rgba(19, 176, 170, 0.42)"
+  glass-field-steel: "rgba(142, 166, 212, 0.5)"
+  glass-field-mist: "rgba(169, 212, 255, 0.35)"
 typography:
   display:
     fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
@@ -74,13 +80,13 @@ spacing:
   xl: "1.5rem"
 components:
   button-primary:
-    backgroundColor: "{colors.signal-indigo-deep}"
+    backgroundColor: "{colors.signal-cobalt-deep}"
     textColor: "{colors.on-signal}"
     rounded: "{rounded.xl}"
     padding: "0.375rem 0.75rem"
     typography: "{typography.body}"
   segmented-option-active:
-    backgroundColor: "{colors.signal-indigo-deep}"
+    backgroundColor: "{colors.signal-cobalt-deep}"
     textColor: "{colors.on-signal}"
     rounded: "{rounded.lg}"
     padding: "0.25rem 0.625rem"
@@ -117,7 +123,7 @@ components:
     padding: "0.125rem 0.5rem"
     typography: "{typography.label}"
   step-marker:
-    textColor: "{colors.signal-indigo-light}"
+    textColor: "{colors.signal-cobalt-light}"
     rounded: "{rounded.full}"
     size: "1.5rem"
     typography: "{typography.label}"
@@ -140,10 +146,16 @@ The colour discipline is the whole personality. Surfaces are a five-step
 near-neutral ink ramp — the layering model behind IBM Carbon's g100 and
 Material's dark theme — with saturation held near zero. An earlier version made
 every surface a saturated navy; the result read as one colour and left the brand
-indigo nowhere to land. Desaturating the surfaces is what gives the indigo and
-the green their meaning: when something is indigo it is interactive, when
+colour nowhere to land. Desaturating the surfaces is what gives the cobalt and
+the green their meaning: when something is cobalt it is interactive, when
 something is green it fits, and neither has to compete with the background for
 attention.
+
+The palette is called **Kobalt** (2026-10-14). It replaced a vivid indigo /
+neon-green set taken from a dashboard template, which read as generated rather
+than engineered. Kobalt's lineage is the consoles this audience already trusts —
+IBM Carbon, Grafana, Datadog: neutral graphite, one saturated blue for action,
+and a green / amber / red signal set.
 
 Three themes exist and they are not three skins. Dark is the baseline the tokens
 are defined on. Light overrides those tokens. **Glass is a material, not a
@@ -161,38 +173,40 @@ result, never assumed from a token.
 
 ## Colors
 
-A near-neutral ink ramp carrying two saturated signals — an indigo that means
-"interactive" and a green that means "fits" — plus a warm/cool pair reserved for
-caution and fault.
+A near-neutral graphite ramp carrying two saturated signals — a cobalt that
+means "interactive" and a green that means "fits" — plus amber and red reserved
+for caution and fault. Every token is redefined for light and glass in
+`src/index.css`; the values listed here are the dark baseline.
 
 ### Primary
 
-- **Signal Indigo** (`signal-indigo`): the interactive voice. Solid on the active
-  segmented option, the active nav link, and the primary action; at low alpha it
-  tints selected cards and step markers. Also the leading series in charts.
-- **Signal Indigo Light** (`signal-indigo-light`): indigo as *text* on a dark
-  surface, where the solid indigo would not clear contrast — step-marker numerals
-  and inline accents.
-- **Signal Indigo Deep** (`signal-indigo-deep`): the fill behind `on-signal`
-  white on solid buttons and active tabs.
+- **Signal Cobalt** (`signal-cobalt`): the interactive voice. Rings, the range
+  thumb, focus; at low alpha it tints selected cards. Also the leading chart
+  series (`--chart-cobalt`).
+- **Signal Cobalt Light** (`signal-cobalt-light`): cobalt as *text* — links,
+  step-marker numerals, inline accents. Darker than the fill in light (#0a47b0)
+  and glass (#0946b8), because a step numeral sits on its own 30% cobalt disc.
+- **Signal Cobalt Deep** (`signal-cobalt-deep`): the fill behind `on-signal`
+  white on solid buttons, active tabs and the current nav entry (5.3:1).
 
 ### Secondary
 
-- **Readout Green** (`readout-green`): the "it fits" colour. Fit bars, capacity
-  meters, positive stat values, KV-cache series. Never decorative — a green
-  element is asserting that something passed.
-- **Readout Green Deep** (`readout-green-deep`): the same signal where a light
-  surface needs a darker green to hold contrast.
+- **Readout Green** (`readout-green`): the "it fits" colour as text — positive
+  stat values, the live-data badge. **Readout Green Fill** (`readout-green-fill`)
+  is the same signal as a fill: fit bars, capacity meters, the KV-cache series.
+  It leans toward blue (hue ~162) so it stays apart from the fault red under
+  red-green colour blindness. Never decorative — a green element is asserting
+  that something passed.
 
 ### Tertiary
 
 - **Caution Amber** (`caution-amber`): approaching a limit; activation memory;
   the FP8 series.
-- **Fault Rose** (`fault-rose`): over budget, does not fit, INT8 series.
+- **Fault Red** (`fault-red`): over budget, does not fit, INT8 series.
 
 ### Neutral
 
-- **Ink Void** (`ink-void`): the page itself, under a single quiet indigo wash.
+- **Ink Void** (`ink-void`): the page itself, under a single quiet cobalt wash.
 - **Ink Card** (`ink-card`): the raised card surface, carried at ~70% alpha.
 - **Ink Inset** (`ink-inset`): stat tiles, inputs, segmented containers — one
   step *into* the card, not out of it.
@@ -208,15 +222,39 @@ caution and fault.
 
 ### Chart series
 
-`chart-*` tokens are the data-visualisation ramp and live in `src/lib/palette.ts`
-because they must be inlined into SVG fills, canvas strokes, and inline bar
-styles where a utility class cannot reach. They are a single source; do not
-re-declare a chart colour at a call site.
+`chart-*` colours are CSS variables (`--chart-cobalt`, `--chart-green`, …)
+defined once per theme in `src/index.css` and named in `src/lib/palette.ts`,
+which is what SVG fills, strokes and inline bar styles import. A single hex
+cannot hold 3:1 on both a near-black card and a white one, so each theme carries
+its own set: dark as listed above, darker for light, darker again for glass,
+where the card is a translucent pane over the colour field. Do not re-declare a
+chart colour at a call site, and do not append a hex alpha to one — use
+`tint(color, pct)`, which is `color-mix` and works on a variable.
+
+A fill only promises 3:1. Where a signal colour is set as *text* (a score, a
+count), use the text tokens instead — `COBALT_TEXT`, `GREEN_TEXT`, `AMBER_TEXT`,
+`RED_TEXT` — which clear 4.5:1.
+
+The model-name decoder colours its token kinds with mid-tone hues from the same
+Carbon-like family (`src/lib/modelName.ts`). As text they are mixed 58/42 with
+the theme's foreground, and as a fill behind white text they are taken darker,
+so one hex per kind reads in every theme.
+
+### Measured
+
+Every text and fill pair was measured in all three themes (glass against the
+pane composited over each blob of the field at its peak, under the pane's own
+filter): 94 of 94 pairs pass WCAG AA. In the built site, a probe that composites
+each visible text node over its real background found 0 items under the bar
+across 30 page × theme × viewport captures; the indigo palette it replaced had
+216. Fits-against-fault separation under simulated protanopia, deuteranopia and
+tritanopia (Machado 2009, OKLab ΔE) is at least 0.067. Re-measure before
+changing any of it.
 
 ### Named Rules
 
-**The Signal Rule.** Indigo means interactive, green means fits, amber means
-approaching a limit, rose means over budget. A colour never appears for
+**The Signal Rule.** Cobalt means interactive, green means fits, amber means
+approaching a limit, red means over budget. A colour never appears for
 decoration, and never carries a second meaning on another screen.
 
 **The Desaturated Surface Rule.** Surfaces stay near-neutral. The moment a
@@ -330,9 +368,9 @@ belonging to the same instrument.
 
 - **Shape:** softly rounded (`0.75rem`); small controls inside groups step down
   to `0.5rem`.
-- **Primary:** solid `signal-indigo-deep` with `on-signal` white text and a soft
-  indigo glow. Reserved for the one committing action on a surface.
-- **Hover / Focus:** a lighter indigo on solid buttons; a 5% white wash on quiet
+- **Primary:** solid `signal-cobalt-deep` with `on-signal` white text and a soft
+  cobalt glow. Reserved for the one committing action on a surface.
+- **Hover / Focus:** a lighter cobalt on solid buttons; a 5% white wash on quiet
   ones. All state changes transition over 150ms.
 - **Ghost:** no fill at rest, muted text, white-wash on hover. This is the
   default for anything that is not the primary action.
@@ -342,7 +380,7 @@ belonging to the same instrument.
 The signature control. A rounded container at the inset tone with a hairline
 ring and `0.25rem` internal padding; options sit inside it.
 
-- **Active:** solid `signal-indigo-deep`, white text, soft shadow.
+- **Active:** solid `signal-cobalt-deep`, white text, soft shadow.
 - **Idle:** muted text, transparent, 5% white wash on hover.
 - **Two sizes:** compact for header-level switches, standard inside forms.
 - **In the header** the groups keep their natural width and never wrap inside
@@ -376,7 +414,7 @@ by a shared link that is not among the options still shows, labelled as it is.
 
 - **Closed:** the input tone with the interactive ring, the value, a caret.
 - **Open:** the raised tone, a hairline ring, the list (max 18rem, scrolls), group
-  headings in caption type, the highlighted row in a 20% indigo wash, the chosen
+  headings in caption type, the highlighted row in a 20% cobalt wash, the chosen
   one bold with a check.
 - **Keyboard:** arrows move, Home and End jump, Enter or Space picks, Escape closes.
 
@@ -393,7 +431,7 @@ visitors should pick, not type.
 - **Style:** fully round, `0.125rem 0.5rem` padding, label typography, hairline
   ring in the tone's own colour.
 - **Tones:** neutral (muted text on 5% white), good (green on 15% green),
-  caution (amber), fault (rose). Tone is semantic — a chip's colour states a
+  caution (amber), fault (red). Tone is semantic — a chip's colour states a
   fact about the thing it labels.
 
 ### Cards / Containers
@@ -411,11 +449,11 @@ visitors should pick, not type.
 - **Style:** inset tone (`ink-inset`), `0.75rem` radius, ring in `control-edge` —
   a deliberately more visible edge than a card's, because an input must announce
   that it is operable.
-- **Focus:** the ring shifts to indigo at 60%, applied on the wrapper
+- **Focus:** the ring shifts to cobalt at 60%, applied on the wrapper
   (`focus-within`) so the whole field lights up rather than just the text box.
 - **Label:** uppercase, wide-tracked, muted, sitting above the control with an
   optional right-aligned hint in the quietest ramp step.
-- Number spinners are suppressed; range tracks are capsules with an indigo thumb
+- Number spinners are suppressed; range tracks are capsules with a cobalt thumb
   ringed in pale lilac.
 
 ### Navigation
@@ -424,21 +462,21 @@ A single centred pill at the inset tone, one row at every width from `sm` up and
 in both languages. The calculator — the product's core — is a direct link; after
 a thin vertical rule come three menus by intent: **Model** (understand and choose
 it), **Serve** (run it) and **Learn**. The menu holding the current page is solid
-indigo and names the page after its own name ("Serve · Serving Brief"); the
+cobalt and names the page after its own name ("Serve · Serving Brief"); the
 others are muted with a white-wash hover. A menu opens when the pointer rests on
 its trigger (90 ms), or on a click, Enter or the down arrow; moving along the row
 switches menus at once, and leaving waits 220 ms so the pointer can cross into the
 panel. The panel centres under the row: an inset-tone pane with a hairline ring
 and the deep drop shadow, in two columns. On the left each entry is its name over
-a one-line description — the current page solid indigo with white text, the entry
-under the pointer or focus an indigo tint with an indigo ring and an indigo name;
+a one-line description — the current page solid cobalt with white text, the entry
+under the pointer or focus a cobalt tint with a cobalt ring and a cobalt name;
 sections are divided by a hairline, a titled one under an uppercase caption. On
 the right a quieter well says what the entry under the pointer holds ("What
 you'll find"), defaulting to the current page or the first entry. On glass the
 panel is nearly opaque, because it lies over the page. A click elsewhere, Escape,
 or focus leaving the menu closes it. A new tool lengthens a menu, never the row.
 
-Below `sm` the pill folds to the current page (solid indigo) and a Menu button;
+Below `sm` the pill folds to the current page (solid cobalt) and a Menu button;
 opened, it lists every destination under its menu's caption, sections divided by
 horizontal rules. Without JavaScript every width shows that list instead. Nothing
 in the nav scrolls sideways. The structure lives in `src/lib/nav.ts`, which the app
@@ -456,7 +494,7 @@ sub-line in the quietest ramp step. Accent variant renders the value in
 The selectable hardware card is the system's most characteristic component: a
 compact `0.625rem` panel with the device name, its memory as a right-aligned
 label, a capacity meter, and a percentage. The meter is green when the model
-fits and rose when it does not — the card states its own verdict before you read
+fits and red when it does not — the card states its own verdict before you read
 a word of it.
 
 Selection is carried by a ring and a tinted fill, and the card sets

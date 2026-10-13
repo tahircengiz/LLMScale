@@ -66,7 +66,7 @@ function chipValue(raw: string): string {
   return raw.slice(0, 25) + "…";
 }
 
-/** The themed focus ring every control on this page carries (DESIGN.md: indigo). */
+/** The themed focus ring every control on this page carries (DESIGN.md: cobalt). */
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-brand-500";
 
 const rowId = (path: string) => "cfg-" + path.replace(/[^a-zA-Z0-9_-]/g, "-");
@@ -304,7 +304,7 @@ function Portrait({ data, report, onRetry }: { data: Loaded; report: ConfigRepor
         </p>
       )}
       {data.rebuilt && (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-amber-500/10 px-3 py-2 ring-1 ring-amber-500/30">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-warn/10 px-3 py-2 ring-1 ring-warn/30">
           <p className="min-w-0 flex-1 text-xs leading-relaxed text-warn">
             {t(data.gated ? "config.source.bundled" : "config.source.bundledFailed")}
           </p>

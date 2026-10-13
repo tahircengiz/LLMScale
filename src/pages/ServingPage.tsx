@@ -34,7 +34,7 @@ const EXAMPLES: { id: string; label: string }[] = [
 
 const QUESTIONS: SectionId[] = ["repo", "chat", "sampling", "weights", "mtp", "context", "load"];
 
-/** The themed focus ring every control on this page carries (DESIGN.md: indigo). */
+/** The themed focus ring every control on this page carries (DESIGN.md: cobalt). */
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-brand-500";
 
 interface Loaded {
