@@ -96,6 +96,7 @@ const SURFACES: Record<string, string> = {
   "decode.html": "Name Decoder",
   "config.html": "Config Decoder",
   "serving.html": "Serving Brief",
+  "plan.html": "Capacity Plan",
   "vllm.html": "vLLM Params",
   "learn.html": "LLM 101",
 };

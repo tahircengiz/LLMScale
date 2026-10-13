@@ -57,7 +57,7 @@ export const NAV_MENUS: NavMenu[] = [
   {
     id: "serve",
     label: "nav.group.serve",
-    sections: [{ items: [item("serving", "serving.html"), item("vllm", "vllm.html")] }],
+    sections: [{ items: [item("serving", "serving.html"), item("vllm", "vllm.html"), item("plan", "plan.html")] }],
   },
   {
     id: "learn",

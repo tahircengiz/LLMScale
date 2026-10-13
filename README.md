@@ -19,7 +19,7 @@ In Turkish: **[/tr/](https://tahircengiz.github.io/LLMScale/tr/)**.
 | **MLA** | DeepSeek's multi-head latent attention caches one compressed latent per layer, not a K/V pair per head — worth ~25× on V3 |
 | **MoE** | every expert stays resident; decode speed reads only the *active* ones — from the model card for presets, worked out from `config.json` for any other model |
 | **Overhead** | vLLM 0.31's on each GPU — runtime buffers, the profiling pass's peak and CUDA graphs at the batch it profiles with on that card — checked against eleven real vLLM startups |
-| **GPU fit** | which cards hold it, how many users fit, the maximum context for one user, and a bandwidth-bound decode speed |
+| **GPU fit** | which cards hold it, how many users fit — at the full context and at a typical request size with a shared prefix — the maximum context for one user, time to first token, and decode speed as a curve over the batch |
 
 Architecture is pulled **live from the Hugging Face Hub**. Gated repos (Llama,
 Gemma, Mistral) can't be read from a browser, so their configs ship in a bundled
@@ -38,6 +38,7 @@ the page says so.
 | **Model Anatomy** | a visual X-ray: parameter distribution, weight size at each precision, GQA head grouping, KV growth |
 | **Model Compare** | 2–4 models side by side |
 | **Name Decoder** | what 70B, A3B, AWQ, GGUF, FP8, MXFP4 actually mean |
+| **Capacity Plan** | requests per second, prompt and reply lengths and TTFT / TPOT targets in; replicas, tensor-parallel size and GPU count out, with what limits each replica |
 | **Serving Brief** | what a repository's other files say about serving it — chat template and parsers, sampling defaults, quantization read from the tensor names, MTP layers that ship or don't — with vLLM and SGLang flags |
 | **vLLM Params** | a tuned `vllm serve` command with per-flag rationale |
 | **LLM 101** | an interactive walkthrough of how a language model works |
@@ -100,7 +101,8 @@ npm run test:invariants   # guards against silent drift between lists
 | KV cache (MLA) | `layers × (kv_lora_rank + qk_rope_head_dim) × bytes × context × concurrency` |
 | KV cache as vLLM reserves it | sliding layers hold `min(window − 1 + 2 × batched_tokens, context)`, Mamba and linear-attention layers two state blocks, each kind grouped and padded as vLLM groups it (`kvReservedPerSeq`) |
 | Overhead per GPU | `0.15 GiB + 4 B × max_num_seqs × vocab + max(8 B × batched_tokens × ffn_width, 2 B × vocab × hidden) ÷ TP + CUDA graphs` (`src/lib/overhead.ts`) |
-| Decode speed | `bandwidth × 0.8 ÷ (active_params × bytes + kv_cache of the batch)` |
+| Decode step | slower of `(weights read + kv_cache of the batch) ÷ (bandwidth × 0.8)` and `batch × 2 × active_params ÷ (dense TFLOPS × 0.5)` |
+| Time to first token | slower of `prompt FLOPs ÷ (dense TFLOPS × 0.5)` and one read of the weights |
 
 GPU fit budgets a discrete card at vLLM's default `--gpu-memory-utilization`,
 92% of its memory, leaving the rest to the CUDA context; each card adds vLLM's

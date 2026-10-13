@@ -17,6 +17,7 @@ import { ComparePage } from "./pages/ComparePage";
 import { TrainPage } from "./pages/TrainPage";
 import { ConfigPage } from "./pages/ConfigPage";
 import { ServingPage } from "./pages/ServingPage";
+import { PlanPage } from "./pages/PlanPage";
 import { Badge, Segmented } from "./components/ui";
 import { About } from "./components/About";
 import { LANG_NAME, pathFor } from "./lib/langPath";
@@ -29,7 +30,7 @@ import { SiteNav } from "./components/SiteNav";
 const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
-function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" | "config" | "serving" {
+function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" | "config" | "serving" | "plan" {
   const p = window.location.pathname;
   if (p.endsWith("fit.html")) return "fit";
   if (p.endsWith("vllm.html")) return "vllm";
@@ -39,6 +40,7 @@ function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "comp
   if (p.endsWith("train.html")) return "train";
   if (p.endsWith("config.html")) return "config";
   if (p.endsWith("serving.html")) return "serving";
+  if (p.endsWith("plan.html")) return "plan";
   return "sizing";
 }
 
@@ -196,6 +198,8 @@ export default function App() {
             <ConfigPage />
           ) : page === "serving" ? (
             <ServingPage />
+          ) : page === "plan" ? (
+            <PlanPage />
           ) : (
             <SizingPage />
           )}

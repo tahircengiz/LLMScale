@@ -35,7 +35,9 @@ per-GPU overhead measured against real startups — then reports which devices f
 many concurrent users a card supports, and the maximum context for a single user.
 
 Around that core it also covers fine-tuning memory (LoRA, QLoRA, full),
-decode speed as a bandwidth-bound estimate, vLLM launch parameters, a plain-language
+decode speed and time to first token (the slower of bandwidth and tensor throughput,
+as a curve over the batch), a capacity planner that turns requests per second and
+latency targets into replicas and GPUs, vLLM launch parameters, a plain-language
 reading of a model's config.json, a serving brief read from the rest of its repository
 (chat template and parsers, sampling defaults, quantization from the tensor names,
 multi-token-prediction layers, with vLLM and SGLang flags), task-to-model fit,
@@ -119,11 +121,13 @@ generators.
 - **Three themes** — dark, light, and a translucent "glass" material. Glass is
   the default for a first-time visitor unless their OS asks for dark; a stored
   choice outranks both.
-- **Not modeled:** engine-specific paged-attention efficiency, prefill (time to
-  first token), and the compute ceiling decode reaches at large batches. Since
-  2026-10-13 the KV cache is counted layer by layer — sliding-window layers at
-  their window, a hybrid's linear-attention and Mamba layers as a fixed state —
-  and a checkpoint that ships quantized is sized by its own files. Estimates are
+- **Not modeled:** queueing beyond a steady-arrival model, bursts and long-tail
+  lengths, and engines other than vLLM. Since 2026-10-13 the KV cache is sized as
+  vLLM reserves it — sliding-window layers at their window plus the tokens in
+  flight, a hybrid's linear-attention and Mamba layers as fixed state blocks — the
+  overhead per GPU follows vLLM's own accounting, a checkpoint that ships quantized
+  is sized by its own files, and prefill and the compute ceiling of large decode
+  batches use the vendors' dense tensor throughput at a stated 50%. Estimates are
   for capacity planning and are labelled as such, not presented as guarantees.
 
 ## Brand Commitments

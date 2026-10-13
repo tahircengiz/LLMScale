@@ -7,10 +7,13 @@
 // why a 128 GB unified device can hold a model a 24 GB card cannot and still
 // generate more slowly.
 //
-// Prefill — time to first token — is compute bound and deliberately NOT modelled
-// here; nothing in this file should be read as a latency estimate.
+// Prefill — reading the prompt before the first token — is the other way round:
+// every prompt token goes through the same weights in one pass, so it is bound by
+// tensor throughput (FLOPS) once the prompt is more than a few hundred tokens.
+// prefillTime and decodeStep below take whichever bound is slower. The vendors'
+// dense figures are peaks; the efficiencies are stated where they are applied.
 
-import { kvBytesPerSeq, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
+import { kvBytesPerSeq, resolveHeadDim, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
 
 /**
  * Share of peak bandwidth a good decode kernel actually reaches. Vendors quote
@@ -92,4 +95,129 @@ export function estimateDecode(i: DecodeInput): DecodeEstimate | null {
     total: (1000 / stepMs) * i.concurrency,
     kvShare: kvBytes / bytesPerStep,
   };
+}
+
+/** Share of peak tensor throughput large matrix multiplies reach in a serving
+ *  engine: prefill and big decode batches. Kernels reach more in isolation; with
+ *  attention, norms and launches in between, half is a fair planning figure. */
+export const COMPUTE_EFFICIENCY = 0.5;
+
+/** A device's dense tensor throughput, TFLOPS, without structured sparsity. */
+export interface Tflops {
+  bf16: number;
+  fp8?: number;
+  fp4?: number;
+}
+
+/** The throughput the matrix multiplies run at. FP8 weights run on FP8 tensor
+ *  cores where the device has them (FP8-dynamic quantizes activations too); 4-bit
+ *  formats are counted as weight-only, computing in 16-bit, which is the
+ *  conservative reading for AWQ, GPTQ and GGUF. */
+export function computeTflops(t: Tflops, weightDtype: Dtype): number {
+  if ((weightDtype === "fp8" || weightDtype === "int8") && t.fp8) return t.fp8;
+  return t.bf16;
+}
+
+/** Attention width the score and value products run over: heads × head dim. */
+function attnWidth(arch: ModelArch): number {
+  return arch.numAttentionHeads * resolveHeadDim(arch);
+}
+
+/**
+ * FLOPs to read a prompt of `tokens`: two per active parameter per token for the
+ * matrix multiplies, plus attention's two products over the causal context, which
+ * a sliding layer caps at its window.
+ */
+export function prefillFlops(arch: ModelArch, tokens: number): number {
+  const active = arch.activeParams ?? arch.numParams;
+  const attn = arch.attnLayers ?? arch.numLayers;
+  const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, attn) : 0;
+  const full = attn - sliding;
+  const d = attnWidth(arch);
+  // Σ over t of 4·d·t for t < P is 2·d·P² per full layer.
+  const fullAttn = 2 * d * tokens * tokens * full;
+  const W = Math.min(arch.slidingWindow ?? 0, tokens);
+  const slideAttn = sliding ? 4 * d * sliding * (W * tokens - (W * W) / 2) : 0;
+  return 2 * active * tokens + fullAttn + slideAttn;
+}
+
+export interface PrefillEstimate {
+  /** Seconds to read the prompt and produce the first token. */
+  seconds: number;
+  /** Which limit set it. */
+  bound: "compute" | "memory";
+}
+
+/** Time to first token for one request alone on `gpus` GPUs: the prompt's FLOPs
+ *  at COMPUTE_EFFICIENCY of peak, or one read of the weights, whichever is slower.
+ *  Queueing behind other requests is not in it. */
+export function prefillTime(
+  arch: ModelArch,
+  weightDtype: Dtype,
+  tokens: number,
+  device: { tflops: Tflops; bandwidthGBs: number },
+  gpus = 1,
+): PrefillEstimate {
+  const compute = prefillFlops(arch, tokens) / (computeTflops(device.tflops, weightDtype) * 1e12 * COMPUTE_EFFICIENCY * gpus);
+  const memory = weightsBytes(arch, weightDtype) / (device.bandwidthGBs * 1e9 * BANDWIDTH_EFFICIENCY * gpus);
+  return compute >= memory ? { seconds: compute, bound: "compute" } : { seconds: memory, bound: "memory" };
+}
+
+export interface DecodePoint {
+  batch: number;
+  /** Milliseconds per decode step: the time between two tokens for each user. */
+  stepMs: number;
+  perUser: number;
+  total: number;
+  bound: "compute" | "memory";
+}
+
+/**
+ * One decode step for `batch` sequences at `contextLength`: the bytes it reads
+ * (estimateDecode) against the FLOPs it does (two per active parameter per
+ * sequence, plus attention over each sequence's context), whichever is slower.
+ * Bandwidth bounds small batches; past the crossover the step grows with the batch
+ * and total throughput levels off.
+ */
+export function decodeStep(
+  i: Omit<DecodeInput, "concurrency" | "bandwidthGBs">,
+  batch: number,
+  device: { tflops?: Tflops; bandwidthGBs: number },
+  gpus = 1,
+): DecodePoint | null {
+  const mem = estimateDecode({ ...i, concurrency: batch, bandwidthGBs: device.bandwidthGBs * gpus });
+  if (!mem) return null;
+  let stepMs = mem.stepMs;
+  let bound: DecodePoint["bound"] = "memory";
+  if (device.tflops) {
+    const active = i.arch.activeParams ?? i.arch.numParams;
+    const attn = i.arch.attnLayers ?? i.arch.numLayers;
+    const sliding = i.arch.slidingWindow ? Math.min(i.arch.slidingLayers ?? 0, attn) : 0;
+    // Each new token attends over its context; a sliding layer over its window.
+    const span = (attn - sliding) * i.contextLength + sliding * Math.min(i.contextLength, i.arch.slidingWindow ?? 0);
+    const flops = batch * (2 * active + 4 * attnWidth(i.arch) * span);
+    const computeMs = (flops / (computeTflops(device.tflops, i.weightDtype) * 1e12 * COMPUTE_EFFICIENCY * gpus)) * 1000;
+    if (computeMs > stepMs) [stepMs, bound] = [computeMs, "compute"];
+  }
+  return { batch, stepMs, perUser: 1000 / stepMs, total: (1000 / stepMs) * batch, bound };
+}
+
+/** Decode speed from one sequence up to `maxBatch`, doubling: the curve a
+ *  capacity plan reads its operating point from. */
+export function decodeCurve(
+  i: Omit<DecodeInput, "concurrency" | "bandwidthGBs">,
+  maxBatch: number,
+  device: { tflops?: Tflops; bandwidthGBs: number },
+  gpus = 1,
+): DecodePoint[] {
+  const out: DecodePoint[] = [];
+  for (let b = 1; b <= Math.max(1, maxBatch); b *= 2) {
+    const p = decodeStep(i, b, device, gpus);
+    if (p) out.push(p);
+  }
+  if (maxBatch > 1 && out.length && out[out.length - 1].batch !== maxBatch) {
+    const p = decodeStep(i, maxBatch, device, gpus);
+    if (p) out.push(p);
+  }
+  return out;
 }

@@ -84,6 +84,14 @@ export const TR_META: Record<string, PageMeta> = {
     ogDescription:
       "Bir modelin dosyaları servis hakkında ne diyor: araç ve akıl yürütme parser'ları, örnekleme varsayılanları, quantization, MTP — vLLM ve SGLang bayraklarıyla.",
   },
+  "plan.html": {
+    title: "LLM Kapasite Planı — Yükün ve Gecikmen İçin GPU | LLMScale",
+    description:
+      "Bir yükün kaç GPU istediği: saniyedeki istek sayısı, prompt ve cevap uzunlukları, ilk token ve token başına süre hedefleri girilir; kopya sayısı, tensor parallelism ve GPU sayısı çıkar. vLLM'in kendi belleğinden ve GPU'ların bant genişliği ile tensor işlem gücünden hesaplanır.",
+    ogTitle: "LLMScale — Kapasite Planı",
+    ogDescription:
+      "Saniyedeki istek ve gecikme hedefleri girilir, GPU sayısı çıkar: vLLM için kopya sayısı ve tensor parallelism; bellek, bant genişliği ve tensor işlem gücünden.",
+  },
   "learn.html": {
     title: "LLM 101 — Bir LLM Nasıl Çalışır, Görsel Anlatım | LLMScale",
     description:

@@ -6,7 +6,8 @@ import { batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
-import { BANDWIDTH_EFFICIENCY, estimateDecode } from "../lib/perf";
+import { BANDWIDTH_EFFICIENCY, COMPUTE_EFFICIENCY, decodeStep } from "../lib/perf";
+import { SpeedPanel } from "./SpeedPanel";
 import { useLang } from "../lib/i18n";
 import { Badge, SectionTitle, Stat } from "./ui";
 
@@ -121,22 +122,16 @@ export function GpuFit({
         .map((d) => ({ d, total: calculate({ ...base, weightDtype: d, contextLength, concurrency, batch: selBatch }).totalGiB }))
         .find((x) => x.total <= effUsable) ?? null;
 
+  // A MIG slice gets roughly its share of the memory system and of the SMs.
   const bwScale = migSlice ? migSlice / selected.vramGiB : 1;
-  const speedOf = (g: Gpu) =>
-    g.bandwidthGBs
-      ? estimateDecode({ arch, weightDtype, kvDtype, contextLength, concurrency, bandwidthGBs: g.bandwidthGBs })
-      : null;
-  const speed =
-    selUsage.fits && selected.bandwidthGBs
-      ? estimateDecode({
-          arch,
-          weightDtype,
-          kvDtype,
-          contextLength,
-          concurrency,
-          bandwidthGBs: selected.bandwidthGBs * bwScale,
-        })
-      : null;
+  const deviceOf = (g: Gpu, scale = 1) => ({
+    bandwidthGBs: (g.bandwidthGBs ?? 0) * scale,
+    tflops: g.tflops ? { bf16: g.tflops.bf16 * scale, fp8: g.tflops.fp8 && g.tflops.fp8 * scale, fp4: g.tflops.fp4 && g.tflops.fp4 * scale } : undefined,
+  });
+  const decodeIn = { arch, weightDtype, kvDtype, contextLength };
+  const speedOf = (g: Gpu) => (g.bandwidthGBs ? decodeStep(decodeIn, concurrency, deviceOf(g)) : null);
+  const selDevice = deviceOf(selected, bwScale);
+  const speed = selUsage.fits && selected.bandwidthGBs ? decodeStep(decodeIn, concurrency, selDevice) : null;
   // Stage 2: devices within the selected category, split by whether they fit the model.
   const catGpus = GPUS.filter((g) => g.category === activeCat).sort(
     (a, b) => (a.totalGiB ?? a.vramGiB) - (b.totalGiB ?? b.vramGiB)
@@ -354,8 +349,25 @@ export function GpuFit({
 
         {speed && (
           <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-            {t("gpu.speedNote", { p: Math.round(BANDWIDTH_EFFICIENCY * 100) })}
+            {t(selected.tflops ? "gpu.speedNote" : "gpu.speedNoteBw", {
+              p: Math.round(BANDWIDTH_EFFICIENCY * 100),
+              c: Math.round(COMPUTE_EFFICIENCY * 100),
+            })}
           </p>
+        )}
+
+        {/* Time to first token and the batch curve, where the device has a bandwidth. */}
+        {speed && (
+          <SpeedPanel
+            arch={arch}
+            weightDtype={weightDtype}
+            kvDtype={kvDtype}
+            tokensPerSeq={typical ? typical.inUse : contextLength}
+            promptTokens={load ? Math.min(load.promptTokens, contextLength) : contextLength}
+            maxBatch={typical ? Math.max(1, typical.users) : Math.max(1, maxUsers)}
+            device={selDevice}
+            name={migId ? `${selected.name} MIG ${migId}` : selected.name}
+          />
         )}
 
         {/* Answer "then what?" before explaining the multi-GPU arithmetic. */}
