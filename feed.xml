@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Sun, 11 Oct 2026 15:11:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 13 Oct 2026 17:13:50 GMT</lastBuildDate>
+<item>
+<title>vLLM adds bi-directional KV transfer, cutting multi-turn TTFT up to 3.3x</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-13-vllm-bidirectional-kv-transfer-multi-turn.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-13-vllm-bidirectional-kv-transfer-multi-turn.html</guid>
+<pubDate>Tue, 13 Oct 2026 17:13:50 GMT</pubDate>
+<category>Tooling</category>
+<description>&lt;p&gt;vLLM's prefill-decode disaggregated serving can now send KV cache back from the decode node to the prefill node. Later turns of an agent conversation reuse earlier context instead of recomputing it. On a 1P1D EC2 P5en setup, with prefix caching off on the prefill node, TTFT at long prompts fell by up to 1.6x for Qwen3-32B and up to 3.3x for GLM-5-FP8.&lt;/p&gt;&lt;p&gt;The cost falls on decode VRAM. Finished KV blocks are kept for decoder_kv_blocks_ttl (default 480 s), so idle sessions hold memory until the timer expires. Remainders below kv_recompute_threshold (default 64 tokens) are recomputed instead.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://vllm.ai/blog/2026-10-12-bidirectional-kvxfer-multiturn-agentic-workload"&gt;vLLM&lt;/a&gt; · &lt;a href="https://docs.vllm.ai/en/latest/features/nixl_connector_usage"&gt;vLLM&lt;/a&gt; · &lt;a href="https://github.com/vllm-project/vllm/blob/main/examples/disaggregated/disaggregated_serving/disagg_proxy_multiturn.py"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>Ollama v0.40.0 makes MLX the default runtime on Apple Silicon</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-11-ollama-mlx-default-apple-silicon.html</link>

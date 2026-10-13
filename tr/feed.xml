@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Sun, 11 Oct 2026 15:11:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 13 Oct 2026 17:13:50 GMT</lastBuildDate>
+<item>
+<title>vLLM çift yönlü KV aktarımı ekledi, çok turlu TTFT 3,3 kata kadar düştü</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-13-vllm-bidirectional-kv-transfer-multi-turn.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-13-vllm-bidirectional-kv-transfer-multi-turn.html</guid>
+<pubDate>Tue, 13 Oct 2026 17:13:50 GMT</pubDate>
+<category>Araç</category>
+<description>&lt;p&gt;vLLM'in prefill-decode ayrıştırmalı serving'inde decode node'u artık KV cache'i prefill node'una geri gönderebiliyor. Böylece agent konuşmalarının sonraki turlarında önceki context yeniden hesaplanmıyor. Prefill'de prefix caching kapalı 1P1D EC2 P5en kurulumunda, uzun prompt'larda TTFT Qwen3-32B için 1,6 kata, GLM-5-FP8 için 3,3 kata kadar düştü.&lt;/p&gt;&lt;p&gt;Bedeli decode VRAM'i ödüyor. Biten isteklerin KV blokları decoder_kv_blocks_ttl süresince (varsayılan 480 sn) tutuluyor, yani boştaki oturumlar süre dolana kadar bellek kaplıyor.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://vllm.ai/blog/2026-10-12-bidirectional-kvxfer-multiturn-agentic-workload"&gt;vLLM&lt;/a&gt; · &lt;a href="https://docs.vllm.ai/en/latest/features/nixl_connector_usage"&gt;vLLM&lt;/a&gt; · &lt;a href="https://github.com/vllm-project/vllm/blob/main/examples/disaggregated/disaggregated_serving/disagg_proxy_multiturn.py"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>Ollama v0.40.0, Apple Silicon'da MLX'i varsayılan runtime yapıyor</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-11-ollama-mlx-default-apple-silicon.html</link>
