@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { InfoTip, Tip } from "./tip";
 
 export function Card({
   children,
@@ -45,15 +46,21 @@ export function Field({
   label,
   children,
   hint,
+  info,
 }: {
   label: string;
   children: ReactNode;
   hint?: string;
+  /** What the setting is, on hover of the ⓘ beside its label. */
+  info?: string;
 }) {
   return (
     <label className="block">
-      <div className="mb-1 flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
+          {info && <InfoTip text={info} />}
+        </span>
         {hint && <span className="text-xs text-slate-500">{hint}</span>}
       </div>
       {children}
@@ -69,7 +76,8 @@ export function Segmented<T extends string>({
   nowrap = false,
 }: {
   value: T;
-  options: { value: T; label: string }[];
+  /** `hint`: what the option means, on hover or focus. */
+  options: { value: T; label: string; hint?: string }[];
   onChange: (v: T) => void;
   size?: "sm" | "md";
   /** Keep the options side by side at their natural width, for a row of
@@ -81,9 +89,10 @@ export function Segmented<T extends string>({
   return (
     <div className={"flex gap-1 rounded-xl bg-ink-850 p-1 ring-1 ring-white/10 " + (nowrap ? "shrink-0" : "flex-wrap")}>
       {options.map((o) => (
+        <Tip key={o.value} text={o.hint}>
         <button
-          key={o.value}
           type="button"
+          aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
           className={
             (size === "sm" ? "px-2.5 py-1 text-xs " : "px-3 py-1.5 text-sm ") +
@@ -96,6 +105,7 @@ export function Segmented<T extends string>({
         >
           {o.label}
         </button>
+        </Tip>
       ))}
     </div>
   );
@@ -108,7 +118,9 @@ export function NumberInput({
   max,
   step = 1,
   suffix,
+  id,
 }: {
+  id?: string;
   value: number;
   onChange: (v: number) => void;
   min?: number;
@@ -119,6 +131,7 @@ export function NumberInput({
   return (
     <div className="flex items-center rounded-xl bg-ink-850 ring-1 ring-control focus-within:ring-brand-500/60">
       <input
+        id={id}
         type="number"
         value={Number.isFinite(value) ? value : ""}
         min={min}

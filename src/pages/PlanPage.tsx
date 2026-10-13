@@ -7,7 +7,9 @@ import { planOptions, type Limit, type Workload } from "../lib/planner";
 import { formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
-import { Badge, Card, Field, NumberInput, SectionTitle, Segmented, Stat } from "../components/ui";
+import { Badge, Card, Field, SectionTitle, Segmented, Stat } from "../components/ui";
+import { AdvancedToggle, PickField, Select } from "../components/choice";
+import { contextChoices, gpuHint, outputChoices, prefixChoices, promptChoices, rpsChoices, tpotChoices, ttftChoices } from "../lib/choices";
 import { PresetChips } from "../components/PresetChips";
 
 // "How many GPUs does my load take?" (planner.ts): requests per second, their
@@ -38,7 +40,7 @@ function initial() {
     hfId: p.get("m") || HERO.hfId,
     gpuId: PLANNABLE.some((g) => g.id === wanted) ? wanted : "h100-80",
     rps: n("rps", 10),
-    prompt: n("ip", 2048),
+    prompt: n("ip", 2000),
     output: p.has("op") ? Math.max(0, Number(p.get("op")) || 0) : 256,
     prefix: Math.max(0, Number(p.get("px")) || 0),
     ttft: n("ttft", 1),
@@ -48,6 +50,8 @@ function initial() {
     kd: (p.get("kd") as Dtype) || "fp16",
   };
 }
+
+const formatNum = (v: number, lang: string) => v.toLocaleString(lang === "tr" ? "tr-TR" : "en-US");
 
 const ms = (s: number) => (s >= 10 ? `${s.toFixed(0)} s` : s >= 1 ? `${s.toFixed(1)} s` : `${Math.round(s * 1000)} ms`);
 
@@ -110,6 +114,7 @@ export function PlanPage() {
     ? `${home}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${gpu.id}&n=${best.tp}&ctx=${maxLen}`
     : null;
   const limitText = (l: Limit) => t(`plan.limit.${l}`);
+  const tok = (n: number) => `${formatInt(n)} ${t("controls.tok")}`;
 
   return (
     <div>
@@ -130,7 +135,10 @@ export function PlanPage() {
             />
           </Card>
           <Card className="space-y-5 p-5">
-            <SectionTitle step="2" title={t("plan.loadTitle")} />
+            <div className="flex items-start justify-between gap-3">
+              <SectionTitle step="2" title={t("plan.loadTitle")} />
+              <AdvancedToggle />
+            </div>
             <PresetChips
               hfId={hfId}
               maxContext={arch?.maxContext}
@@ -142,57 +150,49 @@ export function PlanPage() {
               }}
             />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label={t("plan.rps")} hint={t("plan.rpsHint")}>
-                <NumberInput value={w.rps} onChange={(v) => patch({ rps: Math.max(0.01, v) })} min={0.01} step={1} />
-              </Field>
-              <Field label={t("plan.ctx")} hint="--max-model-len">
-                <NumberInput value={ctx} onChange={(v) => setCtx(Math.max(256, v))} min={256} step={1024} suffix={t("controls.tok")} />
-              </Field>
-              <Field label={t("controls.loadPrompt")}>
-                <NumberInput value={w.promptTokens} onChange={(v) => patch({ promptTokens: Math.max(1, v), sharedPrefix: Math.min(w.sharedPrefix, Math.max(1, v)) })} min={1} step={256} suffix={t("controls.tok")} />
-              </Field>
-              <Field label={t("controls.loadOutput")}>
-                <NumberInput value={w.outputTokens} onChange={(v) => patch({ outputTokens: Math.max(0, v) })} min={0} step={64} suffix={t("controls.tok")} />
-              </Field>
-              <Field label={t("controls.loadPrefix")} hint={t("plan.prefixHint")}>
-                <NumberInput value={w.sharedPrefix} onChange={(v) => patch({ sharedPrefix: Math.max(0, Math.min(v, w.promptTokens)) })} min={0} step={256} suffix={t("controls.tok")} />
-              </Field>
+              <PickField label={t("plan.rps")} info={t("info.rps")} aside={t("plan.rpsHint")} value={w.rps} options={rpsChoices(t, lang)}
+                onChange={(v) => patch({ rps: Math.max(0.01, v) })} min={0.01} step={1} custom={(v) => formatNum(v, lang)} />
+              <PickField label={t("plan.ctx")} info={t("info.maxLen")} aside="--max-model-len" value={ctx} options={contextChoices(t, lang, arch?.maxContext)}
+                onChange={(v) => setCtx(Math.max(256, v))} min={256} step={1024} suffix={t("controls.tok")} custom={tok} />
+              <PickField label={t("controls.loadPrompt")} info={t("info.loadPrompt")} value={w.promptTokens} options={promptChoices(t, lang)}
+                onChange={(v) => patch({ promptTokens: Math.max(1, v), sharedPrefix: Math.min(w.sharedPrefix, Math.max(1, v)) })} min={1} step={256} suffix={t("controls.tok")} custom={tok} />
+              <PickField label={t("controls.loadOutput")} info={t("info.loadOutput")} value={w.outputTokens} options={outputChoices(t, lang)}
+                onChange={(v) => patch({ outputTokens: Math.max(0, v) })} min={0} step={64} suffix={t("controls.tok")} custom={tok} />
+              <PickField label={t("controls.loadPrefix")} info={t("info.loadPrefix")} aside={t("plan.prefixHint")} value={w.sharedPrefix}
+                options={prefixChoices(t, lang).filter((o) => o.value <= w.promptTokens)}
+                onChange={(v) => patch({ sharedPrefix: Math.max(0, Math.min(v, w.promptTokens)) })} min={0} step={256} suffix={t("controls.tok")} custom={tok} />
             </div>
             <SectionTitle step="3" title={t("plan.targetsTitle")} />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label={t("plan.ttft")} hint={t("plan.ttftHint")}>
-                <NumberInput value={w.ttftS} onChange={(v) => patch({ ttftS: Math.max(0.001, v) })} min={0.001} step={0.1} suffix="s" />
-              </Field>
-              <Field label={t("plan.tpot")} hint={t("plan.tpotHint", { n: formatInt(Math.round(1000 / Math.max(1, w.tpotMs))) })}>
-                <NumberInput value={w.tpotMs} onChange={(v) => patch({ tpotMs: Math.max(0.1, v) })} min={0.1} step={5} suffix="ms" />
-              </Field>
+              <PickField label={t("plan.ttft")} info={t("info.ttft")} aside={t("plan.ttftHint")} value={w.ttftS} options={ttftChoices(t, lang)}
+                onChange={(v) => patch({ ttftS: Math.max(0.001, v) })} min={0.001} step={0.1} suffix="s" custom={(v) => ms(v)} />
+              <PickField label={t("plan.tpot")} info={t("info.tpot")} aside={t("plan.tpotHint", { n: formatInt(Math.round(1000 / Math.max(1, w.tpotMs))) })}
+                value={w.tpotMs} options={tpotChoices(t, lang)} onChange={(v) => patch({ tpotMs: Math.max(0.1, v) })} min={0.1} step={5} suffix="ms" custom={(v) => `${formatNum(v, lang)} ms`} />
             </div>
             <SectionTitle step="4" title={t("plan.hwTitle")} />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="GPU">
-                <select
+              <Field label="GPU" info={t("info.gpu")}>
+                <Select
                   id="plan-gpu"
+                  label="GPU"
                   value={gpu?.id ?? ""}
-                  onChange={(e) => setGpuId(e.target.value)}
-                  className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-control outline-none focus:ring-brand-500/60"
-                >
-                  {GPU_CATEGORIES.filter((c) => PLANNABLE.some((g) => g.category === c)).map((c) => (
-                    <optgroup key={c} label={t(`cat.${c}`)}>
-                      {PLANNABLE.filter((g) => g.category === c).map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name} — {g.totalGiB ?? g.vramGiB} GB
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+                  options={GPU_CATEGORIES.flatMap((c) =>
+                    PLANNABLE.filter((g) => g.category === c).map((g) => ({
+                      value: g.id,
+                      label: `${g.name} — ${g.totalGiB ?? g.vramGiB} GB`,
+                      hint: gpuHint(t, g, lang),
+                      group: t(`cat.${c}`),
+                    })),
+                  )}
+                  onChange={setGpuId}
+                />
               </Field>
               <div className="space-y-3">
-                <Field label={t("controls.weightQuant")}>
-                  <Segmented<Dtype> value={weightDtype} options={WEIGHT_DTYPES} onChange={setWeightDtype} size="sm" />
+                <Field label={t("controls.weightQuant")} info={t("info.weightQuant")}>
+                  <Segmented<Dtype> value={weightDtype} options={WEIGHT_DTYPES.map((o) => ({ ...o, hint: t(`hint.wd.${o.value}`) }))} onChange={setWeightDtype} size="sm" />
                 </Field>
-                <Field label={t("controls.kvPrecision")}>
-                  <Segmented<Dtype> value={kvDtype} options={KV_DTYPES} onChange={setKvDtype} size="sm" />
+                <Field label={t("controls.kvPrecision")} info={t("info.kvPrecision")}>
+                  <Segmented<Dtype> value={kvDtype} options={KV_DTYPES.map((o) => ({ ...o, hint: t(`hint.kv.${o.value}`) }))} onChange={setKvDtype} size="sm" />
                 </Field>
               </div>
             </div>

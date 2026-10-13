@@ -8,7 +8,9 @@ import { formatGiB, formatInt, formatParams } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { AMBER, GREY, GREEN, INDIGO, PURPLE, RED } from "../lib/palette";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
-import { Badge, Card, Field, NumberInput, SectionTitle, Segmented } from "../components/ui";
+import { Badge, Card, Field, SectionTitle, Segmented } from "../components/ui";
+import { AdvancedToggle, PickField, Select } from "../components/choice";
+import { batchChoices, gpuHint, rankChoices, seqChoices } from "../lib/choices";
 
 const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
 const OVERHEAD_GIB = 1;
@@ -30,7 +32,7 @@ function initial() {
 }
 
 export function TrainPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const init = initial();
   const [hfId, setHfId] = useState(init.hfId);
   const [arch, setArch] = useState<ModelArch | null>(init.hfId === HERO.hfId ? { ...HERO } : null);
@@ -127,7 +129,10 @@ export function TrainPage() {
           </Card>
 
           <Card className="p-5 space-y-5">
-            <SectionTitle step="2" title={t("train.setup")} />
+            <div className="flex items-start justify-between gap-3">
+              <SectionTitle step="2" title={t("train.setup")} />
+              <AdvancedToggle />
+            </div>
 
             <Field label={t("train.mode")}>
               <Segmented<TrainMode>
@@ -135,9 +140,9 @@ export function TrainPage() {
                 onChange={setMode}
                 size="sm"
                 options={[
-                  { value: "qlora", label: "QLoRA" },
-                  { value: "lora", label: "LoRA" },
-                  { value: "full", label: t("train.mode.full") },
+                  { value: "qlora", label: "QLoRA", hint: t("train.modeNote.qlora") },
+                  { value: "lora", label: "LoRA", hint: t("train.modeNote.lora") },
+                  { value: "full", label: t("train.mode.full"), hint: t("train.modeNote.full") },
                 ]}
               />
               <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">{t(`train.modeNote.${mode}`)}</p>
@@ -145,17 +150,25 @@ export function TrainPage() {
 
             {mode !== "full" && (
               <div className="grid grid-cols-2 gap-4">
-                <Field label={t("train.rank")} hint={result ? formatParams(result.trainableParams) : undefined}>
-                  <NumberInput value={rank} onChange={(v) => setRank(Math.max(1, Math.min(512, v)))} min={1} max={512} />
-                </Field>
+                <PickField
+                  label={t("train.rank")}
+                  info={t("info.rank")}
+                  aside={result ? formatParams(result.trainableParams) : undefined}
+                  value={rank}
+                  options={rankChoices(t)}
+                  onChange={(v) => setRank(Math.max(1, Math.min(512, v)))}
+                  min={1}
+                  max={512}
+                  custom={(v) => String(v)}
+                />
                 <Field label={t("train.target")}>
                   <Segmented<LoraTarget>
                     value={target}
                     onChange={setTarget}
                     size="sm"
                     options={[
-                      { value: "attn", label: t("train.target.attn") },
-                      { value: "all", label: t("train.target.all") },
+                      { value: "attn", label: t("train.target.attn"), hint: t("train.targetHint.attn") },
+                      { value: "all", label: t("train.target.all"), hint: t("train.targetHint.all") },
                     ]}
                   />
                 </Field>
@@ -163,15 +176,30 @@ export function TrainPage() {
             )}
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label={t("train.batch")}>
-                <NumberInput value={batchSize} onChange={(v) => setBatchSize(Math.max(1, Math.min(512, v)))} min={1} />
-              </Field>
-              <Field label={t("train.seq")} hint={arch?.maxContext ? formatInt(arch.maxContext) : undefined}>
-                <NumberInput value={seqLength} onChange={(v) => setSeqLength(Math.max(128, v))} min={128} step={512} suffix="tok" />
-              </Field>
+              <PickField
+                label={t("train.batch")}
+                info={t("info.batch")}
+                value={batchSize}
+                options={batchChoices(t)}
+                onChange={(v) => setBatchSize(Math.max(1, Math.min(512, v)))}
+                min={1}
+                custom={(v) => String(v)}
+              />
+              <PickField
+                label={t("train.seq")}
+                info={t("info.seq")}
+                aside={arch?.maxContext ? formatInt(arch.maxContext) : undefined}
+                value={seqLength}
+                options={seqChoices(t, lang)}
+                onChange={(v) => setSeqLength(Math.max(128, v))}
+                min={128}
+                step={512}
+                suffix="tok"
+                custom={(v) => `${formatInt(v)} tok`}
+              />
             </div>
 
-            <Field label={t("train.ckpt")} hint={t("train.ckptHint")}>
+            <Field label={t("train.ckpt")} hint={t("train.ckptHint")} info={t("info.ckpt")}>
               <Segmented<string>
                 value={ckpt ? "on" : "off"}
                 onChange={(v) => setCkpt(v === "on")}
@@ -245,17 +273,18 @@ export function TrainPage() {
               </div>
 
               <div className="flex items-center justify-between gap-2">
-                <select
-                  value={gpuId}
-                  onChange={(e) => setGpuId(e.target.value)}
-                  className="min-w-0 flex-1 rounded-lg bg-ink-800 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-control outline-none focus:ring-brand-500/60"
-                >
-                  {GPUS.filter((g) => g.category === gpu.category).map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name} — {g.totalGiB ?? g.vramGiB} GB
-                    </option>
-                  ))}
-                </select>
+                <div className="min-w-0 flex-1">
+                  <Select
+                    label="GPU"
+                    value={gpuId}
+                    options={GPUS.filter((g) => g.category === gpu.category).map((g) => ({
+                      value: g.id,
+                      label: `${g.name} — ${g.totalGiB ?? g.vramGiB} GB`,
+                      hint: gpuHint(t, g, lang),
+                    }))}
+                    onChange={setGpuId}
+                  />
+                </div>
                 {fits ? (
                   <Badge tone="good">{t("gpu.fits")}</Badge>
                 ) : (

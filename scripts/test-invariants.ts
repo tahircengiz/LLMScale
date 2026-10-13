@@ -129,7 +129,7 @@ check("the gated host matches the canonical URL", read("index.html").includes(`h
 const fit = read("src/components/GpuFit.tsx");
 check("GpuFit marks the selected card with aria-pressed", fit.includes("aria-pressed={g.id === gpuId}"));
 check("the glass rule hangs off that same attribute", css.includes('.gpu-card[aria-pressed="true"]'));
-check("the card carries the gpu-card hook", fit.includes('"gpu-card rounded-xl'));
+check("the card carries the gpu-card hook", /"gpu-card [^"]*rounded-xl/.test(fit));
 
 // A selected device the model has outgrown stays in the visible grid instead of
 // sliding into the collapsed group, where the fit summary would go on describing

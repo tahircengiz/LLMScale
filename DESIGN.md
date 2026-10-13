@@ -352,7 +352,33 @@ ring and `0.25rem` internal padding; options sit inside it.
 
 Used for precision, dtype, batch, language, theme, and every other small
 mutually-exclusive choice. If a choice has 2–6 options and they are short, it is
-a segmented control, not a dropdown.
+a segmented control, not a dropdown. Each option may carry a hint, shown in a
+tooltip on hover or focus, saying what picking it means.
+
+### Menus
+
+Anything with more options than a segmented control holds — a number, a device,
+a MIG slice — is a menu (`Select` in `src/components/choice.tsx`), never a bare
+number field. Its options are the sensible values (`src/lib/choices.ts`), and the
+open list shows the highlighted option's hint at its foot, so the explanation
+sits where the eye already is. Hints are worked out from the value where a plain
+equivalent exists: words and pages for tokens, words a minute for a token rate,
+requests a day for a rate, memory, bandwidth and TFLOPS for a device. A value set
+by a shared link that is not among the options still shows, labelled as it is.
+
+- **Closed:** the input tone with the interactive ring, the value, a caret.
+- **Open:** the raised tone, a hairline ring, the list (max 18rem, scrolls), group
+  headings in caption type, the highlighted row in a 20% indigo wash, the chosen
+  one bold with a check.
+- **Keyboard:** arrows move, Home and End jump, Enter or Space picks, Escape closes.
+
+### Explanations and advanced mode
+
+Every setting's label carries an ⓘ whose tooltip says what the setting is; every
+option says what it means. One switch, **Advanced**, at the head of each tool's
+settings, swaps the menus for number fields and shows the hand-entered
+architecture tab. It is one preference for the whole site, kept in this browser;
+off is the default, because most visitors should pick, not type.
 
 ### Chips
 

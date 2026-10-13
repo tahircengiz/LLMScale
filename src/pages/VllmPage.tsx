@@ -9,7 +9,11 @@ import { recommend, servingDtype, PRIORITIES, VLLM_TASKS, type Priority, type Vl
 import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor, runsVllm } from "../lib/gpus";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
-import { Card, Field, NumberInput, SectionTitle, Segmented } from "../components/ui";
+import { Card, Field, SectionTitle, Segmented } from "../components/ui";
+import { AdvancedToggle, PickField, Select } from "../components/choice";
+import { Tip } from "../components/tip";
+import { contextChoices, gpuCountChoices, gpuHint } from "../lib/choices";
+import { formatInt } from "../lib/format";
 import { LogCheck } from "../components/LogCheck";
 
 const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
@@ -36,7 +40,7 @@ function initial() {
 }
 
 export function VllmPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const init = initial();
   const [hfId, setHfId] = useState(init.hfId);
   const [arch, setArch] = useState<ModelArch | null>(init.hfId === HERO.hfId ? { ...HERO } : null);
@@ -142,84 +146,100 @@ export function VllmPage() {
           </Card>
           <Card className="p-5 space-y-5">
             <div>
-              <SectionTitle step="2" title={t("vllm.pickPriority")} />
+              <div className="flex items-start justify-between gap-3">
+                <SectionTitle step="2" title={t("vllm.pickPriority")} />
+                <AdvancedToggle />
+              </div>
               <Segmented<Priority>
                 value={priority}
                 onChange={setPriority}
                 size="sm"
-                options={PRIORITIES.map((p) => ({ value: p, label: t(`vllm.prio.${p}`) }))}
+                options={PRIORITIES.map((p) => ({ value: p, label: t(`vllm.prio.${p}`), hint: t(`vllm.prioHint.${p}`) }))}
               />
             </div>
             <div>
               <SectionTitle step="3" title={t("vllm.pickTask")} />
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {VLLM_TASKS.map((tid) => (
+                  <Tip key={tid} text={t(`vllm.taskHint.${tid}`)} className="flex min-w-0">
                   <button
-                    key={tid}
                     type="button"
+                    aria-pressed={task === tid}
                     onClick={() => setTask(tid)}
                     className={
-                      "rounded-xl px-3 py-2 text-left text-xs ring-1 transition " +
+                      "w-full rounded-xl px-3 py-2 text-left text-xs ring-1 transition " +
                       (task === tid ? "bg-brand-600/30 ring-brand-500/50 text-white" : "bg-ink-850 ring-white/10 text-slate-300 hover:bg-white/5")
                     }
                   >
                     {t(`vllm.task.${tid}`)}
                   </button>
+                  </Tip>
                 ))}
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Field label="GPU">
-                <select
+              <Field label="GPU" info={t("info.gpu")}>
+                <Select
+                  label="GPU"
                   value={gpuId}
-                  onChange={(e) => {
-                    setGpuId(e.target.value);
+                  options={GPU_CATEGORIES.flatMap((cat) =>
+                    GPUS.filter((g) => g.category === cat && runsVllm(g)).map((g) => ({
+                      value: g.id,
+                      label: `${g.name} — ${g.totalGiB ?? g.vramGiB} GB`,
+                      hint: gpuHint(t, g, lang),
+                      group: t(`cat.${cat}`),
+                    })),
+                  )}
+                  onChange={(id) => {
+                    setGpuId(id);
                     setMigId("");
                   }}
-                  className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-control outline-none focus:ring-brand-500/60"
-                >
-                  {GPU_CATEGORIES.filter((cat) => GPUS.some((g) => g.category === cat && runsVllm(g))).map((cat) => (
-                    <optgroup key={cat} label={t(`cat.${cat}`)}>
-                      {GPUS.filter((g) => g.category === cat && runsVllm(g)).map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name} — {g.totalGiB ?? g.vramGiB} GB
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+                />
                 {init.swappedFrom && (
                   <p className="mt-1 text-[11px] text-warn">
                     {t("vllm.noMetal", { gpu: init.swappedFrom })}
                   </p>
                 )}
               </Field>
-              <Field label={t("vllm.gpuCount")} hint={migId ? "MIG = 1" : undefined}>
-                <NumberInput
-                  value={migId ? 1 : gpuCount}
-                  onChange={(v) => setGpuCount(Math.max(1, Math.min(16, v)))}
-                  min={1}
-                  max={16}
-                />
-              </Field>
-              <Field label={t("vllm.maxlen")} hint={arch?.maxContext ? String(arch.maxContext) : undefined}>
-                <NumberInput value={maxLen} onChange={(v) => setMaxLen(Math.max(512, v))} min={512} step={1024} suffix="tok" />
-              </Field>
+              <PickField
+                label={t("vllm.gpuCount")}
+                info={t("info.gpuCount")}
+                aside={migId ? "MIG = 1" : undefined}
+                value={migId ? 1 : gpuCount}
+                options={gpuCountChoices(t)}
+                onChange={(v) => setGpuCount(Math.max(1, Math.min(16, v)))}
+                min={1}
+                max={16}
+                custom={(n) => String(n)}
+              />
+              <PickField
+                label={t("vllm.maxlen")}
+                info={t("info.maxLen")}
+                aside={arch?.maxContext ? t("controls.contextMax", { n: formatInt(arch.maxContext) }) : undefined}
+                value={maxLen}
+                options={contextChoices(t, lang, arch?.maxContext)}
+                onChange={(v) => setMaxLen(Math.max(512, v))}
+                min={512}
+                step={1024}
+                suffix="tok"
+                custom={(n) => `${formatInt(n)} tok`}
+              />
             </div>
             {migProfiles.length > 0 && (
               <Field label={t("gpu.mig")}>
-                <select
+                <Select
+                  label={t("gpu.mig")}
                   value={migId}
-                  onChange={(e) => setMigId(e.target.value)}
-                  className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-slate-200 ring-1 ring-control outline-none focus:ring-brand-500/60"
-                >
-                  <option value="">{t("gpu.migOff")}</option>
-                  {migProfiles.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      MIG {m.id} — {m.memGiB} GB{m.max > 1 ? ` (×${m.max})` : ""}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: "", label: t("gpu.migOff"), hint: t("gpu.migOffHint") },
+                    ...migProfiles.map((m) => ({
+                      value: m.id,
+                      label: `MIG ${m.id} — ${m.memGiB} GB${m.max > 1 ? ` (×${m.max})` : ""}`,
+                      hint: t("gpu.migHint", { gb: m.memGiB, n: m.max }),
+                    })),
+                  ]}
+                  onChange={setMigId}
+                />
               </Field>
             )}
           </Card>

@@ -10,6 +10,9 @@ import { BANDWIDTH_EFFICIENCY, COMPUTE_EFFICIENCY, decodeStep } from "../lib/per
 import { SpeedPanel } from "./SpeedPanel";
 import { useLang } from "../lib/i18n";
 import { Badge, SectionTitle, Stat } from "./ui";
+import { Select } from "./choice";
+import { Tip } from "./tip";
+import { gpuHint } from "../lib/choices";
 
 function ctxLabel(n: number): string {
   return n >= 1048576 ? `${n / 1048576}M` : n >= 1024 ? `${n / 1024}k` : String(n);
@@ -160,8 +163,8 @@ export function GpuFit({
     // that is over budget has to say so on its own — in red and in words.
     const overBudget = g.id === gpuId && !u.fits;
     return (
+      <Tip key={g.id} text={gpuHint(t, g, lang)} className="flex min-w-0">
       <button
-        key={g.id}
         type="button"
         onClick={() => onGpu(g.id)}
         // aria-pressed doubles as the styling hook for the glass theme and as the
@@ -171,7 +174,7 @@ export function GpuFit({
         // would repaint an over-budget card in brand colours; this overrides it.
         data-over-budget={overBudget ? "true" : undefined}
         className={
-          "gpu-card rounded-xl p-2.5 text-left ring-1 transition " +
+          "gpu-card w-full rounded-xl p-2.5 text-left ring-1 transition " +
           (overBudget
             ? "ring-rose-500/50 bg-rose-500/10"
             : g.id === gpuId
@@ -194,6 +197,7 @@ export function GpuFit({
               : t("gpu.cardNeeds", { n: u.needed })}
         </div>
       </button>
+      </Tip>
     );
   };
 
@@ -242,17 +246,14 @@ export function GpuFit({
       <div className="rounded-2xl bg-ink-850/60 p-4 ring-1 ring-white/10">
         <div className="mb-2 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <select
-              value={gpuId}
-              onChange={(e) => onGpu(e.target.value)}
-              className="min-w-0 flex-1 rounded-lg bg-ink-800 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-control outline-none focus:ring-brand-500/60"
-            >
-              {catGpus.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name} — {g.totalGiB ?? g.vramGiB} GB
-                </option>
-              ))}
-            </select>
+            <div className="min-w-0 flex-1">
+              <Select
+                label={t("gpu.step")}
+                value={gpuId}
+                options={catGpus.map((g) => ({ value: g.id, label: `${g.name} — ${g.totalGiB ?? g.vramGiB} GB`, hint: gpuHint(t, g, lang) }))}
+                onChange={onGpu}
+              />
+            </div>
             {selUsage.fits ? (
               <Badge tone="good">{t("gpu.fits")}</Badge>
             ) : (
@@ -263,18 +264,19 @@ export function GpuFit({
             <StaticPageLink file={gpuPageFile(selected.id)}>{t("gpu.page", { name: selected.name })}</StaticPageLink>
           )}
           {migProfiles.length > 0 && (
-            <select
+            <Select
+              label={t("gpu.mig")}
               value={migId}
-              onChange={(e) => onMig(e.target.value)}
-              className="w-full rounded-lg bg-ink-800 px-3 py-1.5 text-sm text-slate-200 ring-1 ring-control outline-none focus:ring-brand-500/60"
-            >
-              <option value="">{t("gpu.migOff")}</option>
-              {migProfiles.map((m) => (
-                <option key={m.id} value={m.id}>
-                  MIG {m.id} — {m.memGiB} GB{m.max > 1 ? ` (×${m.max})` : ""}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: t("gpu.migOff"), hint: t("gpu.migOffHint") },
+                ...migProfiles.map((m) => ({
+                  value: m.id,
+                  label: `MIG ${m.id} — ${m.memGiB} GB${m.max > 1 ? ` (×${m.max})` : ""}`,
+                  hint: t("gpu.migHint", { gb: m.memGiB, n: m.max }),
+                })),
+              ]}
+              onChange={onMig}
+            />
           )}
         </div>
 
