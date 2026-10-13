@@ -4,6 +4,7 @@ import { resolveModel } from "../lib/hf";
 import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
 import { extractCaps, scoreFit, TASKS, type Status, type TaskId } from "../lib/fit";
 import { useLang } from "../lib/i18n";
+import { Tip } from "../components/tip";
 import { AMBER, GREEN, GREEN_DEEP, RED } from "../lib/palette";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, SectionTitle } from "../components/ui";
@@ -89,17 +90,19 @@ export function FitPage() {
             <SectionTitle step="2" title={t("fit.pickTask")} />
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {TASKS.map((tid) => (
+                <Tip key={tid} text={t(`fit.taskHint.${tid}`)} className="flex min-w-0">
                 <button
-                  key={tid}
                   type="button"
+                  aria-pressed={task === tid}
                   onClick={() => setTask(tid)}
                   className={
-                    "rounded-xl px-3 py-2 text-left text-xs ring-1 transition " +
+                    "w-full rounded-xl px-3 py-2 text-left text-xs ring-1 transition " +
                     (task === tid ? "bg-brand-600/30 ring-brand-500/50 text-white" : "bg-ink-850 ring-white/10 text-slate-300 hover:bg-white/5")
                   }
                 >
                   {t(`fit.task.${tid}`)}
                 </button>
+                </Tip>
               ))}
             </div>
           </Card>
