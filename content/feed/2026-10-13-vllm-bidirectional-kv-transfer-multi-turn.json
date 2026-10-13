@@ -1,0 +1,36 @@
+{
+  "id": "2026-10-13-vllm-bidirectional-kv-transfer-multi-turn",
+  "published": "2026-10-13T17:13:50Z",
+  "category": "tooling",
+  "en": {
+    "title": "vLLM adds bi-directional KV transfer, cutting multi-turn TTFT up to 3.3x",
+    "body": "vLLM's prefill-decode disaggregated serving can now send KV cache back from the decode node to the prefill node. Later turns of an agent conversation reuse earlier context instead of recomputing it. On a 1P1D EC2 P5en setup, with prefix caching off on the prefill node, TTFT at long prompts fell by up to 1.6x for Qwen3-32B and up to 3.3x for GLM-5-FP8.\n\nThe cost falls on decode VRAM. Finished KV blocks are kept for decoder_kv_blocks_ttl (default 480 s), so idle sessions hold memory until the timer expires. Remainders below kv_recompute_threshold (default 64 tokens) are recomputed instead."
+  },
+  "tr": {
+    "title": "vLLM çift yönlü KV aktarımı ekledi, çok turlu TTFT 3,3 kata kadar düştü",
+    "body": "vLLM'in prefill-decode ayrıştırmalı serving'inde decode node'u artık KV cache'i prefill node'una geri gönderebiliyor. Böylece agent konuşmalarının sonraki turlarında önceki context yeniden hesaplanmıyor. Prefill'de prefix caching kapalı 1P1D EC2 P5en kurulumunda, uzun prompt'larda TTFT Qwen3-32B için 1,6 kata, GLM-5-FP8 için 3,3 kata kadar düştü.\n\nBedeli decode VRAM'i ödüyor. Biten isteklerin KV blokları decoder_kv_blocks_ttl süresince (varsayılan 480 sn) tutuluyor, yani boştaki oturumlar süre dolana kadar bellek kaplıyor."
+  },
+  "refs": [
+    {
+      "url": "https://vllm.ai/blog/2026-10-12-bidirectional-kvxfer-multiturn-agentic-workload",
+      "source": "vLLM",
+      "title": "Improve TTFT for Multi-Turn Agentic Workloads with Bi-Directional KV Transfer in vLLM"
+    },
+    {
+      "url": "https://docs.vllm.ai/en/latest/features/nixl_connector_usage",
+      "source": "vLLM",
+      "title": "NIXL Connector Usage"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/blob/main/examples/disaggregated/disaggregated_serving/disagg_proxy_multiturn.py",
+      "source": "GitHub",
+      "title": "disagg_proxy_multiturn.py example proxy"
+    }
+  ],
+  "tags": [
+    "vllm",
+    "kv-cache",
+    "disaggregated-serving",
+    "ttft"
+  ]
+}
