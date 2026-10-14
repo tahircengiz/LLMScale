@@ -27,7 +27,7 @@ database alongside a curated preset list. Repos with no config of their own —
 GGUF forks, for instance — are resolved through their `base_model` lineage, and
 the page says so.
 
-## Ten tools
+## Eleven tools
 
 | | |
 |---|---|
@@ -41,6 +41,7 @@ the page says so.
 | **Capacity Plan** | requests per second, prompt and reply lengths and TTFT / TPOT targets in; replicas, tensor-parallel size and GPU count out, with what limits each replica |
 | **Serving Brief** | what a repository's other files say about serving it — chat template and parsers, sampling defaults, quantization read from the tensor names, MTP layers that ship or don't — with vLLM and SGLang flags |
 | **vLLM Params** | a tuned `vllm serve` command with per-flag rationale |
+| **GPU Compare** | 2–4 GPUs' datasheets side by side — architecture, memory type and bandwidth, dense BF16 / FP8 / FP4 throughput, power, form factor and links, each fact sourced in [`docs/gpu-specs.md`](docs/gpu-specs.md) |
 | **LLM 101** | an interactive walkthrough of how a language model works |
 
 ![Fine-tuning memory for Llama 3.3 70B under QLoRA](docs/media/finetune.png)

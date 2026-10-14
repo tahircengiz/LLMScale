@@ -41,7 +41,7 @@ latency targets into replicas and GPUs, vLLM launch parameters, a plain-language
 reading of a model's config.json, a serving brief read from the rest of its repository
 (chat template and parsers, sampling defaults, quantization from the tensor names,
 multi-token-prediction layers, with vLLM and SGLang flags), task-to-model fit,
-model anatomy, side-by-side comparison, model-name decoding, and a standalone
+model anatomy, side-by-side comparison of models and of GPUs' datasheets, model-name decoding, and a standalone
 explainer for people meeting the concepts for the first time. Guides
 generated from the same engine answer the questions people search for: a page
 per preset model, a page per commonly searched GPU, and concept guides to the KV
