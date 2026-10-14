@@ -18,6 +18,7 @@ import { TrainPage } from "./pages/TrainPage";
 import { ConfigPage } from "./pages/ConfigPage";
 import { ServingPage } from "./pages/ServingPage";
 import { PlanPage } from "./pages/PlanPage";
+import { GpuComparePage } from "./pages/GpuComparePage";
 import { Badge, Segmented } from "./components/ui";
 import { About } from "./components/About";
 import { LANG_NAME, pathFor } from "./lib/langPath";
@@ -30,8 +31,10 @@ import { SiteNav } from "./components/SiteNav";
 const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
 const LINKEDIN_URL = "https://tr.linkedin.com/in/tahircengiz";
 
-function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" | "config" | "serving" | "plan" {
+function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "compare" | "train" | "config" | "serving" | "plan" | "gpucompare" {
   const p = window.location.pathname;
+  // Before compare.html, which this name also ends with.
+  if (p.endsWith("gpu-compare.html")) return "gpucompare";
   if (p.endsWith("fit.html")) return "fit";
   if (p.endsWith("vllm.html")) return "vllm";
   if (p.endsWith("decode.html")) return "decode";
@@ -200,6 +203,8 @@ export default function App() {
             <ServingPage />
           ) : page === "plan" ? (
             <PlanPage />
+          ) : page === "gpucompare" ? (
+            <GpuComparePage />
           ) : (
             <SizingPage />
           )}

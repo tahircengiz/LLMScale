@@ -97,6 +97,7 @@ const SURFACES: Record<string, string> = {
   "config.html": "Config Decoder",
   "serving.html": "Serving Brief",
   "plan.html": "Capacity Plan",
+  "gpu-compare.html": "GPU Compare",
   "vllm.html": "vLLM Params",
   "learn.html": "LLM 101",
 };

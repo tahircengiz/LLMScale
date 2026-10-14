@@ -92,6 +92,14 @@ export const TR_META: Record<string, PageMeta> = {
     ogDescription:
       "Saniyedeki istek ve gecikme hedefleri girilir, GPU sayısı çıkar: vLLM için kopya sayısı ve tensor parallelism; bellek, bant genişliği ve tensor işlem gücünden.",
   },
+  "gpu-compare.html": {
+    title: "GPU Özellik Karşılaştırma — VRAM, Bant, TFLOPS | LLMScale",
+    description:
+      "2–4 GPU'yu veri sayfalarından yan yana karşılaştır: mimari, bellek tipi ve bant genişliği, yoğun BF16, FP8 ve FP4 TFLOPS, güç, NVLink ve form faktörü — tüketici ve veri merkezi kartları, Apple Silicon ve yapay zekâ PC'leri.",
+    ogTitle: "LLMScale — GPU Karşılaştırma",
+    ogDescription:
+      "2–4 GPU yan yana: mimari, bellek ve bant genişliği, yoğun tensor TFLOPS, güç ve bağlantılar, üretici veri sayfalarından.",
+  },
   "learn.html": {
     title: "LLM 101 — Bir LLM Nasıl Çalışır, Görsel Anlatım | LLMScale",
     description:

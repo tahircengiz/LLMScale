@@ -244,7 +244,7 @@ console.log("\n--- every tool explains itself ---");
 // guarantees Turkish has whatever English has.
 const aboutPages = [...(read("src/components/About.tsx").match(/export type AboutPage = ([^;]+);/)?.[1] ?? "")
   .matchAll(/"([a-z]+)"/g)].map((m) => m[1]);
-check("About names the pages", aboutPages.length === 10, aboutPages.join(", "));
+check("About names the pages", aboutPages.length === 11, aboutPages.join(", "));
 const aboutGaps = aboutPages.filter((pg) => {
   const has = (k: string) => k in DICTS.en;
   let q = 0;

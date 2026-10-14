@@ -48,6 +48,7 @@ export default defineConfig({
         config: fileURLToPath(new URL("./config.html", import.meta.url)),
         serving: fileURLToPath(new URL("./serving.html", import.meta.url)),
         plan: fileURLToPath(new URL("./plan.html", import.meta.url)),
+        gpucompare: fileURLToPath(new URL("./gpu-compare.html", import.meta.url)),
       },
     },
   },

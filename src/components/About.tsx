@@ -3,7 +3,7 @@ import { Card } from "./ui";
 import { StaticPageLink } from "./StaticPageLink";
 import { CONCEPT_FILES } from "../lib/staticPages";
 
-export type AboutPage = "sizing" | "train" | "fit" | "anatomy" | "compare" | "decode" | "vllm" | "config" | "serving" | "plan";
+export type AboutPage = "sizing" | "train" | "fit" | "anatomy" | "compare" | "decode" | "vllm" | "config" | "serving" | "plan" | "gpucompare";
 
 /** The concept guides worth reading after each tool (scripts/concepts.ts). */
 const DEEPER: Partial<Record<AboutPage, (keyof typeof CONCEPT_FILES)[]>> = {
@@ -16,6 +16,7 @@ const DEEPER: Partial<Record<AboutPage, (keyof typeof CONCEPT_FILES)[]>> = {
   config: ["kvCache", "attention", "quantization"],
   serving: ["quantization"],
   plan: ["kvCache", "quantization"],
+  gpucompare: ["quantization"],
 };
 
 /** How many numbered keys of one kind a page has — about.<page>.p1, p2, … — so a
