@@ -73,7 +73,7 @@ export const GPUS: Gpu[] = [
   // address by default; totalGiB is the full pool. Raise the cap via iogpu.wired_limit_mb.
   { id: "apple-m4-32", name: "Apple M4", vramGiB: 24, totalGiB: 32, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 120, note: "Unified memory; ~75% usable by the GPU by default" },
   { id: "apple-m4pro-48", name: "Apple M4 Pro", vramGiB: 36, totalGiB: 48, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 273, note: "Unified memory; ~75% usable by the GPU by default" },
-  { id: "apple-m4max-64", name: "Apple M4 Max (64GB)", vramGiB: 48, totalGiB: 64, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 410, note: "Unified memory; ~75% usable by the GPU by default" },
+  { id: "apple-m4max-64", name: "Apple M4 Max (64GB)", vramGiB: 48, totalGiB: 64, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 546, note: "Unified memory; ~75% usable by the GPU by default" },
   { id: "apple-m4max-128", name: "Apple M4 Max (128GB)", vramGiB: 96, totalGiB: 128, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 546, note: "Unified memory; ~75% usable by the GPU by default" },
   { id: "apple-m2ultra-192", name: "Apple M2 Ultra", vramGiB: 144, totalGiB: 192, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 800, tflops: { bf16: 27.2 }, note: "Unified memory; ~75% usable by the GPU by default" },
   { id: "apple-m3ultra-256", name: "Apple M3 Ultra (256GB)", vramGiB: 192, totalGiB: 256, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 819, note: "Unified memory; ~75% usable by the GPU by default" },
