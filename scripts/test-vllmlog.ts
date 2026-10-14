@@ -102,7 +102,7 @@ console.log(`      worst miss ${worst.toFixed(2)} GiB`);
   check("a 12 GB card: 2,048 tokens, 256 sequences", JSON.stringify(vllmBatch(11.99)) === JSON.stringify({ tokens: 2048, seqs: 256, graphCap: 512 }));
   check("an H100: 8,192 and 1,024", vllmBatch(80, "H100 (SXM/PCIe) 80GB").tokens === 8192);
   check("an A100 80GB stays at the small defaults", vllmBatch(80, "A100 80GB").tokens === 2048);
-  check("a B200: 16,384, graphs up to 1,024", vllmBatch(192, "B200 192GB").tokens === 16384 && vllmBatch(192, "B200 192GB").graphCap === 1024);
+  check("a B200: 16,384, graphs up to 1,024", vllmBatch(180, "B200 180GB").tokens === 16384 && vllmBatch(180, "B200 180GB").graphCap === 1024);
   check("an RTX 5090 is not datacenter Blackwell", vllmBatch(32, "RTX 5090").graphCap === 512);
 }
 

@@ -110,7 +110,7 @@ GPU fit budgets a discrete card at vLLM's default `--gpu-memory-utilization`,
 92% of its memory, leaving the rest to the CUDA context; each card adds vLLM's
 overhead at its own serve defaults, and every GPU of a tensor-parallel group
 repeats it. Unified-memory devices are budgeted at the share their GPU can address
-by default rather than the whole pool — 75% on Apple Silicon, 96 of 128 GB on
+by default rather than the whole pool — 75% on Apple Silicon (two-thirds below 36 GB), 96 of 128 GB on
 Strix Halo, 120 of 128 GB on DGX Spark.
 
 > These are **planning figures, not guarantees**. Real usage depends on the

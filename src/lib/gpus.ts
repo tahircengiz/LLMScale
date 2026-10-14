@@ -57,11 +57,11 @@ export const GPUS: Gpu[] = [
   { id: "a100-80", name: "A100 80GB", vramGiB: 80, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 2039, tflops: { bf16: 312 } },
   { id: "h100-80", name: "H100 (SXM/PCIe) 80GB", vramGiB: 80, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 3350, tflops: { bf16: 989.5, fp8: 1979 } },
   { id: "h200-141", name: "H200 141GB", vramGiB: 141, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 4800, tflops: { bf16: 989.5, fp8: 1979 } },
-  { id: "b200-192", name: "B200 192GB", vramGiB: 192, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 8000, tflops: { bf16: 2250, fp8: 4500, fp4: 9000 } },
+  { id: "b200-192", name: "B200 180GB", vramGiB: 180, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 7700, tflops: { bf16: 2250, fp8: 4500, fp4: 9000 } },
   { id: "gh200-96", name: "GH200 96GB", vramGiB: 96, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 4000, tflops: { bf16: 990, fp8: 1979 } },
   { id: "h100nvl-94", name: "H100 NVL 94GB", vramGiB: 94, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 3938, tflops: { bf16: 835.5, fp8: 1670.5 } },
   { id: "rtxpro6000-96", name: "RTX PRO 6000 Blackwell", vramGiB: 96, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 1792, tflops: { bf16: 500, fp8: 1000, fp4: 2000 } },
-  { id: "b300-288", name: "B300 (Blackwell Ultra) 288GB", vramGiB: 288, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 8000, tflops: { bf16: 2250, fp8: 4500, fp4: 13500 } },
+  { id: "b300-288", name: "B300 (Blackwell Ultra) 270GB", vramGiB: 270, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 7700, tflops: { bf16: 2250, fp8: 4500, fp4: 13500 } },
 
   // AMD
   { id: "mi210-64", name: "AMD MI210", vramGiB: 64, category: "datacenter", vendor: "AMD", bandwidthGBs: 1638, tflops: { bf16: 181 } },
@@ -69,9 +69,11 @@ export const GPUS: Gpu[] = [
   { id: "mi325x-256", name: "AMD MI325X", vramGiB: 256, category: "datacenter", vendor: "AMD", bandwidthGBs: 6000, tflops: { bf16: 1307.4, fp8: 2614.9 } },
   { id: "mi355x-288", name: "AMD MI355X", vramGiB: 288, category: "datacenter", vendor: "AMD", bandwidthGBs: 8000, tflops: { bf16: 2516.6, fp8: 5033.2, fp4: 10066.3 } },
 
-  // Apple Silicon — unified memory (shared CPU/GPU). vramGiB is the ~75% the GPU can
-  // address by default; totalGiB is the full pool. Raise the cap via iogpu.wired_limit_mb.
-  { id: "apple-m4-32", name: "Apple M4", vramGiB: 24, totalGiB: 32, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 120, note: "Unified memory; ~75% usable by the GPU by default" },
+  // Apple Silicon — unified memory (shared CPU/GPU). vramGiB is the share the GPU can
+  // address by default (Metal's recommendedMaxWorkingSetSize, as llama.cpp logs it):
+  // ~75% from 36 GB up, two-thirds below; totalGiB is the full pool. Raise the cap
+  // via iogpu.wired_limit_mb. Logs per device: docs/gpu-specs.md.
+  { id: "apple-m4-32", name: "Apple M4", vramGiB: 21.3, totalGiB: 32, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 120, note: "Unified memory; ~2/3 usable by the GPU by default on a Mac under 36 GB" },
   { id: "apple-m4pro-48", name: "Apple M4 Pro", vramGiB: 36, totalGiB: 48, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 273, note: "Unified memory; ~75% usable by the GPU by default" },
   { id: "apple-m4max-64", name: "Apple M4 Max (64GB)", vramGiB: 48, totalGiB: 64, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 546, note: "Unified memory; ~75% usable by the GPU by default" },
   { id: "apple-m4max-128", name: "Apple M4 Max (128GB)", vramGiB: 96, totalGiB: 128, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 546, note: "Unified memory; ~75% usable by the GPU by default" },

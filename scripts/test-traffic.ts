@@ -213,7 +213,7 @@ check("the session counts as a calculator visit", r16.sizingSessions === 1);
 check("the settled state survives a trailing nav click", r16.blankActivated === 1);
 check("and the model is still credited", find(r16.modelsChosen, "Llama 3.3 70B Instruct") === 1,
   JSON.stringify(r16.modelsChosen));
-check("as is the device", find(r16.devicesChosen, "B200 192GB") === 1, JSON.stringify(r16.devicesChosen));
+check("as is the device", find(r16.devicesChosen, "B200 180GB") === 1, JSON.stringify(r16.devicesChosen));
 
 console.log("\n--- a seed only contaminates the page that writes it ---");
 // h100-80 is the vLLM helper's own default. On the sizing page it is an

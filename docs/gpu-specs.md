@@ -11,8 +11,10 @@ configuration; **low** — inferred or conflicting. **Only high and medium value
 the base card, "H100 (SXM/PCIe)" the SXM part its bandwidth belongs to, and a link's bandwidth is both directions
 together, as vendors quote it. Apple publishes no SoC power, so Apple power is the Mac's maximum at the wall.
 
-Rows marked *discrepancy* are where a source disagrees with a figure in `src/lib/gpus.ts`. The 64 GB M4 Max's
-bandwidth has been corrected (410 → 546 GB/s); the others are open.
+Rows marked *discrepancy* are where a source disagrees with a figure in `src/lib/gpus.ts`. Corrected since:
+the 64 GB M4 Max's bandwidth (410 → 546 GB/s); B200 to NVIDIA's per-GPU 180 GB at 7.7 TB/s (192 GB is the
+physical memory, 8 TB/s the GB200's) and B300 to 270 GB at 7.7 TB/s; the 32 GB M4's GPU share to two-thirds, 21.3 GiB,
+as Metal reports it on a Mac under 36 GB. The others are open.
 
 | Device | Field | Value | Confidence | Source | Note |
 |---|---|---|---|---|---|

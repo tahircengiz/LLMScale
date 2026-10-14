@@ -48,6 +48,14 @@ console.log("\n--- the datasheet facts ---");
   const undocumented = ids.filter((id) => !doc.includes("`" + id + "`"));
   check("docs/gpu-specs.md sources every device", undocumented.length === 0, undocumented.join(", "));
   check("the M4 Max 64GB is the 40-core part at 546 GB/s, as Apple sells it", gpu("apple-m4max-64").bandwidthGBs === 546 && GPU_SPECS["apple-m4max-64"].cores === 40);
+  // NVIDIA's per-GPU listing (HGX B200 / B300 datasheets), not the physical stacks.
+  check("B200 at 180 GB and 7.7 TB/s, as NVIDIA lists it per GPU", gpu("b200-192").vramGiB === 180 && gpu("b200-192").bandwidthGBs === 7700);
+  check("B300 at 270 GB and 7.7 TB/s", gpu("b300-288").vramGiB === 270 && gpu("b300-288").bandwidthGBs === 7700);
+  check("…and their names say so", gpu("b200-192").name.includes("180GB") && gpu("b300-288").name.includes("270GB"));
+  check("B200's largest MIG slice is the whole 180 GB", migMax(gpu("b200-192")) === 7);
+  // Metal's recommendedMaxWorkingSetSize: two-thirds below 36 GB, three-quarters from it up.
+  check("a 32 GB M4 gives its GPU two-thirds", Math.abs(gpu("apple-m4-32").vramGiB - 32 * 2 / 3) < 0.05);
+  check("…a 48 GB M4 Pro three-quarters", gpu("apple-m4pro-48").vramGiB === 36);
 }
 
 console.log("\n--- what the about text says ---");
