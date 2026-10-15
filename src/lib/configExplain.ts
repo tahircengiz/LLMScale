@@ -13,13 +13,13 @@
 //
 // React-free: scripts/test-config.ts runs it against real configs.
 
-import { BYTES_PER_GIB, kvBytesPerToken, resolveHeadDim, usesMla, type Dtype, type ModelArch } from "./calc.ts";
+import { BYTES_PER_GIB, kvBytesPerLayerToken, kvBytesPerToken, resolveHeadDim, usesMla, type Dtype, type ModelArch } from "./calc.ts";
 import { archFromConfig } from "./hf.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
 import type { Lang } from "./dict.ts";
 import { lookupField, type FieldGroup, type GlossaryEntry, type Relevance } from "./configGlossary.ts";
-import { activeWindow, hybridLayers } from "./layers.ts";
+import { activeWindow, compressedLayers, hybridLayers } from "./layers.ts";
 
 // Configs are free-form JSON.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -358,7 +358,9 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
   const moeUncounted = rebuilt && moeHint && !isMoE;
   const archName: string | undefined = Array.isArray(cfg?.architectures) ? cfg.architectures[0] : undefined;
   const hybrid = hybridLayers(c, L);
-  const window = activeWindow(c);
+  // DeepSeek V4's window sits beside a compressed copy of the whole context.
+  const compressed = compressedLayers(c);
+  const window = compressed ? undefined : activeWindow(c);
 
   // ── What kind of model is it?
   {
@@ -432,6 +434,9 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
     } else if (type && typeof factor === "number") {
       parts.push({ k: "context.scaledBy", v: { f: fmtNum(factor, lang, 2), type: ropeLabel(type) } });
     }
+    if (compressed) {
+      parts.push({ k: "context.compressed", v: { w: F(compressed.window), csa: F(compressed.csa), hca: F(compressed.hca), k: F(c.index_topk ?? 512) } });
+    }
     if (window) {
       if (window.sliding > 0 && window.sliding < L) {
         parts.push({ k: "context.windowSome", v: { s: F(window.sliding), n: F(L), w: F(window.size) } });
@@ -455,11 +460,13 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
     const perToken = kvBytesPerToken({ ...arch, attnLayers: undefined }, dt);
     const hd = resolveHeadDim(arch);
     const mla = usesMla(arch);
-    const parts: Part[] = [{ k: "kv.perToken", v: { b: fmtBytes(perToken, lang) } }];
+    const parts: Part[] = [{ k: compressed ? "kv.perToken.compressed" : "kv.perToken", v: { b: fmtBytes(perToken, lang), w: F(compressed?.window ?? 0) } }];
     if (maxCtx) parts.push({ k: "kv.full", v: { s: shortTokens(maxCtx, lang), b: fmtBytes(perToken * maxCtx, lang) } });
     const working: Part[] = mla
       ? [{ k: "kv.w.mla", v: { L: F(L), r: F(arch.kvLoraRank!), q: F(arch.qkRopeHeadDim!), b: F(perToken) } }]
-      : [{ k: "kv.w.gqa", v: { L: F(L), kv: F(arch.numKeyValueHeads), hd: F(hd), b: F(perToken) } }];
+      : compressed
+        ? [{ k: "kv.w.compressed", v: { csa: F(compressed.csa), hca: F(compressed.hca), e: F(kvBytesPerLayerToken(arch, dt)), i: F(compressed.indexDim + Math.ceil(compressed.indexDim / 128) * 4), b: F(Math.round(perToken)) } }]
+        : [{ k: "kv.w.gqa", v: { L: F(L), kv: F(arch.numKeyValueHeads), hd: F(hd), b: F(perToken) } }];
     let tone: Answer["tone"];
     if (hybrid) {
       const counted = kvBytesPerToken({ ...arch, numLayers: hybrid.attention }, dt);
@@ -476,7 +483,9 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
       tone,
       cites: mla
         ? cites(at("num_hidden_layers"), at("kv_lora_rank"), at("qk_rope_head_dim"))
-        : cites(at("num_hidden_layers", "n_layer", "num_layers"), at("num_key_value_heads", "num_kv_heads"), at("head_dim"),
+        : compressed
+          ? cites(at("compress_ratios"), at("sliding_window"), at("head_dim"), at("index_head_dim"))
+          : cites(at("num_hidden_layers", "n_layer", "num_layers"), at("num_key_value_heads", "num_kv_heads"), at("head_dim"),
             c.head_dim === undefined ? at("hidden_size", "n_embd") : undefined,
             c.head_dim === undefined ? at("num_attention_heads", "n_head") : undefined, hybrid ? prefix + hybrid.path : undefined, window ? prefix + window.path : undefined),
     });

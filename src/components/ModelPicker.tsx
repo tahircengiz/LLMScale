@@ -11,7 +11,7 @@ import { KNOWN_MODELS } from "../lib/models";
 import { formatParams } from "../lib/format";
 import { track } from "../lib/analytics";
 import { useLang } from "../lib/i18n";
-import { usesMla } from "../lib/calc";
+import { usesCompressedAttn, usesMla } from "../lib/calc";
 import { Badge, Field, NumberInput, SectionTitle, Segmented } from "./ui";
 
 type Tab = "search" | "presets" | "custom";
@@ -327,6 +327,8 @@ export function ModelPicker({
               returning a number 25x smaller than the same config would imply. */}
           {usesMla(arch) ? (
             <Badge tone="good">{t("common.mla")}</Badge>
+          ) : usesCompressedAttn(arch) ? (
+            <Badge tone="good">{t("common.csa")}</Badge>
           ) : (
             arch.numKeyValueHeads < arch.numAttentionHeads && <Badge tone="good">{t("common.gqa")}</Badge>
           )}

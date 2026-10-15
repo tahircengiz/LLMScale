@@ -90,6 +90,11 @@ export function encodeState(s: AppState): string {
       p.set("sl", String(a.slidingLayers));
       p.set("sw", String(a.slidingWindow));
     }
+    // DeepSeek V4's compressed layers: without them it decodes as one entry per token.
+    if (a.compressedAttn) {
+      const c = a.compressedAttn;
+      p.set("cx", [c.csa, c.hca, c.window, c.indexDim].join("."));
+    }
     if (a.stateBytesPerSeq) p.set("st", String(a.stateBytesPerSeq));
     if (a.stateLayers) p.set("sn", String(a.stateLayers));
     if (a.numExperts && a.expertsPerToken) {
@@ -117,6 +122,13 @@ export function encodeState(s: AppState): string {
   if (s.gpuId) p.set("g", s.gpuId);
   if (s.migId) p.set("mig", s.migId);
   return p.toString();
+}
+
+/** "csa.hca.window.indexDim", as encodeState writes it. */
+function compressedOf(v: string | null): ModelArch["compressedAttn"] {
+  const n = (v ?? "").split(".").map(Number);
+  if (n.length !== 4 || !n.every((x) => Number.isInteger(x) && x >= 0) || n[0] + n[1] === 0 || !n[2]) return undefined;
+  return { csa: n[0], hca: n[1], window: n[2], indexDim: n[3] };
 }
 
 function num(v: string | null): number | undefined {
@@ -153,6 +165,7 @@ export function decodeState(search: string): Partial<AppState> {
       attnLayers: num(p.get("al")),
       slidingLayers: num(p.get("sl")),
       slidingWindow: num(p.get("sw")),
+      compressedAttn: compressedOf(p.get("cx")),
       stateBytesPerSeq: num(p.get("st")),
       stateLayers: num(p.get("sn")),
       numExperts: num(p.get("ne")),

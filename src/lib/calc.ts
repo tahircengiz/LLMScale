@@ -61,6 +61,11 @@ export interface ModelArch {
    */
   kvLoraRank?: number;
   qkRopeHeadDim?: number;
+  /** DeepSeek V4's compressed attention (config `compress_ratios`). Every layer
+   *  keeps its last `window` tokens; on top of that `csa` layers keep one entry per
+   *  4 tokens, each with an `indexDim`-wide indexer key, and `hca` layers one entry
+   *  per 128. The entry is one `headDim`-wide vector serving as key and value. */
+  compressedAttn?: { csa: number; hca: number; window: number; indexDim: number };
   /** Layers that keep a KV cache, when not all of them do: hybrids keep a fixed
    *  state in their linear-attention or Mamba layers instead (layers.ts). */
   attnLayers?: number;
@@ -90,6 +95,12 @@ export interface ModelArch {
 /** Does this architecture cache a compressed latent instead of K and V tensors? */
 export function usesMla(arch: ModelArch): boolean {
   return !!(arch.kvLoraRank && arch.qkRopeHeadDim);
+}
+
+/** Does it keep DeepSeek V4's compressed caches instead of one entry per token? */
+export function usesCompressedAttn(arch: ModelArch): boolean {
+  const c = arch.compressedAttn;
+  return !!c && c.csa + c.hca > 0 && c.window > 0;
 }
 
 export interface CalcInput {
@@ -129,6 +140,9 @@ export interface CalcResult {
   /** The whole deployment: weights + KV cache + the overhead on every GPU. */
   totalGiB: number;
   headDim: number;
+  /** DeepSeek V4: of one request's cache, the compressed part that grows with the
+   *  context and the window and compressor state sized for the tokens in flight. */
+  compressed?: { growGiB: number; fixedGiB: number; inFlight: number; window: number };
 }
 
 export function resolveHeadDim(arch: ModelArch): number {
@@ -164,20 +178,109 @@ export function kvBytesPerLayerToken(arch: ModelArch, kvDtype: Dtype): number {
   // ordinary formula to these models overstates the cache badly: DeepSeek-V3 came
   // out 25x too large — 13.34 GiB at 8k context where the true figure is 0.54.
   if (usesMla(arch)) return (arch.kvLoraRank! + arch.qkRopeHeadDim!) * DTYPE_BYTES[kvDtype];
+  // DeepSeek V4: one raw token in a layer's window, a single vector for K and V.
+  if (usesCompressedAttn(arch)) return v4Bytes(arch, kvDtype).entry;
   // 2 = one tensor for K and one for V.
   return 2 * arch.numKeyValueHeads * resolveHeadDim(arch) * DTYPE_BYTES[kvDtype];
 }
 
 /** KV cache bytes for ONE token of ONE sequence, across every layer that keeps a
- *  cache: what a token costs while the context is shorter than any window. */
+ *  cache: what a token costs while the context is shorter than any window. For
+ *  DeepSeek V4, what each further token adds to a long context: a quarter of an
+ *  entry and its indexer key in every CSA layer, a 128th of one in every HCA layer. */
 export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
+  if (usesCompressedAttn(arch)) {
+    const c = arch.compressedAttn!;
+    const b = v4Bytes(arch, kvDtype);
+    return (c.csa * (b.entry + b.index)) / CSA_RATIO + (c.hca * b.entry) / HCA_RATIO;
+  }
   return (arch.attnLayers ?? arch.numLayers) * kvBytesPerLayerToken(arch, kvDtype);
+}
+
+/**
+ * DeepSeek V4 as vLLM 0.31.0 caches it (vllm/models/deepseek_v4/attention.py,
+ * compressor.py, vllm/v1/attention/backends/mla/sparse_swa.py). One cached vector
+ * serves as key and value, and a layer keeps up to three caches of them:
+ *   - every layer, its last `window` (128) tokens as they are;
+ *   - a CSA layer, one entry per 4 tokens, and beside each a 128-wide indexer key
+ *     that picks which entries a query reads; an HCA layer, one entry per 128.
+ * While a group of tokens is being folded into one entry, the compressor keeps the
+ * group's projections and scores in fp32. The compressed caches are cut in blocks
+ * of 256 tokens; the window and the compressor state are sliding windows, which
+ * vLLM sizes for every token in flight as well (kvReservedPerSeq below).
+ * At --kv-cache-dtype fp8, the default and on NVIDIA the only layout, an entry is
+ * DeepSeek's fp8_ds_mla row: 448 fp8 values, the 64 positional ones kept in bf16
+ * and a scale per 64 values, 584 bytes, with each page padded to 576 bytes. A
+ * 16-bit cache keeps the 512 values plain. The indexer key is fp8 with an fp32
+ * scale, 132 bytes, whatever the cache dtype. Treating every layer as keeping every
+ * token made DeepSeek-V4-Flash's cache 11x too large at 256k tokens.
+ */
+const CSA_RATIO = 4;
+const HCA_RATIO = 128;
+/** --block-size the V4 recipe serves with: tokens per block of every compressed cache. */
+const V4_BLOCK = 256;
+/** Tokens per block of the window cache, and of the CSA and HCA compressor states. */
+const V4_SWA_BLOCK = 64;
+const V4_CSA_STATE_BLOCK = 4;
+const V4_HCA_STATE_BLOCK = 8;
+
+function v4Bytes(arch: ModelArch, kvDtype: Dtype) {
+  const hd = resolveHeadDim(arch);
+  const rope = arch.qkRopeHeadDim ?? 64;
+  const packed = DTYPE_BYTES[kvDtype] < 2;
+  const nope = hd - rope;
+  const entry = packed ? nope + rope * 2 + Math.ceil(nope / 64 / 8) * 8 : hd * DTYPE_BYTES[kvDtype];
+  const indexDim = arch.compressedAttn?.indexDim ?? 128;
+  const align = packed ? 576 : 512;
+  return {
+    entry,
+    index: indexDim + Math.ceil(indexDim / 128) * 4,
+    page: (bytes: number) => Math.ceil(bytes / align) * align,
+    // fp32 projection and score per token; a CSA compressor keeps two overlapping groups.
+    csaState: 2 * 2 * hd * 4,
+    indexState: 2 * 2 * indexDim * 4,
+    hcaState: 2 * hd * 4,
+  };
+}
+
+/** What ONE V4 request holds back in vLLM at `contextLength`, in two parts: the
+ *  compressed caches, which grow with the context, and the window and compressor
+ *  state, which vLLM sizes for `window − 1` tokens plus two batches in flight
+ *  (SlidingWindowSpec.max_admission_blocks_per_request). */
+function v4Reserved(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens: number) {
+  const c = arch.compressedAttn!;
+  const b = v4Bytes(arch, kvDtype);
+  const blocks = Math.ceil(contextLength / V4_BLOCK);
+  const perBlock =
+    c.csa * (b.page((V4_BLOCK / CSA_RATIO) * b.entry) + b.page((V4_BLOCK / CSA_RATIO) * b.index)) +
+    c.hca * b.page((V4_BLOCK / HCA_RATIO) * b.entry);
+  const slide = (window: number, block: number) =>
+    Math.ceil(Math.min(window - 1 + 2 * batchTokens, contextLength) / block) + 1;
+  const csaWindow = 2 * CSA_RATIO;
+  const fixed =
+    arch.numLayers * slide(c.window, V4_SWA_BLOCK) * b.page(V4_SWA_BLOCK * b.entry) +
+    c.csa * slide(csaWindow, V4_CSA_STATE_BLOCK) *
+      (b.page(V4_CSA_STATE_BLOCK * b.csaState) + b.page(V4_CSA_STATE_BLOCK * b.indexState)) +
+    c.hca * slide(HCA_RATIO, V4_HCA_STATE_BLOCK) * b.page(V4_HCA_STATE_BLOCK * b.hcaState);
+  return { grow: blocks * perBlock, fixed, perBlock };
 }
 
 /** KV cache and fixed state ONE sequence holds at a context length: full-attention
  *  layers keep every token, sliding layers at most their window, and a hybrid's
  *  linear-attention or Mamba layers a fixed state. */
 export function kvBytesPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number): number {
+  if (usesCompressedAttn(arch)) {
+    const c = arch.compressedAttn!;
+    const b = v4Bytes(arch, kvDtype);
+    const at = (n: number) => Math.min(contextLength, n);
+    return (
+      arch.numLayers * at(c.window) * b.entry +
+      c.csa * Math.floor(contextLength / CSA_RATIO) * (b.entry + b.index) +
+      c.hca * Math.floor(contextLength / HCA_RATIO) * b.entry +
+      c.csa * at(2 * CSA_RATIO) * (b.csaState + b.indexState) +
+      c.hca * at(HCA_RATIO) * b.hcaState
+    );
+  }
   const perLayer = kvBytesPerLayerToken(arch, kvDtype);
   const layers = arch.attnLayers ?? arch.numLayers;
   const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, layers) : 0;
@@ -189,7 +292,7 @@ export function kvBytesPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: nu
  *  with fewer KV heads than GPUs replicates them, and MLA's single latent per token
  *  is held whole on every GPU (vLLM shards attention by head; the latent has none). */
 export function kvSplit(arch: ModelArch, gpus: number): number {
-  if (usesMla(arch)) return 1;
+  if (usesMla(arch) || usesCompressedAttn(arch)) return 1;
   return Math.max(1, Math.min(gpus, arch.numKeyValueHeads || gpus));
 }
 
@@ -247,6 +350,10 @@ function kvLayout(arch: ModelArch, kvDtype: Dtype) {
  * Granite 4.0-H Micro (23.2× vs 23.21×) in scripts/test-vllmlog.ts.
  */
 export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens = 2048): number {
+  if (usesCompressedAttn(arch)) {
+    const r = v4Reserved(arch, kvDtype, contextLength, batchTokens);
+    return r.grow + r.fixed;
+  }
   const l = kvLayout(arch, kvDtype);
   if (!l) return 0;
   const blocksOf = (tokens: number) => Math.ceil(tokens / l.block);
@@ -275,6 +382,8 @@ export function tokensInUse(load: TypicalLoad, contextLength: number): number {
  *  layers' whole blocks of the common prefix. Sliding layers keep only their
  *  window and a hybrid's state is per request, so neither is shared. */
 export function kvSharedPrefix(arch: ModelArch, kvDtype: Dtype, prefixTokens: number): number {
+  // DeepSeek V4 shares its compressed caches' whole 256-token blocks.
+  if (usesCompressedAttn(arch)) return Math.floor(Math.max(0, prefixTokens) / V4_BLOCK) * v4Reserved(arch, kvDtype, 1, 1).perBlock;
   const l = kvLayout(arch, kvDtype);
   if (!l || !l.full) return 0;
   return l.full * Math.floor(Math.max(0, prefixTokens) / l.block) * l.group * l.page;
@@ -319,7 +428,7 @@ export function calculate(input: CalcInput): CalcResult {
   const o = overheadPerGpu(arch, input.batch, gpus);
   const perGpu = (weights / gpus + kvTotal / kvSplit(arch, gpus)) / BYTES_PER_GIB + o.totalGiB;
 
-  return {
+  const result: CalcResult = {
     weightsGiB: weights / BYTES_PER_GIB,
     kvCacheGiB: kvTotal / BYTES_PER_GIB,
     kvPerSeqGiB: kvPerSeq / BYTES_PER_GIB,
@@ -332,6 +441,12 @@ export function calculate(input: CalcInput): CalcResult {
     totalGiB: (weights + kvTotal) / BYTES_PER_GIB + gpus * o.totalGiB,
     headDim,
   };
+  if (usesCompressedAttn(arch)) {
+    const tokens = (input.batch ?? SMALL_CARD_BATCH).tokens;
+    const r = v4Reserved(arch, kvDtype, contextLength, tokens);
+    result.compressed = { growGiB: r.grow / BYTES_PER_GIB, fixedGiB: r.fixed / BYTES_PER_GIB, inFlight: 2 * tokens, window: arch.compressedAttn!.window };
+  }
+  return result;
 }
 
 /** What each GPU has left for the KV cache once its share of the weights and the

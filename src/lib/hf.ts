@@ -6,7 +6,7 @@
 import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
-import { layerPlan } from "./layers.ts";
+import { compressedLayers, layerPlan } from "./layers.ts";
 
 const HF = "https://huggingface.co";
 
@@ -204,8 +204,11 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   if (arch.numExperts && typeof moeWidth === "number") arch.moeIntermediateSize = moeWidth;
   // An absent flag counts as untied: the larger, safer figure for a quantized estimate.
   arch.tieEmbeddings = (c.tie_word_embeddings ?? cfg?.tie_word_embeddings) === true;
+  // DeepSeek V4 keeps most of its context compressed 4x or 128x (calc.ts).
+  const compressed = compressedLayers(c);
+  if (compressed) arch.compressedAttn = compressed;
   // Sliding windows and hybrid layers cache less than every layer at full context.
-  const plan = layerPlan(c);
+  const plan = compressed ? undefined : layerPlan(c);
   if (plan) {
     if (plan.attention !== numLayers) arch.attnLayers = plan.attention;
     if (plan.sliding && plan.window) [arch.slidingLayers, arch.slidingWindow] = [plan.sliding, plan.window];

@@ -74,9 +74,19 @@ export function Results({ result, cardName }: { result: CalcResult; cardName?: s
         <Stat
           label={t("stat.kvToken")}
           value={formatBytes(result.kvPerTokenBytes)}
-          sub={t("stat.headDim", { n: result.headDim })}
+          sub={result.compressed ? t("stat.kvCompressed") : t("stat.headDim", { n: result.headDim })}
         />
       </div>
+      {result.compressed && (
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+          {t("results.compressedNote", {
+            grow: formatGiB(result.compressed.growGiB),
+            fixed: formatGiB(result.compressed.fixedGiB),
+            w: formatInt(result.compressed.window),
+            tokens: formatInt(result.compressed.inFlight),
+          })}
+        </p>
+      )}
     </div>
   );
 }

@@ -100,6 +100,21 @@ export function stateElementsPerLayer(c: Json): number {
   return 0;
 }
 
+/** DeepSeek V4: how many layers fold their cache 4 tokens into one entry (CSA)
+ *  and 128 into one (HCA), beside the sliding window every layer keeps. The list
+ *  carries the speculative-decoding layers after the model's own, so only the
+ *  first num_hidden_layers count. vLLM builds an indexer for ratio 4 only and
+ *  accepts no other ratio (vllm/models/deepseek_v4/attention.py). */
+export function compressedLayers(c: Json): { csa: number; hca: number; window: number; indexDim: number } | undefined {
+  const L = c?.num_hidden_layers ?? 0;
+  if (!Array.isArray(c?.compress_ratios) || !L || typeof c.sliding_window !== "number" || c.sliding_window <= 0) return undefined;
+  const ratios: number[] = c.compress_ratios.slice(0, L).map(Number);
+  const csa = ratios.filter((r) => r === 4).length;
+  const hca = ratios.filter((r) => r === 128).length;
+  if (csa + hca === 0) return undefined;
+  return { csa, hca, window: c.sliding_window, indexDim: typeof c.index_head_dim === "number" ? c.index_head_dim : 128 };
+}
+
 export interface LayerPlan {
   /** Layers that keep a KV cache (full or sliding). */
   attention: number;
