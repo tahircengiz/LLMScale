@@ -161,8 +161,8 @@ export function memoryCard(rc: RenderCtx, lang: Lang, cm: CardModel): string {
     const input = { arch: m, weightDtype: d, contextLength: ctx, concurrency: 1, kvDtype: "fp16" as Dtype };
     const need = calculate(input).totalGiB;
     const holder = FEATURED.find((g) => needOn(input, g) <= usableGiB(g));
-    const many = cardsFor(input, BIGGEST) ?? Math.ceil(needOn(input, BIGGEST) / usableGiB(BIGGEST));
-    return { d, need, fit: holder ? gpuLink(rc, lang, holder) : `${many}× ${gpuLink(rc, lang, BIGGEST)}` };
+    const many = cardsFor(input, BIGGEST);
+    return { d, need, fit: holder ? gpuLink(rc, lang, holder) : `${many ?? "—"}× ${gpuLink(rc, lang, BIGGEST)}` };
   });
   const max = Math.max(...rows.map((r) => r.need));
   return `<figure class="mem">

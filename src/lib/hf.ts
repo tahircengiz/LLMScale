@@ -6,7 +6,7 @@
 import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
-import { compressedLayers, layerPlan, sparseIndexer } from "./layers.ts";
+import { compressedLayers, layerPlan, sparseIndexer, unmodelledCacheKeys } from "./layers.ts";
 
 const HF = "https://huggingface.co";
 
@@ -56,6 +56,8 @@ export interface HfModelInfo {
   usedStorage?: number;
   /** Bytes in the repository's top-level safetensors weight files. */
   weightFileBytes?: number;
+  /** The repository's file names. */
+  files?: string[];
 }
 
 /** Bytes in a repository's weight files: its top-level .safetensors, without an
@@ -163,11 +165,16 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
     createdAt: d?.createdAt,
     lastModified: d?.lastModified,
     usedStorage: typeof d?.usedStorage === "number" ? d.usedStorage : undefined,
+    files: Array.isArray(d?.siblings) ? d.siblings.map((x: any) => String(x.rfilename)) : undefined,
     weightFileBytes: Array.isArray(d?.siblings)
       ? weightFileBytes(d.siblings.map((x: any) => ({ name: String(x.rfilename), size: x.size })))
       : undefined,
   };
 }
+
+/** Model types whose Transformers config ties the embedding and the output head
+ *  when the config does not say. */
+const TIED_BY_DEFAULT = new Set(["gemma", "gemma2", "gemma3", "gemma3_text", "gpt2", "falcon"]);
 
 /** Pull various config key spellings into our normalized arch shape. Exported for
  *  scripts/test-moe.ts. */
@@ -178,7 +185,13 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   const hiddenSize = c.hidden_size ?? c.n_embd ?? c.d_model;
   const numAttentionHeads = c.num_attention_heads ?? c.n_head ?? c.num_heads;
   if (!numLayers || !hiddenSize || !numAttentionHeads) return null;
-  const numKeyValueHeads = c.num_key_value_heads ?? c.num_kv_heads ?? numAttentionHeads;
+  // Every spelling vLLM reads (model_arch_config_convertor.py): Falcon's n_head_kv
+  // and multi_query, ChatGLM's multi_query_group_num, Step's num_attention_groups.
+  // Falling back to every head made Falcon-7B's cache 71x and GLM-4-9B's 16x too large.
+  const numKeyValueHeads =
+    c.num_key_value_heads ?? c.num_kv_heads ?? c.n_head_kv ??
+    (c.multi_query_attention !== false ? c.multi_query_group_num : undefined) ??
+    c.num_attention_groups ?? (c.multi_query === true ? 1 : undefined) ?? numAttentionHeads;
   const arch: ModelArch = {
     numParams,
     numLayers,
@@ -192,7 +205,7 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     kvLoraRank: c.kv_lora_rank,
     qkRopeHeadDim: c.qk_rope_head_dim,
     vocabSize: c.vocab_size,
-    maxContext: c.max_position_embeddings ?? c.n_positions ?? c.max_seq_len,
+    maxContext: c.max_position_embeddings ?? c.n_positions ?? c.max_seq_len ?? c.seq_length,
   };
   // Decode speed reads the ACTIVE parameters (perf.ts). Nothing set them for a
   // model resolved from its config, so every live MoE was estimated as if dense.
@@ -202,14 +215,19 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   if (experts && experts > 1 && perTok) [arch.numExperts, arch.expertsPerToken] = [experts, perTok];
   const moeWidth = c.moe_intermediate_size ?? c.expert_intermediate_size;
   if (arch.numExperts && typeof moeWidth === "number") arch.moeIntermediateSize = moeWidth;
-  // An absent flag counts as untied: the larger, safer figure for a quantized estimate.
-  arch.tieEmbeddings = (c.tie_word_embeddings ?? cfg?.tie_word_embeddings) === true;
+  // An absent flag takes the family's default in Transformers: tied for Gemma, GPT-2
+  // and Falcon, untied for the rest (Llama, Qwen, Mistral…). Reading every absent
+  // flag as untied put Gemma 2 9B's INT4 estimate 21% high.
+  arch.tieEmbeddings = (c.tie_word_embeddings ?? cfg?.tie_word_embeddings ?? TIED_BY_DEFAULT.has(String(c.model_type ?? cfg?.model_type ?? ""))) === true;
   // DeepSeek V4 keeps most of its context compressed 4x or 128x (calc.ts).
   const compressed = compressedLayers(c);
   if (compressed) arch.compressedAttn = compressed;
   // DeepSeek Sparse Attention keeps an indexer key per token beside MLA's latent (calc.ts).
   const sparse = sparseIndexer(c);
   if (sparse) arch.sparseAttn = sparse;
+  // What the sizing does not follow yet, said beside the figures.
+  const unmodelled = unmodelledCacheKeys(c);
+  if (unmodelled.length) arch.unmodelled = unmodelled;
   // Sliding windows and hybrid layers cache less than every layer at full context.
   const plan = compressed ? undefined : layerPlan(c);
   if (plan) {
@@ -218,6 +236,21 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     if (plan.stateBytesPerSeq) [arch.stateBytesPerSeq, arch.stateLayers] = [plan.stateBytesPerSeq, plan.stateLayers];
   }
   return arch;
+}
+
+/** JSON as Python writes it: NVIDIA's Nemotron-H configs carry a bare `Infinity`
+ *  (`time_step_limit`), which JSON.parse rejects, so the whole config was lost. A
+ *  bare Infinity or NaN outside a string becomes a number or null. */
+export function parseConfigJson(text: string): any {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return JSON.parse(
+      text
+        .replace(/([:[,]\s*)(-?)Infinity(?=\s*[,\]}])/g, (_m, pre: string, sign: string) => `${pre}${sign}1e308`)
+        .replace(/([:[,]\s*)NaN(?=\s*[,\]}])/g, (_m, pre: string) => `${pre}null`),
+    );
+  }
 }
 
 /** Try to read config.json directly (public models). Returns null if gated/missing.
@@ -229,7 +262,7 @@ async function fetchConfig(hfId: string): Promise<any | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetchWithTimeout(`${HF}/${hfId}/resolve/main/config.json`, 8000);
-      if (res.ok) return await res.json();
+      if (res.ok) return parseConfigJson(await res.text());
       if (res.status !== 429 && res.status < 500) return null;
     } catch {
       // a timeout or a network error: try once more
@@ -284,6 +317,12 @@ function dtypeFromName(id: string): Dtype | null {
 /** Effective weight precision to preselect in the sizing controls. Priority:
  * quantization_config → repo-id tag → torch_dtype → safetensors dtype. */
 function detectWeightDtype(id: string, cfg: any, paramDtype?: string): Dtype | undefined {
+  // A GGUF repo ships its base model's config, FP8 quantization block and all; its
+  // files are the GGUF quant its name says (DeepSeek-V3-0324-GGUF came out at 671 GB).
+  if (/gguf/i.test(id)) {
+    const fromName = dtypeFromName(id);
+    if (fromName) return fromName;
+  }
   const q = cfg?.quantization_config ?? cfg?.text_config?.quantization_config;
   const fromQ = dtypeFromQuantConfig(q);
   if (fromQ) return fromQ;
@@ -305,10 +344,25 @@ function detectWeightDtype(id: string, cfg: any, paramDtype?: string): Dtype | u
 /** KV-cache precision is a serving choice, NOT a model property — so we only
  * preselect it when the model explicitly ships an FP8 KV-cache calibration
  * (`quantization_config.kv_cache_scheme`). Otherwise it stays the user's default. */
-function detectKvDtype(cfg: any): Dtype | undefined {
-  const kv = (cfg?.quantization_config ?? cfg?.text_config?.quantization_config)?.kv_cache_scheme;
-  if (kv && typeof kv === "object" && (kv.num_bits === 8 || kv.num_bits === 4)) return "fp8";
+function detectKvDtype(cfg: any, hfQuant?: any): Dtype | undefined {
+  // vLLM's own default under --kv-cache-dtype auto (torch_utils.py): a ModelOpt
+  // checkpoint's kv_cache_quant_algo FP8 (config.json or hf_quant_config.json)
+  // turns the cache to FP8. A compressed-tensors kv_cache_scheme does not: the
+  // cache stays in the model's dtype unless fp8 is asked for.
+  const q = cfg?.quantization_config ?? cfg?.text_config?.quantization_config;
+  const algo = q?.kv_cache_quant_algo ?? hfQuant?.quantization?.kv_cache_quant_algo ?? hfQuant?.kv_cache_quant_algo;
+  if (typeof algo === "string" && /fp8/i.test(algo)) return "fp8";
   return undefined;
+}
+
+/** ModelOpt keeps its quantization settings in hf_quant_config.json beside config.json. */
+async function fetchHfQuantConfig(hfId: string): Promise<any | null> {
+  try {
+    const res = await fetchWithTimeout(`${HF}/${hfId}/resolve/main/hf_quant_config.json`, 8000);
+    return res.ok ? parseConfigJson(await res.text()) : null;
+  } catch {
+    return null;
+  }
 }
 
 /** A checkpoint that ships quantized is sized by its own files, which hold the
@@ -346,7 +400,8 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
   const tags = info?.tags ?? [];
   const pipelineTag = info?.pipelineTag;
   const weightDtype = detectWeightDtype(hfId, cfg, info?.paramDtype);
-  const kvDtype = detectKvDtype(cfg);
+  const hfQuant = info?.files?.includes("hf_quant_config.json") ? await fetchHfQuantConfig(hfId) : null;
+  const kvDtype = detectKvDtype(cfg, hfQuant);
 
   if (cfg) {
     const arch = archFromConfig(cfg, numParams || known?.numParams || 0);

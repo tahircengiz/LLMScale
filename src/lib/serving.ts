@@ -213,6 +213,9 @@ export interface Facts {
   template: TemplateFacts | null;
   /** Chat format kept outside a Jinja template (Mistral's tekken.json). */
   mistralCommon: boolean;
+  /** vLLM's own chat encoder for this architecture, by tokenizer mode, when the
+   *  repository ships no template. */
+  engineEncoder?: string;
   family?: string;
   parsers: { vllm: Parsers; sglang: Parsers };
   quant: {
@@ -518,7 +521,29 @@ function tensorQuant(d: TensorDigest): QuantScheme {
   if (suffixCount(d, "weight_packed")) return "int4-packed";
   if (suffixCount(d, "absmax", "quant_map")) return "bnb";
   if (suffixCount(d, "weight_scale")) return "fp8";
+  // DeepSeek V4 names its block scales `.scale`, beside each `.weight` (UE8M0 scales
+  // for FP8 blocks and FP4 experts). Read as no scales at all, the page called its
+  // FP8 declaration copied from another repository.
+  if (countWhere(d, (t) => lastSeg(t) === "scale" && `${t.slice(0, -"scale".length)}weight` in d.templates) >= 100) return "fp8-block";
   return "none";
+}
+
+/** Architectures vLLM 0.31 formats chats for with its own encoder, picking the
+ *  tokenizer mode itself (vllm/config/model.py): these ship no Jinja template, and
+ *  the chat endpoint works without --chat-template. */
+const ENGINE_ENCODERS: Record<string, string> = {
+  DeepseekV32ForCausalLM: "deepseek_v32",
+  DeepseekV4ForCausalLM: "deepseek_v4",
+  DeepseekV4ForConditionalGeneration: "deepseek_v4",
+  DeepseekV41ForCausalLM: "deepseek_v41",
+  KimiK3ForConditionalGeneration: "kimi_k3",
+  InklingForCausalLM: "inkling",
+  InklingForConditionalGeneration: "inkling",
+};
+
+function engineEncoderOf(s: RepoSnapshot): string | undefined {
+  const archs: string[] = Array.isArray(s.config?.architectures) ? s.config.architectures : [];
+  return archs.map((a) => ENGINE_ENCODERS[a]).find(Boolean);
 }
 
 /** Which key a checkpoint lists its full-precision modules under. */
@@ -625,7 +650,8 @@ export function buildBrief(s: RepoSnapshot, lang: Lang): ServingBrief {
   const fmt = formatOf(s);
   const template = s.chatTemplate ? readTemplate(s.chatTemplate) : null;
   const mistralCommon = has(s, "tekken.json") && !template;
-  const role = roleOf(s, fmt.format, template, mistralCommon);
+  const engineEncoder = template ? undefined : engineEncoderOf(s);
+  const role = roleOf(s, fmt.format, template, mistralCommon || !!engineEncoder);
   const fam = role === "chat" ? familyOf(s, template) : undefined;
   // A tool parser is only worth naming when something renders tools into the
   // prompt: the repository's template, the engine's own template, or mistral-common.
@@ -652,6 +678,7 @@ export function buildBrief(s: RepoSnapshot, lang: Lang): ServingBrief {
     audio: !!(cfg?.audio_config || (s.tensors && countWhere(s.tensors, (t) => /^(model\.)?audio_tower\./.test(t)) > 0)),
     template,
     mistralCommon,
+    engineEncoder,
     family: fam?.id,
     parsers: { vllm: enginePick(fam?.vllm), sglang: enginePick(fam?.sglang) },
     quant: { declared, tensors: tq, kvScales, kept: keptModules(s) },
@@ -760,6 +787,10 @@ function chatSection(s: RepoSnapshot, f: Facts, g: G): Section | null {
         parts.push({ k: "chat.systemPromptFile" });
         cites.push({ file: "SYSTEM_PROMPT.txt" });
       }
+      return { id: "chat", parts, cites };
+    }
+    if (f.engineEncoder) {
+      parts.push({ k: "chat.engineEncoder", v: { mode: f.engineEncoder } });
       return { id: "chat", parts, cites };
     }
     parts.push({ k: "chat.none" });

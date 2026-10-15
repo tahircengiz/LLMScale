@@ -1,4 +1,4 @@
-import { calculate, gpusNeeded, type CalcInput } from "./calc.ts";
+import { calculate, layoutFor, type CalcInput } from "./calc.ts";
 import { COMPUTE_EFFICIENCY, CONSUMER_COMPUTE_EFFICIENCY, type Tflops } from "./perf.ts";
 import { VLLM_UTIL, vllmBatch, type BatchShape } from "./overhead.ts";
 
@@ -23,6 +23,13 @@ export interface Gpu {
   unified?: boolean;
   /** Total on-package unified memory (GiB). When set, vramGiB is the usable slice. */
   totalGiB?: number;
+  /** Memory the runtime reports (torch's total, what vLLM's --gpu-memory-utilization
+   *  multiplies), when it differs from the nominal GB: GB counted as GiB overstates
+   *  every card a little, and ECC on GDDR datacenter cards (L40S, L4, T4) reserves a
+   *  sixteenth. Read from vLLM startup logs (docs/audit-2026-10-15/vllm-loglari.md). */
+  visibleGiB?: number;
+  /** vLLM 0.31 does not run on it (compute capability below 7.5). */
+  noVllm?: boolean;
   /** Dense tensor throughput from the vendor's datasheet, TFLOPS (perf.ts). */
   tflops?: Tflops;
   note?: string;
@@ -34,40 +41,44 @@ export const GPUS: Gpu[] = [
   { id: "rtx4060ti-16", name: "RTX 4060 Ti 16GB", vramGiB: 16, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 288, tflops: { bf16: 44.1, fp8: 88.3 } },
   { id: "rtx4070ti-s-16", name: "RTX 4070 Ti Super", vramGiB: 16, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 672, tflops: { bf16: 88.3, fp8: 176.5 } },
   { id: "rtx4080-16", name: "RTX 4080 / Super", vramGiB: 16, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 717, tflops: { bf16: 104.5, fp8: 209 } },
-  { id: "rtx3090-24", name: "RTX 3090 / Ti", vramGiB: 24, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 936, tflops: { bf16: 71 } },
-  { id: "rtx4090-24", name: "RTX 4090", vramGiB: 24, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 1008, tflops: { bf16: 165.2, fp8: 330.3 } },
+  { id: "rtx3090-24", name: "RTX 3090 / Ti", vramGiB: 24, visibleGiB: 23.6, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 936, tflops: { bf16: 71 } },
+  { id: "rtx4090-24", name: "RTX 4090", vramGiB: 24, visibleGiB: 23.65, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 1008, tflops: { bf16: 165.2, fp8: 330.3 } },
   { id: "rtx5070ti-16", name: "RTX 5070 Ti", vramGiB: 16, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 896, tflops: { bf16: 87.9, fp8: 175.8, fp4: 703 } },
   { id: "rtx5080-16", name: "RTX 5080", vramGiB: 16, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 960, tflops: { bf16: 112.6, fp8: 225.1, fp4: 900.4 } },
   { id: "rx7900xtx-24", name: "AMD RX 7900 XTX", vramGiB: 24, category: "consumer", vendor: "AMD", bandwidthGBs: 960, tflops: { bf16: 123 } },
-  { id: "rtx5090-32", name: "RTX 5090", vramGiB: 32, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 1792, tflops: { bf16: 209.5, fp8: 419, fp4: 1676 } },
+  { id: "rtx5090-32", name: "RTX 5090", vramGiB: 32, visibleGiB: 31.38, category: "consumer", vendor: "NVIDIA", bandwidthGBs: 1792, tflops: { bf16: 209.5, fp8: 419, fp4: 1676 } },
 
   // Workstation / pro
-  { id: "l4-24", name: "NVIDIA L4", vramGiB: 24, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 300, tflops: { bf16: 121, fp8: 242.5 } },
+  { id: "l4-24", name: "NVIDIA L4", vramGiB: 24, visibleGiB: 22.0, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 300, tflops: { bf16: 121, fp8: 242.5 } },
   { id: "a5000-24", name: "RTX A5000", vramGiB: 24, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 768, tflops: { bf16: 111.1 } },
-  { id: "a6000-48", name: "RTX A6000", vramGiB: 48, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 768, tflops: { bf16: 154.8 } },
-  { id: "rtx6000ada-48", name: "RTX 6000 Ada", vramGiB: 48, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 960, tflops: { bf16: 364.25, fp8: 728.5 } },
-  { id: "l40s-48", name: "NVIDIA L40S", vramGiB: 48, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 864, tflops: { bf16: 362.05, fp8: 733 } },
+  { id: "a6000-48", name: "RTX A6000", vramGiB: 48, visibleGiB: 47.53, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 768, tflops: { bf16: 154.8 } },
+  { id: "rtx6000ada-48", name: "RTX 6000 Ada", vramGiB: 48, visibleGiB: 47.49, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 960, tflops: { bf16: 364.25, fp8: 728.5 } },
+  { id: "l40s-48", name: "NVIDIA L40S", vramGiB: 48, visibleGiB: 44.36, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 864, tflops: { bf16: 362.05, fp8: 733 } },
   { id: "rtxpro5000-72", name: "RTX PRO 5000 Blackwell (72GB)", vramGiB: 72, category: "workstation", vendor: "NVIDIA", bandwidthGBs: 1344, tflops: { bf16: 258, fp8: 516, fp4: 1032 } },
 
   // Datacenter
-  { id: "t4-16", name: "NVIDIA T4", vramGiB: 16, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 320, tflops: { bf16: 65 } },
-  { id: "v100-32", name: "Tesla V100 32GB", vramGiB: 32, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 900, tflops: { bf16: 125 } },
-  { id: "a30-24", name: "NVIDIA A30", vramGiB: 24, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 933, tflops: { bf16: 165 } },
-  { id: "a100-40", name: "A100 40GB", vramGiB: 40, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 1555, tflops: { bf16: 312 } },
-  { id: "a100-80", name: "A100 80GB", vramGiB: 80, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 2039, tflops: { bf16: 312 } },
-  { id: "h100-80", name: "H100 (SXM/PCIe) 80GB", vramGiB: 80, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 3350, tflops: { bf16: 989.5, fp8: 1979 } },
-  { id: "h200-141", name: "H200 141GB", vramGiB: 141, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 4800, tflops: { bf16: 989.5, fp8: 1979 } },
-  { id: "b200-192", name: "B200 180GB", vramGiB: 180, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 7700, tflops: { bf16: 2250, fp8: 4500, fp4: 9000 } },
-  { id: "gh200-96", name: "GH200 96GB", vramGiB: 96, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 4000, tflops: { bf16: 990, fp8: 1979 } },
-  { id: "h100nvl-94", name: "H100 NVL 94GB", vramGiB: 94, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 3938, tflops: { bf16: 835.5, fp8: 1670.5 } },
-  { id: "rtxpro6000-96", name: "RTX PRO 6000 Blackwell", vramGiB: 96, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 1792, tflops: { bf16: 500, fp8: 1000, fp4: 2000 } },
-  { id: "b300-288", name: "B300 (Blackwell Ultra) 270GB", vramGiB: 270, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 7700, tflops: { bf16: 2250, fp8: 4500, fp4: 13500 } },
+  { id: "t4-16", name: "NVIDIA T4", vramGiB: 16, visibleGiB: 14.57, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 320, tflops: { bf16: 65 } },
+  { id: "v100-32", name: "Tesla V100 32GB", vramGiB: 32, noVllm: true, visibleGiB: 31.73, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 900, tflops: { bf16: 125 } },
+  { id: "a30-24", name: "NVIDIA A30", vramGiB: 24, visibleGiB: 23.5, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 933, tflops: { bf16: 165 } },
+  { id: "a100-40", name: "A100 40GB", vramGiB: 40, visibleGiB: 39.38, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 1555, tflops: { bf16: 312 } },
+  { id: "a100-80", name: "A100 80GB", vramGiB: 80, visibleGiB: 79.15, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 2039, tflops: { bf16: 312 } },
+  { id: "h100-80", name: "H100 SXM 80GB", vramGiB: 80, visibleGiB: 79.15, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 3350, tflops: { bf16: 989.5, fp8: 1979 } },
+  // H100 PCIe: HBM2e at 2,000 GB/s and 114 SMs, against the SXM's HBM3 at 3,350 and 132 (PCIe product brief).
+  { id: "h100pcie-80", name: "H100 PCIe 80GB", vramGiB: 80, visibleGiB: 79.15, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 2000, tflops: { bf16: 756, fp8: 1513 } },
+  { id: "h200-141", name: "H200 141GB", vramGiB: 141, visibleGiB: 139.76, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 4800, tflops: { bf16: 989.5, fp8: 1979 } },
+  { id: "b200-192", name: "B200 180GB", vramGiB: 180, visibleGiB: 178.35, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 7700, tflops: { bf16: 2250, fp8: 4500, fp4: 9000 } },
+  { id: "gh200-96", name: "GH200 96GB", vramGiB: 96, visibleGiB: 94.5, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 4000, tflops: { bf16: 990, fp8: 1979 } },
+  { id: "h100nvl-94", name: "H100 NVL 94GB", vramGiB: 94, visibleGiB: 93.09, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 3938, tflops: { bf16: 835.5, fp8: 1670.5 } },
+  { id: "rtxpro6000-96", name: "RTX PRO 6000 Blackwell", vramGiB: 96, visibleGiB: 94.97, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 1792, tflops: { bf16: 500, fp8: 1000, fp4: 2000 } },
+  // Server Edition: the same GB202 and 96 GB of GDDR7, clocked to 1,597 GB/s (server product brief).
+  { id: "rtxpro6000s-96", name: "RTX PRO 6000 Blackwell Server", vramGiB: 96, visibleGiB: 94.97, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 1597, tflops: { bf16: 500, fp8: 1000, fp4: 2000 } },
+  { id: "b300-288", name: "B300 (Blackwell Ultra) 270GB", vramGiB: 270, visibleGiB: 267.69, category: "datacenter", vendor: "NVIDIA", bandwidthGBs: 7700, tflops: { bf16: 2250, fp8: 4500, fp4: 13500 } },
 
   // AMD
   { id: "mi210-64", name: "AMD MI210", vramGiB: 64, category: "datacenter", vendor: "AMD", bandwidthGBs: 1638, tflops: { bf16: 181 } },
-  { id: "mi300x-192", name: "AMD MI300X", vramGiB: 192, category: "datacenter", vendor: "AMD", bandwidthGBs: 5300, tflops: { bf16: 1307.4, fp8: 2614.9 } },
-  { id: "mi325x-256", name: "AMD MI325X", vramGiB: 256, category: "datacenter", vendor: "AMD", bandwidthGBs: 6000, tflops: { bf16: 1307.4, fp8: 2614.9 } },
-  { id: "mi355x-288", name: "AMD MI355X", vramGiB: 288, category: "datacenter", vendor: "AMD", bandwidthGBs: 8000, tflops: { bf16: 2516.6, fp8: 5033.2, fp4: 10066.3 } },
+  { id: "mi300x-192", name: "AMD MI300X", vramGiB: 192, visibleGiB: 191.98, category: "datacenter", vendor: "AMD", bandwidthGBs: 5300, tflops: { bf16: 1307.4, fp8: 2614.9 } },
+  { id: "mi325x-256", name: "AMD MI325X", vramGiB: 256, visibleGiB: 255.98, category: "datacenter", vendor: "AMD", bandwidthGBs: 6000, tflops: { bf16: 1307.4, fp8: 2614.9 } },
+  { id: "mi355x-288", name: "AMD MI355X", vramGiB: 288, visibleGiB: 287.98, category: "datacenter", vendor: "AMD", bandwidthGBs: 8000, tflops: { bf16: 2516.6, fp8: 5033.2, fp4: 10066.3 } },
 
   // Apple Silicon — unified memory (shared CPU/GPU). vramGiB is the share the GPU can
   // address by default (Metal's recommendedMaxWorkingSetSize, as llama.cpp logs it):
@@ -84,7 +95,7 @@ export const GPUS: Gpu[] = [
   // Unified-memory AI PCs / APUs — system RAM assigned to the SoC's GPU.
   { id: "amd-strixhalo-64", name: "AMD Ryzen AI Max+ 395 (64GB)", vramGiB: 48, totalGiB: 64, category: "apu", vendor: "AMD", unified: true, bandwidthGBs: 256, tflops: { bf16: 60 }, note: "Strix Halo · LPDDR5X; ~75% to the iGPU via Variable Graphics Memory" },
   { id: "amd-strixhalo-128", name: "AMD Ryzen AI Max+ 395 (128GB)", vramGiB: 96, totalGiB: 128, category: "apu", vendor: "AMD", unified: true, bandwidthGBs: 256, tflops: { bf16: 60 }, note: "Strix Halo · LPDDR5X; up to 96 GB to the iGPU (Variable Graphics Memory)" },
-  { id: "nv-dgxspark-128", name: "NVIDIA DGX Spark (GB10)", vramGiB: 120, totalGiB: 128, category: "apu", vendor: "NVIDIA", unified: true, bandwidthGBs: 273, tflops: { bf16: 125, fp8: 250, fp4: 500 }, note: "Grace-Blackwell GB10 · LPDDR5X; full pool shared CPU/GPU" },
+  { id: "nv-dgxspark-128", name: "NVIDIA DGX Spark (GB10)", vramGiB: 120, visibleGiB: 121.63, totalGiB: 128, category: "apu", vendor: "NVIDIA", unified: true, bandwidthGBs: 273, tflops: { bf16: 125, fp8: 250, fp4: 500 }, note: "Grace-Blackwell GB10 · LPDDR5X; full pool shared CPU/GPU; vLLM is commonly run at --gpu-memory-utilization 0.8 here" },
   { id: "nv-jetson-orin-64", name: "NVIDIA Jetson AGX Orin (64GB)", vramGiB: 56, totalGiB: 64, category: "apu", vendor: "NVIDIA", unified: true, bandwidthGBs: 204, tflops: { bf16: 42.5 }, note: "Edge module · unified LPDDR5" },
 ];
 
@@ -92,7 +103,7 @@ export const GPUS: Gpu[] = [
  * cannot serve with it. The memory maths still applies everywhere — only the
  * command builder has to exclude these devices. */
 export function runsVllm(g: Gpu): boolean {
-  return g.vendor !== "Apple";
+  return g.vendor !== "Apple" && !g.noVllm;
 }
 
 /** Display order of the hardware tiers. Kept here so every picker stays in
@@ -152,6 +163,15 @@ export const MIG_PROFILES: Record<string, MigProfile[]> = {
     { id: "4g.40gb", memGiB: 40, max: 1 },
     { id: "7g.80gb", memGiB: 80, max: 1 },
   ],
+
+  "h100pcie-80": [
+    { id: "1g.10gb", memGiB: 10, max: 7 },
+    { id: "1g.20gb", memGiB: 20, max: 4 },
+    { id: "2g.20gb", memGiB: 20, max: 3 },
+    { id: "3g.40gb", memGiB: 40, max: 2 },
+    { id: "4g.40gb", memGiB: 40, max: 1 },
+    { id: "7g.80gb", memGiB: 80, max: 1 },
+  ],
   "h200-141": [
     { id: "1g.18gb", memGiB: 18, max: 7 },
     { id: "1g.35gb", memGiB: 35, max: 4 },
@@ -182,6 +202,11 @@ export const MIG_PROFILES: Record<string, MigProfile[]> = {
     { id: "2g.48gb", memGiB: 48, max: 2 },
     { id: "4g.96gb", memGiB: 96, max: 1 },
   ],
+  "rtxpro6000s-96": [
+    { id: "1g.24gb", memGiB: 24, max: 4 },
+    { id: "2g.48gb", memGiB: 48, max: 2 },
+    { id: "4g.96gb", memGiB: 96, max: 1 },
+  ],
 };
 
 /** Fraction of a discrete board's nominal VRAM a training job can use, after the
@@ -190,15 +215,18 @@ export const DRIVER_RESERVE = 0.95;
 
 /**
  * Memory budget (GiB) a model may actually occupy. A selected MIG slice wins; a
- * unified-memory device already stores its usable slice in vramGiB; a discrete
- * board gets `share` of its memory: for serving, vLLM's --gpu-memory-utilization
- * (0.92 by default, overhead.ts), whose remainder holds the CUDA context.
+ * Mac keeps its Metal share in vramGiB; every other device gets `share` of the
+ * memory its runtime reports: for serving, vLLM's --gpu-memory-utilization (0.92
+ * by default, overhead.ts), whose remainder holds the CUDA context.
  */
 export function usableGiB(g: Gpu, migId?: string, share: number = VLLM_UTIL): number {
   const slice = migId ? migMem(g.id, migId) : null;
   if (slice) return slice * share;
-  if (g.unified) return g.vramGiB;
-  return g.vramGiB * share;
+  // A Mac's share is Metal's working set; vLLM does not run there.
+  if (g.unified && g.vendor === "Apple") return g.vramGiB;
+  // vLLM multiplies what the runtime reports, unified memory included: 96 GiB on
+  // Strix Halo gives 88.3, DGX Spark's 121.6 gives 111.9.
+  return (g.visibleGiB ?? g.vramGiB) * share;
 }
 
 /** The share of its rated tensor peak a device reaches serving (perf.ts): measured
@@ -219,10 +247,11 @@ export function needOn(input: Omit<CalcInput, "batch" | "gpus">, g: Gpu): number
   return calculate({ ...input, batch: batchFor(g) }).totalGiB;
 }
 
-/** How many of these devices hold the deployment, the overhead repeated on each and
- *  the count one vLLM can split the heads across; null when none up to 64 does. */
+/** The fewest of these devices that serve the deployment, laid out as the
+ *  calculator lays it out (calc.ts, layoutFor: tensor parallel, pipeline stages,
+ *  replicas, expert parallelism); null when no count does. */
 export function cardsFor(input: Omit<CalcInput, "batch" | "gpus">, g: Gpu, share: number = VLLM_UTIL): number | null {
-  return gpusNeeded({ ...input, batch: batchFor(g) }, usableGiB(g, undefined, share));
+  return layoutFor({ ...input, batch: batchFor(g) }, usableGiB(g, undefined, share))?.gpus ?? null;
 }
 
 export function migProfilesFor(gpuId: string): MigProfile[] {

@@ -146,8 +146,8 @@ function modelPage(lang: Lang, m: KnownModel): string {
     const holding = ALL_BY_SIZE.filter((g) => needOn(input, g) <= usableGiB(g)).slice(0, 4);
     const label = `<strong>${LABEL[d]}</strong> (${gib(lang, need)})`;
     if (holding.length) return `<li>${label}: ${holding.map((g) => gpuLink(lang, g)).join(", ")}</li>`;
-    const counts = MULTI_CARDS.map((g) => `${cardsFor(input, g) ?? Math.ceil(needOn(input, g) / usableGiB(g))}× ${gpuLink(lang, g)}`).join(en ? ", " : ", ");
-    return `<li>${label}: ${en ? `no single GPU holds it — by memory it takes ${counts}.` : `tek bir GPU'ya sığmaz — bellek olarak ${counts} gerekir.`}</li>`;
+    const counts = MULTI_CARDS.map((g) => `${cardsFor(input, g) ?? "—"}× ${gpuLink(lang, g)}`).join(en ? ", " : ", ");
+    return `<li>${label}: ${en ? `no single GPU holds it — the fewest that serve it, as the calculator lays them out: ${counts}.` : `tek bir GPU'ya sığmaz — hesaplayıcının yerleşimiyle en az: ${counts}.`}</li>`;
   }).join("");
 
   const users = USER_CARDS.map((g) => ({
@@ -265,11 +265,11 @@ function gpuPage(lang: Lang, g: Gpu): string {
   const lede = [
     g.unified && g.totalGiB
       ? en
-        ? `${g.name} shares ${g.totalGiB} GB of memory between CPU and GPU; by default the GPU can address about ${g.vramGiB} GB of it, and that is the budget used here.`
-        : `${g.name}, ${g.totalGiB} GB belleği CPU ve GPU arasında paylaşır; GPU varsayılan olarak bunun yaklaşık ${g.vramGiB} GB'ını kullanabilir ve buradaki hesaplar bu payla yapılır.`
+        ? `${g.name} shares ${g.totalGiB} GB of memory between CPU and GPU; by default the GPU can address about ${g.vramGiB} GB of it, and LLMScale budgets ${gib(lang, usable)} for a model${g.vendor === "Apple" ? "" : ", vLLM's default 92% of what the GPU reports"}.`
+        : `${g.name}, ${g.totalGiB} GB belleği CPU ve GPU arasında paylaşır; GPU varsayılan olarak bunun yaklaşık ${g.vramGiB} GB'ını kullanabilir ve LLMScale modele ${gib(lang, usable)} ayırır${g.vendor === "Apple" ? "" : ": GPU'nun bildirdiği belleğin vLLM varsayılanı olan %92'si"}.`
       : en
-        ? `${g.name} has ${g.vramGiB} GB of memory. LLMScale budgets ${gib(lang, usable)} of it for a model, leaving 5% for the driver.`
-        : `${g.name} ${g.vramGiB} GB belleğe sahiptir. LLMScale sürücü payı olarak %5 bırakıp modele ${gib(lang, usable)} ayırır.`,
+        ? `${g.name} has ${g.vramGiB} GB of memory. LLMScale budgets ${gib(lang, usable)} of it for a model: vLLM's default --gpu-memory-utilization of 0.92 of what the card reports, the rest kept for the CUDA context.`
+        : `${g.name} ${g.vramGiB} GB belleğe sahiptir. LLMScale modele bunun ${gib(lang, usable)} kadarını ayırır: kartın bildirdiği belleğin vLLM varsayılanı olan %92'si (--gpu-memory-utilization 0.92); kalanı CUDA bağlamına kalır.`,
     g.bandwidthGBs
       ? en
         ? `Its memory bandwidth, ${int(lang, g.bandwidthGBs)} GB/s, is what limits generation speed once a model fits.`

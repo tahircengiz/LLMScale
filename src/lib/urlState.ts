@@ -1,4 +1,4 @@
-import type { Dtype, ModelArch } from "./calc";
+import { DTYPE_BYTES, type Dtype, type ModelArch } from "./calc.ts";
 import { VLLM_UTIL } from "./overhead.ts";
 
 // Shareable state encoded in the URL query string so a configured calculation
@@ -70,6 +70,9 @@ export function encodeState(s: AppState): string {
     p.set("a", String(s.arch.numAttentionHeads));
     p.set("k", String(s.arch.numKeyValueHeads));
     if (s.arch.headDim) p.set("d", String(s.arch.headDim));
+    // The model's own limit: without it a reload sized "max context" past what the
+    // model reads (Qwen3-30B-A3B showed 81,104 tokens against its 40,960).
+    if (s.arch.maxContext) p.set("mc", String(s.arch.maxContext));
     // Without these two an MLA model decodes back as ordinary GQA and its KV
     // cache comes out ~25x too large. The app writes this URL itself, so leaving
     // them out broke every reload and every shared estimate, not just links
@@ -104,6 +107,7 @@ export function encodeState(s: AppState): string {
       const d = a.sparseAttn;
       p.set("dx", [d.topk, d.indexDim, d.indexLayers].join("."));
     }
+    if (a.unmodelled?.length) p.set("um", a.unmodelled.join(","));
     if (a.stateBytesPerSeq) p.set("st", String(a.stateBytesPerSeq));
     if (a.stateLayers) p.set("sn", String(a.stateLayers));
     if (a.numExperts && a.expertsPerToken) {
@@ -150,10 +154,34 @@ function sparseOf(v: string | null): ModelArch["sparseAttn"] {
   return { topk: n[0], indexDim: n[1], indexLayers: n[2] };
 }
 
+/** Config key names, as encodeState writes them; anything else is dropped. */
+function unmodelledOf(v: string | null): string[] | undefined {
+  const keys = (v ?? "").split(",").map((k) => k.trim()).filter((k) => /^[a-z0-9_ ().:]{1,48}$/i.test(k)).slice(0, 12);
+  return keys.length ? keys : undefined;
+}
+
 function num(v: string | null): number | undefined {
   if (v == null) return undefined;
   const n = Number(v);
   return Number.isFinite(n) ? n : undefined;
+}
+
+/** A size or a count: positive and finite, or nothing. A hand-edited `ctx=-8192`
+ *  or `p=-8e9` used to come out as negative GiB. */
+function pos(v: string | null): number | undefined {
+  const n = num(v);
+  return n !== undefined && n > 0 ? n : undefined;
+}
+
+/** A count that may be zero (layers with no cache, a rope part of 0), never negative. */
+function nonneg(v: string | null): number | undefined {
+  const n = num(v);
+  return n !== undefined && n >= 0 ? n : undefined;
+}
+
+/** A precision the engine sizes; anything else (`wd=fp4`) gave "NaN GiB". */
+function dtype(v: string | null): Dtype | undefined {
+  return v !== null && Object.prototype.hasOwnProperty.call(DTYPE_BYTES, v) ? (v as Dtype) : undefined;
 }
 
 export function decodeState(search: string): Partial<AppState> {
@@ -161,11 +189,11 @@ export function decodeState(search: string): Partial<AppState> {
   const out: Partial<AppState> = {};
   if (p.get("m")) out.hfId = p.get("m")!;
 
-  const numParams = num(p.get("p"));
-  const numLayers = num(p.get("L"));
-  const hiddenSize = num(p.get("h"));
-  const numAttentionHeads = num(p.get("a"));
-  const numKeyValueHeads = num(p.get("k"));
+  const numParams = pos(p.get("p"));
+  const numLayers = pos(p.get("L"));
+  const hiddenSize = pos(p.get("h"));
+  const numAttentionHeads = pos(p.get("a"));
+  const numKeyValueHeads = pos(p.get("k"));
   if (numParams && numLayers && hiddenSize && numAttentionHeads && numKeyValueHeads) {
     out.arch = {
       numParams,
@@ -173,39 +201,41 @@ export function decodeState(search: string): Partial<AppState> {
       hiddenSize,
       numAttentionHeads,
       numKeyValueHeads,
-      headDim: num(p.get("d")),
-      kvLoraRank: num(p.get("kl")),
-      qkRopeHeadDim: num(p.get("qr")),
-      activeParams: num(p.get("ap")),
-      vocabSize: num(p.get("v")),
-      intermediateSize: num(p.get("i")),
-      moeIntermediateSize: num(p.get("mi")),
+      headDim: pos(p.get("d")),
+      maxContext: pos(p.get("mc")),
+      kvLoraRank: pos(p.get("kl")),
+      qkRopeHeadDim: nonneg(p.get("qr")),
+      activeParams: pos(p.get("ap")),
+      vocabSize: pos(p.get("v")),
+      intermediateSize: pos(p.get("i")),
+      moeIntermediateSize: pos(p.get("mi")),
       tieEmbeddings: p.get("te") === "1" ? true : undefined,
-      attnLayers: num(p.get("al")),
-      slidingLayers: num(p.get("sl")),
-      slidingWindow: num(p.get("sw")),
+      attnLayers: nonneg(p.get("al")),
+      slidingLayers: pos(p.get("sl")),
+      slidingWindow: pos(p.get("sw")),
       compressedAttn: compressedOf(p.get("cx")),
       sparseAttn: sparseOf(p.get("dx")),
-      stateBytesPerSeq: num(p.get("st")),
-      stateLayers: num(p.get("sn")),
-      numExperts: num(p.get("ne")),
-      expertsPerToken: num(p.get("ek")),
+      unmodelled: unmodelledOf(p.get("um")),
+      stateBytesPerSeq: pos(p.get("st")),
+      stateLayers: pos(p.get("sn")),
+      numExperts: pos(p.get("ne")),
+      expertsPerToken: pos(p.get("ek")),
     } as ModelArch;
-    const sd = p.get("sd") as Dtype | null;
-    const sb = num(p.get("sb"));
+    const sd = dtype(p.get("sd"));
+    const sb = pos(p.get("sb"));
     if (sd && sb) out.arch.shipped = { dtype: sd, bytes: sb };
     // Drop what the URL did not carry, so a decoded arch has no undefined keys.
     for (const k of Object.keys(out.arch) as (keyof ModelArch)[]) if (out.arch[k] === undefined) delete out.arch[k];
   }
 
-  const wd = p.get("wd") as Dtype | null;
+  const wd = dtype(p.get("wd"));
   if (wd) out.weightDtype = wd;
-  const kd = p.get("kd") as Dtype | null;
+  const kd = dtype(p.get("kd"));
   if (kd) out.kvDtype = kd;
-  const ctx = num(p.get("ctx"));
-  if (ctx) out.contextLength = ctx;
-  const n = num(p.get("n"));
-  if (n) out.concurrency = n;
+  const ctx = pos(p.get("ctx"));
+  if (ctx) out.contextLength = Math.round(ctx);
+  const n = pos(p.get("n"));
+  if (n) out.concurrency = Math.max(1, Math.round(n));
   // Links made before 2026-10-13 carry `ov`, a share of the weights and cache added
   // as overhead; the overhead is now sized per GPU, so it is not read.
   const gu = num(p.get("gu"));

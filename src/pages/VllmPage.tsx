@@ -99,7 +99,8 @@ export function VllmPage() {
 
   const gpu = GPUS.find((g) => g.id === gpuId) ?? GPUS.find((g) => g.id === "h100-80")!;
   const migProfiles = migProfilesFor(gpu.id);
-  const effVram = (migId && migMem(gpu.id, migId)) || gpu.vramGiB;
+  // What the runtime reports, as the calculator budgets it (gpus.ts, usableGiB).
+  const effVram = (migId && migMem(gpu.id, migId)) || (gpu.visibleGiB ?? gpu.vramGiB);
   const effCount = migId ? 1 : gpuCount;
 
   const rec = useMemo(() => {

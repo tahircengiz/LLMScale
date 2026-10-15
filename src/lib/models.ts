@@ -46,20 +46,20 @@ export const KNOWN_MODELS: KnownModel[] = [
   // ---- Mistral ----
   {
     id: "mistral-7b-v0.3", displayName: "Mistral 7B Instruct v0.3", family: "Mistral", hfId: "mistralai/Mistral-7B-Instruct-v0.3",
-    gated: true, numParams: 7.248e9, numLayers: 32, hiddenSize: 4096, intermediateSize: 14336, numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 128, vocabSize: 32768, maxContext: 32768,
+    numParams: 7.248e9, numLayers: 32, hiddenSize: 4096, intermediateSize: 14336, numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 128, vocabSize: 32768, maxContext: 32768,
   },
   {
     id: "mistral-nemo-12b", displayName: "Mistral Nemo 12B Instruct", family: "Mistral", hfId: "mistralai/Mistral-Nemo-Instruct-2407",
-    gated: true, numParams: 12.25e9, numLayers: 40, hiddenSize: 5120, intermediateSize: 14336, numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 128, vocabSize: 131072, maxContext: 128000,
+    numParams: 12.25e9, numLayers: 40, hiddenSize: 5120, intermediateSize: 14336, numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 128, vocabSize: 131072, maxContext: 131072,
   },
   {
     id: "mixtral-8x7b", displayName: "Mixtral 8x7B Instruct", family: "Mistral", hfId: "mistralai/Mixtral-8x7B-Instruct-v0.1",
-    gated: true, isMoE: true, numParams: 46.7e9, activeParams: 12.9e9, numLayers: 32, hiddenSize: 4096, intermediateSize: 14336, numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 128, vocabSize: 32000, maxContext: 32768,
+    isMoE: true, numParams: 46.7e9, activeParams: 12.9e9, numLayers: 32, hiddenSize: 4096, intermediateSize: 14336, numAttentionHeads: 32, numKeyValueHeads: 8, headDim: 128, vocabSize: 32000, maxContext: 32768,
     numExperts: 8, expertsPerToken: 2,
   },
   {
     id: "mixtral-8x22b", displayName: "Mixtral 8x22B Instruct", family: "Mistral", hfId: "mistralai/Mixtral-8x22B-Instruct-v0.1",
-    gated: true, isMoE: true, numParams: 140.6e9, activeParams: 39e9, numLayers: 56, hiddenSize: 6144, intermediateSize: 16384, numAttentionHeads: 48, numKeyValueHeads: 8, headDim: 128, vocabSize: 32768, maxContext: 65536,
+    isMoE: true, numParams: 140.6e9, activeParams: 39e9, numLayers: 56, hiddenSize: 6144, intermediateSize: 16384, numAttentionHeads: 48, numKeyValueHeads: 8, headDim: 128, vocabSize: 32768, maxContext: 65536,
     numExperts: 8, expertsPerToken: 2,
   },
 
@@ -125,7 +125,7 @@ export const KNOWN_MODELS: KnownModel[] = [
     isMoE: true, numParams: 30532122624, activeParams: 3.3e9,
     numLayers: 48, hiddenSize: 2048, intermediateSize: 6144,
     numAttentionHeads: 32, numKeyValueHeads: 4, headDim: 128, vocabSize: 151936, maxContext: 40960,
-    numExperts: 128, expertsPerToken: 8,
+    numExperts: 128, expertsPerToken: 8, moeIntermediateSize: 768,
   },
   {
     id: "qwen3-coder-30b-a3b", displayName: "Qwen3 Coder 30B A3B", family: "Qwen",
@@ -133,7 +133,7 @@ export const KNOWN_MODELS: KnownModel[] = [
     isMoE: true, numParams: 30532122624, activeParams: 3.3e9,
     numLayers: 48, hiddenSize: 2048, intermediateSize: 6144,
     numAttentionHeads: 32, numKeyValueHeads: 4, headDim: 128, vocabSize: 151936, maxContext: 262144,
-    numExperts: 128, expertsPerToken: 8,
+    numExperts: 128, expertsPerToken: 8, moeIntermediateSize: 768,
   },
   {
     id: "qwen2.5-coder-7b", displayName: "Qwen2.5 Coder 7B", family: "Qwen",
@@ -165,7 +165,7 @@ export const KNOWN_MODELS: KnownModel[] = [
     numLayers: 61, hiddenSize: 7168, intermediateSize: 18432,
     numAttentionHeads: 128, numKeyValueHeads: 128,
     kvLoraRank: 512, qkRopeHeadDim: 64, vocabSize: 129280, maxContext: 163840,
-    numExperts: 256, expertsPerToken: 8,
+    numExperts: 256, expertsPerToken: 8, moeIntermediateSize: 2048,
   },
 ];
 

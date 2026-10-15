@@ -29,7 +29,8 @@ export function hybridLayers(
   // entries are never mistaken for attention.
   for (const key of ["layer_types", "layers_block_type"]) {
     if (!Array.isArray(c[key])) continue;
-    const types: string[] = c[key].map(String);
+    // Speculative-decoding layers come after the model's own (Step-3.5 lists three).
+    const types: string[] = (L > 0 ? c[key].slice(0, L) : c[key]).map(String);
     const isState = (t: string) => /linear|mamba|ssm|recurrent|conv/.test(t);
     const state = types.filter(isState);
     if (state.length > 0) {
@@ -65,13 +66,24 @@ export function activeWindow(c: Json): { size: number; sliding: number; path: st
   // Phi-3.5-mini declares a 262,144-token window over a 131,072-token context.
   const maxCtx = c.max_position_embeddings;
   if (typeof maxCtx === "number" && size >= maxCtx) return undefined;
-  const types: string[] | undefined = Array.isArray(c.layer_types) ? c.layer_types.map(String) : undefined;
+  const L = c.num_hidden_layers;
+  const types: string[] | undefined = Array.isArray(c.layer_types)
+    ? (typeof L === "number" && L > 0 ? c.layer_types.slice(0, L) : c.layer_types).map(String)
+    : undefined;
   let sliding = types ? types.filter((t) => t.includes("sliding")).length : 0;
   if (types && sliding === 0) return undefined;
   // Gemma 3 says it as a pattern instead: every pattern-th layer is global.
   const pattern = c.sliding_window_pattern;
-  const L = c.num_hidden_layers;
   if (!types && typeof pattern === "number" && pattern > 1 && typeof L === "number") sliding = L - Math.floor(L / pattern);
+  else if (!types && typeof L === "number" && L > 0) {
+    // No layer list and no pattern. vLLM then sets CacheConfig.sliding_window for
+    // every layer (arg_utils.py): Mistral-7B v0.1, Phi-3-mini-4k, Starcoder2. Gemma 2
+    // alternates, as Transformers builds its layer_types; Qwen2 slides from
+    // max_window_layers up when use_sliding_window is on.
+    if (c.model_type === "gemma2") sliding = Math.ceil(L / 2);
+    else if (c.use_sliding_window === true && typeof c.max_window_layers === "number") sliding = Math.max(0, L - c.max_window_layers);
+    else sliding = L;
+  }
   return { size, sliding, path: "sliding_window" };
 }
 
@@ -130,12 +142,44 @@ export function sparseIndexer(c: Json): { topk: number; indexDim: number; indexL
   const freq = typeof c.index_topk_freq === "number" && c.index_topk_freq > 1 ? c.index_topk_freq : 1;
   const offset = typeof c.index_skip_topk_offset === "number" ? c.index_skip_topk_offset : 2;
   const pattern: string | string[] | undefined = typeof c.index_topk_pattern === "string" || Array.isArray(c.index_topk_pattern) ? c.index_topk_pattern : undefined;
+  // A hybrid's linear-attention layers keep no indexer (GLM-5.3-Flash).
+  const types: string[] | undefined = Array.isArray(c.layer_types) ? c.layer_types.map(String) : undefined;
+  const isState = (l: number) => !!types && /linear|mamba|ssm|recurrent|conv/.test(types[l] ?? "");
   let indexLayers = 0;
   for (let l = 0; l < L; l++) {
     const skip = pattern ? l < pattern.length && pattern[l] === "S" : Math.max(l - offset + 1, 0) % freq !== 0;
-    if (!skip) indexLayers++;
+    if (!skip && !isState(l)) indexLayers++;
   }
   return { topk: c.index_topk, indexDim: typeof c.index_head_dim === "number" ? c.index_head_dim : 128, indexLayers };
+}
+
+/** Config keys that change what a model caches in ways the sizing does not follow
+ *  yet, found by the 2026-10-15 audit (docs/audit-2026-10-15-veri-guvenilirligi.md):
+ *  per-layer blocks (Nemotron NAS), linear-attention layouts (Kimi-Linear, GLM-5.3's
+ *  KDA), sliding patterns given another way (MiMo-V2), interleaved attention types
+ *  (MiniMax-Text, Jamba), KV shared across layers (Gemma 3n/4), a second head shape
+ *  for global layers (Gemma 4), Mamba beside attention in every layer (Falcon-H1),
+ *  cross-attention (Llama 3.2 Vision) and a float32 SSM state (Nemotron-H, Qwen3.5).
+ *  The figures still show, marked as approximate. */
+export function unmodelledCacheKeys(c: Json): string[] {
+  if (!c || typeof c !== "object") return [];
+  const found: string[] = [];
+  const num = (k: string) => typeof c[k] === "number";
+  if (Array.isArray(c.block_configs)) found.push("block_configs");
+  if (c.num_key_value_heads === null) found.push("num_key_value_heads: null");
+  if (c.linear_attn_config && typeof c.linear_attn_config === "object") found.push("linear_attn_config");
+  if (c.hybrid_layer_pattern !== undefined) found.push("hybrid_layer_pattern");
+  if (Array.isArray(c.attn_type_list)) found.push("attn_type_list");
+  if (num("attn_layer_period")) found.push("attn_layer_period");
+  if (num("num_kv_shared_layers") && c.num_kv_shared_layers > 0) found.push("num_kv_shared_layers");
+  if (num("global_head_dim") && c.global_head_dim !== c.head_dim) found.push("global_head_dim");
+  if (num("num_global_key_value_heads") && c.num_global_key_value_heads !== c.num_key_value_heads) found.push("num_global_key_value_heads");
+  if (c.mamba_d_ssm !== undefined && !Array.isArray(c.layer_types) && c.hybrid_override_pattern === undefined) found.push("mamba_d_ssm");
+  if (Array.isArray(c.cross_attention_layers)) found.push("cross_attention_layers");
+  const ssm = c.mamba_ssm_cache_dtype ?? c.mamba_ssm_dtype;
+  if (typeof ssm === "string" && /32/.test(ssm)) found.push(c.mamba_ssm_cache_dtype !== undefined ? "mamba_ssm_cache_dtype" : "mamba_ssm_dtype");
+  else if (c.model_type === "nemotron_h") found.push("mamba_ssm_cache_dtype (float32 in vLLM)");
+  return found;
 }
 
 export interface LayerPlan {

@@ -23,6 +23,7 @@ import {
   type Part,
 } from "../src/lib/configExplain.ts";
 import type { Lang } from "../src/lib/dict.ts";
+import { parseConfigJson } from "../src/lib/hf.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -31,7 +32,8 @@ function check(name: string, cond: boolean, detail = "") {
 }
 
 const dir = new URL("./fixtures/configs/", import.meta.url);
-const load = (name: string) => JSON.parse(readFileSync(new URL(`${name}.json`, dir), "utf8"));
+// As the app reads them: a bare Infinity (Nemotron-H) is allowed (hf.ts).
+const load = (name: string) => parseConfigJson(readFileSync(new URL(`${name}.json`, dir), "utf8"));
 const ans = (r: ConfigReport, id: Answer["id"]) => r.answers.find((a) => a.id === id)!;
 const has = (a: Answer, k: string) => a.parts.some((p) => p.k === k);
 const part = (a: Answer, k: string) => [...a.parts, ...a.working].find((p) => p.k === k);

@@ -100,17 +100,25 @@ export function Controls({
               key={c}
               type="button"
               onClick={() => onChange({ contextLength: c })}
+              // Past the model's own limit the chip stays usable but quiet.
+              title={maxContext && c > maxContext ? t("controls.ctxPastMax", { n: formatInt(maxContext) }) : undefined}
               className={
                 "rounded-lg px-2 py-1 text-[11px] ring-1 transition " +
                 (contextLength === c
                   ? "bg-brand-600 text-onbrand ring-brand-500"
-                  : "bg-ink-850 text-slate-300 ring-white/10 hover:bg-white/5")
+                  : "bg-ink-850 text-slate-300 ring-white/10 hover:bg-white/5") +
+                (maxContext && c > maxContext && contextLength !== c ? " opacity-45" : "")
               }
             >
               {c >= 1048576 ? `${c / 1048576}M` : c >= 1024 ? `${c / 1024}k` : c}
             </button>
           ))}
         </div>
+        {/* The figures below still size this context, but vLLM will not serve it:
+            --max-model-len above the model's max fails at startup. */}
+        {maxContext && contextLength > maxContext ? (
+          <p className="mt-1.5 text-[11px] leading-relaxed text-warn">{t("controls.ctxOver", { n: formatInt(maxContext) })}</p>
+        ) : null}
       </Field>
 
       <Field label={t("controls.users")} hint={t("controls.usersHint")}>

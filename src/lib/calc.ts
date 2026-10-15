@@ -71,6 +71,9 @@ export interface ModelArch {
    *  latent, `indexLayers` layers keep an `indexDim`-wide indexer key for every
    *  token, and a query reads only the `topk` tokens the indexer picks. */
   sparseAttn?: { topk: number; indexDim: number; indexLayers: number };
+  /** Config keys that shape the cache in ways the sizing does not model yet
+   *  (layers.ts, unmodelledCacheKeys). The figures for such a model are approximate. */
+  unmodelled?: string[];
   /** Layers that keep a KV cache, when not all of them do: hybrids keep a fixed
    *  state in their linear-attention or Mamba layers instead (layers.ts). */
   attnLayers?: number;
@@ -99,7 +102,9 @@ export interface ModelArch {
 
 /** Does this architecture cache a compressed latent instead of K and V tensors? */
 export function usesMla(arch: ModelArch): boolean {
-  return !!(arch.kvLoraRank && arch.qkRopeHeadDim);
+  // A positional part of 0 is still MLA: GLM-5.3-Flash caches its 512-wide latent
+  // with no RoPE key, and read as per-head attention its cache came out 16x too large.
+  return !!arch.kvLoraRank && typeof arch.qkRopeHeadDim === "number" && arch.qkRopeHeadDim >= 0;
 }
 
 /** Does it keep an indexer key beside MLA's latent and read only the top-k tokens? */
@@ -207,8 +212,10 @@ export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
     return (c.csa * (b.entry + b.index)) / CSA_RATIO + (c.hca * b.entry) / HCA_RATIO;
   }
   if (usesDsa(arch)) {
+    // A hybrid (GLM-5.3-Flash) keeps the latent and the key in its attention layers only.
     const b = dsaBytes(arch, kvDtype);
-    return arch.numLayers * b.row + arch.sparseAttn!.indexLayers * b.index;
+    const layers = arch.attnLayers ?? arch.numLayers;
+    return layers * b.row + Math.min(arch.sparseAttn!.indexLayers, layers) * b.index;
   }
   return (arch.attnLayers ?? arch.numLayers) * kvBytesPerLayerToken(arch, kvDtype);
 }
@@ -348,7 +355,8 @@ export function kvBytesReadPerStep(arch: ModelArch, kvDtype: Dtype, contextLengt
   if (usesDsa(arch)) {
     const s = arch.sparseAttn!;
     const b = dsaBytes(arch, kvDtype);
-    return arch.numLayers * Math.min(contextLength, s.topk) * b.row + s.indexLayers * contextLength * b.index;
+    const layers = arch.attnLayers ?? arch.numLayers;
+    return layers * Math.min(contextLength, s.topk) * b.row + Math.min(s.indexLayers, layers) * contextLength * b.index;
   }
   if (usesCompressedAttn(arch)) {
     const c = arch.compressedAttn!;
@@ -692,9 +700,9 @@ function layoutPerGpu(b: Basis, l: Shape, users: number): number {
  * helps, and for a MoE data-parallel attention with its experts spread over the
  * GPUs. Tensor parallelism alone cannot hold more requests than one card's cache
  * once the KV heads run out (one MLA latent or one KV head is held whole on every
- * GPU); pipeline stages and replicas can. Here expert parallelism takes GPU counts
- * that split the experts evenly. Adding requests or context never lowers the
- * count. Of the layouts on that many GPUs it returns the one layoutsOn puts first,
+ * GPU); pipeline stages and replicas can. It searches what layoutsOn sizes: up to
+ * MAX_PP stages, experts split evenly or not. Adding requests or context never
+ * lowers the count. Of the layouts on that many GPUs it returns the one layoutsOn puts first,
  * the one that holds the most requests. null when none up to `limit` GPUs does.
  */
 export function layoutFor(input: CalcInput, usableGiB: number, limit = 1024): Layout | null {
@@ -713,12 +721,10 @@ export function layoutFor(input: CalcInput, usableGiB: number, limit = 1024): La
       for (const ep of moe ? [false, true] : [false]) {
         // Without expert parallelism, replicas past one per request add nothing.
         const top = ep ? Math.floor(limit / (tp * pp)) : Math.min(Math.floor(limit / (tp * pp)), users);
-        // Replica counts to try, ascending: any, or with expert parallelism those
-        // whose tp × dp GPUs split the experts evenly.
-        const even: number[] = [];
-        if (ep) for (let m = 2 * tp; m <= b.experts && m / tp <= top; m += tp) if (b.experts % m === 0) even.push(m / tp);
-        const count = (i: number) => (ep ? even[i] : i + 1);
-        const n = ep ? even.length : top;
+        // Replica counts to try, ascending; expert parallelism needs two or more.
+        const first = ep ? 2 : 1;
+        const count = (i: number) => first + i;
+        const n = top - first + 1;
         const fits = (dp: number) => layoutPerGpu(b, { tp, pp, dp, ep }, users) <= usableGiB;
         if (n < 1 || !fits(count(n - 1))) continue;
         // What a GPU holds only falls as replicas are added: halve towards the fewest.
@@ -753,9 +759,10 @@ export interface LayoutFit {
 
 /**
  * Every way vLLM can run the deployment on exactly `gpus` GPUs of `usableGiB`
- * each — tensor parallel where the heads allow, pipeline stages, replicas, and for
- * a MoE expert parallelism, here with an uneven split too — the best first: the
- * most requests at this context, then fewer pipeline stages, then fewer replicas.
+ * each — tensor parallel where the heads allow, up to MAX_PP pipeline stages,
+ * replicas, and for a MoE expert parallelism, the experts split evenly or not —
+ * the best first: the most requests at this context, then fewer pipeline stages,
+ * then fewer replicas. The same rules layoutFor searches.
  */
 export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number): LayoutFit[] {
   const b = layoutBasis(input);
@@ -767,7 +774,7 @@ export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number): La
   const out: LayoutFit[] = [];
   for (let tp = 1; tp <= gpus; tp++) {
     if (gpus % tp || !tpValid(tp, heads, kv)) continue;
-    for (let pp = 1; pp <= gpus / tp; pp++) {
+    for (let pp = 1; pp <= Math.min(gpus / tp, MAX_PP); pp++) {
       if ((gpus / tp) % pp || pp > b.layers) continue;
       const dp = gpus / (tp * pp);
       for (const ep of moe && dp > 1 ? [false, true] : [false]) {

@@ -29,7 +29,7 @@ function initialState(): AppState {
     const known = findKnownByHfId(fromUrl.hfId);
     if (known) {
       const fill: Partial<ModelArch> = {};
-      for (const k of ["activeParams", "vocabSize", "tieEmbeddings", "slidingLayers", "slidingWindow", "numExperts", "expertsPerToken"] as const) {
+      for (const k of ["activeParams", "vocabSize", "tieEmbeddings", "slidingLayers", "slidingWindow", "numExperts", "expertsPerToken", "maxContext", "moeIntermediateSize"] as const) {
         if (fromUrl.arch[k] === undefined && known[k] !== undefined) (fill as Record<string, unknown>)[k] = known[k];
       }
       fromUrl.arch = { ...fromUrl.arch, ...fill };

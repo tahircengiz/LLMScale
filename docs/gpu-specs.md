@@ -302,6 +302,14 @@ as Metal reports it on a Mac under 36 GB. The others are open.
 | `h100-80` | mig | 7 | high | https://www.nvidia.com/en-us/data-center/h100/ | Up to 7 MIGs @ 10 GB. |
 | `h100-80` | ecc | True | high | https://docs.nvidia.com/deploy/a100-gpu-mem-error-mgmt/latest/supported-gpus.html | GH100 covered by NVIDIA GPU memory error management (ECC, row remapping); H100 PCIe brief lists ECC enabled. |
 | `h100-80` | discrepancy | — | — | — | Label says 'SXM/PCIe' but the figures are SXM only. H100 PCIe 80GB is HBM2e at 2,000 GB/s (vendor PCIe product brief), not 3,350 GB/s, with 350 W, 114 SMs and NVLink bridge 600 GB/s. |
+| `h100pcie-80` | arch | Hopper | high | https://www.nvidia.com/en-us/data-center/h100/ | Added 2026-10-15: split from `h100-80`, which now carries the SXM figures only. |
+| `h100pcie-80` | chip | GH100 | high | https://docs.nvidia.com/datacenter/tesla/mig-user-guide/supported-gpus.html |  |
+| `h100pcie-80` | cores | 14592 CUDA cores | high | https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/ | 114 SMs. |
+| `h100pcie-80` | memType | HBM2e | high | https://www.nvidia.com/en-us/data-center/h100/ | PCIe product brief: 80 GB HBM2e. |
+| `h100pcie-80` | bandwidth | 2,000 GB/s | high | https://www.nvidia.com/en-us/data-center/h100/ | PCIe product brief; SXM is 3,350 GB/s. |
+| `h100pcie-80` | tdpW | 350 | high | https://www.nvidia.com/en-us/data-center/h100/ | PCIe max 350 W. |
+| `h100pcie-80` | interconnect | NVLink bridge · 600 GB/s | high | https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/ | 3 NVLink bridges. |
+| `h100pcie-80` | launch | 2022-03 | high | https://nvidianews.nvidia.com/news/nvidia-announces-hopper-architecture-the-next-generation-of-accelerated-computing |  |
 | `h200-141` | arch | Hopper | high | https://dam-cdn.nvd.orangelogic.com/AssetLink/5o2qgy5d2835ve2pm11i62kv8mphqta8.pdf |  |
 | `h200-141` | chip | GH100 | high | https://docs.nvidia.com/datacenter/tesla/mig-user-guide/supported-gpus.html | MIG guide: H200-SXM5 and H200 NVL, die GH100. |
 | `h200-141` | process | TSMC 4N | high | https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/ | GH100 process per Hopper architecture blog. |
@@ -365,6 +373,11 @@ as Metal reports it on a Mac under 36 GB. The others are open.
 | `rtxpro6000-96` | mig | 4 | high | https://docs.nvidia.com/datacenter/tesla/mig-user-guide/supported-gpus.html | Up to 4 x 24 GB. |
 | `rtxpro6000-96` | ecc | True | high | https://www.nvidia.com/content/dam/en-zz/Solutions/data-center/rtx-pro-6000-blackwell-workstation-edition/workstation-blackwell-rtx-pro-6000-workstation-edition-nvidia-us-3519208-web.pdf | '96 GB GDDR7 with ECC'. |
 | `rtxpro6000-96` | discrepancy | — | — | — | Server Edition bandwidth is 1,597 GB/s (12,481 MHz memory clock, server product brief and server page), not 1,792 GB/s. 1,792 GB/s applies to Workstation and Max-Q Editions only. |
+| `rtxpro6000s-96` | arch | Blackwell | high | https://www.nvidia.com/en-us/data-center/rtx-pro-6000-blackwell-server-edition/ | Added 2026-10-15: the Server Edition, apart from `rtxpro6000-96` (Workstation figures). |
+| `rtxpro6000s-96` | bandwidth | 1,597 GB/s | high | https://dam-cdn.nvd.orangelogic.com/AssetLink/3km2720jiy76r06ctf8mxg21743p1058.pdf | Server product brief: 12,481 MHz memory clock. |
+| `rtxpro6000s-96` | hostInterface | PCIe 5.0 x16, passive | high | https://dam-cdn.nvd.orangelogic.com/AssetLink/3km2720jiy76r06ctf8mxg21743p1058.pdf | FHFL dual-slot passive. |
+| `rtxpro6000s-96` | interconnect | none | high | https://dam-cdn.nvd.orangelogic.com/AssetLink/3km2720jiy76r06ctf8mxg21743p1058.pdf | 'NVIDIA NVLink: Not supported'. |
+| `rtxpro6000s-96` | tdpW | 600 | high | https://dam-cdn.nvd.orangelogic.com/AssetLink/3km2720jiy76r06ctf8mxg21743p1058.pdf | Up to 600 W, configurable. |
 | `b300-288` | arch | Blackwell Ultra | high | https://dam-cdn.nvd.orangelogic.com/AssetLink/1k0p832eq8r5ca0u5383ie5o4tp3bst1.pdf |  |
 | `b300-288` | chip | GB110 | medium | https://docs.nvidia.com/datacenter/tesla/mig-user-guide/supported-gpus.html | MIG guide names GB110 for GB300 (DGX Station), the same Blackwell Ultra GPU; HGX B300 not listed there. Wikipedia also gives 2x GB110. Two reticle-sized dies per package. |
 | `b300-288` | process | TSMC 4NP | high | https://developer.nvidia.com/blog/inside-nvidia-blackwell-ultra-the-chip-powering-the-ai-factory-era/ |  |

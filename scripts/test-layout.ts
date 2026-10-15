@@ -41,9 +41,10 @@ function needed(arch: ModelArch, wd: Dtype, kd: Dtype, ctx: number, users: numbe
 console.log("--- the screenshot: DeepSeek-V4-Flash on RTX PRO 6000s at 256k tokens ---");
 const at = (u: number) => needed(v4, "fp8", "fp8", 262144, u, pro);
 check("1 user: two cards", at(1).gpus === 2, JSON.stringify(at(1).layout));
-// Tensor parallelism holds V4's single cached vector whole on both; two pipeline
-// stages hold half of it each, so they leave room for more requests.
-check("…as two pipeline stages, which split the cache", at(1).layout?.pp === 2, JSON.stringify(at(1).layout));
+// Tensor parallelism holds V4's single cached vector whole on both cards, two
+// pipeline stages half of it each; at one request either holds the same.
+const two = layoutsOn({ arch: v4, weightDtype: "fp8", kvDtype: "fp8", contextLength: 262144, concurrency: 1, batch: batchFor(pro) }, usableGiB(pro), 2);
+check("…as TP 2 or two pipeline stages, both of which fit", two.filter((f) => f.fits).some((f) => f.layout.tp === 2) && two.filter((f) => f.fits).some((f) => f.layout.pp === 2));
 check("8 users: three, as three pipeline stages", at(8).gpus === 3 && at(8).layout?.pp === 3, JSON.stringify(at(8).layout));
 check("16 users: not fewer than 8 take", at(16).gpus >= at(8).gpus, `${at(8).gpus} → ${at(16).gpus}`);
 check("…four", at(16).gpus === 4, JSON.stringify(at(16).layout));
@@ -79,7 +80,8 @@ check("three pipeline stages hold the most requests", three[0].layout.pp === 3 &
 check("expert parallelism over three, with 256 experts split unevenly", three.some((f) => f.layout.ep && f.layout.dp === 3 && f.fits));
 check("three plain replicas cannot each hold the weights", three.some((f) => !f.layout.ep && f.layout.dp === 3 && !f.fits));
 const sixteen = on(pro, 16)[0];
-check("16 requests are one more than three RTX PRO 6000s hold", !sixteen.fits && sixteen.maxUsers === 15, `${sixteen.maxUsers}`);
+// vLLM's budget is 0.92 of the 94.97 GiB the card reports, 87.4 GiB a card.
+check("16 requests are more than three RTX PRO 6000s hold", !sixteen.fits && sixteen.maxUsers === 14, `${sixteen.maxUsers}`);
 check("…which still hold a shorter context for all 16", sixteen.maxContext > 0 && sixteen.maxContext < 262144, `${sixteen.maxContext} tokens`);
 const h = on(h200, 16)[0];
 check("three H200s hold 16", h.fits && h.maxUsers >= 16, `${h.maxUsers} requests, ${h.layout.perGpuGiB.toFixed(1)} GiB a GPU`);

@@ -110,7 +110,9 @@ export function GpuFit({
     // The fewest cards that serve it, and how: replicas of a tensor-parallel group,
     // or for a MoE its experts spread over every card. Never a plain memory ratio:
     // a cache held whole on every card does not shrink as cards are added.
-    const layout = fits ? null : layoutFor(input, usable);
+    // vLLM splits no model across MIG slices, and a unified-memory machine takes
+    // no second unit: neither gets a layout.
+    const layout = fits || g.unified || mig ? null : layoutFor(input, usable);
     return { usable, need, pct: need / usable, fits, layout, needed: fits ? 1 : layout?.gpus ?? null };
   }
   function usage(g: Gpu, mig = "") {
@@ -242,8 +244,8 @@ export function GpuFit({
           {u.fits
             ? t("gpu.cardFits", { p: Math.round(u.pct * 100) })
             : overBudget
-              ? `${t("gpu.cardOverBudget")} · ${u.needed ? t("gpu.cardNeeds", { n: u.needed }) : t("gpu.cardNone")}`
-              : u.needed ? t("gpu.cardNeeds", { n: u.needed }) : t("gpu.cardNone")}
+              ? `${t("gpu.cardOverBudget")} · ${u.needed ? t("gpu.cardNeeds", { n: u.needed }) : t(g.unified ? "gpu.noFitSingle" : "gpu.cardNone")}`
+              : u.needed ? t("gpu.cardNeeds", { n: u.needed }) : t(g.unified ? "gpu.noFitSingle" : "gpu.cardNone")}
         </div>
       </button>
     );
@@ -330,7 +332,7 @@ export function GpuFit({
             ) : selUsage.fits ? (
               <Badge tone="good">{t("gpu.fits")}</Badge>
             ) : (
-              <Badge tone="bad">{selected.unified ? t("gpu.noFitSingle") : selUsage.needed ? t("gpu.needs", { n: selUsage.needed }) : t("gpu.needsNone")}</Badge>
+              <Badge tone="bad">{selected.unified ? t("gpu.noFitSingle") : migId ? t("gpu.noFitSlice") : selUsage.needed ? t("gpu.needs", { n: selUsage.needed }) : t("gpu.needsNone")}</Badge>
             )}
           </div>
           {FEATURED_GPU_IDS.includes(selected.id) && (
@@ -413,7 +415,7 @@ export function GpuFit({
           {speed && (
             <Stat
               label={t("gpu.decodeSpeed")}
-              value={`~${Math.round(speed.perUser)}`}
+              value={`≤${Math.round(speed.perUser)}`}
               sub={
                 concurrency > 1
                   ? t("gpu.tpsBatch", { total: Math.round(speed.total) })
@@ -462,7 +464,7 @@ export function GpuFit({
                     {t("gpu.recSmallest")}
                     {(() => {
                       const sp = speedOf(smallestFit);
-                      return sp ? ` · ~${Math.round(sp.perUser)} tok/s` : "";
+                      return sp ? ` · ≤${Math.round(sp.perUser)} tok/s` : "";
                     })()}
                   </span>
                 </button>
@@ -508,6 +510,10 @@ export function GpuFit({
           (selected.unified ? (
             <p className="mt-3 rounded-xl bg-ink-800/60 p-3 text-[11.5px] leading-relaxed text-slate-300">
               {t("gpu.unifiedSingle")}
+            </p>
+          ) : migId ? (
+            <p className="mt-3 rounded-xl bg-ink-800/60 p-3 text-[11.5px] leading-relaxed text-slate-300">
+              {t("gpu.migLayout")}
             </p>
           ) : !layout ? (
             <p className="mt-3 rounded-xl bg-ink-800/60 p-3 text-[11.5px] leading-relaxed text-slate-300">

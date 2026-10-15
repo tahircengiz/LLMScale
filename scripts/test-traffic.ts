@@ -228,7 +228,7 @@ const sharedThenH100: Row[] = [
 ];
 const r17 = buildReport(sharedThenH100, SURFACED);
 check("an H100 picked on the sizing page is a real choice",
-  find(r17.devicesChosen, "H100 (SXM/PCIe) 80GB") === 1, JSON.stringify(r17.devicesChosen));
+  find(r17.devicesChosen, "H100 SXM 80GB") === 1, JSON.stringify(r17.devicesChosen));
 // ...but the same value on the page that seeds it is not.
 const onVllm: Row[] = [
   row("S", q(DEFAULTS.model, "h100-80").replace("g=", "gpu="), { url_path: "/LLMScale/vllm.html" }),

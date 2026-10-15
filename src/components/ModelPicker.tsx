@@ -325,6 +325,7 @@ export function ModelPicker({
           {/* MLA replaces the K/V pair with one shared latent, so the head counts
               printed above no longer drive the cache. Say so rather than quietly
               returning a number 25x smaller than the same config would imply. */}
+          {arch.unmodelled?.length ? <Badge tone="warn">{t("model.badge.partial")}</Badge> : null}
           {usesMla(arch) ? (
             <Badge tone="good">{t(usesDsa(arch) ? "common.dsa" : "common.mla")}</Badge>
           ) : usesCompressedAttn(arch) ? (
@@ -337,6 +338,10 @@ export function ModelPicker({
       {meta?.warningKey && (
         <p className="mt-2 text-xs text-warn">{t(`warning.${meta.warningKey}`)}</p>
       )}
+      {/* Layers the sizing does not follow yet: the figures stay, marked approximate. */}
+      {arch?.unmodelled?.length ? (
+        <p className="mt-2 text-xs text-warn">{t("warning.archPartial", { keys: arch.unmodelled.join(", ") })}</p>
+      ) : null}
     </div>
   );
 }
