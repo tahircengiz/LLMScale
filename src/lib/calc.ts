@@ -557,7 +557,11 @@ export function maxContextLength(input: Omit<CalcInput, "contextLength">, usable
   const { arch, kvDtype, concurrency } = input;
   if (!(concurrency > 0)) return 0;
   const perSeq = (kvRoom(input, usableGiB) * kvSplit(arch, input.gpus ?? 1)) / concurrency;
-  const tokens = (input.batch ?? SMALL_CARD_BATCH).tokens;
+  return contextWithin(arch, kvDtype, (input.batch ?? SMALL_CARD_BATCH).tokens, perSeq);
+}
+
+/** The longest context whose reservation fits in `perSeq` bytes. */
+function contextWithin(arch: ModelArch, kvDtype: Dtype, tokens: number, perSeq: number): number {
   const need = (ctx: number) => kvReservedPerSeq(arch, kvDtype, ctx, tokens);
   if (perSeq <= 0 || !(need(VLLM_BLOCK) > 0) || need(1) > perSeq) return 0;
   // The reservation grows with the context, in steps of a block; past the
@@ -604,81 +608,181 @@ export function expertWeightBytes(arch: ModelArch, dtype: Dtype): number {
 }
 
 /**
- * How a deployment spreads over GPUs: `dp` replicas of `tp` GPUs each, every replica
- * serving its share of the requests. With `ep` a MoE runs its attention data-parallel
- * and shards its routed experts across all `gpus` (vLLM's --data-parallel-size with
+ * How a deployment spreads over GPUs: `dp` replicas, each `pp` pipeline stages of
+ * `tp` tensor-parallel GPUs, every replica serving its share of the requests. A
+ * stage holds its share of the layers, and with them of the weights and the cache.
+ * With `ep` a MoE runs its attention data-parallel and spreads its routed experts
+ * over the tp × dp GPUs of each stage (vLLM's --data-parallel-size with
  * --enable-expert-parallel, the layout DeepSeek's vLLM recipes use).
  */
 export interface Layout {
   gpus: number;
   tp: number;
+  pp: number;
   dp: number;
   ep: boolean;
-  /** Requests each replica serves, and what one of its GPUs holds. */
+  /** Requests each replica serves, and what the busiest GPU of the layout holds. */
   usersPerReplica: number;
   perGpuGiB: number;
 }
 
-/** What one GPU holds in a layout: its share of the weights, the cache of its
- *  replica's requests (split across the replica's tensor-parallel GPUs as far as
- *  the KV heads go) and the overhead. */
-function layoutPerGpu(input: CalcInput, tp: number, dp: number, ep: boolean): number {
+type Shape = Pick<Layout, "tp" | "pp" | "dp" | "ep">;
+
+/** Pipeline stages vLLM is asked for in practice; past these the stages idle more
+ *  than they hold. */
+const MAX_PP = 16;
+
+/** Everything a layout's per-GPU sum reads that does not depend on the layout,
+ *  worked out once: what one request's cache reserves, and the weights. */
+function layoutBasis(input: Omit<CalcInput, "concurrency">) {
   const { arch, weightDtype, kvDtype, contextLength } = input;
   const batch = input.batch ?? SMALL_CARD_BATCH;
-  const users = Math.ceil(Math.max(1, input.concurrency) / dp);
-  const weights = weightsBytes(arch, weightDtype);
-  const experts = ep ? expertWeightBytes(arch, weightDtype) : 0;
-  const share = (weights - experts) / tp + experts / (tp * dp);
-  const kv = (kvReservedPerSeq(arch, kvDtype, contextLength, batch.tokens) * users) / kvSplit(arch, tp);
-  const o = overheadPerGpu(arch, batch, tp);
-  // Expert parallelism exchanges tokens between every GPU, tensor parallel or not.
-  const comm = ep && tp === 1 ? COMM_GIB : 0;
-  return (share + kv) / BYTES_PER_GIB + o.totalGiB + comm;
+  const overhead = new Map<number, number>();
+  return {
+    arch,
+    batch,
+    layers: Math.max(1, arch.numLayers),
+    experts: arch.numExperts ?? 0,
+    weights: weightsBytes(arch, weightDtype),
+    expertBytes: expertWeightBytes(arch, weightDtype),
+    perRequest: kvReservedPerSeq(arch, kvDtype, contextLength, batch.tokens),
+    /** Overhead per GPU at a tensor-parallel size (overhead.ts), cached. */
+    overhead(tp: number): number {
+      if (!overhead.has(tp)) overhead.set(tp, overheadPerGpu(arch, batch, tp).totalGiB);
+      return overhead.get(tp)!;
+    },
+  };
+}
+type Basis = ReturnType<typeof layoutBasis>;
+
+/** The busiest pipeline stage's share of the layers: vLLM spreads the remainder
+ *  of an uneven split over the stages before the last (get_pp_indices). */
+function stageShare(b: Basis, pp: number): number {
+  return Math.ceil(b.layers / pp) / b.layers;
+}
+
+/** What a layout's busiest GPU holds besides the cache, in GiB: its share of the
+ *  weights, the overhead, and buffers to exchange tokens when no tensor-parallel
+ *  group already keeps them. Expert parallelism gives the first GPUs one expert
+ *  more when the experts do not split evenly (vLLM's determine_expert_map). */
+function layoutFixedGiB(b: Basis, l: Shape): number {
+  const stage = stageShare(b, l.pp);
+  const experts = l.ep ? b.expertBytes : 0;
+  const expertShare = l.ep ? Math.ceil(b.experts / (l.tp * l.dp)) / b.experts : 1 / l.tp;
+  const weights = ((b.weights - experts) / l.tp + experts * expertShare) * stage;
+  const comm = l.tp === 1 && (l.ep || l.pp > 1) ? COMM_GIB : 0;
+  return weights / BYTES_PER_GIB + b.overhead(l.tp) + comm;
+}
+
+/** One request's cache on a GPU of the layout, in GiB: its stage's layers, split
+ *  across the tensor-parallel group as far as the KV heads go. */
+function layoutRequestGiB(b: Basis, l: Shape): number {
+  return (b.perRequest * stageShare(b, l.pp)) / kvSplit(b.arch, l.tp) / BYTES_PER_GIB;
+}
+
+function layoutPerGpu(b: Basis, l: Shape, users: number): number {
+  return layoutFixedGiB(b, l) + Math.ceil(Math.max(1, users) / l.dp) * layoutRequestGiB(b, l);
 }
 
 /**
  * The fewest GPUs of `usableGiB` each that serve the deployment, and how: replicas
- * of a tensor-parallel group vLLM accepts, or for a MoE data-parallel attention
- * with its experts spread over every GPU. Tensor parallelism alone cannot hold
- * more requests than one card's cache once the KV heads run out (one MLA latent or
- * one KV head is held whole on every GPU), so more requests take more replicas.
- * Expert parallelism takes GPU counts that split the experts evenly. Adding requests
- * or context never lowers the count. Equal counts go to the layout with fewer
- * replicas. null when none up to `limit` GPUs does.
+ * of tensor-parallel groups vLLM accepts, split into pipeline stages when that
+ * helps, and for a MoE data-parallel attention with its experts spread over the
+ * GPUs. Tensor parallelism alone cannot hold more requests than one card's cache
+ * once the KV heads run out (one MLA latent or one KV head is held whole on every
+ * GPU); pipeline stages and replicas can. Here expert parallelism takes GPU counts
+ * that split the experts evenly. Adding requests or context never lowers the
+ * count. Of the layouts on that many GPUs it returns the one layoutsOn puts first,
+ * the one that holds the most requests. null when none up to `limit` GPUs does.
  */
 export function layoutFor(input: CalcInput, usableGiB: number, limit = 1024): Layout | null {
+  const b = layoutBasis(input);
   const { arch } = input;
   const heads = arch.numAttentionHeads;
   const kv = arch.numKeyValueHeads || heads;
   const users = Math.max(1, input.concurrency);
-  const moe = expertWeightBytes(arch, input.weightDtype) > 0;
-  const experts = arch.numExperts ?? 0;
+  const moe = b.expertBytes > 0;
   let best: Layout | null = null;
+  const better = (l: Layout) =>
+    !best || l.gpus < best.gpus || (l.gpus === best.gpus && (l.pp < best.pp || (l.pp === best.pp && l.dp < best.dp)));
   for (let tp = 1; tp <= Math.min(heads, limit); tp++) {
     if (!tpValid(tp, heads, kv)) continue;
-    for (const ep of moe ? [false, true] : [false]) {
-      // Without expert parallelism, replicas past one per request add nothing.
-      const top = ep ? Math.floor(limit / tp) : Math.min(Math.floor(limit / tp), users);
-      // Expert parallelism takes GPU counts that split the experts evenly.
-      const counts = ep
-        ? Array.from({ length: Math.max(0, top - 1) }, (_, i) => i + 2).filter((dp) => experts % (tp * dp) === 0)
-        : Array.from({ length: top }, (_, i) => i + 1);
-      const fits = (dp: number) => layoutPerGpu(input, tp, dp, ep) <= usableGiB;
-      if (!counts.length || !fits(counts[counts.length - 1])) continue;
-      // What a GPU holds only falls as replicas are added: halve towards the fewest.
-      let lo = -1;
-      let hi = counts.length - 1;
-      while (hi - lo > 1) {
-        const mid = Math.floor((lo + hi) / 2);
-        if (fits(counts[mid])) hi = mid;
-        else lo = mid;
-      }
-      const dp = counts[hi];
-      const gpus = tp * dp;
-      if (!best || gpus < best.gpus || (gpus === best.gpus && dp < best.dp)) {
-        best = { gpus, tp, dp, ep, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(input, tp, dp, ep) };
+    for (let pp = 1; pp <= Math.min(MAX_PP, b.layers, Math.floor(limit / tp)); pp++) {
+      for (const ep of moe ? [false, true] : [false]) {
+        // Without expert parallelism, replicas past one per request add nothing.
+        const top = ep ? Math.floor(limit / (tp * pp)) : Math.min(Math.floor(limit / (tp * pp)), users);
+        // Replica counts to try, ascending: any, or with expert parallelism those
+        // whose tp × dp GPUs split the experts evenly.
+        const even: number[] = [];
+        if (ep) for (let m = 2 * tp; m <= b.experts && m / tp <= top; m += tp) if (b.experts % m === 0) even.push(m / tp);
+        const count = (i: number) => (ep ? even[i] : i + 1);
+        const n = ep ? even.length : top;
+        const fits = (dp: number) => layoutPerGpu(b, { tp, pp, dp, ep }, users) <= usableGiB;
+        if (n < 1 || !fits(count(n - 1))) continue;
+        // What a GPU holds only falls as replicas are added: halve towards the fewest.
+        let lo = -1;
+        let hi = n - 1;
+        while (hi - lo > 1) {
+          const mid = Math.floor((lo + hi) / 2);
+          if (fits(count(mid))) hi = mid;
+          else lo = mid;
+        }
+        const dp = count(hi);
+        const l: Layout = { gpus: tp * pp * dp, tp, pp, dp, ep, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(b, { tp, pp, dp, ep }, users) };
+        if (better(l)) best = l;
       }
     }
   }
-  return best;
+  // Of the layouts on that many GPUs, the one the count's own sizing puts first,
+  // so the fewest GPUs and those GPUs given as the count agree on how to run it.
+  if (!best) return null;
+  return layoutsOn(input, usableGiB, best.gpus).find((f) => f.fits)?.layout ?? best;
+}
+
+/** One layout of a given number of GPUs, sized for a load. */
+export interface LayoutFit {
+  layout: Layout;
+  /** Whether the requests at the context fit, and the most of each it holds:
+   *  requests at this context, and context for this many requests. */
+  fits: boolean;
+  maxUsers: number;
+  maxContext: number;
+}
+
+/**
+ * Every way vLLM can run the deployment on exactly `gpus` GPUs of `usableGiB`
+ * each — tensor parallel where the heads allow, pipeline stages, replicas, and for
+ * a MoE expert parallelism, here with an uneven split too — the best first: the
+ * most requests at this context, then fewer pipeline stages, then fewer replicas.
+ */
+export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number): LayoutFit[] {
+  const b = layoutBasis(input);
+  const { arch, kvDtype } = input;
+  const heads = arch.numAttentionHeads;
+  const kv = arch.numKeyValueHeads || heads;
+  const users = Math.max(1, input.concurrency);
+  const moe = b.expertBytes > 0;
+  const out: LayoutFit[] = [];
+  for (let tp = 1; tp <= gpus; tp++) {
+    if (gpus % tp || !tpValid(tp, heads, kv)) continue;
+    for (let pp = 1; pp <= gpus / tp; pp++) {
+      if ((gpus / tp) % pp || pp > b.layers) continue;
+      const dp = gpus / (tp * pp);
+      for (const ep of moe && dp > 1 ? [false, true] : [false]) {
+        const shape = { tp, pp, dp, ep };
+        const room = usableGiB - layoutFixedGiB(b, shape);
+        const per = layoutRequestGiB(b, shape);
+        const maxUsers = room > 0 && per > 0 ? Math.floor(room / per) * dp : 0;
+        // The longest context each replica's share of the requests fits in.
+        const perSeq = room > 0 ? (room * BYTES_PER_GIB * kvSplit(arch, tp)) / stageShare(b, pp) / Math.ceil(users / dp) : 0;
+        out.push({
+          layout: { gpus, ...shape, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(b, shape, users) },
+          fits: layoutPerGpu(b, shape, users) <= usableGiB,
+          maxUsers,
+          maxContext: Math.min(contextWithin(arch, kvDtype, b.batch.tokens, perSeq), arch.maxContext ?? Infinity),
+        });
+      }
+    }
+  }
+  return out.sort((x, y) => y.maxUsers - x.maxUsers || x.layout.pp - y.layout.pp || x.layout.dp - y.layout.dp);
 }

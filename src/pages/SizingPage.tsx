@@ -219,7 +219,9 @@ export function SizingPage() {
                   if (id !== state.gpuId) track("device-select", { device: id });
                   patch({ gpuId: id, migId: "" });
                 }}
-                onMig={(id) => patch({ migId: id })}
+                onMig={(id) => patch({ migId: id, gpuCount: 1 })}
+                gpuCount={state.gpuCount}
+                onGpuCount={(n) => patch({ gpuCount: n, migId: "" })}
                 onWeightDtype={(d) => patch({ weightDtype: d })}
               />
             </Card>

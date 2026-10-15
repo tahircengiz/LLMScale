@@ -21,6 +21,9 @@ export interface AppState {
   loadPrefix: number;
   gpuId: string;
   migId: string;
+  /** How many of the chosen card there are: 1 sizes one card and says how many it
+   *  takes; more sizes the deployment on exactly that many (calc.ts, layoutsOn). */
+  gpuCount: number;
 }
 
 /** True when the app opened on nothing of its own — no model, no architecture,
@@ -54,6 +57,7 @@ export const DEFAULT_STATE: AppState = {
   // Both problems disappear when there is nothing to emit. See docs/traffic-report.md.
   gpuId: "",
   migId: "",
+  gpuCount: 1,
 };
 
 export function encodeState(s: AppState): string {
@@ -126,6 +130,7 @@ export function encodeState(s: AppState): string {
   // read as a value and would land in the analytics data as one.
   if (s.gpuId) p.set("g", s.gpuId);
   if (s.migId) p.set("mig", s.migId);
+  if (s.gpuCount > 1) p.set("gn", String(s.gpuCount));
   return p.toString();
 }
 
@@ -213,5 +218,7 @@ export function decodeState(search: string): Partial<AppState> {
   }
   if (p.get("g")) out.gpuId = p.get("g")!;
   if (p.get("mig")) out.migId = p.get("mig")!;
+  const gn = num(p.get("gn"));
+  if (gn && Number.isInteger(gn) && gn > 1 && gn <= 1024) out.gpuCount = gn;
   return out;
 }

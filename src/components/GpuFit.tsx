@@ -1,7 +1,7 @@
 import { FEATURED_GPU_IDS, gpuPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "./StaticPageLink";
 import { useEffect, useState } from "react";
-import { calculate, layoutFor, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch, type TypicalLoad } from "../lib/calc";
+import { calculate, layoutFor, layoutsOn, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type Layout, type ModelArch, type TypicalLoad } from "../lib/calc";
 import { computeEfficiency, batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
@@ -13,6 +13,27 @@ import { Badge, SectionTitle, Stat } from "./ui";
 
 function ctxLabel(n: number): string {
   return n >= 1048576 ? `${n / 1048576}M` : n >= 1024 ? `${n / 1024}k` : String(n);
+}
+
+/** Card counts the selector offers; any other count a link carries is added. */
+const COUNTS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 24, 32, 64];
+
+const FLAGS_CLASS = "mt-2 block overflow-x-auto whitespace-nowrap rounded-lg bg-ink-900/60 px-2 py-1.5 font-mono text-[11px] text-slate-300";
+
+/** A layout in the engine's own terms: "TP 2 · PP 3", "DP 4 · EP". */
+function layoutLabel(l: Layout): string {
+  const parts = [l.tp > 1 && `TP ${l.tp}`, l.pp > 1 && `PP ${l.pp}`, l.dp > 1 && `DP ${l.dp}`, l.ep && "EP"].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "1 GPU";
+}
+
+/** The vllm serve flags that set a layout up. */
+function layoutFlags(l: Layout): string {
+  return [
+    l.tp > 1 && `--tensor-parallel-size ${l.tp}`,
+    l.pp > 1 && `--pipeline-parallel-size ${l.pp}`,
+    l.dp > 1 && `--data-parallel-size ${l.dp}`,
+    l.ep && "--enable-expert-parallel",
+  ].filter(Boolean).join(" ");
 }
 
 export function GpuFit({
@@ -29,6 +50,8 @@ export function GpuFit({
   migId,
   onGpu,
   onMig,
+  gpuCount = 1,
+  onGpuCount,
   onWeightDtype,
 }: {
   hfId: string;
@@ -46,6 +69,10 @@ export function GpuFit({
   migId: string;
   onGpu: (id: string) => void;
   onMig: (id: string) => void;
+  /** How many of the selected card there are; above 1 the panel sizes the
+   *  deployment on exactly that many. */
+  gpuCount?: number;
+  onGpuCount?: (n: number) => void;
   onWeightDtype?: (d: Dtype) => void;
 }) {
   const { t, lang } = useLang();
@@ -96,10 +123,30 @@ export function GpuFit({
   const kvHeads = arch.numKeyValueHeads ?? arch.numAttentionHeads;
   const heads = arch.numAttentionHeads;
   const layout = selUsage.layout;
+  /** What each part of a layout means for this model, one line each. */
+  const layoutBullets = (l: Layout, chosen: boolean) => (
+    <>
+      {l.tp > 1 && <li>{t("gpu.tpHeadsOk", { n: l.tp, h: heads, kv: kvHeads })}</li>}
+      {l.pp > 1 && <li>{t("gpu.ppHow", { L: arch.numLayers, pp: l.pp, k: Math.ceil(arch.numLayers / l.pp) })}</li>}
+      {l.ep ? (
+        <li>{t("gpu.epHow", { n: l.tp * l.dp, dp: l.dp, u: l.usersPerReplica, users: concurrency, e: arch.numExperts ?? 0 })}</li>
+      ) : (
+        l.dp > 1 && <li>{t(chosen ? "gpu.dpEach" : "gpu.dpHow", { dp: l.dp, tp: l.tp, u: l.usersPerReplica, users: concurrency })}</li>
+      )}
+      {selected.category === "consumer" && <li>{t("gpu.tpNvlink")}</li>}
+      <li>{t(l.dp > 1 || l.pp > 1 ? "gpu.dpOverhead" : "gpu.tpOverhead")}</li>
+    </>
+  );
   const selBatch = batchFor(selected, migId);
   const maxUsers = maxConcurrency({ ...base, contextLength, batch: selBatch }, effUsable);
   const maxCtx = maxContextLength({ ...base, concurrency, batch: selBatch }, effUsable);
-  const typical = load ? typicalConcurrency({ ...base, contextLength, batch: selBatch }, effUsable, load) : null;
+  // Several of the card: every way vLLM can run it on exactly that many, the one
+  // that holds the most requests first. One card, a MIG slice or a unified-memory
+  // machine keeps the single-card view.
+  const count = !selected.unified && !migId ? Math.max(1, gpuCount) : 1;
+  const multi = count > 1 ? layoutsOn({ ...base, contextLength, concurrency, batch: selBatch }, effUsable, count) : null;
+  const best = multi?.[0] ?? null;
+  const typical = load && !multi ? typicalConcurrency({ ...base, contextLength, batch: selBatch }, effUsable, load) : null;
   // A MIG slice gets roughly its share of the memory system, so scale the
   // published bandwidth with it. Only estimate where the model actually fits —
   // a speed for a configuration that cannot run is noise.
@@ -132,7 +179,11 @@ export function GpuFit({
   const decodeIn = { arch, weightDtype, kvDtype, contextLength };
   const speedOf = (g: Gpu) => (g.bandwidthGBs ? decodeStep(decodeIn, concurrency, deviceOf(g)) : null);
   const selDevice = deviceOf(selected, bwScale);
-  const speed = selUsage.fits && selected.bandwidthGBs ? decodeStep(decodeIn, concurrency, selDevice) : null;
+  const speed = !multi && selUsage.fits && selected.bandwidthGBs ? decodeStep(decodeIn, concurrency, selDevice) : null;
+  // What the panel shows: one card's figures, or the best layout's on all of them.
+  const shown = best
+    ? { fits: best.fits, pct: best.layout.perGpuGiB / effUsable, users: best.maxUsers, ctx: best.maxContext }
+    : { fits: selUsage.fits, pct: selUsage.pct, users: maxUsers, ctx: maxCtx };
   // Stage 2: devices within the selected category, split by whether they fit the model.
   const catGpus = GPUS.filter((g) => g.category === activeCat).sort(
     (a, b) => (a.totalGiB ?? a.vramGiB) - (b.totalGiB ?? b.vramGiB)
@@ -254,7 +305,29 @@ export function GpuFit({
                 </option>
               ))}
             </select>
-            {selUsage.fits ? (
+            {/* How many of this card: a MIG slice and a unified-memory machine stay at one. */}
+            {onGpuCount && !selected.unified && !migId && (
+              <select
+                value={count}
+                onChange={(e) => onGpuCount(Number(e.target.value))}
+                aria-label={t("gpu.countLabel")}
+                title={t("gpu.countLabel")}
+                className="rounded-lg bg-ink-800 px-2 py-1.5 text-sm font-medium text-white ring-1 ring-control outline-none focus:ring-brand-500/60"
+              >
+                {[...new Set([...COUNTS, count])].sort((a, b) => a - b).map((n) => (
+                  <option key={n} value={n}>
+                    ×{n}
+                  </option>
+                ))}
+              </select>
+            )}
+            {best ? (
+              best.fits ? (
+                <Badge tone="good">{t("gpu.fitsOn", { n: count })}</Badge>
+              ) : (
+                <Badge tone="bad">{t("gpu.notOn", { n: count })}</Badge>
+              )
+            ) : selUsage.fits ? (
               <Badge tone="good">{t("gpu.fits")}</Badge>
             ) : (
               <Badge tone="bad">{selected.unified ? t("gpu.noFitSingle") : selUsage.needed ? t("gpu.needs", { n: selUsage.needed }) : t("gpu.needsNone")}</Badge>
@@ -283,13 +356,15 @@ export function GpuFit({
           <div
             className="h-full rounded-full transition-all"
             style={{
-              width: `${Math.min(100, selUsage.pct * 100)}%`,
-              backgroundColor: selUsage.fits ? GREEN : RED,
+              width: `${Math.min(100, shown.pct * 100)}%`,
+              backgroundColor: shown.fits ? GREEN : RED,
             }}
           />
         </div>
         <div className="mt-1 text-xs text-slate-400">
-          {t("gpu.usage", { x: formatGiB(selUsage.need), y: capGiB, p: Math.round(selUsage.pct * 100) })}
+          {best
+            ? t("gpu.usageEach", { x: formatGiB(best.layout.perGpuGiB), y: capGiB, p: Math.round(shown.pct * 100), n: count })
+            : t("gpu.usage", { x: formatGiB(selUsage.need), y: capGiB, p: Math.round(selUsage.pct * 100) })}
           {migId ? ` · MIG ${migId}` : ""}
         </div>
         {selected.unified && !migId ? (
@@ -304,9 +379,9 @@ export function GpuFit({
         <div className={"mt-3 grid grid-cols-2 gap-2" + ((speed ? 1 : 0) + (typical ? 1 : 0) === 1 ? " sm:grid-cols-3" : "")}>
           <Stat
             label={t("gpu.maxUsers")}
-            value={maxUsers > 0 ? formatInt(maxUsers) : "0"}
-            sub={t("gpu.atCtx", { x: ctxLabel(contextLength) })}
-            accent={maxUsers > 0 && !typical}
+            value={shown.users > 0 ? formatInt(shown.users) : "0"}
+            sub={best ? t("gpu.atCtxOn", { x: ctxLabel(contextLength), n: count }) : t("gpu.atCtx", { x: ctxLabel(contextLength) })}
+            accent={shown.users > 0 && !typical}
           />
           {/* The worst case above is what vLLM reports at startup; this is what
               the pool holds when requests are the size the visitor described. */}
@@ -326,9 +401,9 @@ export function GpuFit({
               value — max users at this context, max context at this concurrency. */}
           <Stat
             label={t("gpu.maxContext")}
-            value={maxCtx > 0 ? formatInt(maxCtx) : "0"}
+            value={shown.ctx > 0 ? formatInt(shown.ctx) : "0"}
             sub={
-              maxCtx <= 0
+              shown.ctx <= 0
                 ? t("gpu.weightsNoFit")
                 : concurrency === 1
                   ? t("gpu.tokens")
@@ -372,7 +447,7 @@ export function GpuFit({
         )}
 
         {/* Answer "then what?" before explaining the multi-GPU arithmetic. */}
-        {!selUsage.fits && (smallestFit || quantFix) && (
+        {!multi && !selUsage.fits && (smallestFit || quantFix) && (
           <div className="mt-3 rounded-xl bg-brand-600/10 p-3 ring-1 ring-brand-500/30">
             <div className="mb-2 text-[11.5px] font-semibold text-white">{t("gpu.recTitle")}</div>
             <div className="flex flex-wrap gap-2">
@@ -408,10 +483,10 @@ export function GpuFit({
             </div>
           </div>
         )}
-        {!selUsage.fits && !smallestFit && !quantFix && (
+        {!multi && !selUsage.fits && !smallestFit && !quantFix && (
           <p className="mt-3 text-[11.5px] text-slate-400">{t("gpu.recNone")}</p>
         )}
-        {smallerAlternative && (
+        {!multi && smallerAlternative && (
           <p className="mt-2 text-[11px] text-slate-500">
             {t("gpu.recSmaller", {
               name: smallerAlternative.name,
@@ -427,9 +502,9 @@ export function GpuFit({
           </p>
         )}
 
-        {/* Say how N cards serve the model — one tensor-parallel group, replicas of
-            one, or experts spread over all — and hand a single group to the vLLM page. */}
-        {!selUsage.fits &&
+        {/* Say how N cards serve the model — one tensor-parallel group, pipeline
+            stages, replicas, or experts spread over all — and the flags that set it up. */}
+        {!multi && !selUsage.fits &&
           (selected.unified ? (
             <p className="mt-3 rounded-xl bg-ink-800/60 p-3 text-[11.5px] leading-relaxed text-slate-300">
               {t("gpu.unifiedSingle")}
@@ -441,33 +516,76 @@ export function GpuFit({
           ) : (
             <div className="mt-3 rounded-xl bg-ink-800/60 p-3">
               <div className="mb-1.5 text-[11.5px] font-semibold text-white">
-                {layout.ep
-                  ? t("gpu.epTitle", { n: layout.gpus })
-                  : layout.dp > 1
-                    ? t("gpu.dpTitle", { n: layout.gpus, dp: layout.dp, tp: layout.tp })
-                    : t("gpu.tpTitle", { n: layout.gpus })}
+                {layout.dp === 1 && layout.pp === 1
+                  ? t("gpu.tpTitle", { n: layout.gpus })
+                  : layout.ep && layout.pp === 1 && layout.tp === 1
+                    ? t("gpu.epTitle", { n: layout.gpus })
+                    : t("gpu.layoutTitle", { n: layout.gpus, layout: layoutLabel(layout) })}
               </div>
-              <ul className="space-y-1 text-[11.5px] leading-relaxed text-slate-400">
-                {layout.tp > 1 && <li>{t("gpu.tpHeadsOk", { n: layout.tp, h: heads, kv: kvHeads })}</li>}
-                {layout.ep ? (
-                  <li>{t("gpu.epHow", { n: layout.gpus, dp: layout.dp, u: layout.usersPerReplica, users: concurrency, e: arch.numExperts ?? 0 })}</li>
-                ) : (
-                  layout.dp > 1 && <li>{t("gpu.dpHow", { dp: layout.dp, tp: layout.tp, u: layout.usersPerReplica, users: concurrency })}</li>
+              <ul className="space-y-1 text-[11.5px] leading-relaxed text-slate-400">{layoutBullets(layout, false)}</ul>
+              {layoutFlags(layout) && <code className={FLAGS_CLASS}>vllm serve {hfId || "<model>"} {layoutFlags(layout)}</code>}
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                {onGpuCount && (
+                  <button type="button" onClick={() => onGpuCount(layout.gpus)} className="text-[11.5px] font-medium text-brand-400 hover:underline">
+                    {t("gpu.useCount", { n: layout.gpus })}
+                  </button>
                 )}
-                {selected.category === "consumer" && <li>{t("gpu.tpNvlink")}</li>}
-                <li>{t(layout.dp > 1 ? "gpu.dpOverhead" : "gpu.tpOverhead")}</li>
-              </ul>
-              {/* The vLLM page sets up one tensor-parallel group; replicas are more of it. */}
-              {layout.dp === 1 && (
-                <a
-                  href={`${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${layout.tp}&ctx=${contextLength}`}
-                  className="mt-2 inline-block text-[11.5px] font-medium text-brand-400 hover:underline"
-                >
-                  {t("gpu.tpLink")}
-                </a>
-              )}
+                {/* The vLLM page sets up one tensor-parallel group. */}
+                {layout.dp === 1 && layout.pp === 1 && (
+                  <a
+                    href={`${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${layout.tp}&ctx=${contextLength}`}
+                    className="text-[11.5px] font-medium text-brand-400 hover:underline"
+                  >
+                    {t("gpu.tpLink")}
+                  </a>
+                )}
+              </div>
             </div>
           ))}
+
+        {/* Several of the card: the layout that holds the most requests, how it is
+            set up, and every other way to run it on that many. */}
+        {multi && best && (
+          <div className="mt-3 rounded-xl bg-ink-800/60 p-3">
+            <div className="mb-1.5 text-[11.5px] font-semibold text-white">
+              {t("gpu.onTitle", { n: count, name: selected.name, layout: layoutLabel(best.layout) })}
+            </div>
+            {!best.fits && (
+              <p className="mb-1.5 text-[11.5px] leading-relaxed text-bad">
+                {best.maxUsers > 0
+                  ? t("gpu.onShort", { u: formatInt(best.maxUsers), users: formatInt(concurrency), c: formatInt(best.maxContext) })
+                  : t("gpu.onNone")}
+              </p>
+            )}
+            <ul className="space-y-1 text-[11.5px] leading-relaxed text-slate-400">{layoutBullets(best.layout, true)}</ul>
+            {layoutFlags(best.layout) && <code className={FLAGS_CLASS}>vllm serve {hfId || "<model>"} {layoutFlags(best.layout)}</code>}
+            {multi.length > 1 && (
+              <div className="mt-3 overflow-x-auto">
+                <div className="mb-1 text-[11px] font-medium text-slate-300">{t("gpu.altTitle", { n: count })}</div>
+                <table className="w-full text-[11px] tabular-nums">
+                  <thead className="text-slate-500">
+                    <tr>
+                      <th scope="col" className="py-1 pr-2 text-left font-medium">{t("gpu.alt.layout")}</th>
+                      <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.perGpu")}</th>
+                      <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.users", { x: ctxLabel(contextLength) })}</th>
+                      <th scope="col" className="py-1 text-right font-medium">{t("gpu.alt.ctx", { n: formatInt(concurrency) })}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {multi.map((f, i) => (
+                      <tr key={layoutLabel(f.layout)} className={i === 0 ? "font-semibold text-white" : f.fits ? "text-slate-300" : "text-slate-500"}>
+                        <td className="py-0.5 pr-2">{layoutLabel(f.layout)}</td>
+                        <td className="py-0.5 pr-2 text-right">{formatGiB(f.layout.perGpuGiB)}</td>
+                        <td className="py-0.5 pr-2 text-right">{formatInt(f.maxUsers)}</td>
+                        <td className="py-0.5 text-right">{formatInt(f.maxContext)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       )}
 
