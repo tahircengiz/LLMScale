@@ -6,7 +6,7 @@
 import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
-import { compressedLayers, layerPlan } from "./layers.ts";
+import { compressedLayers, layerPlan, sparseIndexer } from "./layers.ts";
 
 const HF = "https://huggingface.co";
 
@@ -207,6 +207,9 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   // DeepSeek V4 keeps most of its context compressed 4x or 128x (calc.ts).
   const compressed = compressedLayers(c);
   if (compressed) arch.compressedAttn = compressed;
+  // DeepSeek Sparse Attention keeps an indexer key per token beside MLA's latent (calc.ts).
+  const sparse = sparseIndexer(c);
+  if (sparse) arch.sparseAttn = sparse;
   // Sliding windows and hybrid layers cache less than every layer at full context.
   const plan = compressed ? undefined : layerPlan(c);
   if (plan) {

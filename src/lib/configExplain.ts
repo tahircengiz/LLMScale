@@ -13,7 +13,7 @@
 //
 // React-free: scripts/test-config.ts runs it against real configs.
 
-import { BYTES_PER_GIB, kvBytesPerLayerToken, kvBytesPerToken, resolveHeadDim, usesMla, type Dtype, type ModelArch } from "./calc.ts";
+import { BYTES_PER_GIB, kvBytesPerLayerToken, kvBytesPerToken, resolveHeadDim, usesDsa, usesMla, type Dtype, type ModelArch } from "./calc.ts";
 import { archFromConfig } from "./hf.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
@@ -437,6 +437,7 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
     if (compressed) {
       parts.push({ k: "context.compressed", v: { w: F(compressed.window), csa: F(compressed.csa), hca: F(compressed.hca), k: F(c.index_topk ?? 512) } });
     }
+    if (arch && usesDsa(arch)) parts.push({ k: "context.sparse", v: { k: F(arch.sparseAttn!.topk) } });
     if (window) {
       if (window.sliding > 0 && window.sliding < L) {
         parts.push({ k: "context.windowSome", v: { s: F(window.sliding), n: F(L), w: F(window.size) } });
@@ -449,7 +450,8 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
       parts,
       working,
       cites: cites(at("max_position_embeddings", "n_positions", "n_ctx", "max_seq_len"), rsPath, window ? prefix + window.path : undefined,
-        window ? at("layer_types", "sliding_window_pattern") : undefined, at("original_max_position_embeddings", "initial_context_length")),
+        window ? at("layer_types", "sliding_window_pattern") : undefined, at("original_max_position_embeddings", "initial_context_length"),
+        arch && usesDsa(arch) ? at("index_topk") : undefined),
     });
   }
 
@@ -460,13 +462,23 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
     const perToken = kvBytesPerToken({ ...arch, attnLayers: undefined }, dt);
     const hd = resolveHeadDim(arch);
     const mla = usesMla(arch);
+    const sparse = usesDsa(arch) ? arch.sparseAttn! : undefined;
     const parts: Part[] = [{ k: compressed ? "kv.perToken.compressed" : "kv.perToken", v: { b: fmtBytes(perToken, lang), w: F(compressed?.window ?? 0) } }];
     if (maxCtx) parts.push({ k: "kv.full", v: { s: shortTokens(maxCtx, lang), b: fmtBytes(perToken * maxCtx, lang) } });
-    const working: Part[] = mla
-      ? [{ k: "kv.w.mla", v: { L: F(L), r: F(arch.kvLoraRank!), q: F(arch.qkRopeHeadDim!), b: F(perToken) } }]
-      : compressed
-        ? [{ k: "kv.w.compressed", v: { csa: F(compressed.csa), hca: F(compressed.hca), e: F(kvBytesPerLayerToken(arch, dt)), i: F(compressed.indexDim + Math.ceil(compressed.indexDim / 128) * 4), b: F(Math.round(perToken)) } }]
-        : [{ k: "kv.w.gqa", v: { L: F(L), kv: F(arch.numKeyValueHeads), hd: F(hd), b: F(perToken) } }];
+    // DeepSeek Sparse Attention: an indexer key per token beside the latent, and at
+    // FP8 a latent row with its scales (calc.ts).
+    const indexKey = sparse ? sparse.indexDim + Math.ceil(sparse.indexDim / 128) * 4 : 0;
+    if (sparse) {
+      const v = { n: F(sparse.indexLayers), L: F(L), i: F(indexKey), f: F(kvBytesPerLayerToken(arch, "fp8")), p: F(arch.kvLoraRank! + arch.qkRopeHeadDim!) };
+      parts.push({ k: sparse.indexLayers < L ? "kv.dsaSome" : "kv.dsa", v });
+    }
+    const working: Part[] = sparse
+      ? [{ k: "kv.w.dsa", v: { L: F(L), r: F(arch.kvLoraRank!), q: F(arch.qkRopeHeadDim!), n: F(sparse.indexLayers), i: F(indexKey), b: F(perToken) } }]
+      : mla
+        ? [{ k: "kv.w.mla", v: { L: F(L), r: F(arch.kvLoraRank!), q: F(arch.qkRopeHeadDim!), b: F(perToken) } }]
+        : compressed
+          ? [{ k: "kv.w.compressed", v: { csa: F(compressed.csa), hca: F(compressed.hca), e: F(kvBytesPerLayerToken(arch, dt)), i: F(compressed.indexDim + Math.ceil(compressed.indexDim / 128) * 4), b: F(Math.round(perToken)) } }]
+          : [{ k: "kv.w.gqa", v: { L: F(L), kv: F(arch.numKeyValueHeads), hd: F(hd), b: F(perToken) } }];
     let tone: Answer["tone"];
     if (hybrid) {
       const counted = kvBytesPerToken({ ...arch, numLayers: hybrid.attention }, dt);
@@ -482,7 +494,8 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
       working,
       tone,
       cites: mla
-        ? cites(at("num_hidden_layers"), at("kv_lora_rank"), at("qk_rope_head_dim"))
+        ? cites(at("num_hidden_layers"), at("kv_lora_rank"), at("qk_rope_head_dim"),
+            sparse ? at("index_head_dim") : undefined, sparse ? at("index_topk_pattern", "index_topk_freq") : undefined)
         : compressed
           ? cites(at("compress_ratios"), at("sliding_window"), at("head_dim"), at("index_head_dim"))
           : cites(at("num_hidden_layers", "n_layer", "num_layers"), at("num_key_value_heads", "num_kv_heads"), at("head_dim"),
@@ -733,6 +746,7 @@ export function configFromArch(arch: ModelArch): Record<string, number> {
   if (arch.intermediateSize) out.intermediate_size = arch.intermediateSize;
   if (arch.kvLoraRank) out.kv_lora_rank = arch.kvLoraRank;
   if (arch.qkRopeHeadDim) out.qk_rope_head_dim = arch.qkRopeHeadDim;
+  if (arch.sparseAttn) [out.index_topk, out.index_head_dim] = [arch.sparseAttn.topk, arch.sparseAttn.indexDim];
   if (arch.vocabSize) out.vocab_size = arch.vocabSize;
   if (arch.maxContext) out.max_position_embeddings = arch.maxContext;
   return out;

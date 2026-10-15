@@ -93,7 +93,12 @@ export function encodeState(s: AppState): string {
     // DeepSeek V4's compressed layers: without them it decodes as one entry per token.
     if (a.compressedAttn) {
       const c = a.compressedAttn;
-      p.set("cx", [c.csa, c.hca, c.window, c.indexDim].join("."));
+      p.set("cx", [c.csa, c.hca, c.window, c.indexDim, ...(c.topk ? [c.topk] : [])].join("."));
+    }
+    // DeepSeek Sparse Attention: without it the indexer keys drop out of the cache.
+    if (a.sparseAttn) {
+      const d = a.sparseAttn;
+      p.set("dx", [d.topk, d.indexDim, d.indexLayers].join("."));
     }
     if (a.stateBytesPerSeq) p.set("st", String(a.stateBytesPerSeq));
     if (a.stateLayers) p.set("sn", String(a.stateLayers));
@@ -124,11 +129,20 @@ export function encodeState(s: AppState): string {
   return p.toString();
 }
 
-/** "csa.hca.window.indexDim", as encodeState writes it. */
+/** "csa.hca.window.indexDim[.topk]", as encodeState writes it. */
 function compressedOf(v: string | null): ModelArch["compressedAttn"] {
   const n = (v ?? "").split(".").map(Number);
-  if (n.length !== 4 || !n.every((x) => Number.isInteger(x) && x >= 0) || n[0] + n[1] === 0 || !n[2]) return undefined;
-  return { csa: n[0], hca: n[1], window: n[2], indexDim: n[3] };
+  if ((n.length !== 4 && n.length !== 5) || !n.every((x) => Number.isInteger(x) && x >= 0) || n[0] + n[1] === 0 || !n[2]) return undefined;
+  const out: ModelArch["compressedAttn"] = { csa: n[0], hca: n[1], window: n[2], indexDim: n[3] };
+  if (n[4]) out.topk = n[4];
+  return out;
+}
+
+/** "topk.indexDim.indexLayers", as encodeState writes it. */
+function sparseOf(v: string | null): ModelArch["sparseAttn"] {
+  const n = (v ?? "").split(".").map(Number);
+  if (n.length !== 3 || !n.every((x) => Number.isInteger(x) && x > 0)) return undefined;
+  return { topk: n[0], indexDim: n[1], indexLayers: n[2] };
 }
 
 function num(v: string | null): number | undefined {
@@ -166,6 +180,7 @@ export function decodeState(search: string): Partial<AppState> {
       slidingLayers: num(p.get("sl")),
       slidingWindow: num(p.get("sw")),
       compressedAttn: compressedOf(p.get("cx")),
+      sparseAttn: sparseOf(p.get("dx")),
       stateBytesPerSeq: num(p.get("st")),
       stateLayers: num(p.get("sn")),
       numExperts: num(p.get("ne")),

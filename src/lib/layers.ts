@@ -105,14 +105,37 @@ export function stateElementsPerLayer(c: Json): number {
  *  carries the speculative-decoding layers after the model's own, so only the
  *  first num_hidden_layers count. vLLM builds an indexer for ratio 4 only and
  *  accepts no other ratio (vllm/models/deepseek_v4/attention.py). */
-export function compressedLayers(c: Json): { csa: number; hca: number; window: number; indexDim: number } | undefined {
+export function compressedLayers(c: Json): { csa: number; hca: number; window: number; indexDim: number; topk?: number } | undefined {
   const L = c?.num_hidden_layers ?? 0;
   if (!Array.isArray(c?.compress_ratios) || !L || typeof c.sliding_window !== "number" || c.sliding_window <= 0) return undefined;
   const ratios: number[] = c.compress_ratios.slice(0, L).map(Number);
   const csa = ratios.filter((r) => r === 4).length;
   const hca = ratios.filter((r) => r === 128).length;
   if (csa + hca === 0) return undefined;
-  return { csa, hca, window: c.sliding_window, indexDim: typeof c.index_head_dim === "number" ? c.index_head_dim : 128 };
+  const out: { csa: number; hca: number; window: number; indexDim: number; topk?: number } =
+    { csa, hca, window: c.sliding_window, indexDim: typeof c.index_head_dim === "number" ? c.index_head_dim : 128 };
+  if (typeof c.index_topk === "number" && c.index_topk > 0) out.topk = c.index_topk;
+  return out;
+}
+
+/** DeepSeek Sparse Attention (DeepSeek-V3.2, GLM-5): vLLM serves an MLA config
+ *  with `index_topk` as DSA and builds a lightning indexer, with a cache of its own,
+ *  in every layer, unless IndexCache's `index_topk_freq` or `index_topk_pattern`
+ *  ("S" skips) lets a layer reuse an earlier layer's picks. Only the first
+ *  num_hidden_layers count; the speculative-decoding layers come after them
+ *  (vllm/models/deepseek_v32/attention.py). V4's indexer is compressedLayers'. */
+export function sparseIndexer(c: Json): { topk: number; indexDim: number; indexLayers: number } | undefined {
+  const L = c?.num_hidden_layers ?? 0;
+  if (typeof c?.index_topk !== "number" || c.index_topk <= 0 || !L || !c.kv_lora_rank || Array.isArray(c.compress_ratios)) return undefined;
+  const freq = typeof c.index_topk_freq === "number" && c.index_topk_freq > 1 ? c.index_topk_freq : 1;
+  const offset = typeof c.index_skip_topk_offset === "number" ? c.index_skip_topk_offset : 2;
+  const pattern: string | string[] | undefined = typeof c.index_topk_pattern === "string" || Array.isArray(c.index_topk_pattern) ? c.index_topk_pattern : undefined;
+  let indexLayers = 0;
+  for (let l = 0; l < L; l++) {
+    const skip = pattern ? l < pattern.length && pattern[l] === "S" : Math.max(l - offset + 1, 0) % freq !== 0;
+    if (!skip) indexLayers++;
+  }
+  return { topk: c.index_topk, indexDim: typeof c.index_head_dim === "number" ? c.index_head_dim : 128, indexLayers };
 }
 
 export interface LayerPlan {

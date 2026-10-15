@@ -64,8 +64,13 @@ export interface ModelArch {
   /** DeepSeek V4's compressed attention (config `compress_ratios`). Every layer
    *  keeps its last `window` tokens; on top of that `csa` layers keep one entry per
    *  4 tokens, each with an `indexDim`-wide indexer key, and `hca` layers one entry
-   *  per 128. The entry is one `headDim`-wide vector serving as key and value. */
-  compressedAttn?: { csa: number; hca: number; window: number; indexDim: number };
+   *  per 128. The entry is one `headDim`-wide vector serving as key and value. A CSA
+   *  query reads the `topk` entries its indexer picks (config `index_topk`, 512). */
+  compressedAttn?: { csa: number; hca: number; window: number; indexDim: number; topk?: number };
+  /** DeepSeek Sparse Attention (V3.2, GLM-5; config `index_topk`). Beside MLA's
+   *  latent, `indexLayers` layers keep an `indexDim`-wide indexer key for every
+   *  token, and a query reads only the `topk` tokens the indexer picks. */
+  sparseAttn?: { topk: number; indexDim: number; indexLayers: number };
   /** Layers that keep a KV cache, when not all of them do: hybrids keep a fixed
    *  state in their linear-attention or Mamba layers instead (layers.ts). */
   attnLayers?: number;
@@ -95,6 +100,11 @@ export interface ModelArch {
 /** Does this architecture cache a compressed latent instead of K and V tensors? */
 export function usesMla(arch: ModelArch): boolean {
   return !!(arch.kvLoraRank && arch.qkRopeHeadDim);
+}
+
+/** Does it keep an indexer key beside MLA's latent and read only the top-k tokens? */
+export function usesDsa(arch: ModelArch): boolean {
+  return usesMla(arch) && !!arch.sparseAttn && arch.sparseAttn.topk > 0;
 }
 
 /** Does it keep DeepSeek V4's compressed caches instead of one entry per token? */
@@ -170,8 +180,10 @@ export function weightsBytes(arch: ModelArch, dtype: Dtype): number {
   return arch.numParams * DTYPE_BYTES[dtype];
 }
 
-/** KV cache bytes ONE layer keeps for ONE token. */
+/** KV cache bytes ONE layer keeps for ONE token. For DeepSeek Sparse Attention,
+ *  the latent's row only: kvBytesPerToken adds the indexer keys. */
 export function kvBytesPerLayerToken(arch: ModelArch, kvDtype: Dtype): number {
+  if (usesDsa(arch)) return dsaBytes(arch, kvDtype).row;
   // MLA caches a single compressed latent per token per layer — (d_c + d_h^R) —
   // shared across all heads, so neither the head count nor the head dim appears.
   // DeepSeek-V2 §2.1.3: "KV cache per token is (d_c + d_h^R)·l". Applying the
@@ -194,7 +206,41 @@ export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
     const b = v4Bytes(arch, kvDtype);
     return (c.csa * (b.entry + b.index)) / CSA_RATIO + (c.hca * b.entry) / HCA_RATIO;
   }
+  if (usesDsa(arch)) {
+    const b = dsaBytes(arch, kvDtype);
+    return arch.numLayers * b.row + arch.sparseAttn!.indexLayers * b.index;
+  }
   return (arch.attnLayers ?? arch.numLayers) * kvBytesPerLayerToken(arch, kvDtype);
+}
+
+/**
+ * DeepSeek Sparse Attention (DeepSeek-V3.2, GLM-5) as vLLM 0.31.0 caches it
+ * (vllm/models/deepseek_v32/attention.py; MLAAttention.get_kv_cache_spec in
+ * vllm/model_executor/layers/attention/mla_attention.py; DeepseekV32IndexerCache in
+ * vllm/model_executor/models/deepseek_v2.py). Every layer keeps MLA's latent, and
+ * every layer with an indexer one key per token beside it:
+ *   - the latent at 16-bit is (kv_lora_rank + qk_rope_head_dim) values, 1,152 bytes;
+ *     at --kv-cache-dtype fp8 FlashMLA's sparse kernel reads it as its "FP8 with
+ *     scale" row, 656 bytes: 512 fp8 NoPE values, an fp32 scale per 128 of them and
+ *     the 64 RoPE values in bf16 (FlashMLA README at ba89a34; vLLM's fp8_ds_mla);
+ *   - the indexer key is fp8 with an fp32 scale per 128 values, 132 bytes, at any
+ *     --kv-cache-dtype.
+ * Both are full-attention specs with the same 64-token block (FlashMLA's sparse
+ * kernel block), so vLLM puts them in one KV cache group and pads neither page
+ * (UniformTypeKVCacheSpecs in vllm/v1/kv_cache_interface.py). On B200 and B300 vLLM
+ * runs an fp8 cache through FlashInfer's sparse kernel instead, which keeps the
+ * latent in the plain 576 bytes: there the figure is about 11% high.
+ * Counting the latent alone made DeepSeek-V3.2's cache 10% too small at 16-bit and
+ * 27% too small at fp8.
+ */
+const DSA_BLOCK = 64;
+
+function dsaBytes(arch: ModelArch, kvDtype: Dtype) {
+  const s = arch.sparseAttn!;
+  const nope = arch.kvLoraRank!;
+  const rope = arch.qkRopeHeadDim!;
+  const row = DTYPE_BYTES[kvDtype] < 2 ? nope + Math.ceil(nope / 128) * 4 + rope * 2 : (nope + rope) * DTYPE_BYTES[kvDtype];
+  return { row, index: s.indexDim + Math.ceil(s.indexDim / 128) * 4 };
 }
 
 /**
@@ -217,6 +263,8 @@ export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
  */
 const CSA_RATIO = 4;
 const HCA_RATIO = 128;
+/** Entries a CSA query reads when the config does not say (DeepSeek-V4-Flash's index_topk). */
+const V4_TOPK = 512;
 /** --block-size the V4 recipe serves with: tokens per block of every compressed cache. */
 const V4_BLOCK = 256;
 /** Tokens per block of the window cache, and of the CSA and HCA compressor states. */
@@ -281,11 +329,38 @@ export function kvBytesPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: nu
       c.hca * at(HCA_RATIO) * b.hcaState
     );
   }
+  if (usesDsa(arch)) return kvBytesPerToken(arch, kvDtype) * contextLength;
   const perLayer = kvBytesPerLayerToken(arch, kvDtype);
   const layers = arch.attnLayers ?? arch.numLayers;
   const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, layers) : 0;
   const windowed = sliding * Math.min(contextLength, arch.slidingWindow ?? contextLength);
   return perLayer * ((layers - sliding) * contextLength + windowed) + (arch.stateBytesPerSeq ?? 0);
+}
+
+/** KV cache bytes ONE decode step reads for ONE sequence: all a sequence holds
+ *  (kvBytesPerSeq), except in a model that reads sparsely. DeepSeek Sparse Attention
+ *  reads every indexer key and the `topk` latents the indexer picks. DeepSeek V4
+ *  reads every layer's window and every HCA entry, and in a CSA layer every indexer
+ *  key and the `topk` entries picked from the compressed context, all of them while
+ *  there are no more (vLLM 0.31.0, vllm/models/deepseek_v4/attention.py). A V4
+ *  compressor's working state is read once per group it folds, so it is left out. */
+export function kvBytesReadPerStep(arch: ModelArch, kvDtype: Dtype, contextLength: number): number {
+  if (usesDsa(arch)) {
+    const s = arch.sparseAttn!;
+    const b = dsaBytes(arch, kvDtype);
+    return arch.numLayers * Math.min(contextLength, s.topk) * b.row + s.indexLayers * contextLength * b.index;
+  }
+  if (usesCompressedAttn(arch)) {
+    const c = arch.compressedAttn!;
+    const b = v4Bytes(arch, kvDtype);
+    const csaEntries = Math.floor(contextLength / CSA_RATIO);
+    return (
+      arch.numLayers * Math.min(contextLength, c.window) * b.entry +
+      c.csa * (Math.min(csaEntries, c.topk ?? V4_TOPK) * b.entry + csaEntries * b.index) +
+      c.hca * Math.floor(contextLength / HCA_RATIO) * b.entry
+    );
+  }
+  return kvBytesPerSeq(arch, kvDtype, contextLength);
 }
 
 /** How many ways the KV cache splits across `gpus`: by key-value head, so a model
@@ -354,6 +429,7 @@ export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength:
     const r = v4Reserved(arch, kvDtype, contextLength, batchTokens);
     return r.grow + r.fixed;
   }
+  if (usesDsa(arch)) return Math.ceil(contextLength / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
   const l = kvLayout(arch, kvDtype);
   if (!l) return 0;
   const blocksOf = (tokens: number) => Math.ceil(tokens / l.block);
@@ -384,6 +460,7 @@ export function tokensInUse(load: TypicalLoad, contextLength: number): number {
 export function kvSharedPrefix(arch: ModelArch, kvDtype: Dtype, prefixTokens: number): number {
   // DeepSeek V4 shares its compressed caches' whole 256-token blocks.
   if (usesCompressedAttn(arch)) return Math.floor(Math.max(0, prefixTokens) / V4_BLOCK) * v4Reserved(arch, kvDtype, 1, 1).perBlock;
+  if (usesDsa(arch)) return Math.floor(Math.max(0, prefixTokens) / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
   const l = kvLayout(arch, kvDtype);
   if (!l || !l.full) return 0;
   return l.full * Math.floor(Math.max(0, prefixTokens) / l.block) * l.group * l.page;

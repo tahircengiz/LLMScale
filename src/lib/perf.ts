@@ -13,7 +13,7 @@
 // prefillTime and decodeStep below take whichever bound is slower. The vendors'
 // dense figures are peaks; the efficiencies are stated where they are applied.
 
-import { kvBytesPerSeq, resolveHeadDim, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
+import { kvBytesReadPerStep, resolveHeadDim, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
 
 /**
  * Share of peak bandwidth a good decode kernel actually reaches. Vendors quote
@@ -81,8 +81,9 @@ export function estimateDecode(i: DecodeInput): DecodeEstimate | null {
   const readShare = i.arch.numParams > 0 ? paramsReadPerStep(i.arch, i.concurrency) / i.arch.numParams : 1;
   const weightBytes = weightsBytes(i.arch, i.weightDtype) * readShare;
 
-  // Attention reads the cache for every sequence in the batch on every step.
-  const kvBytes = kvBytesPerSeq(i.arch, i.kvDtype, i.contextLength) * i.concurrency;
+  // Attention reads the cache for every sequence in the batch on every step: all of
+  // it, or for a sparse model the indexer keys and the entries they pick.
+  const kvBytes = kvBytesReadPerStep(i.arch, i.kvDtype, i.contextLength) * i.concurrency;
 
   const bytesPerStep = weightBytes + kvBytes;
   const effectiveBps = i.bandwidthGBs * 1e9 * BANDWIDTH_EFFICIENCY;
@@ -199,7 +200,9 @@ export function decodeStep(
     const active = i.arch.activeParams ?? i.arch.numParams;
     const attn = i.arch.attnLayers ?? i.arch.numLayers;
     const sliding = i.arch.slidingWindow ? Math.min(i.arch.slidingLayers ?? 0, attn) : 0;
-    // Each new token attends over its context; a sliding layer over its window.
+    // Each new token attends over its context; a sliding layer over its window. A
+    // sparse model's top-k attend is narrower, but its indexer scores every token
+    // of the context; the full span is kept, as an upper bound for the two.
     const span = (attn - sliding) * i.contextLength + sliding * Math.min(i.contextLength, i.arch.slidingWindow ?? 0);
     const flops = batch * (2 * active + 4 * attnWidth(i.arch) * span);
     const computeMs = (flops / (computeTflops(device.tflops, i.weightDtype) * 1e12 * (device.computeEfficiency ?? COMPUTE_EFFICIENCY) * gpus)) * 1000;
