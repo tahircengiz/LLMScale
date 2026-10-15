@@ -78,7 +78,8 @@ export function encodeState(s: AppState): string {
     // them out broke every reload and every shared estimate, not just links
     // people typed by hand.
     if (s.arch.kvLoraRank) p.set("kl", String(s.arch.kvLoraRank));
-    if (s.arch.qkRopeHeadDim) p.set("qr", String(s.arch.qkRopeHeadDim));
+    // GLM-5.3-Flash's positional part is 0, which is still MLA (calc.ts usesMla).
+    if (s.arch.kvLoraRank && typeof s.arch.qkRopeHeadDim === "number") p.set("qr", String(s.arch.qkRopeHeadDim));
     // Without it a MoE model decodes back as dense on every reload and shared link,
     // and its decode estimate reads every expert instead of the routed few.
     if (s.arch.activeParams) p.set("ap", String(Math.round(s.arch.activeParams)));
@@ -99,6 +100,8 @@ export function encodeState(s: AppState): string {
     }
     // Gemma 4's global layers: without them every layer takes the sliding shape.
     if (a.globalAttn) p.set("ga", `${a.globalAttn.kvHeads}.${a.globalAttn.headDim}`);
+    if (a.vHeadDim) p.set("vd", String(a.vHeadDim));
+    if (a.crossAttn) p.set("ca", `${a.crossAttn.layers}.${a.crossAttn.tokens}`);
     // DeepSeek V4's compressed layers: without them it decodes as one entry per token.
     if (a.compressedAttn) {
       const c = a.compressedAttn;
@@ -107,7 +110,7 @@ export function encodeState(s: AppState): string {
     // DeepSeek Sparse Attention: without it the indexer keys drop out of the cache.
     if (a.sparseAttn) {
       const d = a.sparseAttn;
-      p.set("dx", [d.topk, d.indexDim, d.indexLayers].join("."));
+      p.set("dx", [d.topk, d.indexDim, d.indexLayers, ...(d.kpool ? [d.kpool] : [])].join("."));
     }
     if (a.unmodelled?.length) p.set("um", a.unmodelled.join(","));
     if (a.notInVllm) p.set("nv", `${a.notInVllm.arch}${a.notInVllm.until ? `@${a.notInVllm.until}` : ""}${a.notInVllm.linear ? "!" : ""}`);
@@ -150,6 +153,13 @@ function compressedOf(v: string | null): ModelArch["compressedAttn"] {
   return out;
 }
 
+/** "layers.tokens", as encodeState writes it. */
+function crossOf(v: string | null): ModelArch["crossAttn"] {
+  const n = (v ?? "").split(".").map(Number);
+  if (n.length !== 2 || !n.every((x) => Number.isInteger(x) && x > 0)) return undefined;
+  return { layers: n[0], tokens: n[1] };
+}
+
 /** "kvHeads.headDim", as encodeState writes it. */
 function globalOf(v: string | null): ModelArch["globalAttn"] {
   const n = (v ?? "").split(".").map(Number);
@@ -157,11 +167,13 @@ function globalOf(v: string | null): ModelArch["globalAttn"] {
   return { kvHeads: n[0], headDim: n[1] };
 }
 
-/** "topk.indexDim.indexLayers", as encodeState writes it. */
+/** "topk.indexDim.indexLayers[.kpool]", as encodeState writes it. */
 function sparseOf(v: string | null): ModelArch["sparseAttn"] {
   const n = (v ?? "").split(".").map(Number);
-  if (n.length !== 3 || !n.every((x) => Number.isInteger(x) && x > 0)) return undefined;
-  return { topk: n[0], indexDim: n[1], indexLayers: n[2] };
+  if ((n.length !== 3 && n.length !== 4) || !n.every((x) => Number.isInteger(x) && x > 0)) return undefined;
+  const out: ModelArch["sparseAttn"] = { topk: n[0], indexDim: n[1], indexLayers: n[2] };
+  if (n[3] > 1) out.kpool = n[3];
+  return out;
 }
 
 /** "Class@version" or "Class!", as encodeState writes it. */
@@ -234,6 +246,8 @@ export function decodeState(search: string): Partial<AppState> {
       slidingLayers: pos(p.get("sl")),
       slidingWindow: pos(p.get("sw")),
       globalAttn: globalOf(p.get("ga")),
+      vHeadDim: pos(p.get("vd")),
+      crossAttn: crossOf(p.get("ca")),
       compressedAttn: compressedOf(p.get("cx")),
       sparseAttn: sparseOf(p.get("dx")),
       unmodelled: unmodelledOf(p.get("um")),

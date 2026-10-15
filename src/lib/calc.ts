@@ -69,8 +69,9 @@ export interface ModelArch {
   compressedAttn?: { csa: number; hca: number; window: number; indexDim: number; topk?: number };
   /** DeepSeek Sparse Attention (V3.2, GLM-5; config `index_topk`). Beside MLA's
    *  latent, `indexLayers` layers keep an `indexDim`-wide indexer key for every
-   *  token, and a query reads only the `topk` tokens the indexer picks. */
-  sparseAttn?: { topk: number; indexDim: number; indexLayers: number };
+   *  token — every `kpool` tokens where GLM-5.3-Flash pools them — and a query
+   *  reads only the `topk` tokens the indexer picks. */
+  sparseAttn?: { topk: number; indexDim: number; indexLayers: number; kpool?: number };
   /** Config keys that shape the cache in ways the sizing does not model yet
    *  (layers.ts, unmodelledCacheKeys). The figures for such a model are approximate. */
   unmodelled?: string[];
@@ -85,6 +86,12 @@ export interface ModelArch {
    *  tokens (Gemma 2 and 3, gpt-oss). */
   slidingLayers?: number;
   slidingWindow?: number;
+  /** Width of a value head where it differs from a key head's (headDim): MiMo-V2
+   *  keeps keys of 192 and values of 128. vLLM sizes a page by both (head_size_v). */
+  vHeadDim?: number;
+  /** Llama 3.2 Vision's cross-attention layers: they keep one image's `tokens`
+   *  keys and values whatever the context (layers.ts, crossAttention). */
+  crossAttn?: { layers: number; tokens: number };
   /** The full-attention layers' own key-value shape, where it differs from the
    *  sliding layers' (numKeyValueHeads × headDim): Gemma 4 widens its global
    *  layers' heads to `global_head_dim` and, with `attention_k_eq_v`, keeps
@@ -206,8 +213,9 @@ export function kvBytesPerLayerToken(arch: ModelArch, kvDtype: Dtype): number {
   if (usesMla(arch)) return (arch.kvLoraRank! + arch.qkRopeHeadDim!) * DTYPE_BYTES[kvDtype];
   // DeepSeek V4: one raw token in a layer's window, a single vector for K and V.
   if (usesCompressedAttn(arch)) return v4Bytes(arch, kvDtype).entry;
-  // 2 = one tensor for K and one for V.
-  return 2 * arch.numKeyValueHeads * resolveHeadDim(arch) * DTYPE_BYTES[kvDtype];
+  // One tensor for K and one for V, each numKeyValueHeads heads wide.
+  const hd = resolveHeadDim(arch);
+  return arch.numKeyValueHeads * (hd + (arch.vHeadDim ?? hd)) * DTYPE_BYTES[kvDtype];
 }
 
 /** The same for a full-attention layer, which in Gemma 4 has a shape of its own
@@ -240,7 +248,7 @@ export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
     // A hybrid (GLM-5.3-Flash) keeps the latent and the key in its attention layers only.
     const b = dsaBytes(arch, kvDtype);
     const layers = arch.attnLayers ?? arch.numLayers;
-    return layers * b.row + Math.min(arch.sparseAttn!.indexLayers, layers) * b.index;
+    return layers * b.row + (Math.min(arch.sparseAttn!.indexLayers, layers) * b.index) / (arch.sparseAttn!.kpool ?? 1);
   }
   const n = attnCounts(arch);
   return n.full * kvBytesPerFullLayerToken(arch, kvDtype) + n.sliding * kvBytesPerLayerToken(arch, kvDtype);
@@ -274,6 +282,33 @@ function dsaBytes(arch: ModelArch, kvDtype: Dtype) {
   const rope = arch.qkRopeHeadDim!;
   const row = DTYPE_BYTES[kvDtype] < 2 ? nope + Math.ceil(nope / 128) * 4 + rope * 2 : (nope + rope) * DTYPE_BYTES[kvDtype];
   return { row, index: s.indexDim + Math.ceil(s.indexDim / 128) * 4 };
+}
+
+/**
+ * GLM-5.3-Flash as vLLM 0.31.0 lays it out (_get_kv_cache_groups_glm5_next and
+ * _glm5_next_tensor_layout in vllm/v1/core/kv_cache_utils.py): DSA in its 11
+ * attention layers, with one indexer key per `kpool` (4) tokens and a one-block
+ * tail of raw keys (KpoolTailSpec), and KDA in the other 34, each keeping a state
+ * of 4.1 MiB, float32 for the most part. The state is padded to the MLA layers'
+ * page, so a block grows until an MLA page holds one: 4,352 tokens at 16-bit
+ * (Platform._align_hybrid_block_size, in multiples of 128 under MLA), fewer as
+ * tensor parallelism splits the state. Every block of the pool spans all MLA and
+ * indexer pages; a request takes the context's blocks, the tail's one and two for
+ * each group of KDA layers (as many groups as it takes to fit them in the MLA
+ * slots, two blocks each under prefix caching's "align" mode). undefined for a
+ * DSA model without such a state (DeepSeek-V3.2, GLM-5).
+ */
+function dsaHybridLayout(arch: ModelArch, kvDtype: Dtype, tp: number) {
+  const stateLayers = arch.stateBytesPerSeq ? arch.stateLayers ?? 0 : 0;
+  if (!stateLayers) return undefined;
+  const s = arch.sparseAttn!;
+  const b = dsaBytes(arch, kvDtype);
+  const layers = arch.attnLayers ?? arch.numLayers;
+  const kpool = s.kpool ?? 1;
+  const state = (arch.stateBytesPerSeq! / stateLayers) * headShare(arch.numKeyValueHeads, tp);
+  const block = Math.max(DSA_BLOCK, Math.ceil(state / b.row / 128) * 128);
+  const perBlock = layers * block * b.row + Math.min(s.indexLayers, layers) * (block / kpool) * b.index;
+  return { block, perBlock, extra: (kpool > 1 ? 1 : 0) + 2 * Math.ceil(stateLayers / layers) };
 }
 
 /**
@@ -362,11 +397,12 @@ export function kvBytesPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: nu
       c.hca * at(HCA_RATIO) * b.hcaState
     );
   }
-  if (usesDsa(arch)) return kvBytesPerToken(arch, kvDtype) * contextLength;
+  if (usesDsa(arch)) return kvBytesPerToken(arch, kvDtype) * contextLength + (arch.stateBytesPerSeq ?? 0);
   const n = attnCounts(arch);
   const windowed = n.sliding * Math.min(contextLength, arch.slidingWindow ?? contextLength);
+  const cross = arch.crossAttn ? arch.crossAttn.layers * arch.crossAttn.tokens : 0;
   return (
-    kvBytesPerFullLayerToken(arch, kvDtype) * n.full * contextLength +
+    kvBytesPerFullLayerToken(arch, kvDtype) * (n.full * contextLength + cross) +
     kvBytesPerLayerToken(arch, kvDtype) * windowed +
     (arch.stateBytesPerSeq ?? 0)
   );
@@ -384,7 +420,8 @@ export function kvBytesReadPerStep(arch: ModelArch, kvDtype: Dtype, contextLengt
     const s = arch.sparseAttn!;
     const b = dsaBytes(arch, kvDtype);
     const layers = arch.attnLayers ?? arch.numLayers;
-    return layers * Math.min(contextLength, s.topk) * b.row + Math.min(s.indexLayers, layers) * contextLength * b.index;
+    return layers * Math.min(contextLength, s.topk) * b.row + (Math.min(s.indexLayers, layers) * contextLength * b.index) / (s.kpool ?? 1) +
+      (arch.stateBytesPerSeq ?? 0);
   }
   if (usesCompressedAttn(arch)) {
     const c = arch.compressedAttn!;
@@ -462,7 +499,7 @@ function kvLayout(arch: ModelArch, kvDtype: Dtype, tp = 1) {
     const block = Math.abs(ratio - Math.round(ratio)) < 1e-9 ? base * Math.round(ratio) : base;
     return { sliding: k.sliding, block, groups: groups(k.layers) };
   });
-  return { page, group, kinds, state: groups(stateLayers) };
+  return { page, group, kinds, state: groups(stateLayers), fullTok };
 }
 
 /**
@@ -485,7 +522,11 @@ export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength:
     const r = v4Reserved(arch, kvDtype, contextLength, batchTokens);
     return r.grow + r.fixed;
   }
-  if (usesDsa(arch)) return Math.ceil(contextLength / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
+  if (usesDsa(arch)) {
+    const h = dsaHybridLayout(arch, kvDtype, tp);
+    if (h) return (Math.ceil(contextLength / h.block) + h.extra) * h.perBlock;
+    return Math.ceil(contextLength / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
+  }
   const l = kvLayout(arch, kvDtype, tp);
   if (!l) return 0;
   let blocks = l.state * 2;
@@ -493,7 +534,10 @@ export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength:
     const tokens = k.sliding ? Math.min(arch.slidingWindow! - 1 + 2 * batchTokens, contextLength) : contextLength;
     blocks += k.groups * (Math.ceil(tokens / k.block) + (k.sliding ? 1 : 0));
   }
-  return blocks * l.group * l.page;
+  // mllama's cross-attention layers hold one image, in blocks of their own.
+  const x = arch.crossAttn;
+  const cross = x ? x.layers * Math.ceil(x.tokens / VLLM_BLOCK) * VLLM_BLOCK * l.fullTok : 0;
+  return blocks * l.group * l.page + cross;
 }
 
 /** A load as it runs, not at its limit: what an average request sends and gets
@@ -517,7 +561,11 @@ export function tokensInUse(load: TypicalLoad, contextLength: number): number {
 export function kvSharedPrefix(arch: ModelArch, kvDtype: Dtype, prefixTokens: number, tp = 1): number {
   // DeepSeek V4 shares its compressed caches' whole 256-token blocks.
   if (usesCompressedAttn(arch)) return Math.floor(Math.max(0, prefixTokens) / V4_BLOCK) * v4Reserved(arch, kvDtype, 1, 1).perBlock;
-  if (usesDsa(arch)) return Math.floor(Math.max(0, prefixTokens) / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
+  if (usesDsa(arch)) {
+    const h = dsaHybridLayout(arch, kvDtype, tp);
+    if (h) return Math.floor(Math.max(0, prefixTokens) / h.block) * h.perBlock;
+    return Math.floor(Math.max(0, prefixTokens) / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
+  }
   const l = kvLayout(arch, kvDtype, tp);
   const full = l?.kinds.find((k) => !k.sliding);
   if (!l || !full) return 0;

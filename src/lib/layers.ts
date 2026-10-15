@@ -55,7 +55,67 @@ export function hybridLayers(
     const p: string[] = [...c.hybrid_override_pattern];
     if (p.includes("M")) return { attention: p.filter((ch) => ch === "*").length, state: p.filter((ch) => ch === "M").length, other: "mamba", path: "hybrid_override_pattern" };
   }
+  // Jamba: one attention layer every attn_layer_period, at attn_layer_offset, and a
+  // Mamba (v1) layer everywhere else (JambaConfig.layers_block_type, vllm jamba.py).
+  const period = c.attn_layer_period;
+  if (typeof period === "number" && period > 0 && typeof c.attn_layer_offset === "number" && L > 0) {
+    let attention = 0;
+    for (let i = 0; i < L; i++) if (i % period === c.attn_layer_offset) attention++;
+    if (attention < L) return { attention, state: L - attention, other: "mamba", path: "attn_layer_period" };
+  }
+  // MiniMax-Text-01 and M1: 1 is softmax attention, 0 lightning (linear) attention.
+  if (Array.isArray(c.attn_type_list) && L > 0) {
+    const attention = c.attn_type_list.slice(0, L).filter((t: unknown) => Number(t) === 1).length;
+    if (attention < L) return { attention, state: L - attention, other: "linear", path: "attn_type_list" };
+  }
+  // Kimi-Linear: its linear_attn_config lists the KDA layers and the MLA ones.
+  const lac = c.linear_attn_config;
+  if (lac && Array.isArray(lac.kda_layers) && Array.isArray(lac.full_attn_layers) && lac.kda_layers.length > 0 && L > 0 &&
+    lac.kda_layers.length + lac.full_attn_layers.length <= L) {
+    return { attention: lac.full_attn_layers.length, state: lac.kda_layers.length, other: "linear", path: "linear_attn_config" };
+  }
+  // Falcon-H1: an attention block and a Mamba2 mixer side by side in every layer
+  // (FalconH1ParallelHybrid in vllm/model_executor/models/falcon_h1.py).
+  if (L > 0 && (/^falcon_h1/.test(String(c.model_type ?? "")) || (typeof c.mamba_d_ssm === "number" && typeof c.mamba_n_heads === "number"))) {
+    return { attention: L, state: L, other: "mamba", path: "mamba_d_ssm" };
+  }
   return undefined;
+}
+
+/** MiMo-V2: `hybrid_layer_pattern` marks its sliding layers (1), which have their
+ *  own key-value heads and widths (swa_num_key_value_heads, swa_head_dim,
+ *  swa_v_head_dim), and keys wider than values (head_dim 192, v_head_dim 128).
+ *  The config has no layer_types, so vLLM 0.31 sets its 128-token window for the
+ *  whole model and the global layers inherit it (arg_utils.py, Attention.__init__):
+ *  every layer keeps the window, all in one group whose page is the sum of theirs.
+ *  Only that sum matters, so `attention` counts layers of the sliding shape that
+ *  hold as much: exact on up to as many GPUs as the global layers have KV heads. */
+export function mimoAttention(c: Json, L: number): { attention: number; kvHeads: number; headDim: number; vHeadDim: number } | undefined {
+  if (!Array.isArray(c?.hybrid_layer_pattern) || typeof c.swa_num_key_value_heads !== "number" || typeof c.num_key_value_heads !== "number") return undefined;
+  const hd = c.head_dim;
+  const swaHd = c.swa_head_dim ?? hd;
+  if (typeof hd !== "number" || typeof swaHd !== "number") return undefined;
+  const p: number[] = c.hybrid_layer_pattern.slice(0, L > 0 ? L : undefined).map(Number);
+  const swa = p.filter((x) => x === 1).length;
+  const vHd = typeof c.v_head_dim === "number" ? c.v_head_dim : hd;
+  const swaVHd = typeof c.swa_v_head_dim === "number" ? c.swa_v_head_dim : vHd;
+  const width = (kv: number, k: number, v: number) => kv * (k + v);
+  const ratio = width(c.num_key_value_heads, hd, vHd) / width(c.swa_num_key_value_heads, swaHd, swaVHd);
+  return { attention: swa + (p.length - swa) * ratio, kvHeads: c.swa_num_key_value_heads, headDim: swaHd, vHeadDim: swaVHd };
+}
+
+/** Llama 3.2 Vision (mllama): the layers in `cross_attention_layers` attend to one
+ *  image, not to the text: they keep the image's keys and values, max_num_tiles
+ *  tiles of (image_size / patch_size)² + 1 patches, whatever the context. vLLM 0.31
+ *  no longer loads it (vllmSupport.ts); this is how the model itself caches. */
+export function crossAttention(cfg: Json, L: number): { layers: number; tokens: number } | undefined {
+  const c = cfg?.text_config ?? cfg;
+  const v = cfg?.vision_config;
+  if (!Array.isArray(c?.cross_attention_layers) || !v) return undefined;
+  const layers = c.cross_attention_layers.filter((i: unknown) => typeof i === "number" && i < L).length;
+  const { image_size: size, patch_size: patch, max_num_tiles: tiles } = v;
+  if (!layers || ![size, patch, tiles].every((x) => typeof x === "number" && x > 0)) return undefined;
+  return { layers, tokens: tiles * ((Math.floor(size / patch) ** 2) + 1) };
 }
 
 /** Nemotron NAS (DeciLM: Llama-3.3-Nemotron-Super-49B, Llama-3.1-Nemotron-Ultra-253B,
@@ -162,6 +222,19 @@ export function activeWindow(c: Json, own?: number): { size: number; sliding: nu
  *  state, which vLLM may keep in another dtype. undefined when the config does not
  *  carry the fields. */
 export function stateShape(c: Json): { conv: number; ssm: number } | undefined {
+  // KDA (Kimi-Linear, GLM-5.3-Flash): conv over q, k and v; a head_dim² state per
+  // head (kda_state_shape).
+  const lac = c.linear_attn_config;
+  if (lac && typeof lac.num_heads === "number" && typeof lac.head_dim === "number") {
+    const k = lac.short_conv_kernel_size ?? 4;
+    return { conv: lac.num_heads * lac.head_dim * 3 * (k - 1), ssm: lac.num_heads * lac.head_dim * lac.head_dim };
+  }
+  // MiniMax lightning attention: a head_dim² state per head, no convolution
+  // (linear_attention_state_shape).
+  if (Array.isArray(c.attn_type_list) && typeof c.num_attention_heads === "number") {
+    const hd = c.head_dim ?? Math.floor(c.hidden_size / c.num_attention_heads);
+    if (typeof hd === "number" && hd > 0) return { conv: 0, ssm: c.num_attention_heads * hd * hd };
+  }
   // Gated DeltaNet (Qwen3-Next, Qwen3.5): conv over q, k and v; state per value head.
   if (typeof c.linear_num_value_heads === "number") {
     const nk = c.linear_num_key_heads ?? c.linear_num_value_heads;
@@ -178,7 +251,15 @@ export function stateShape(c: Json): { conv: number; ssm: number } | undefined {
   if ([heads, hd, st].every((x) => typeof x === "number")) {
     const groups = c.mamba_n_groups ?? c.n_groups ?? c.mamba_num_groups ?? 1;
     const k = c.mamba_d_conv ?? c.conv_kernel ?? 4;
-    return { conv: (heads * hd + 2 * groups * st) * (k - 1), ssm: heads * hd * st };
+    // Falcon-H1 gives the mixer's width as mamba_d_ssm.
+    const inner = typeof c.mamba_d_ssm === "number" ? c.mamba_d_ssm : heads * hd;
+    return { conv: (inner + 2 * groups * st) * (k - 1), ssm: heads * hd * st };
+  }
+  // Mamba (v1, Jamba): conv and state over mamba_expand × hidden_size channels
+  // (mamba1_state_shape).
+  if (typeof c.mamba_expand === "number" && typeof c.mamba_d_state === "number" && typeof c.hidden_size === "number") {
+    const inner = c.mamba_expand * c.hidden_size;
+    return { conv: inner * ((c.mamba_d_conv ?? 4) - 1), ssm: inner * c.mamba_d_state };
   }
   return undefined;
 }
@@ -188,11 +269,14 @@ export function stateShape(c: Json): { conv: number; ssm: number } | undefined {
  *  --mamba-ssm-cache-dtype, whose "auto" the model's config class resolves
  *  (vllm/model_executor/models/config.py): Nemotron-H to its config's
  *  mamba_ssm_cache_dtype or float32, Qwen3.5 (and Qwen4Exp) to its config's
- *  mamba_ssm_dtype — float32 in every published one. Counting 2 bytes left
+ *  mamba_ssm_dtype — float32 in every published one; KDA (Kimi-Linear,
+ *  GLM-5.3-Flash) keeps float32 itself. Counting 2 bytes left
  *  Nemotron Nano 9B v2's reservation 40% short at 4k tokens. */
 export function ssmStateBytes(c: Json): number {
   const bytes = (v: unknown) => (typeof v === "string" ? (/32/.test(v) ? 4 : /16/.test(v) ? 2 : undefined) : undefined);
   const type = String(c?.model_type ?? "");
+  // KDA keeps its recurrent state in float32 under "auto" (kda_state_dtype).
+  if (c?.linear_attn_config && typeof c.linear_attn_config.num_heads === "number") return bytes(c.mamba_ssm_cache_dtype) ?? 4;
   if (/^nemotron_h/.test(type)) return bytes(c.mamba_ssm_cache_dtype) ?? 4;
   if (/^qwen3_5|^qwen4_exp/.test(type)) return bytes(c.mamba_ssm_dtype) ?? 2;
   return 2;
@@ -228,7 +312,7 @@ export function compressedLayers(c: Json): { csa: number; hca: number; window: n
  *  ("S" skips) lets a layer reuse an earlier layer's picks. Only the first
  *  num_hidden_layers count; the speculative-decoding layers come after them
  *  (vllm/models/deepseek_v32/attention.py). V4's indexer is compressedLayers'. */
-export function sparseIndexer(c: Json): { topk: number; indexDim: number; indexLayers: number } | undefined {
+export function sparseIndexer(c: Json): { topk: number; indexDim: number; indexLayers: number; kpool?: number } | undefined {
   const L = c?.num_hidden_layers ?? 0;
   if (typeof c?.index_topk !== "number" || c.index_topk <= 0 || !L || !c.kv_lora_rank || Array.isArray(c.compress_ratios)) return undefined;
   const freq = typeof c.index_topk_freq === "number" && c.index_topk_freq > 1 ? c.index_topk_freq : 1;
@@ -242,30 +326,29 @@ export function sparseIndexer(c: Json): { topk: number; indexDim: number; indexL
     const skip = pattern ? l < pattern.length && pattern[l] === "S" : Math.max(l - offset + 1, 0) % freq !== 0;
     if (!skip && !isState(l)) indexLayers++;
   }
-  return { topk: c.index_topk, indexDim: typeof c.index_head_dim === "number" ? c.index_head_dim : 128, indexLayers };
+  const out: { topk: number; indexDim: number; indexLayers: number; kpool?: number } =
+    { topk: c.index_topk, indexDim: typeof c.index_head_dim === "number" ? c.index_head_dim : 128, indexLayers };
+  // GLM-5.3-Flash pools its indexer keys, one per index_kpool tokens
+  // (Glm5NextIndexerCache's tokens_per_state in vllm/models/glm5next).
+  if (typeof c.index_kpool === "number" && c.index_kpool > 1) out.kpool = c.index_kpool;
+  return out;
 }
 
 /** Config keys that change what a model caches in ways the sizing does not follow
- *  yet, found by the 2026-10-15 audit (docs/audit-2026-10-15-veri-guvenilirligi.md):
- *  per-layer blocks (Nemotron NAS), linear-attention layouts (Kimi-Linear, GLM-5.3's
- *  KDA), sliding patterns given another way (MiMo-V2), interleaved attention types
- *  (MiniMax-Text, Jamba), KV shared across layers (Gemma 3n/4), a second head shape
- *  for global layers (Gemma 4), Mamba beside attention in every layer (Falcon-H1),
- *  cross-attention (Llama 3.2 Vision) and a float32 SSM state (Nemotron-H, Qwen3.5).
- *  The figures still show, marked as approximate. */
+ *  yet. The 2026-10-15 audit (docs/audit-2026-10-15-veri-guvenilirligi.md) found a
+ *  dozen; phase 2 modelled them (Nemotron NAS blocks, Gemma 4's global layers and
+ *  shared caches, Jamba, Falcon-H1, KDA, MiMo-V2, MiniMax-Text, mllama, float32
+ *  SSM states). What is left: blocks or layer lists the readers below could not
+ *  make sense of. The figures still show, marked as approximate. */
 export function unmodelledCacheKeys(c: Json): string[] {
   if (!c || typeof c !== "object") return [];
   const found: string[] = [];
-  const num = (k: string) => typeof c[k] === "number";
-  const nas = nasAttention(c, c.num_hidden_layers ?? 0);
+  const L = c.num_hidden_layers ?? 0;
+  const nas = nasAttention(c, L);
   if (Array.isArray(c.block_configs) && !nas) found.push("block_configs");
   if (c.num_key_value_heads === null && !nas) found.push("num_key_value_heads: null");
-  if (c.linear_attn_config && typeof c.linear_attn_config === "object") found.push("linear_attn_config");
-  if (c.hybrid_layer_pattern !== undefined) found.push("hybrid_layer_pattern");
-  if (Array.isArray(c.attn_type_list)) found.push("attn_type_list");
-  if (num("attn_layer_period")) found.push("attn_layer_period");
-  if (c.mamba_d_ssm !== undefined && !Array.isArray(c.layer_types) && c.hybrid_override_pattern === undefined) found.push("mamba_d_ssm");
-  if (Array.isArray(c.cross_attention_layers)) found.push("cross_attention_layers");
+  if (c.linear_attn_config && typeof c.linear_attn_config === "object" && !stateShape(c)) found.push("linear_attn_config");
+  if (c.hybrid_layer_pattern !== undefined && !mimoAttention(c, L)) found.push("hybrid_layer_pattern");
   return found;
 }
 
@@ -293,14 +376,19 @@ export function layerPlan(c: Json): LayerPlan | undefined {
   if (!L) return undefined;
   const hybrid = hybridLayers(c, L);
   const nas = hybrid ? undefined : nasAttention(c, L);
+  const mimo = hybrid || nas ? undefined : mimoAttention(c, L);
   const shared = hybrid ? 0 : kvSharedLayers(c, L);
+  // mllama's cross-attention layers keep an image, not the context (crossAttention).
+  const cross = Array.isArray(c.cross_attention_layers) ? c.cross_attention_layers.filter((i: unknown) => typeof i === "number" && i < L).length : 0;
   const window = activeWindow(c, L - shared);
   // A window the config does not assign to layers is left out: counting the whole
   // context for every layer overstates the cache, counting none would understate it.
-  const sliding = window && window.sliding > 0 ? window.sliding : 0;
-  const attention = hybrid ? hybrid.attention : nas ? nas.attention : L - shared;
+  let sliding = window && window.sliding > 0 ? window.sliding : 0;
+  const attention = hybrid ? hybrid.attention : nas ? nas.attention : mimo ? mimo.attention : L - shared - cross;
+  // MiMo-V2's window reaches every layer, counted in layers of the sliding shape.
+  if (mimo && sliding >= L) sliding = attention;
   const global = attention > sliding ? globalAttnShape(c) : undefined;
-  if (!hybrid && !sliding && !shared && !global && !(nas && nas.attention !== L)) return undefined;
+  if (!hybrid && !sliding && !shared && !global && !cross && !(nas && nas.attention !== L) && !(mimo && mimo.attention !== L)) return undefined;
   const plan: LayerPlan = {
     attention,
     sliding: Math.min(sliding, attention),

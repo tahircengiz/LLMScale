@@ -110,6 +110,78 @@ console.log("\n--- C1: a float32 recurrent state ---");
   check("Granite 4.0-H and Qwen3-Next keep the model's dtype", ssmStateBytes({ model_type: "granitemoehybrid", mamba_ssm_dtype: "float32" }) === 2 && ssmStateBytes({ model_type: "qwen3_next" }) === 2);
 }
 
+console.log("\n--- B5: hybrid and local layouts ---");
+{
+  // Jamba: an attention layer every 8 (every 14 in the 3B), Mamba v1 elsewhere, its
+  // state 16-bit. Before: every layer as attention, 5–12x the cache.
+  const jamba = archFromConfig(cfg("ai21labs_Jamba-v0.1"), 51.6e9)!;
+  check("Jamba v0.1: 4 attention layers, 28 Mamba states of 8,192 × (3 + 16)", jamba.attnLayers === 4 && jamba.stateLayers === 28 &&
+    jamba.stateBytesPerSeq === 28 * 8192 * (3 + 16) * 2, `${jamba.attnLayers} · ${jamba.stateLayers}`);
+  reserved("Jamba v0.1", jamba, [[4096, 2048, 0.081], [32768, 2048, 0.518], [131072, 2048, 2.018]]);
+  const j3 = archFromConfig(cfg("ai21labs_AI21-Jamba-Reasoning-3B"), 3.2e9)!;
+  reserved("Jamba Reasoning 3B", j3, [[4096, 2048, 0.014], [32768, 2048, 0.041], [131072, 2048, 0.135]]);
+  // Falcon-H1: attention and Mamba2 in all 44 (72) layers. Before: no state, 48% short at 4k.
+  const f7 = archFromConfig(cfg("tiiuae_Falcon-H1-7B-Instruct"), 7.6e9)!;
+  check("Falcon-H1 7B: attention and a Mamba2 state in each of 44 layers", (f7.attnLayers ?? f7.numLayers) === 44 && f7.stateLayers === 44);
+  reserved("Falcon-H1 7B", f7, [[4096, 2048, 0.329], [32768, 2048, 1.513], [131072, 2048, 5.658]]);
+  const f34 = archFromConfig(cfg("tiiuae_Falcon-H1-34B-Instruct"), 34e9)!;
+  reserved("Falcon-H1 34B", f34, [[4096, 2048, 0.857], [32768, 2048, 4.856], [131072, 2048, 18.424]]);
+
+  // Kimi-Linear: 7 MLA layers, 20 KDA layers whose 32 × 128² state is float32. Under
+  // MLA a hybrid's block is a multiple of 128 tokens: 1,920 holds a 2.07 MiB state.
+  const kimi = archFromConfig(cfg("moonshotai_Kimi-Linear-48B-A3B-Instruct"), 49.1e9)!;
+  const kda = 32 * 128 * 3 * 3 * 2 + 32 * 128 * 128 * 4;
+  check("Kimi-Linear: 7 MLA layers, 20 KDA states of 2.07 MiB", kimi.attnLayers === 7 && kimi.stateLayers === 20 && kimi.stateBytesPerSeq === 20 * kda);
+  const kimiPage = 1920 * 576 * 2;
+  check("…at 4k: 3 attention blocks and 3 × 2 state blocks, 7 layers each", kvReservedPerSeq(kimi, "bf16", 4096) === (3 + 6) * 7 * kimiPage,
+    `${gib(kvReservedPerSeq(kimi, "bf16", 4096)).toFixed(3)} GiB; before ${(4096 * 27 * 2 * 32 * 72 * 2 / BYTES_PER_GIB).toFixed(3)}`);
+  check("Kimi-Linear reads 1,048,576 tokens (model_max_length)", kimi.maxContext === 1048576);
+
+  // GLM-5.3-Flash: its KDA state (64 × 128², float32: 4.1 MiB) is padded to the MLA
+  // page, so a block holds 4,352 tokens; each block spans 11 latent and 11 pooled
+  // indexer pages; a request takes the context's blocks, one tail block and 2 for
+  // each of 4 KDA groups.
+  const glm = archFromConfig(cfg("zai-org_GLM-5.3-Flash"), 321e9)!;
+  const perBlock = 11 * 4352 * 1024 + 11 * (4352 / 4) * 132;
+  const glmAt = (ctx: number) => (Math.ceil(ctx / 4352) + 1 + 8) * perBlock;
+  check("GLM-5.3-Flash at 4k: 10 blocks of 48.3 MiB", kvReservedPerSeq(glm, "bf16", 4096) === glmAt(4096), `${gib(glmAt(4096)).toFixed(3)} GiB`);
+  check("…at 128k: 40 blocks", kvReservedPerSeq(glm, "bf16", 131072) === glmAt(131072), `${gib(glmAt(131072)).toFixed(3)} GiB`);
+  check("…smaller blocks as tensor parallelism splits the state", kvReservedPerSeq(glm, "bf16", 4096, 2048, 8) < kvReservedPerSeq(glm, "bf16", 4096));
+
+  // MiMo-V2: no layer_types, so vLLM's 128-token window reaches all 48 layers; the 39
+  // sliding ones keep 8 heads, the 9 global ones 4, keys 192 and values 128 wide.
+  const mimo = archFromConfig(cfg("XiaomiMiMo_MiMo-V2-Flash"), 309.8e9)!;
+  const sum = 39 * 8 * (192 + 128) * 2 + 9 * 4 * (192 + 128) * 2;
+  check("MiMo-V2-Flash: 218 KiB a token across its layers", kvBytesPerToken(mimo, "bf16") === sum, `${kvBytesPerToken(mimo, "bf16")} vs ${sum}`);
+  check("…every layer kept to the window: 265 blocks at any long context", kvReservedPerSeq(mimo, "bf16", 131072) === 265 * 16 * sum &&
+    kvReservedPerSeq(mimo, "bf16", 1048576) === 265 * 16 * sum, `${gib(265 * 16 * sum).toFixed(3)} GiB`);
+
+  // MiniMax-Text-01: 10 softmax layers, 70 lightning ones with a 64 × 128² state. vLLM
+  // 0.31 does not load it (B15); this is how the model caches.
+  const mm = archFromConfig(cfg("MiniMaxAI_MiniMax-Text-01"), 456e9)!;
+  check("MiniMax-Text-01: 10 attention layers, 70 states of 2 MiB", mm.attnLayers === 10 && mm.stateBytesPerSeq === 70 * 64 * 128 * 128 * 2);
+  check("…and flagged as not loaded by vLLM 0.31", mm.notInVllm?.until === "0.23.0");
+  check("…0.43 GiB a request at 4k, not 1.25", kvReservedPerSeq(mm, "bf16", 4096) === (8 + 14) * 10 * 2 * 1024 ** 2, gib(kvReservedPerSeq(mm, "bf16", 4096)).toFixed(3));
+
+  // Gemma 3n E4B: the last 15 of 35 layers reuse a cache; of the first 20, 16 slide.
+  const g3n = archFromConfig(cfg("unsloth_gemma-3n-E4B-it"), 7.85e9)!;
+  check("Gemma 3n E4B: 20 layers keep a cache, 16 of them sliding", g3n.attnLayers === 20 && g3n.slidingLayers === 16);
+  check("…and its per-layer FFN widths are no longer NaN", g3n.intermediateSize === 16384);
+  check("…1,284 blocks of 4 layers at 4k", kvReservedPerSeq(g3n, "bf16", 4096) === (4 * 257 + 256) * 4 * 16 * 2048);
+
+  // Llama 3.2 Vision: 32 self-attention layers; 8 cross-attention layers keep one
+  // image, 4 tiles of 1,601 patches. vLLM 0.31 does not load it.
+  const ml = archFromConfig(cfg("unsloth_Llama-3.2-11B-Vision-Instruct"), 10.67e9)!;
+  check("mllama: 32 self-attention layers, 8 holding 6,404 image tokens", ml.attnLayers === 32 && ml.crossAttn?.layers === 8 && ml.crossAttn.tokens === 6404);
+  check("…the image's cache is fixed", kvReservedPerSeq(ml, "bf16", 8192) - kvReservedPerSeq(ml, "bf16", 4096) === 32 * 4096 * 4096);
+  check("no hybrid is flagged as unmodelled", [jamba, j3, f7, f34, kimi, glm, mimo, mm, g3n, ml].every((a) => !a.unmodelled));
+  for (const [name, a] of [["Jamba", jamba], ["Kimi-Linear", kimi], ["GLM-5.3-Flash", glm], ["MiMo-V2", mimo], ["mllama", ml]] as const) {
+    const back = decodeState(encodeState({ ...DEFAULT_STATE, arch: a }))!.arch!;
+    check(`${name}: a link keeps the reservation`, kvReservedPerSeq(back, "bf16", 32768) === kvReservedPerSeq(a, "bf16", 32768),
+      `${kvReservedPerSeq(back, "bf16", 32768)} vs ${kvReservedPerSeq(a, "bf16", 32768)}`);
+  }
+}
+
 console.log("\n--- B15: models vLLM 0.31 does not load ---");
 {
   const mllama = archFromConfig({ architectures: ["MllamaForConditionalGeneration"], text_config: { num_hidden_layers: 40, hidden_size: 4096, num_attention_heads: 32, num_key_value_heads: 8 } }, 10.6e9)!;

@@ -116,9 +116,10 @@ console.log("\n--- B2: MLA with no positional part (GLM-5.3-Flash) ---");
   check("read as MLA", usesMla(glm), `kv_lora_rank ${glm.kvLoraRank}, rope ${glm.qkRopeHeadDim}`);
   check("only its sparse-attention layers keep a cache", glm.attnLayers === 11, String(glm.attnLayers));
   const per = kvBytesPerToken(glm, "bf16");
-  // 11 layers × 512 × 2 bytes of latent, and an fp8 indexer key of 132 bytes each.
-  check("about 12.7 KiB a token, not 176 KiB", per === 11 * 512 * 2 + 11 * 132, `${per} B`);
-  check("its linear-attention state is flagged as not modelled", (glm.unmodelled ?? []).includes("linear_attn_config"));
+  // 11 layers × 512 × 2 bytes of latent, and an fp8 indexer key of 132 bytes for
+  // every 4 tokens (index_kpool; phase 2, scripts/test-audit2.ts).
+  check("about 11.4 KiB a token, not 176 KiB", per === 11 * 512 * 2 + (11 * 132) / 4, `${per} B`);
+  check("its KDA state is modelled now (test-audit2.ts), not flagged", !glm.unmodelled && glm.stateLayers === 34);
 }
 
 console.log("\n--- K14: configs the sizing does not follow yet ---");

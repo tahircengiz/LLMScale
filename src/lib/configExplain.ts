@@ -19,7 +19,7 @@ import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
 import type { Lang } from "./dict.ts";
 import { lookupField, type FieldGroup, type GlossaryEntry, type Relevance } from "./configGlossary.ts";
-import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers } from "./layers.ts";
+import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers, mimoAttention, nasAttention } from "./layers.ts";
 
 // Configs are free-form JSON.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -370,7 +370,8 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
     if (moeUncounted) parts.push({ k: "kind.moeUncounted" });
     else if (isMoE && perTok) parts.push({ k: `kind.moe${named}`, v: { arch: archName ?? "", k: F(perTok), n: F(experts!) } });
     else parts.push({ k: `kind.dense${named}`, v: { arch: archName ?? "" } });
-    if (hybrid) parts.push({ k: `kind.hybrid.${hybrid.other}`, v: { a: F(hybrid.attention), n: F(L) } });
+    // Falcon-H1 runs attention and Mamba side by side in every layer.
+    if (hybrid) parts.push({ k: hybrid.attention >= L ? "kind.hybrid.parallel" : `kind.hybrid.${hybrid.other}`, v: { a: F(hybrid.attention), n: F(L) } });
     if (cfg?.vision_config && cfg?.audio_config) parts.push({ k: "kind.visionAudio" });
     else if (cfg?.vision_config) parts.push({ k: "kind.vision" });
     answers.push({
@@ -459,9 +460,14 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
   if (arch) {
     const dt: Dtype = "bf16";
     // Every layer's cost first; the hybrid line below then says how much of it is real.
-    // Gemma 4 and 3n: the layers that reuse an earlier cache never count.
+    // Layers that keep no cache of their own never count: Gemma 4 and 3n's shared
+    // ones, Nemotron NAS's no-op blocks, mllama's cross-attention layers; MiMo-V2
+    // counts in layers of its sliding shape (layers.ts).
     const shared = hybrid ? 0 : kvSharedLayers(c, L);
-    const perToken = kvBytesPerToken({ ...arch, attnLayers: shared ? arch.attnLayers : undefined }, dt);
+    const nas = hybrid ? undefined : nasAttention(c, L);
+    const mimo = hybrid || nas ? undefined : mimoAttention(c, L);
+    const own = !!(shared || nas || mimo || arch.crossAttn);
+    const perToken = kvBytesPerToken({ ...arch, attnLayers: own ? arch.attnLayers : undefined }, dt);
     const global = arch.globalAttn;
     const hd = resolveHeadDim(arch);
     const mla = usesMla(arch);
@@ -483,10 +489,20 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
           ? [{ k: "kv.w.compressed", v: { csa: F(compressed.csa), hca: F(compressed.hca), e: F(kvBytesPerLayerToken(arch, dt)), i: F(compressed.indexDim + Math.ceil(compressed.indexDim / 128) * 4), b: F(Math.round(perToken)) } }]
           : global
             ? [{ k: "kv.w.gqaGlobal", v: { s: F(arch.slidingLayers ?? 0), kv: F(arch.numKeyValueHeads), hd: F(hd), g: F((arch.attnLayers ?? L) - (arch.slidingLayers ?? 0)), gkv: F(global.kvHeads), ghd: F(global.headDim), b: F(perToken) } }]
-            : [{ k: "kv.w.gqa", v: { L: F(L - shared), kv: F(arch.numKeyValueHeads), hd: F(hd), b: F(perToken) } }];
+            : mimo
+              ? [{ k: "kv.w.mimo", v: { s: F(c.hybrid_layer_pattern.slice(0, L).filter((x: unknown) => Number(x) === 1).length), skv: F(c.swa_num_key_value_heads),
+                  shd: F(mimo.headDim), svd: F(mimo.vHeadDim), g: F(c.hybrid_layer_pattern.slice(0, L).filter((x: unknown) => Number(x) !== 1).length),
+                  gkv: F(c.num_key_value_heads), ghd: F(c.head_dim), gvd: F(c.v_head_dim ?? c.head_dim), b: F(perToken) } }]
+              : arch.vHeadDim
+                ? [{ k: "kv.w.gqaV", v: { L: F(arch.attnLayers ?? L), kv: F(arch.numKeyValueHeads), hd: F(hd), vd: F(arch.vHeadDim), b: F(perToken) } }]
+                : [{ k: "kv.w.gqa", v: { L: F(own ? arch.attnLayers ?? L : L), kv: F(arch.numKeyValueHeads), hd: F(hd), b: F(perToken) } }];
     if (shared) parts.push({ k: "kv.shared", v: { n: F(shared), L: F(L) } });
+    if (arch.crossAttn) {
+      const x = arch.crossAttn;
+      parts.push({ k: "kv.cross", v: { x: F(x.layers), t: F(x.tokens), b: fmtBytes(x.layers * x.tokens * kvBytesPerLayerToken(arch, dt), lang) } });
+    }
     let tone: Answer["tone"];
-    if (hybrid) {
+    if (hybrid && hybrid.attention < L) {
       const counted = kvBytesPerToken({ ...arch, numLayers: hybrid.attention }, dt);
       parts.push({ k: "kv.hybrid", v: { a: F(hybrid.attention), n: F(L), b: fmtBytes(counted, lang) } });
       tone = "warn";

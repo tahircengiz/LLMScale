@@ -7,7 +7,7 @@ import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { vllmRefuses } from "./vllmSupport.ts";
-import { compressedLayers, layerPlan, nasAttention, sparseIndexer, unmodelledCacheKeys } from "./layers.ts";
+import { compressedLayers, crossAttention, layerPlan, mimoAttention, nasAttention, sparseIndexer, unmodelledCacheKeys } from "./layers.ts";
 
 const HF = "https://huggingface.co";
 
@@ -202,7 +202,9 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   // and multi_query, ChatGLM's multi_query_group_num, Step's num_attention_groups.
   // Falling back to every head made Falcon-7B's cache 71x and GLM-4-9B's 16x too large.
   const nas = nasAttention(c, numLayers);
-  const numKeyValueHeads =
+  // MiMo-V2's sliding layers hold most of its cache, so their shape stands for all (layers.ts).
+  const mimo = mimoAttention(c, numLayers);
+  const numKeyValueHeads = mimo?.kvHeads ??
     c.num_key_value_heads ?? c.num_kv_heads ?? c.n_head_kv ??
     (c.multi_query_attention !== false ? c.multi_query_group_num : undefined) ??
     c.num_attention_groups ?? (c.multi_query === true ? 1 : undefined) ?? nas?.kvHeads ?? numAttentionHeads;
@@ -213,14 +215,24 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     intermediateSize: ffnWidth(c) ?? nas?.ffn,
     numAttentionHeads,
     numKeyValueHeads,
-    headDim: c.head_dim,
+    headDim: mimo?.headDim ?? c.head_dim,
     // Multi-head latent attention. Both are needed before the KV formula
     // switches, so a config carrying only one is left on the ordinary path.
     kvLoraRank: c.kv_lora_rank,
     qkRopeHeadDim: c.qk_rope_head_dim,
     vocabSize: c.vocab_size,
-    maxContext: c.max_position_embeddings ?? c.n_positions ?? c.max_seq_len ?? c.seq_length,
+    // The keys vLLM's _get_and_verify_max_len reads, in its order (Kimi-Linear has
+    // only model_max_length).
+    maxContext: c.max_position_embeddings ?? c.n_positions ?? c.max_seq_len ?? c.seq_length ?? c.model_max_length ??
+      c.max_sequence_length ?? c.max_seq_length ?? c.seq_len,
   };
+  // Values narrower than keys (MiMo-V2: 192 and 128). An MLA config's v_head_dim
+  // is its attention output, not a cache width.
+  const vHeadDim = mimo ? mimo.vHeadDim : c.kv_lora_rank ? undefined : c.v_head_dim;
+  if (typeof vHeadDim === "number" && vHeadDim > 0 && vHeadDim !== (arch.headDim ?? Math.floor(hiddenSize / numAttentionHeads))) arch.vHeadDim = vHeadDim;
+  // mllama's cross-attention layers keep one image's keys and values.
+  const cross = crossAttention(cfg, numLayers);
+  if (cross) arch.crossAttn = cross;
   // Decode speed reads the ACTIVE parameters (perf.ts). Nothing set them for a
   // model resolved from its config, so every live MoE was estimated as if dense.
   arch.activeParams = activeParamsOf(arch, c);
