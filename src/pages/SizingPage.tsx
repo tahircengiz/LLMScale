@@ -3,7 +3,7 @@ import { StaticPageLink } from "../components/StaticPageLink";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate, type ModelArch } from "../lib/calc";
 import { batchFor, GPUS } from "../lib/gpus";
-import { resolveModel } from "../lib/hf";
+import { placeholderArch, resolveModel } from "../lib/hf";
 import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
 import { decodeState, encodeState, isBlankStart, DEFAULT_STATE, type AppState } from "../lib/urlState";
 import { track } from "../lib/analytics";
@@ -75,9 +75,7 @@ export function SizingPage() {
           source: r.source, gated: r.gated, modelType: r.modelType, isMoE: r.isMoE,
           tags: r.tags, pipelineTag: r.pipelineTag, weightDtype: r.weightDtype, kvDtype: r.kvDtype, warningKey: r.warningKey,
         });
-        const arch = r.arch ?? {
-          numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8,
-        };
+        const arch = r.arch ?? placeholderArch(r.numParams);
         setState((s) => ({
           ...s,
           arch,
@@ -185,7 +183,11 @@ export function SizingPage() {
               resting state that repeats on every visit and every refresh. */}
           <Card className={"p-5" + (result ? "" : " ring-1 ring-brand-500/60")}>
             {result ? (
-              <Results result={result} cardName={GPUS.find((g) => g.id === state.gpuId)?.name} />
+              <>
+                {/* A stand-in architecture: say so above its figures, not only beside the picker. */}
+                {state.arch?.placeholder && <p className="mb-3 text-xs font-medium text-warn">{t("results.placeholder")}</p>}
+                <Results result={result} cardName={GPUS.find((g) => g.id === state.gpuId)?.name} />
+              </>
             ) : (
               <div className="py-10 text-center">
                 <p className="text-sm font-medium text-white">{t("results.empty")}</p>

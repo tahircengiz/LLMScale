@@ -3,7 +3,7 @@
 // dependency-free and unit-tested; fetchAnatomy plumbs the live data in.
 
 import { resolveHeadDim, type Dtype, type ModelArch } from "./calc.ts";
-import { resolveModel, type WarningKey } from "./hf.ts";
+import { placeholderArch, resolveModel, type WarningKey } from "./hf.ts";
 import { expertCount, expertsPerToken } from "./moe.ts";
 
 // ---- parameter distribution ----------------------------------------------
@@ -149,7 +149,7 @@ export async function fetchAnatomy(hfId: string): Promise<Anatomy> {
   const cfg = r.cfg ?? null;
 
   const arch: ModelArch =
-    r.arch ?? { numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8 };
+    r.arch ?? placeholderArch(r.numParams);
   const numParams = arch.numParams || r.numParams || 0;
   const headDim = resolveHeadDim(arch);
   const c = cfg?.text_config ?? cfg?.llm_config ?? cfg ?? {};

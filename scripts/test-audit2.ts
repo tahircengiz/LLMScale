@@ -4,8 +4,9 @@
 // rules (docs/audit-2026-10-15/kv-vllm-tablolari.md) and the configs as published.
 // Run: node scripts/test-audit2.ts
 import { readFileSync } from "node:fs";
-import { BYTES_PER_GIB, calculate, kvBytesPerToken, kvReservedPerSeq, weightsBytes, type ModelArch } from "../src/lib/calc.ts";
-import { archFromConfig, parseConfigJson, resolveModel, unpackedParams } from "../src/lib/hf.ts";
+import { BYTES_PER_GIB, calculate, kvBytesPerSeq, kvBytesPerToken, kvReservedPerSeq, weightsBytes, type ModelArch } from "../src/lib/calc.ts";
+import { archFromConfig, mirrorIds, parseConfigJson, placeholderArch, resolveModel, unpackedParams } from "../src/lib/hf.ts";
+import { KNOWN_MODELS } from "../src/lib/models.ts";
 import { ssmStateBytes, unmodelledCacheKeys } from "../src/lib/layers.ts";
 import { overheadPerGpu } from "../src/lib/overhead.ts";
 import { decodeState, DEFAULT_STATE, encodeState } from "../src/lib/urlState.ts";
@@ -17,6 +18,7 @@ function check(name: string, cond: boolean, detail = "") {
 }
 const cfg = (n: string) => parseConfigJson(readFileSync(new URL(`./fixtures/configs-audit/${n}.json`, import.meta.url), "utf8"));
 const gib = (b: number) => b / BYTES_PER_GIB;
+const kvBytesPerSeqOf = (a: ModelArch, ctx: number) => kvBytesPerSeq(a, "bf16", ctx);
 const b2 = (n: number | undefined) => `${((n ?? 0) / 1e9).toFixed(2)}B`;
 const near = (a: number | undefined, lo: number, hi: number) => !!a && a >= lo && a <= hi;
 /** vLLM's reservation for one request, in GiB, against the audit's figure to its 3 decimals. */
@@ -25,6 +27,30 @@ function reserved(name: string, arch: ModelArch, rows: [ctx: number, batch: numb
     const ours = gib(kvReservedPerSeq(arch, "bf16", ctx, batch));
     check(`${name} at ${ctx / 1024}k, ${batch}-token batches: ${vllm.toFixed(3)} GiB`, Math.abs(ours - vllm) < 0.0006, ours.toFixed(4));
   }
+}
+
+/** resolveModel against the Hub's own answers for the repos in
+ *  fixtures/configs-audit (fetched 2026-10-15): the API's record under api/, the
+ *  config at the top, anything else a 404 — which is also what a gated repo's
+ *  config gives a browser. Returns the real fetch, to put back. */
+function mockHub(): typeof fetch {
+  const real = globalThis.fetch;
+  const file = (n: string) => new URL(`./fixtures/configs-audit/${n}`, import.meta.url);
+  globalThis.fetch = (async (input: string | URL) => {
+    const url = String(input);
+    const api = /\/api\/models\/([^?]+)/.exec(url);
+    const raw = /huggingface\.co\/([^/]+\/[^/]+)\/resolve\/main\/(.+)$/.exec(url);
+    const name = (id: string) => id.replace("/", "_");
+    try {
+      if (api) return new Response(readFileSync(file(`api/${name(api[1])}.json`), "utf8"), { status: 200 });
+      if (raw && raw[2] === "config.json") return new Response(readFileSync(file(`${name(raw[1])}.json`), "utf8"), { status: 200 });
+      if (raw) return new Response(readFileSync(file(`api/${name(raw[1])}.${raw[2]}`), "utf8"), { status: 200 });
+    } catch {
+      // not in the fixtures
+    }
+    return new Response("not found", { status: 404 });
+  }) as typeof fetch;
+  return real;
 }
 
 console.log("--- B1: Gemma 4 ---");
@@ -233,23 +259,7 @@ console.log("\n--- C6: speculative layers out of the weights ---");
 
 console.log("\n--- B7: mixed-precision and packed checkpoints ---");
 {
-  // resolveModel against the Hub's own answers for these repos (2026-10-15).
-  const real = globalThis.fetch;
-  const file = (n: string) => new URL(`./fixtures/configs-audit/${n}`, import.meta.url);
-  globalThis.fetch = (async (input: string | URL) => {
-    const url = String(input);
-    const api = /\/api\/models\/([^?]+)/.exec(url);
-    const raw = /huggingface\.co\/([^/]+\/[^/]+)\/resolve\/main\/(.+)$/.exec(url);
-    const name = (id: string) => id.replace("/", "_");
-    try {
-      if (api) return new Response(readFileSync(file(`api/${name(api[1])}.json`), "utf8"), { status: 200 });
-      if (raw && raw[2] === "config.json") return new Response(readFileSync(file(`${name(raw[1])}.json`), "utf8"), { status: 200 });
-      if (raw) return new Response(readFileSync(file(`api/${name(raw[1])}.${raw[2]}`), "utf8"), { status: 200 });
-    } catch {
-      // not in the fixtures: the Hub's 404
-    }
-    return new Response("not found", { status: 404 });
-  }) as typeof fetch;
+  const real = mockHub();
   try {
     const nv = await resolveModel("nvidia/Qwen3.6-35B-A3B-NVFP4");
     // Before: FP8 from its first group, 18.7B parameters, BF16 34.8 GiB.
@@ -268,6 +278,41 @@ console.log("\n--- B7: mixed-precision and packed checkpoints ---");
     globalThis.fetch = real;
   }
   check("unpacking needs FP4's U8", unpackedParams({ I32: 3.7e9, BF16: 1.5e9 }) === undefined);
+}
+
+console.log("\n--- B6: gated models the app does not bundle ---");
+{
+  const real = mockHub();
+  try {
+    // Bundled now: Gemma 3 1B had been a 32-layer placeholder, 4.0 GiB at 32k.
+    const g1 = await resolveModel("google/gemma-3-1b-it");
+    check("Gemma 3 1B: its bundled entry, not a placeholder", g1.source === "bundled" && g1.arch?.numLayers === 26 && !g1.arch.placeholder);
+    const was = 32 * 2 * 8 * 128 * 2 * 32768;
+    check("…0.14 GiB of cache at 32k, not 4.0", gib(kvBytesPerSeqOf(g1.arch!, 32768)) < 0.14 && gib(was) === 4, `${gib(kvBytesPerSeqOf(g1.arch!, 32768)).toFixed(3)} GiB`);
+    // A GGUF of a gated base: the base's bundled entry.
+    const gguf = await resolveModel("bartowski/Llama-3.3-70B-Instruct-GGUF");
+    check("bartowski's Llama 3.3 70B GGUF: the bundled Llama 3.3 70B", gguf.source === "bundled" && gguf.warningKey === "archFromBase" && gguf.arch?.numLayers === 80 && gguf.weightDtype === "int4",
+      `${gguf.source}, ${gguf.arch?.numLayers} layers, ${gguf.weightDtype}`);
+    // Not bundled and gated: Unsloth's public copy of the config (decision K15).
+    const g3n = await resolveModel("google/gemma-3n-E4B-it");
+    check("Gemma 3n E4B: read from unsloth/gemma-3n-E4B-it", g3n.source === "base" && g3n.warningKey === "archFromMirror" && g3n.mirror === "unsloth/gemma-3n-E4B-it",
+      `${g3n.source} ${g3n.warningKey} ${g3n.mirror}`);
+    check("…with its own 35 layers and the Hub's 7.85B", g3n.arch?.numLayers === 35 && g3n.numParams === 7849978192 && g3n.arch.attnLayers === 20);
+    const none = await resolveModel("nobody/Nothing-7B");
+    check("nothing to read: no architecture", none.arch === null && none.source === "partial");
+  } finally {
+    globalThis.fetch = real;
+  }
+  check("Unsloth's names for Llama 3.1", JSON.stringify(mirrorIds("meta-llama/Llama-3.1-70B-Instruct")) === JSON.stringify(["unsloth/Llama-3.1-70B-Instruct", "unsloth/Meta-Llama-3.1-70B-Instruct"]));
+  check("an Unsloth repo has no mirror", mirrorIds("unsloth/gemma-3-1b-it").length === 0);
+  const ph = placeholderArch(8e9);
+  check("the placeholder says it is one", ph.placeholder === true && ph.numLayers === 32);
+  check("…through a link", decodeState(encodeState({ ...DEFAULT_STATE, arch: ph })).arch?.placeholder === true);
+  const presets = ["gemma-3-1b", "gemma-3-4b", "gemma-3-12b", "gemma-3-27b", "llama-3.1-70b", "llama-4-scout"];
+  check("presets for Gemma 3, Llama 3.1 70B and Llama 4 Scout", presets.every((id) => KNOWN_MODELS.some((m) => m.id === id)));
+  // Each preset as its config reads (Unsloth's copies, fetched 2026-10-15).
+  const l70 = KNOWN_MODELS.find((m) => m.id === "llama-3.1-70b")!;
+  check("Llama 3.1 70B: 320 KiB a token, 2.5x the placeholder's", kvBytesPerToken(l70, "bf16") === 80 * 2 * 8 * 128 * 2 && kvBytesPerToken(l70, "bf16") / kvBytesPerToken(ph, "bf16") === 2.5);
 }
 
 console.log("\n--- B15: models vLLM 0.31 does not load ---");

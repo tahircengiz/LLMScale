@@ -1,0 +1,43 @@
+{
+"id": "google/gemma-3n-E4B-it",
+"gated": "manual",
+"safetensors": {
+"parameters": {
+"BF16": 7849978192
+},
+"total": 7849978192
+},
+"gguf": null,
+"config": {
+"model_type": "gemma3n"
+},
+"tags": [
+"base_model:google/gemma-3n-E4B",
+"base_model:finetune:google/gemma-3n-E4B"
+],
+"cardData": {
+"base_model": "google/gemma-3n-E4B"
+},
+"siblings": [
+{
+"rfilename": "config.json",
+"size": 4536
+},
+{
+"rfilename": "model-00001-of-00004.safetensors",
+"size": 3077103824
+},
+{
+"rfilename": "model-00002-of-00004.safetensors",
+"size": 4966792808
+},
+{
+"rfilename": "model-00003-of-00004.safetensors",
+"size": 4992870216
+},
+{
+"rfilename": "model-00004-of-00004.safetensors",
+"size": 2663414864
+}
+]
+}

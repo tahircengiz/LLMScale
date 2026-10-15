@@ -14,6 +14,7 @@ const en: Dict = {
   "header.shareShort": "Share",
   "header.shareCopied": "Link copied ✓",
   "results.empty": "Pick a model to see the VRAM breakdown.",
+  "results.placeholder": "Placeholder figures: LLMScale could not read this model's architecture, so these are for a generic 32-layer model of the same size, not for it.",
   "results.emptyHint":
     "Weights, KV cache and overhead are computed in your browser from the model's own config — search Hugging Face above, or start from a preset.",
 
@@ -28,6 +29,7 @@ const en: Dict = {
   "model.search.offline": "Hugging Face unreachable — showing built-in models.",
   "model.badge.config": "live config.json",
   "model.badge.partial": "partly modelled",
+  "model.badge.placeholder": "placeholder",
   "model.badge.base": "base model config",
   "model.badge.bundled": "built-in DB",
   "model.badge.manual": "manual",
@@ -55,6 +57,8 @@ const en: Dict = {
   "warning.configFailed":
     "Could not read this model's config — enter the architecture manually below.",
   "warning.archFromBase": "Architecture loaded from the base model (this repo has no config of its own).",
+  "warning.archFromMirror": "Gated model — architecture read from Unsloth's public copy of its config.",
+  "warning.placeholder": "Not this model's architecture: its config could not be read, so the figures use a generic 32-layer placeholder of the same parameter count. Enter the real values under Custom, or pick another repository.",
   "warning.archPartial": "Partly modelled: its config sets {keys}, which change what some layers cache in ways LLMScale does not size yet. Treat the KV cache and the figures built on it as approximate.",
   "warning.vllmRemoved": "vLLM 0.31 no longer loads {arch}: its last release with it was v{v}. The figures show what the model would hold; serve it with that release or another engine.",
   "warning.vllmLinear": "vLLM 0.31 cannot build this config's linear-replacement blocks ({arch}), so it will not load the model. The figures follow the config, where those blocks keep no cache.",
@@ -890,6 +894,7 @@ const en: Dict = {
   "config.json.hide": "Hide config.json",
   "config.json.rebuilt": "rebuilt",
   "config.source.base": "This repository has no config.json of its own, so this is its base model's: {base}.",
+  "config.source.mirror": "This model is gated, so this is the public copy of its config.json that Unsloth publishes: {base}.",
   "config.source.bundled":
     "Hugging Face doesn't let a browser read this gated repository's config.json. What follows is rebuilt from LLMScale's built-in database: the architecture numbers only, not the real file.",
   "config.source.bundledFailed":
@@ -1310,6 +1315,7 @@ const tr: Dict = {
   "header.shareShort": "Paylaş",
   "header.shareCopied": "Link kopyalandı ✓",
   "results.empty": "VRAM kırılımını görmek için bir model seç.",
+  "results.placeholder": "Yer tutucu rakamlar: LLMScale bu modelin mimarisini okuyamadı; bunlar aynı boyutta genel bir 32 katmanlı model için, bu model için değil.",
   "results.emptyHint":
     "Ağırlıklar, KV cache ve ek yük modelin kendi config'inden, tarayıcının içinde hesaplanır — yukarıdan Hugging Face'te ara ya da hazır bir modelle başla.",
 
@@ -1324,6 +1330,7 @@ const tr: Dict = {
   "model.search.offline": "Hugging Face'e ulaşılamadı — gömülü modeller gösteriliyor.",
   "model.badge.config": "canlı config.json",
   "model.badge.partial": "kısmen modellendi",
+  "model.badge.placeholder": "yer tutucu",
   "model.badge.base": "base model config",
   "model.badge.bundled": "gömülü DB",
   "model.badge.manual": "manuel",
@@ -1348,6 +1355,8 @@ const tr: Dict = {
     "Gated model ve gömülü veri tabanında yok — mimariyi aşağıdan manuel gir.",
   "warning.configFailed": "Modelin config'i okunamadı — mimariyi aşağıdan manuel gir.",
   "warning.archFromBase": "Mimari base model'den yüklendi (bu repo'nun kendi config'i yok).",
+  "warning.archFromMirror": "Gated model — mimari, config'inin Unsloth'taki açık kopyasından okundu.",
+  "warning.placeholder": "Bu modelin mimarisi değil: config'i okunamadı, rakamlar aynı parametre sayısında genel bir 32 katmanlı yer tutucuyla hesaplandı. Gerçek değerleri Manuel sekmesine gir ya da başka bir repo seç.",
   "warning.archPartial": "Kısmen modellendi: config'i {keys} ayarlarını taşıyor; bunlar bazı katmanların neyi önbelleğe aldığını LLMScale'in henüz hesaplamadığı biçimde değiştirir. KV cache'i ve ona dayanan rakamları yaklaşık say.",
   "warning.vllmRemoved": "vLLM 0.31 artık {arch} yüklemiyor: onu destekleyen son sürüm v{v}. Rakamlar modelin ne tutacağını gösterir; o sürümle ya da başka bir motorla servis et.",
   "warning.vllmLinear": "vLLM 0.31 bu config'in doğrusal katmanla değiştirilmiş bloklarını ({arch}) kuramaz, bu yüzden modeli yüklemez. Rakamlar config'i izler; o bloklar cache tutmaz.",
@@ -2176,6 +2185,7 @@ const tr: Dict = {
   "config.json.hide": "config.json'u gizle",
   "config.json.rebuilt": "yeniden kuruldu",
   "config.source.base": "Bu reponun kendi config.json'u yok; gösterilen, base model'inin config'i: {base}.",
+  "config.source.mirror": "Bu model gated; gösterilen, config.json'unun Unsloth'un yayımladığı açık kopyası: {base}.",
   "config.source.bundled":
     "Hugging Face, erişimi kısıtlı bu reponun config.json'unu tarayıcıya vermiyor. Aşağıdakiler LLMScale'in yerleşik veritabanından yeniden kuruldu: yalnızca mimari sayıları, gerçek dosya değil.",
   "config.source.bundledFailed":

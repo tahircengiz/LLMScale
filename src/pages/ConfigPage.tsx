@@ -32,6 +32,8 @@ interface Loaded {
   gated: boolean;
   source: ArchSource;
   baseModel?: string;
+  /** The config is a gated model's public mirror (baseModel names it). */
+  mirror?: boolean;
   numParams: number;
   arch: ModelArch | null;
   meta: ResolvedMeta;
@@ -104,7 +106,9 @@ export function ConfigPage() {
           rebuilt,
           gated: r.gated,
           source: r.source,
-          baseModel: r.info?.baseModel,
+          // A gated model read from its public mirror names the mirror instead.
+          baseModel: r.mirror ?? r.info?.baseModel,
+          mirror: !!r.mirror,
           numParams: r.numParams,
           arch: r.arch,
           meta: {
@@ -300,7 +304,7 @@ function Portrait({ data, report, onRetry }: { data: Loaded; report: ConfigRepor
       </div>
       {data.source === "base" && data.baseModel && (
         <p className="mt-3 rounded-xl bg-ink-850 px-3 py-2 text-xs leading-relaxed text-slate-300 ring-1 ring-white/10">
-          {t("config.source.base", { base: data.baseModel })}
+          {t(data.mirror ? "config.source.mirror" : "config.source.base", { base: data.baseModel })}
         </p>
       )}
       {data.rebuilt && (

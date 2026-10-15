@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ModelArch } from "../lib/calc";
-import { resolveModel } from "../lib/hf";
+import { placeholderArch, resolveModel } from "../lib/hf";
 import { fetchSnapshot } from "../lib/repoFetch";
 import { buildBrief, type Parsers } from "../lib/serving";
 import { findKnownByHfId } from "../lib/models";
@@ -76,7 +76,7 @@ export function VllmPage() {
         source: r.source, gated: r.gated, modelType: r.modelType, isMoE: r.isMoE,
         tags: r.tags, pipelineTag: r.pipelineTag, weightDtype: r.weightDtype, warningKey: r.warningKey,
       });
-      setArch(r.arch ?? { numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8 });
+      setArch(r.arch ?? placeholderArch(r.numParams));
     });
   }
 

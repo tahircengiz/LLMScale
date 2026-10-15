@@ -1,0 +1,31 @@
+{
+"id": "google/gemma-3-1b-it",
+"gated": "manual",
+"safetensors": {
+"parameters": {
+"BF16": 999885952
+},
+"total": 999885952
+},
+"gguf": null,
+"config": {
+"model_type": "gemma3_text"
+},
+"tags": [
+"base_model:google/gemma-3-1b-pt",
+"base_model:finetune:google/gemma-3-1b-pt"
+],
+"cardData": {
+"base_model": "google/gemma-3-1b-pt"
+},
+"siblings": [
+{
+"rfilename": "config.json",
+"size": 899
+},
+{
+"rfilename": "model.safetensors",
+"size": 1999811208
+}
+]
+}

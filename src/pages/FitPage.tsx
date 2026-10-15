@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ModelArch } from "../lib/calc";
-import { resolveModel } from "../lib/hf";
+import { placeholderArch, resolveModel } from "../lib/hf";
 import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
 import { extractCaps, scoreFit, TASKS, type Status, type TaskId } from "../lib/fit";
 import { useLang } from "../lib/i18n";
@@ -49,7 +49,7 @@ export function FitPage() {
           tags: r.tags, pipelineTag: r.pipelineTag, warningKey: r.warningKey,
         });
         setArch(
-          r.arch ?? { numParams: r.numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8 }
+          r.arch ?? placeholderArch(r.numParams)
         );
       });
     }

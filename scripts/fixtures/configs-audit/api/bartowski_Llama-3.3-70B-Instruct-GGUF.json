@@ -1,0 +1,20 @@
+{
+"id": "bartowski/Llama-3.3-70B-Instruct-GGUF",
+"gated": false,
+"safetensors": null,
+"gguf": {
+"total": 70553706560
+},
+"config": {
+"model_type": null
+},
+"tags": [
+"gguf",
+"base_model:meta-llama/Llama-3.3-70B-Instruct",
+"base_model:quantized:meta-llama/Llama-3.3-70B-Instruct"
+],
+"cardData": {
+"base_model": "meta-llama/Llama-3.3-70B-Instruct"
+},
+"siblings": []
+}

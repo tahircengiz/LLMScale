@@ -117,6 +117,8 @@ export function encodeState(s: AppState): string {
       p.set("dx", [d.topk, d.indexDim, d.indexLayers, ...(d.kpool ? [d.kpool] : [])].join("."));
     }
     if (a.unmodelled?.length) p.set("um", a.unmodelled.join(","));
+    // A placeholder stays one through a reload: its figures are not the model's.
+    if (a.placeholder) p.set("ph", "1");
     if (a.notInVllm) p.set("nv", `${a.notInVllm.arch}${a.notInVllm.until ? `@${a.notInVllm.until}` : ""}${a.notInVllm.linear ? "!" : ""}`);
     if (a.stateBytesPerSeq) p.set("st", String(a.stateBytesPerSeq));
     if (a.stateLayers) p.set("sn", String(a.stateLayers));
@@ -258,6 +260,7 @@ export function decodeState(search: string): Partial<AppState> {
       sparseAttn: sparseOf(p.get("dx")),
       unmodelled: unmodelledOf(p.get("um")),
       notInVllm: notInVllmOf(p.get("nv")),
+      placeholder: p.get("ph") === "1" ? true : undefined,
       stateBytesPerSeq: pos(p.get("st")),
       stateLayers: pos(p.get("sn")),
       numExperts: pos(p.get("ne")),

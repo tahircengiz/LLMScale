@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dtype, ModelArch } from "../lib/calc";
 import {
+  placeholderArch,
   resolveModel,
   searchModels,
   type ArchSource,
@@ -127,13 +128,7 @@ export function ModelPicker({
         // Architecture couldn't be auto-detected (e.g. a GGUF repo or an
         // unknown model). Seed the Custom tab with the best-known param count
         // so the result panel stays populated instead of blanking out.
-        const seeded: ModelArch = {
-          numParams: r.numParams || 7e9,
-          numLayers: 32,
-          hiddenSize: 4096,
-          numAttentionHeads: 32,
-          numKeyValueHeads: 8,
-        };
+        const seeded = placeholderArch(r.numParams);
         onModel(id, seeded, m);
         // A page that hides the Custom tab would otherwise open a form it never
         // offered; it shows the resolution warning instead.
@@ -157,7 +152,8 @@ export function ModelPicker({
       numAttentionHeads: 32,
       numKeyValueHeads: 8,
     };
-    const next = { ...base, ...patch };
+    // Values typed in are the user's own: no longer a placeholder.
+    const next = { ...base, ...patch, placeholder: undefined };
     const m: ResolvedMeta = { source: "partial", gated: false };
     onModel("", next, m);
   }
@@ -326,6 +322,7 @@ export function ModelPicker({
               printed above no longer drive the cache. Say so rather than quietly
               returning a number 25x smaller than the same config would imply. */}
           {arch.unmodelled?.length ? <Badge tone="warn">{t("model.badge.partial")}</Badge> : null}
+          {arch.placeholder ? <Badge tone="warn">{t("model.badge.placeholder")}</Badge> : null}
           {usesMla(arch) ? (
             <Badge tone="good">{t(usesDsa(arch) ? "common.dsa" : "common.mla")}</Badge>
           ) : usesCompressedAttn(arch) ? (
@@ -338,6 +335,8 @@ export function ModelPicker({
       {meta?.warningKey && (
         <p className="mt-2 text-xs text-warn">{t(`warning.${meta.warningKey}`)}</p>
       )}
+      {/* A stand-in architecture: its figures are not the model's (audit B6). */}
+      {arch?.placeholder ? <p className="mt-2 text-xs text-warn">{t("warning.placeholder")}</p> : null}
       {/* Layers the sizing does not follow yet: the figures stay, marked approximate. */}
       {arch?.unmodelled?.length ? (
         <p className="mt-2 text-xs text-warn">{t("warning.archPartial", { keys: arch.unmodelled.join(", ") })}</p>

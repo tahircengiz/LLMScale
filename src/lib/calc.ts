@@ -83,6 +83,9 @@ export interface ModelArch {
   /** Config keys that shape the cache in ways the sizing does not model yet
    *  (layers.ts, unmodelledCacheKeys). The figures for such a model are approximate. */
   unmodelled?: string[];
+  /** Not the model's architecture: a generic stand-in of its parameter count, used
+   *  when no config could be read (hf.ts, placeholderArch). Pages say so. */
+  placeholder?: boolean;
   /** vLLM 0.31.0 will not load this model (vllmSupport.ts): the class it would
    *  load, the last release that served it, or `linear` for Nemotron NAS blocks
    *  its model code cannot build. The figures still show, beside a warning. */

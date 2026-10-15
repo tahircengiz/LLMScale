@@ -87,7 +87,7 @@ function baseModelOf(d: any): string | undefined {
 
 export type ArchSource = "config" | "base" | "bundled" | "partial";
 
-export type WarningKey = "gatedBundled" | "gatedUnknown" | "configFailed" | "archFromBase";
+export type WarningKey = "gatedBundled" | "gatedUnknown" | "configFailed" | "archFromBase" | "archFromMirror";
 
 export interface ResolvedModel {
   hfId: string;
@@ -112,6 +112,25 @@ export interface ResolvedModel {
   /** The config.json this resolution used (the base model's for source "base"),
    * so callers can read extra fields (intermediate_size, experts, rope…). */
   cfg?: any;
+  /** The public copy the config came from, for a gated model (warning "archFromMirror"). */
+  mirror?: string;
+}
+
+/** Public copies of a gated repo's config: Unsloth republishes most gated Llama
+ *  and Gemma repos ungated, under the same name or, for Llama 3.1, "Meta-" before it. */
+export function mirrorIds(hfId: string): string[] {
+  const [org, name] = hfId.split("/");
+  if (!org || !name || org.toLowerCase() === "unsloth") return [];
+  const out = [`unsloth/${name}`];
+  if (/^Llama-3\.1-/i.test(name)) out.push(`unsloth/Meta-${name}`);
+  return out;
+}
+
+/** The stand-in the pages size a model on when nothing about it could be read: a
+ *  32-layer, 4,096-wide decoder of its parameter count. Marked, so its figures are
+ *  never shown as the model's own. */
+export function placeholderArch(numParams: number): ModelArch {
+  return { numParams: numParams || 7e9, numLayers: 32, hiddenSize: 4096, numAttentionHeads: 32, numKeyValueHeads: 8, placeholder: true };
 }
 
 /** Rough parameter count parsed from a repo id, e.g. "...-35B-A3B" → 35e9.
@@ -546,6 +565,55 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
       warningKey: gated ? "gatedBundled" : undefined,
       info,
       cfg,
+    };
+  }
+
+  // A repo built on a gated base (bartowski's GGUFs of Llama): the base's bundled entry.
+  const knownBase = info?.baseModel ? findKnownByHfId(info.baseModel) : undefined;
+  if (knownBase) {
+    return {
+      hfId,
+      arch: { ...knownBase, numParams: numParams || knownBase.numParams },
+      numParams: numParams || knownBase.numParams,
+      gated,
+      source: "bundled",
+      modelType: info?.modelType ?? knownBase.family.toLowerCase(),
+      isMoE: knownBase.isMoE,
+      tags,
+      pipelineTag,
+      weightDtype,
+      kvDtype,
+      warningKey: "archFromBase",
+      info,
+      cfg,
+    };
+  }
+
+  // Still nothing: the config as Unsloth republishes it, ungated (decision K15 of
+  // the 2026-10-15 audit: a public mirror's config.json is read, nothing else).
+  // Gemma 3, Llama 3.1 70B, Llama 4 and Gemma 3n had been sized on a 32-layer
+  // placeholder: Gemma 3 1B's cache 17x too large, Llama 3.1 70B's 2.5x too small.
+  for (const id of [...mirrorIds(hfId), ...(info?.baseModel ? mirrorIds(info.baseModel) : [])]) {
+    const mirrorCfg = await fetchConfig(id);
+    const arch = mirrorCfg ? archFromConfig(mirrorCfg, numParams || 0) : null;
+    if (!arch || !(arch.numParams > 0)) continue;
+    const modelType = mirrorCfg.text_config?.model_type ?? mirrorCfg.model_type ?? info?.modelType;
+    return {
+      hfId,
+      arch,
+      numParams: arch.numParams,
+      gated,
+      source: "base",
+      modelType,
+      isMoE: (modelType ?? "").includes("moe") || isMoEFromConfig(mirrorCfg),
+      tags,
+      pipelineTag,
+      weightDtype: detectWeightDtype(hfId, mirrorCfg, info?.paramDtype),
+      kvDtype: detectKvDtype(mirrorCfg),
+      warningKey: "archFromMirror",
+      mirror: id,
+      info,
+      cfg: mirrorCfg,
     };
   }
 
