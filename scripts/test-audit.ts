@@ -125,7 +125,7 @@ console.log("\n--- K14: configs the sizing does not follow yet ---");
 {
   const g4 = archFromConfig(cfg("google_gemma-4-31B-it"), 31e9)!;
   check("Gemma 4's global head shape is modelled now (test-audit2.ts), not flagged", !g4.unmodelled && !!g4.globalAttn, JSON.stringify(g4.unmodelled));
-  check("Nemotron-H's float32 SSM state is flagged", unmodelledCacheKeys(cfg("nvidia_NVIDIA-Nemotron-Nano-12B-v2")).some((k) => k.startsWith("mamba_ssm")));
+  check("Nemotron-H's float32 SSM state is modelled now (test-audit2.ts), not flagged", unmodelledCacheKeys(cfg("nvidia_NVIDIA-Nemotron-Nano-12B-v2")).length === 0);
   check("a plain Llama is not", unmodelledCacheKeys({ model_type: "llama", num_hidden_layers: 32 }).length === 0);
   const flagged = { ...g4, unmodelled: ["block_configs"] };
   const back = decodeState(encodeState({ ...DEFAULT_STATE, arch: flagged }));

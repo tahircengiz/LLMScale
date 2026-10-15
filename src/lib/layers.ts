@@ -157,17 +157,19 @@ export function activeWindow(c: Json, own?: number): { size: number; sliding: nu
 }
 
 /** Elements of fixed state one linear-attention or Mamba layer keeps per sequence,
- *  as vLLM shapes it on one GPU: a convolution state plus the recurrent state. 0 when
- *  the config does not carry the fields. */
-export function stateElementsPerLayer(c: Json): number {
-  // Gated DeltaNet (Qwen3-Next): conv over q, k and v; state per value head.
+ *  as vLLM shapes it on one GPU (vllm/model_executor/layers/mamba/mamba_utils.py):
+ *  a convolution state over the last kernel − 1 inputs and the recurrent (SSM)
+ *  state, which vLLM may keep in another dtype. undefined when the config does not
+ *  carry the fields. */
+export function stateShape(c: Json): { conv: number; ssm: number } | undefined {
+  // Gated DeltaNet (Qwen3-Next, Qwen3.5): conv over q, k and v; state per value head.
   if (typeof c.linear_num_value_heads === "number") {
     const nk = c.linear_num_key_heads ?? c.linear_num_value_heads;
     const nv = c.linear_num_value_heads;
     const dk = c.linear_key_head_dim;
     const dv = c.linear_value_head_dim;
     const k = c.linear_conv_kernel_dim ?? 4;
-    if ([nk, nv, dk, dv].every((x) => typeof x === "number")) return (dk * nk * 2 + dv * nv) * (k - 1) + nv * dv * dk;
+    if ([nk, nv, dk, dv].every((x) => typeof x === "number")) return { conv: (dk * nk * 2 + dv * nv) * (k - 1), ssm: nv * dv * dk };
   }
   // Mamba2 (Granite 4.0-H, Nemotron-H), under either family's spelling.
   const heads = c.mamba_n_heads ?? c.mamba_num_heads;
@@ -176,9 +178,30 @@ export function stateElementsPerLayer(c: Json): number {
   if ([heads, hd, st].every((x) => typeof x === "number")) {
     const groups = c.mamba_n_groups ?? c.n_groups ?? c.mamba_num_groups ?? 1;
     const k = c.mamba_d_conv ?? c.conv_kernel ?? 4;
-    return (heads * hd + 2 * groups * st) * (k - 1) + heads * hd * st;
+    return { conv: (heads * hd + 2 * groups * st) * (k - 1), ssm: heads * hd * st };
   }
-  return 0;
+  return undefined;
+}
+
+/** Bytes an element of the recurrent state takes in vLLM 0.31.0. The convolution
+ *  state stays in the model's dtype (16-bit); the recurrent one follows
+ *  --mamba-ssm-cache-dtype, whose "auto" the model's config class resolves
+ *  (vllm/model_executor/models/config.py): Nemotron-H to its config's
+ *  mamba_ssm_cache_dtype or float32, Qwen3.5 (and Qwen4Exp) to its config's
+ *  mamba_ssm_dtype — float32 in every published one. Counting 2 bytes left
+ *  Nemotron Nano 9B v2's reservation 40% short at 4k tokens. */
+export function ssmStateBytes(c: Json): number {
+  const bytes = (v: unknown) => (typeof v === "string" ? (/32/.test(v) ? 4 : /16/.test(v) ? 2 : undefined) : undefined);
+  const type = String(c?.model_type ?? "");
+  if (/^nemotron_h/.test(type)) return bytes(c.mamba_ssm_cache_dtype) ?? 4;
+  if (/^qwen3_5|^qwen4_exp/.test(type)) return bytes(c.mamba_ssm_dtype) ?? 2;
+  return 2;
+}
+
+/** Bytes of fixed state one linear-attention or Mamba layer keeps per sequence. */
+export function stateBytesPerLayer(c: Json): number {
+  const s = stateShape(c);
+  return s ? s.conv * 2 + s.ssm * ssmStateBytes(c) : 0;
 }
 
 /** DeepSeek V4: how many layers fold their cache 4 tokens into one entry (CSA)
@@ -243,9 +266,6 @@ export function unmodelledCacheKeys(c: Json): string[] {
   if (num("attn_layer_period")) found.push("attn_layer_period");
   if (c.mamba_d_ssm !== undefined && !Array.isArray(c.layer_types) && c.hybrid_override_pattern === undefined) found.push("mamba_d_ssm");
   if (Array.isArray(c.cross_attention_layers)) found.push("cross_attention_layers");
-  const ssm = c.mamba_ssm_cache_dtype ?? c.mamba_ssm_dtype;
-  if (typeof ssm === "string" && /32/.test(ssm)) found.push(c.mamba_ssm_cache_dtype !== undefined ? "mamba_ssm_cache_dtype" : "mamba_ssm_dtype");
-  else if (c.model_type === "nemotron_h") found.push("mamba_ssm_cache_dtype (float32 in vLLM)");
   return found;
 }
 
@@ -264,9 +284,10 @@ export interface LayerPlan {
 }
 
 /** How a config's layers cache, or undefined when every layer is plain full
- *  attention. `c` is the language model's part of the config. States are counted
- *  at 2 bytes an element: vLLM keeps them in the model's dtype by default
- *  (mamba_cache_dtype "auto"), and these models ship in BF16. */
+ *  attention. `c` is the language model's part of the config. A state's
+ *  convolution part is counted at 2 bytes an element: vLLM keeps it in the model's
+ *  dtype by default (mamba_cache_dtype "auto"), and these models ship in BF16; its
+ *  recurrent part as ssmStateBytes says. */
 export function layerPlan(c: Json): LayerPlan | undefined {
   const L = c?.num_hidden_layers ?? 0;
   if (!L) return undefined;
@@ -284,7 +305,7 @@ export function layerPlan(c: Json): LayerPlan | undefined {
     attention,
     sliding: Math.min(sliding, attention),
     window: sliding ? window!.size : undefined,
-    stateBytesPerSeq: hybrid ? hybrid.state * stateElementsPerLayer(c) * 2 : 0,
+    stateBytesPerSeq: hybrid ? hybrid.state * stateBytesPerLayer(c) : 0,
     stateLayers: hybrid ? hybrid.state : 0,
   };
   if (global) plan.globalAttn = global;

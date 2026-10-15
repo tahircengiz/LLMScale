@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { BYTES_PER_GIB, calculate, kvBytesPerToken, kvReservedPerSeq, type ModelArch } from "../src/lib/calc.ts";
 import { archFromConfig, parseConfigJson } from "../src/lib/hf.ts";
-import { unmodelledCacheKeys } from "../src/lib/layers.ts";
+import { ssmStateBytes, unmodelledCacheKeys } from "../src/lib/layers.ts";
 import { overheadPerGpu } from "../src/lib/overhead.ts";
 import { decodeState, DEFAULT_STATE, encodeState } from "../src/lib/urlState.ts";
 
@@ -84,6 +84,30 @@ console.log("\n--- B3: Nemotron NAS ---");
   check("51B: vLLM 0.31 cannot build its linear blocks", n51.notInVllm?.linear === true && n51.notInVllm.arch === "DeciLMForCausalLM");
   const back = decodeState(encodeState({ ...DEFAULT_STATE, arch: n51 }));
   check("a link keeps the layer count and the warning", back.arch?.attnLayers === 46.375 && JSON.stringify(back.arch?.notInVllm) === JSON.stringify(n51.notInVllm));
+}
+
+console.log("\n--- C1: a float32 recurrent state ---");
+{
+  // [config, parameters, vLLM's reservation at 4k, 32k and 128k (the 8B reads 8k)]; before
+  // the fix the app was 28–40% short at 4k, as the audit measured.
+  const models: [string, number, number[]][] = [
+    ["Qwen_Qwen3.5-27B", 27.8e9, [0.574, 2.297, 8.326]],
+    ["Qwen_Qwen3.5-35B-A3B", 35.95e9, [0.201, 0.765, 2.639]],
+    ["Qwen_Qwen3.5-397B-A17B", 397e9, [0.48, 1.319, 4.138]],
+    ["nvidia_NVIDIA-Nemotron-3-Nano-30B-A3B-BF16", 31.6e9, [0.12, 0.288, 0.852]],
+    ["nvidia_NVIDIA-Nemotron-Nano-12B-v2", 12.3e9, [0.42, 1.051, 3.303]],
+    ["nvidia_NVIDIA-Nemotron-Nano-9B-v2", 8.9e9, [0.36, 0.781, 2.282]],
+    ["nvidia_Nemotron-H-8B-Base-8K", 8.1e9, [0.254]],
+  ];
+  for (const [name, params, vllm] of models) {
+    const a = archFromConfig(cfg(name), params)!;
+    reserved(name, a, vllm.map((v, i) => [[4096, 32768, 131072][i], 2048, v] as [number, number, number]));
+    check(`${name}: nothing flagged`, !a.unmodelled, JSON.stringify(a.unmodelled));
+  }
+  const q = cfg("Qwen_Qwen3.5-27B").text_config;
+  check("Qwen3.5: 16-bit when the config does not ask for float32", ssmStateBytes({ ...q, mamba_ssm_dtype: undefined }) === 2 && ssmStateBytes(q) === 4);
+  check("Nemotron-H: float32 unless its config says otherwise", ssmStateBytes({ model_type: "nemotron_h" }) === 4 && ssmStateBytes({ model_type: "nemotron_h", mamba_ssm_cache_dtype: "bfloat16" }) === 2);
+  check("Granite 4.0-H and Qwen3-Next keep the model's dtype", ssmStateBytes({ model_type: "granitemoehybrid", mamba_ssm_dtype: "float32" }) === 2 && ssmStateBytes({ model_type: "qwen3_next" }) === 2);
 }
 
 console.log("\n--- B15: models vLLM 0.31 does not load ---");

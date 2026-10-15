@@ -92,7 +92,8 @@ console.log("\n--- Y4: hybrid layers ---");
   const nh = cfg("nvidia_NVIDIA-Nemotron-Nano-9B-v2");
   const nem = archFromConfig(nh, 8.9e9)!;
   const p: string[] = [...nh.hybrid_override_pattern];
-  check("Nemotron-H: attention from *, state from M, MLP layers neither", nem.attnLayers === p.filter((c) => c === "*").length && nem.stateBytesPerSeq === p.filter((c) => c === "M").length * ((128 * 80 + 2 * 8 * 128) * 3 + 128 * 80 * 128) * 2);
+  // The recurrent state in float32, as vLLM keeps Nemotron-H's (scripts/test-audit2.ts, C1).
+  check("Nemotron-H: attention from *, state from M, MLP layers neither", nem.attnLayers === p.filter((c) => c === "*").length && nem.stateBytesPerSeq === p.filter((c) => c === "M").length * ((128 * 80 + 2 * 8 * 128) * 3 * 2 + 128 * 80 * 128 * 4));
   // The state is per sequence, whatever the context.
   check("state does not grow with context", kvBytesPerSeq(next, "bf16", 65536) - kvBytesPerSeq(next, "bf16", 32768) === kvBytesPerLayerToken(next, "bf16") * 12 * 32768);
 }
