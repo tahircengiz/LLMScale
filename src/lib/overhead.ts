@@ -36,6 +36,10 @@ export interface BatchShape {
   seqs: number;
   /** 512, or 1024 on datacenter Blackwell (vllm/config/vllm.py). */
   graphCap?: number;
+  /** How the card's sparse-MLA kernel stores a DeepSeek Sparse Attention row
+   *  (calc.ts, dsaBytes): "sm100" on B200/B300, "sm120" on RTX 50, RTX PRO
+   *  Blackwell and DGX Spark; Hopper and the rest otherwise. */
+  sparseMla?: "sm100" | "sm120";
 }
 
 /** `vllm serve`'s defaults for a card of this much memory (EngineArgs in
@@ -43,9 +47,20 @@ export interface BatchShape {
  *  small defaults whatever its memory. */
 export function vllmBatch(cardGiB: number, name = ""): BatchShape {
   const graphCap = /\b(g?b[23]00)\b/i.test(name) ? 1024 : 512;
-  if (cardGiB >= 160) return { tokens: 16384, seqs: 1024, graphCap };
-  if (cardGiB >= 70 && !/a100/i.test(name)) return { tokens: 8192, seqs: 1024, graphCap };
-  return { tokens: 2048, seqs: 256, graphCap };
+  const sparseMla = sparseMlaFamily(name);
+  const shape = (tokens: number, seqs: number): BatchShape => (sparseMla ? { tokens, seqs, graphCap, sparseMla } : { tokens, seqs, graphCap });
+  if (cardGiB >= 160) return shape(16384, 1024);
+  if (cardGiB >= 70 && !/a100/i.test(name)) return shape(8192, 1024);
+  return shape(2048, 256);
+}
+
+/** The Blackwell families whose sparse-MLA kernels store a DSA cache row their own
+ *  way (vllm/model_executor/layers/attention/mla_attention.py): datacenter
+ *  Blackwell (SM100), and the GeForce, RTX PRO and GB10 parts (SM120). */
+export function sparseMlaFamily(name: string): BatchShape["sparseMla"] {
+  if (/\b(g?b[23]00)\b/i.test(name)) return "sm100";
+  if (/\bRTX 50\d0|RTX PRO \d{4} Blackwell|GB10\b|DGX Spark/i.test(name)) return "sm120";
+  return undefined;
 }
 
 export const SMALL_CARD_BATCH: BatchShape = { tokens: 2048, seqs: 256 };

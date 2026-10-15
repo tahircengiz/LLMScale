@@ -4,6 +4,7 @@
 
 import { resolveHeadDim, type Dtype, type ModelArch } from "./calc.ts";
 import { placeholderArch, resolveModel, type WarningKey } from "./hf.ts";
+import { textConfig } from "./layers.ts";
 import { expertCount, expertsPerToken } from "./moe.ts";
 
 // ---- parameter distribution ----------------------------------------------
@@ -152,7 +153,7 @@ export async function fetchAnatomy(hfId: string): Promise<Anatomy> {
     r.arch ?? placeholderArch(r.numParams);
   const numParams = arch.numParams || r.numParams || 0;
   const headDim = resolveHeadDim(arch);
-  const c = cfg?.text_config ?? cfg?.llm_config ?? cfg ?? {};
+  const c = textConfig(cfg) ?? {};
 
   // The config key spellings live in moe.ts, shared with hf.ts.
   const numExperts = expertCount(c);

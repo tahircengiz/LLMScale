@@ -15,6 +15,7 @@
 
 import { fmtBytes, fmtInt, fmtNum, shortTokens } from "./configExplain.ts";
 import type { Lang } from "./dict.ts";
+import { textConfig } from "./layers.ts";
 
 // Configs are free-form JSON.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -252,7 +253,7 @@ const top = (f: RepoFile) => !f.name.includes("/");
 const asIds = (v: unknown): number[] =>
   Array.isArray(v) ? v.filter((x): x is number => typeof x === "number") : typeof v === "number" ? [v] : [];
 /** The part of a config that describes the language model. */
-const textCfg = (cfg: Json): Json => cfg?.text_config ?? cfg?.llm_config ?? cfg ?? {};
+const textCfg = (cfg: Json): Json => textConfig(cfg) ?? {};
 const short = (s: string, n = 40) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 const json = (v: unknown) => (typeof v === "string" ? v : JSON.stringify(v));
 /** English plural ending for a count; Turkish templates do not use it. */

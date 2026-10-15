@@ -5,7 +5,8 @@
 // Run: node scripts/test-audit2.ts
 import { readFileSync } from "node:fs";
 import { BYTES_PER_GIB, calculate, kvBytesPerSeq, kvBytesPerToken, kvReservedPerSeq, weightsBytes, type ModelArch } from "../src/lib/calc.ts";
-import { archFromConfig, mirrorIds, parseConfigJson, placeholderArch, resolveModel, unpackedParams } from "../src/lib/hf.ts";
+import { archFromConfig, mirrorIds, paramsFromName, parseConfigJson, placeholderArch, resolveModel, unpackedParams } from "../src/lib/hf.ts";
+import { batchFor, GPUS } from "../src/lib/gpus.ts";
 import { KNOWN_MODELS } from "../src/lib/models.ts";
 import { ssmStateBytes, unmodelledCacheKeys } from "../src/lib/layers.ts";
 import { overheadPerGpu } from "../src/lib/overhead.ts";
@@ -313,6 +314,46 @@ console.log("\n--- B6: gated models the app does not bundle ---");
   // Each preset as its config reads (Unsloth's copies, fetched 2026-10-15).
   const l70 = KNOWN_MODELS.find((m) => m.id === "llama-3.1-70b")!;
   check("Llama 3.1 70B: 320 KiB a token, 2.5x the placeholder's", kvBytesPerToken(l70, "bf16") === 80 * 2 * 8 * 128 * 2 && kvBytesPerToken(l70, "bf16") / kvBytesPerToken(ph, "bf16") === 2.5);
+}
+
+console.log("\n--- B11: spellings and nested configs ---");
+{
+  check("opt-125m names its size in millions", paramsFromName("facebook/opt-125m") === 125e6 && paramsFromName("Qwen/Qwen3-30B-A3B") === 30e9);
+  const opt = archFromConfig(cfg("facebook_opt-125m"), 125e6)!;
+  check("…and its config reads: 12 layers of 768", opt.numLayers === 12 && opt.hiddenSize === 768 && opt.maxContext === 2048);
+  const bloom = archFromConfig(cfg("bigscience_bloomz-560m"), 0.56e9)!;
+  check("Bloom's n_embed", bloom?.hiddenSize === 1024 && bloom.numLayers === 24 && bloom.numAttentionHeads === 16);
+  const mpt = archFromConfig({ architectures: ["MPTForCausalLM"], model_type: "mpt", n_layers: 32, d_model: 4096, n_heads: 32, max_seq_len: 2048 }, 6.7e9)!;
+  check("MPT's n_layers and n_heads, and vLLM 0.31 no longer loads it", mpt?.numLayers === 32 && mpt.numAttentionHeads === 32 && mpt.notInVllm?.until === "0.28.0");
+  const omni = archFromConfig(cfg("Qwen_Qwen2.5-Omni-7B"), 10.7e9)!;
+  check("Qwen2.5-Omni: its thinker's text config", omni?.numLayers === 28 && omni.numKeyValueHeads === 4 && omni.hiddenSize === 3584);
+  const vl2 = archFromConfig(cfg("deepseek-ai_deepseek-vl2-small"), 16.15e9)!;
+  check("DeepSeek-VL2 small: its language_config, MLA by DeepseekV2Config's defaults", vl2?.numLayers === 27 && vl2.kvLoraRank === 512 && vl2.qkRopeHeadDim === 64 && vl2.vocabSize === 102400,
+    `${vl2?.numLayers} layers, kv_lora_rank ${vl2?.kvLoraRank}`);
+  check("…a MoE of 64 experts, 6 a token", vl2.numExperts === 64 && vl2.expertsPerToken === 6);
+  const janus = archFromConfig(cfg("deepseek-ai_Janus-Pro-7B"), 7.4e9)!;
+  check("Janus-Pro: a Llama of 30 layers, the rest its class's defaults", janus?.numLayers === 30 && janus.hiddenSize === 4096 && janus.numAttentionHeads === 32);
+  const llava = archFromConfig(cfg("llava-hf_llava-1.5-7b-hf"), 7.06e9)!;
+  check("llava 1.5: a Vicuna text config with its defaults left out", llava?.numLayers === 32 && llava.hiddenSize === 4096 && llava.numKeyValueHeads === 32 && llava.maxContext === 4096);
+  const next = archFromConfig(cfg("llava-hf_llava-v1.6-mistral-7b-hf"), 7.57e9)!;
+  check("llava-next on Mistral: 8 KV heads, 32,768 tokens", next?.numLayers === 32 && next.numKeyValueHeads === 8 && next.maxContext === 32768);
+}
+
+console.log("\n--- C3: the card sets a DSA row ---");
+{
+  const v32 = archFromConfig(parseConfigJson(readFileSync(new URL("./fixtures/configs/deepseek-ai_DeepSeek-V3.2.json", import.meta.url), "utf8")), 685.4e9)!;
+  const gpu = (id: string) => GPUS.find((g) => g.id === id)!;
+  check("RTX 5090 and RTX PRO 6000 are SM120, B200 SM100, H100 neither", batchFor(gpu("rtx5090-32")).sparseMla === "sm120" &&
+    batchFor(gpu("rtxpro6000-96")).sparseMla === "sm120" && batchFor(gpu("b200-192")).sparseMla === "sm100" && batchFor(gpu("h100-80")).sparseMla === undefined);
+  const ctx = 131072;
+  const at = (dt: "bf16" | "fp8", family?: "sm100" | "sm120") => kvReservedPerSeq(v32, dt, ctx, 2048, 1, family);
+  // 61 layers × (latent row + a 132-byte indexer key).
+  check("Hopper, 16-bit: the plain 1,152-byte latent", at("bf16") === ctx * 61 * (1152 + 132));
+  check("SM120, 16-bit: the 656-byte fp8_ds_mla row all the same (was 63% high)", at("bf16", "sm120") === ctx * 61 * (656 + 132), `${(at("bf16") / at("bf16", "sm120")).toFixed(2)}x`);
+  check("SM100, fp8: the plain 576-byte row (was 11% high)", at("fp8", "sm100") === ctx * 61 * (576 + 132) && at("fp8") === ctx * 61 * (656 + 132),
+    `${(at("fp8") / at("fp8", "sm100")).toFixed(3)}x`);
+  const pro = calculate({ arch: v32, weightDtype: "fp8", kvDtype: "bf16", contextLength: ctx, concurrency: 1, batch: batchFor(gpu("rtxpro6000-96")) });
+  check("…and the calculator takes it from the card", Math.abs(pro.kvPerSeqGiB - gib(at("bf16", "sm120"))) < 1e-9, `${pro.kvPerSeqGiB.toFixed(2)} GiB on an RTX PRO 6000`);
 }
 
 console.log("\n--- B15: models vLLM 0.31 does not load ---");

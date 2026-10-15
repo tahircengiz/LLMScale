@@ -259,12 +259,7 @@ export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
     const b = v4Bytes(arch, kvDtype);
     return (c.csa * (b.entry + b.index)) / CSA_RATIO + (c.hca * b.entry) / HCA_RATIO;
   }
-  if (usesDsa(arch)) {
-    // A hybrid (GLM-5.3-Flash) keeps the latent and the key in its attention layers only.
-    const b = dsaBytes(arch, kvDtype);
-    const layers = arch.attnLayers ?? arch.numLayers;
-    return layers * b.row + (Math.min(arch.sparseAttn!.indexLayers, layers) * b.index) / (arch.sparseAttn!.kpool ?? 1);
-  }
+  if (usesDsa(arch)) return dsaBytesPerToken(arch, kvDtype);
   const n = attnCounts(arch);
   return n.full * kvBytesPerFullLayerToken(arch, kvDtype) + n.sliding * kvBytesPerLayerToken(arch, kvDtype);
 }
@@ -283,20 +278,39 @@ export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
  *     --kv-cache-dtype.
  * Both are full-attention specs with the same 64-token block (FlashMLA's sparse
  * kernel block), so vLLM puts them in one KV cache group and pads neither page
- * (UniformTypeKVCacheSpecs in vllm/v1/kv_cache_interface.py). On B200 and B300 vLLM
- * runs an fp8 cache through FlashInfer's sparse kernel instead, which keeps the
- * latent in the plain 576 bytes: there the figure is about 11% high.
+ * (UniformTypeKVCacheSpecs in vllm/v1/kv_cache_interface.py). The card changes the
+ * row (dsaBytes): B200 and B300 run an fp8 cache through FlashInfer's sparse kernel,
+ * which keeps the latent in the plain 576 bytes, and the SM120 parts (RTX 50, RTX
+ * PRO Blackwell) store the 656-byte row even when the cache is left 16-bit — read
+ * as 16-bit there, the cache came out 63% large.
  * Counting the latent alone made DeepSeek-V3.2's cache 10% too small at 16-bit and
  * 27% too small at fp8.
  */
 const DSA_BLOCK = 64;
 
-function dsaBytes(arch: ModelArch, kvDtype: Dtype) {
+function dsaBytes(arch: ModelArch, kvDtype: Dtype, family?: SparseMlaFamily) {
   const s = arch.sparseAttn!;
   const nope = arch.kvLoraRank!;
   const rope = arch.qkRopeHeadDim!;
-  const row = DTYPE_BYTES[kvDtype] < 2 ? nope + Math.ceil(nope / 128) * 4 + rope * 2 : (nope + rope) * DTYPE_BYTES[kvDtype];
+  const packed = DTYPE_BYTES[kvDtype] < 2;
+  // The card decides the row (_canonicalize_sparse_mla_kv_cache_dtype): an SM120
+  // card stores fp8_ds_mla even for a 16-bit cache, an SM100 card a plain fp8 row
+  // for an fp8 one, Hopper's FlashMLA fp8_ds_mla for fp8.
+  const dsMla = family === "sm120" || (packed && family !== "sm100");
+  const row = dsMla ? nope + Math.ceil(nope / 128) * 4 + rope * 2 : (nope + rope) * DTYPE_BYTES[kvDtype];
   return { row, index: s.indexDim + Math.ceil(s.indexDim / 128) * 4 };
+}
+
+/** The card family a sparse-MLA row depends on (overhead.ts, BatchShape.sparseMla). */
+export type SparseMlaFamily = "sm100" | "sm120";
+
+/** A DSA model's cache for one token on a card of `family`: the latent row in
+ *  every attention layer and the indexer key in every indexing one, pooled where
+ *  GLM-5.3-Flash pools them. A hybrid keeps both in its attention layers only. */
+function dsaBytesPerToken(arch: ModelArch, kvDtype: Dtype, family?: SparseMlaFamily): number {
+  const b = dsaBytes(arch, kvDtype, family);
+  const layers = arch.attnLayers ?? arch.numLayers;
+  return layers * b.row + (Math.min(arch.sparseAttn!.indexLayers, layers) * b.index) / (arch.sparseAttn!.kpool ?? 1);
 }
 
 /**
@@ -313,11 +327,11 @@ function dsaBytes(arch: ModelArch, kvDtype: Dtype) {
  * slots, two blocks each under prefix caching's "align" mode). undefined for a
  * DSA model without such a state (DeepSeek-V3.2, GLM-5).
  */
-function dsaHybridLayout(arch: ModelArch, kvDtype: Dtype, tp: number) {
+function dsaHybridLayout(arch: ModelArch, kvDtype: Dtype, tp: number, family?: SparseMlaFamily) {
   const stateLayers = arch.stateBytesPerSeq ? arch.stateLayers ?? 0 : 0;
   if (!stateLayers) return undefined;
   const s = arch.sparseAttn!;
-  const b = dsaBytes(arch, kvDtype);
+  const b = dsaBytes(arch, kvDtype, family);
   const layers = arch.attnLayers ?? arch.numLayers;
   const kpool = s.kpool ?? 1;
   const state = (arch.stateBytesPerSeq! / stateLayers) * headShare(arch.numKeyValueHeads, tp);
@@ -532,15 +546,15 @@ function kvLayout(arch: ModelArch, kvDtype: Dtype, tp = 1) {
  * Checked against vLLM's own figures for Gemma 3 1B (51.0× vs 51.02×) and
  * Granite 4.0-H Micro (23.2× vs 23.21×) in scripts/test-vllmlog.ts.
  */
-export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens = 2048, tp = 1): number {
+export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens = 2048, tp = 1, family?: SparseMlaFamily): number {
   if (usesCompressedAttn(arch)) {
     const r = v4Reserved(arch, kvDtype, contextLength, batchTokens);
     return r.grow + r.fixed;
   }
   if (usesDsa(arch)) {
-    const h = dsaHybridLayout(arch, kvDtype, tp);
+    const h = dsaHybridLayout(arch, kvDtype, tp, family);
     if (h) return (Math.ceil(contextLength / h.block) + h.extra) * h.perBlock;
-    return Math.ceil(contextLength / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
+    return Math.ceil(contextLength / DSA_BLOCK) * DSA_BLOCK * dsaBytesPerToken(arch, kvDtype, family);
   }
   const l = kvLayout(arch, kvDtype, tp);
   if (!l) return 0;
@@ -573,13 +587,13 @@ export function tokensInUse(load: TypicalLoad, contextLength: number): number {
 /** The part of a request's cache prefix caching shares: the full-attention
  *  layers' whole blocks of the common prefix. Sliding layers keep only their
  *  window and a hybrid's state is per request, so neither is shared. */
-export function kvSharedPrefix(arch: ModelArch, kvDtype: Dtype, prefixTokens: number, tp = 1): number {
+export function kvSharedPrefix(arch: ModelArch, kvDtype: Dtype, prefixTokens: number, tp = 1, family?: SparseMlaFamily): number {
   // DeepSeek V4 shares its compressed caches' whole 256-token blocks.
   if (usesCompressedAttn(arch)) return Math.floor(Math.max(0, prefixTokens) / V4_BLOCK) * v4Reserved(arch, kvDtype, 1, 1).perBlock;
   if (usesDsa(arch)) {
-    const h = dsaHybridLayout(arch, kvDtype, tp);
+    const h = dsaHybridLayout(arch, kvDtype, tp, family);
     if (h) return Math.floor(Math.max(0, prefixTokens) / h.block) * h.perBlock;
-    return Math.floor(Math.max(0, prefixTokens) / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
+    return Math.floor(Math.max(0, prefixTokens) / DSA_BLOCK) * DSA_BLOCK * dsaBytesPerToken(arch, kvDtype, family);
   }
   const l = kvLayout(arch, kvDtype, tp);
   const full = l?.kinds.find((k) => !k.sliding);
@@ -603,8 +617,8 @@ export function typicalConcurrency(
   const tp = input.gpus ?? 1;
   const room = kvRoom(input, usableGiB);
   const batch = input.batch ?? SMALL_CARD_BATCH;
-  const per = kvReservedPerSeq(input.arch, input.kvDtype, inUse, batch.tokens, tp);
-  const shared = Math.min(kvSharedPrefix(input.arch, input.kvDtype, Math.min(load.sharedPrefix, inUse), tp), per);
+  const per = kvReservedPerSeq(input.arch, input.kvDtype, inUse, batch.tokens, tp, batch.sparseMla);
+  const shared = Math.min(kvSharedPrefix(input.arch, input.kvDtype, Math.min(load.sharedPrefix, inUse), tp, batch.sparseMla), per);
   if (room <= 0 || !(per > 0)) return { users: 0, inUse, capped: false };
   // The shared blocks sit in the pool once; each request adds the rest of its own.
   const unique = per - shared;
@@ -621,14 +635,14 @@ export function calculate(input: CalcInput): CalcResult {
   const weights = weightsBytes(arch, weightDtype);
   const kvPerToken = kvBytesPerToken(arch, kvDtype);
   // Sized as vLLM reserves it, at the batch it profiles with.
-  const tokens = (input.batch ?? SMALL_CARD_BATCH).tokens;
-  const kvPerSeq = kvReservedPerSeq(arch, kvDtype, contextLength, tokens);
+  const { tokens, sparseMla } = input.batch ?? SMALL_CARD_BATCH;
+  const kvPerSeq = kvReservedPerSeq(arch, kvDtype, contextLength, tokens, 1, sparseMla);
   const kvTotal = kvPerSeq * concurrency;
 
   const o = overheadPerGpu(arch, input.batch, gpus);
   // Each GPU holds its share of every request's cache: its key-value heads, or a
   // replica of one where a kind of layer has fewer heads than GPUs.
-  const kvPerGpu = (gpus > 1 ? kvReservedPerSeq(arch, kvDtype, contextLength, tokens, gpus) : kvPerSeq) * concurrency;
+  const kvPerGpu = (gpus > 1 ? kvReservedPerSeq(arch, kvDtype, contextLength, tokens, gpus, sparseMla) : kvPerSeq) * concurrency;
   const perGpu = (weights / gpus + kvPerGpu) / BYTES_PER_GIB + o.totalGiB;
 
   const result: CalcResult = {
@@ -668,7 +682,8 @@ function kvRoom(input: Omit<CalcInput, "concurrency" | "contextLength">, usableG
 export function maxConcurrency(input: Omit<CalcInput, "concurrency">, usableGiB: number): number {
   const room = kvRoom(input, usableGiB);
   if (room <= 0) return 0;
-  const kvPerSeq = kvReservedPerSeq(input.arch, input.kvDtype, input.contextLength, (input.batch ?? SMALL_CARD_BATCH).tokens, input.gpus ?? 1);
+  const batch = input.batch ?? SMALL_CARD_BATCH;
+  const kvPerSeq = kvReservedPerSeq(input.arch, input.kvDtype, input.contextLength, batch.tokens, input.gpus ?? 1, batch.sparseMla);
   // Guard a degenerate arch (0 KV heads / 0 context) so we never divide by zero
   // and surface an "Infinity" in the UI.
   if (!(kvPerSeq > 0)) return 0;
@@ -683,13 +698,13 @@ export function maxContextLength(input: Omit<CalcInput, "contextLength">, usable
   const { arch, kvDtype, concurrency } = input;
   if (!(concurrency > 0)) return 0;
   const perSeq = kvRoom(input, usableGiB) / concurrency;
-  return contextWithin(arch, kvDtype, (input.batch ?? SMALL_CARD_BATCH).tokens, perSeq, input.gpus ?? 1);
+  return contextWithin(arch, kvDtype, input.batch ?? SMALL_CARD_BATCH, perSeq, input.gpus ?? 1);
 }
 
 /** The longest context whose reservation on one GPU of a `tp`-wide group fits in
  *  `perSeq` bytes, up to the model's own. */
-function contextWithin(arch: ModelArch, kvDtype: Dtype, tokens: number, perSeq: number, tp = 1): number {
-  const need = (ctx: number) => kvReservedPerSeq(arch, kvDtype, ctx, tokens, tp);
+function contextWithin(arch: ModelArch, kvDtype: Dtype, batch: BatchShape, perSeq: number, tp = 1): number {
+  const need = (ctx: number) => kvReservedPerSeq(arch, kvDtype, ctx, batch.tokens, tp, batch.sparseMla);
   if (perSeq <= 0 || !(need(VLLM_BLOCK) > 0) || need(1) > perSeq) return 0;
   // The reservation grows with the context, in steps of a block; past the
   // sliding layers' bound only the full-attention layers keep growing, and a
@@ -777,7 +792,7 @@ function layoutBasis(input: Omit<CalcInput, "concurrency">) {
     expertBytes: expertWeightBytes(arch, weightDtype),
     /** What one request's cache reserves on a GPU of a tensor-parallel group, cached. */
     perRequest(tp: number): number {
-      if (!request.has(tp)) request.set(tp, kvReservedPerSeq(arch, kvDtype, contextLength, batch.tokens, tp));
+      if (!request.has(tp)) request.set(tp, kvReservedPerSeq(arch, kvDtype, contextLength, batch.tokens, tp, batch.sparseMla));
       return request.get(tp)!;
     },
     /** Overhead per GPU at a tensor-parallel size (overhead.ts), cached. */
@@ -912,7 +927,7 @@ export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number): La
           layout: { gpus, ...shape, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(b, shape, users) },
           fits: layoutPerGpu(b, shape, users) <= usableGiB,
           maxUsers,
-          maxContext: contextWithin(arch, kvDtype, b.batch.tokens, perSeq, tp),
+          maxContext: contextWithin(arch, kvDtype, b.batch, perSeq, tp),
         });
       }
     }

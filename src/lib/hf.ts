@@ -7,7 +7,7 @@ import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
 import { activeParamsOf, expertCount, expertsPerToken, expertWidth, lookupParams, specParamsOf } from "./moe.ts";
 import { vllmRefuses } from "./vllmSupport.ts";
-import { compressedLayers, crossAttention, layerPlan, mimoAttention, nasAttention, sparseIndexer, unmodelledCacheKeys } from "./layers.ts";
+import { compressedLayers, crossAttention, layerPlan, mimoAttention, nasAttention, sparseIndexer, textConfig, unmodelledCacheKeys } from "./layers.ts";
 
 const HF = "https://huggingface.co";
 
@@ -141,7 +141,13 @@ export function paramsFromName(id: string): number {
   for (const m of id.matchAll(/(\d+(?:\.\d+)?)\s*b\b/gi)) {
     max = Math.max(max, parseFloat(m[1]));
   }
-  return max > 0 ? max * 1e9 : 0;
+  if (max > 0) return max * 1e9;
+  // Smaller models say millions: facebook/opt-125m read as no size at all, and
+  // with no safetensors count to fall back on its config was never used.
+  for (const m of id.matchAll(/(\d+(?:\.\d+)?)\s*m\b/gi)) {
+    max = Math.max(max, parseFloat(m[1]));
+  }
+  return max > 0 ? max * 1e6 : 0;
 }
 
 /** Autocomplete search ranked by downloads.
@@ -211,11 +217,13 @@ function ffnWidth(c: any): number | undefined {
 /** Pull various config key spellings into our normalized arch shape. Exported for
  *  scripts/test-moe.ts. */
 export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
-  // Multimodal models nest the LLM dims under text_config / llm_config.
-  const c = cfg?.text_config ?? cfg?.llm_config ?? cfg;
-  const numLayers = c.num_hidden_layers ?? c.n_layer ?? c.num_layers;
-  const hiddenSize = c.hidden_size ?? c.n_embd ?? c.d_model;
-  const numAttentionHeads = c.num_attention_heads ?? c.n_head ?? c.num_heads;
+  // Multimodal models nest the LLM dims (text_config, llm_config, Qwen-Omni's
+  // thinker_config, DeepSeek-VL2's language_config), some leaving their defaults out.
+  const c = textConfig(cfg);
+  // Bloom spells the width n_embed, MPT the depth n_layers and the heads n_heads.
+  const numLayers = c.num_hidden_layers ?? c.n_layer ?? c.num_layers ?? c.n_layers;
+  const hiddenSize = c.hidden_size ?? c.n_embd ?? c.n_embed ?? c.d_model;
+  const numAttentionHeads = c.num_attention_heads ?? c.n_head ?? c.num_heads ?? c.n_heads;
   if (!numLayers || !hiddenSize || !numAttentionHeads) return null;
   // Every spelling vLLM reads (model_arch_config_convertor.py): Falcon's n_head_kv
   // and multi_query, ChatGLM's multi_query_group_num, Step's num_attention_groups.
@@ -298,7 +306,7 @@ export function countParams(arch: ModelArch, c: any): void {
   };
   set("activeParams", activeParamsOf(arch, c));
   set("specParams", specParamsOf(arch, c));
-  set("lookupParams", lookupParams(c?.text_config ?? c?.llm_config ?? c));
+  set("lookupParams", lookupParams(textConfig(c)));
 }
 
 /** JSON as Python writes it: NVIDIA's Nemotron-H configs carry a bare `Infinity`
@@ -338,7 +346,7 @@ async function fetchConfig(hfId: string): Promise<any | null> {
 /** Detect a Mixture-of-Experts model from config, even when model_type has no
  * "moe" substring (e.g. gpt_oss, deepseek_v3, qwen3_moe use expert-count keys). */
 function isMoEFromConfig(cfg: any): boolean {
-  const c = cfg?.text_config ?? cfg?.llm_config ?? cfg;
+  const c = textConfig(cfg);
   return (expertCount(c) ?? 0) > 1;
 }
 
@@ -496,10 +504,10 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
       const counted = arch.numParams;
       await sizeShipped(arch, info, weightDtype);
       // A packed checkpoint's total was corrected: count the rest from it.
-      if (arch.numParams !== counted) countParams(arch, cfg?.text_config ?? cfg?.llm_config ?? cfg);
+      if (arch.numParams !== counted) countParams(arch, textConfig(cfg));
       // A preset's active count comes from its model card; prefer it to the estimate.
       if (known?.activeParams) arch.activeParams = known.activeParams;
-      const modelType = cfg.text_config?.model_type ?? cfg.model_type ?? info?.modelType;
+      const modelType = textConfig(cfg)?.model_type ?? cfg.model_type ?? info?.modelType;
       return {
         hfId,
         arch,
@@ -527,7 +535,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
       if (arch && arch.numParams > 0) {
         const knownBase = findKnownByHfId(info.baseModel);
         if (knownBase?.activeParams && arch.activeParams) arch.activeParams = knownBase.activeParams;
-        const modelType = baseCfg.text_config?.model_type ?? baseCfg.model_type ?? info?.modelType;
+        const modelType = textConfig(baseCfg)?.model_type ?? baseCfg.model_type ?? info?.modelType;
         return {
           hfId,
           arch,
@@ -597,7 +605,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     const mirrorCfg = await fetchConfig(id);
     const arch = mirrorCfg ? archFromConfig(mirrorCfg, numParams || 0) : null;
     if (!arch || !(arch.numParams > 0)) continue;
-    const modelType = mirrorCfg.text_config?.model_type ?? mirrorCfg.model_type ?? info?.modelType;
+    const modelType = textConfig(mirrorCfg)?.model_type ?? mirrorCfg.model_type ?? info?.modelType;
     return {
       hfId,
       arch,

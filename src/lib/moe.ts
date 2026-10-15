@@ -9,6 +9,7 @@
 // React-free: hf.ts, anatomy.ts and scripts/test-moe.ts all use it.
 
 import { resolveHeadDim, type ModelArch } from "./calc.ts";
+import { textConfig } from "./layers.ts";
 
 // Configs are free-form JSON; only the fields read below matter.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,7 +78,7 @@ export function lookupParams(c: Config | null | undefined): number {
  *  except ERNIE 4.5's, a dense Llama layer (vllm ernie_mtp.py): attention, an MLP
  *  of intermediate_size and the projection of two hidden states into one. */
 export function specParamsOf(arch: ModelArch, cfg: Config | null | undefined): number {
-  const c = cfg?.text_config ?? cfg?.llm_config ?? cfg;
+  const c = textConfig(cfg);
   const L = arch.numLayers;
   const spec = specLayers(c, L);
   if (!spec || !(arch.numParams > 0)) return 0;
@@ -142,7 +143,7 @@ function sparseLayers(c: Config): number {
  * report too few parameters: hf.ts recounts once it knows the real total).
  */
 export function activeParamsOf(arch: ModelArch, cfg: Config | null | undefined): number | undefined {
-  const c = cfg?.text_config ?? cfg?.llm_config ?? cfg;
+  const c = textConfig(cfg);
   if (!c) return undefined;
   const withinTotal = (n: number) => (n > 0 && n < arch.numParams ? n : undefined);
   const main = arch.numParams - specParamsOf(arch, cfg) - lookupParams(c);

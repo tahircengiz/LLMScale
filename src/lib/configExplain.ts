@@ -19,7 +19,7 @@ import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
 import type { Lang } from "./dict.ts";
 import { lookupField, type FieldGroup, type GlossaryEntry, type Relevance } from "./configGlossary.ts";
-import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers, mimoAttention, nasAttention } from "./layers.ts";
+import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers, mimoAttention, nasAttention, textConfig, textConfigPrefix } from "./layers.ts";
 
 // Configs are free-form JSON.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -252,7 +252,7 @@ const ALIASES_FOR_NOTES: Record<string, string> = { num_kv_heads: "num_key_value
 
 /** Objects whose children are explained one by one. Anything else nested
  *  (quantization recipes, auto_map) is read as a single field. */
-const OPEN_UP = new Set(["text_config", "llm_config", "rope_scaling", "rope_parameters", "quantization_config", "vision_config", "audio_config"]);
+const OPEN_UP = new Set(["text_config", "llm_config", "language_config", "thinker_config", "rope_scaling", "rope_parameters", "quantization_config", "vision_config", "audio_config"]);
 
 function compact(v: Json): string {
   const s = JSON.stringify(v);
@@ -313,7 +313,7 @@ export interface Answer {
 
 export interface ConfigReport {
   /** The part of the config that describes the language model. */
-  prefix: "" | "text_config." | "llm_config.";
+  prefix: string;
   arch: ModelArch | null;
   answers: Answer[];
   /** One paragraph in plain words, built from the answers' facts. */
@@ -336,8 +336,8 @@ export interface ExplainInput {
 }
 
 export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE: moeHint = false }: ExplainInput): ConfigReport {
-  const prefix: ConfigReport["prefix"] = cfg?.text_config ? "text_config." : cfg?.llm_config ? "llm_config." : "";
-  const c: Json = cfg?.text_config ?? cfg?.llm_config ?? cfg ?? {};
+  const prefix: ConfigReport["prefix"] = textConfigPrefix(cfg);
+  const c: Json = textConfig(cfg) ?? {};
   const arch = archFromConfig(cfg, numParams);
   const F = (n: number) => fmtInt(n, lang);
 

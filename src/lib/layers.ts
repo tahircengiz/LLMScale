@@ -18,6 +18,36 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;
 
+/** Transformers' defaults for the keys a nested language-model config may leave
+ *  out, because they equal its class's: llava 1.5's Vicuna and Janus's Llama,
+ *  llava-next's Mistral, DeepSeek-VL2's V2 (whose vocab_size vLLM sets to
+ *  102,400, vllm/transformers_utils/configs/deepseek_vl2.py). */
+const TEXT_DEFAULTS: Record<string, Json> = {
+  llama: { hidden_size: 4096, intermediate_size: 11008, num_hidden_layers: 32, num_attention_heads: 32, max_position_embeddings: 2048, vocab_size: 32000 },
+  mistral: { hidden_size: 4096, intermediate_size: 14336, num_hidden_layers: 32, num_attention_heads: 32, num_key_value_heads: 8, max_position_embeddings: 131072, vocab_size: 32000 },
+  deepseek_v2: { kv_lora_rank: 512, qk_rope_head_dim: 64, vocab_size: 102400 },
+};
+
+/** The language model's part of a config, wherever a multimodal config nests it:
+ *  text_config, llm_config (InternVL), thinker_config.text_config (Qwen-Omni),
+ *  language_config (DeepSeek-VL2, Janus); with its class's defaults filled in. */
+export function textConfig(cfg: Json): Json {
+  if (!cfg || typeof cfg !== "object") return cfg;
+  const nested = cfg.thinker_config?.text_config ?? cfg.text_config ?? cfg.llm_config ?? cfg.language_config;
+  if (!nested || typeof nested !== "object") return cfg;
+  const d = TEXT_DEFAULTS[String(nested.model_type ?? "")];
+  return d ? { ...d, ...nested } : nested;
+}
+
+/** Where textConfig found the language model, as a path prefix for citing its keys. */
+export function textConfigPrefix(cfg: Json): string {
+  if (cfg?.thinker_config?.text_config) return "thinker_config.text_config.";
+  if (cfg?.text_config) return "text_config.";
+  if (cfg?.llm_config) return "llm_config.";
+  if (cfg?.language_config) return "language_config.";
+  return "";
+}
+
 /** Hybrid models: how many layers keep a KV cache, how many a fixed state, and
  *  what those are. */
 export function hybridLayers(
@@ -109,7 +139,7 @@ export function mimoAttention(c: Json, L: number): { attention: number; kvHeads:
  *  tiles of (image_size / patch_size)² + 1 patches, whatever the context. vLLM 0.31
  *  no longer loads it (vllmSupport.ts); this is how the model itself caches. */
 export function crossAttention(cfg: Json, L: number): { layers: number; tokens: number } | undefined {
-  const c = cfg?.text_config ?? cfg;
+  const c = textConfig(cfg);
   const v = cfg?.vision_config;
   if (!Array.isArray(c?.cross_attention_layers) || !v) return undefined;
   const layers = c.cross_attention_layers.filter((i: unknown) => typeof i === "number" && i < L).length;
