@@ -220,15 +220,23 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   return arch;
 }
 
-/** Try to read config.json directly (public models). Returns null if gated/missing. */
+/** Try to read config.json directly (public models). Returns null if gated/missing.
+ *  A dropped request, a timeout or a rate limit (429, 5xx) gets one more try: left
+ *  alone it put the page on a placeholder architecture, and DeepSeek-V4-Flash came
+ *  out as a 32-layer model needing 541 GiB. 401, 403 and 404 (gated or missing) do
+ *  not change on a retry. */
 async function fetchConfig(hfId: string): Promise<any | null> {
-  try {
-    const res = await fetchWithTimeout(`${HF}/${hfId}/resolve/main/config.json`, 8000);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetchWithTimeout(`${HF}/${hfId}/resolve/main/config.json`, 8000);
+      if (res.ok) return await res.json();
+      if (res.status !== 429 && res.status < 500) return null;
+    } catch {
+      // a timeout or a network error: try once more
+    }
+    if (attempt === 0) await new Promise((r) => setTimeout(r, 1500));
   }
+  return null;
 }
 
 /** Detect a Mixture-of-Experts model from config, even when model_type has no

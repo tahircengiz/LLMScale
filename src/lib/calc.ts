@@ -560,7 +560,7 @@ export function maxContextLength(input: Omit<CalcInput, "contextLength">, usable
   return contextWithin(arch, kvDtype, (input.batch ?? SMALL_CARD_BATCH).tokens, perSeq);
 }
 
-/** The longest context whose reservation fits in `perSeq` bytes. */
+/** The longest context whose reservation fits in `perSeq` bytes, up to the model's own. */
 function contextWithin(arch: ModelArch, kvDtype: Dtype, tokens: number, perSeq: number): number {
   const need = (ctx: number) => kvReservedPerSeq(arch, kvDtype, ctx, tokens);
   if (perSeq <= 0 || !(need(VLLM_BLOCK) > 0) || need(1) > perSeq) return 0;
@@ -580,7 +580,9 @@ function contextWithin(arch: ModelArch, kvDtype: Dtype, tokens: number, perSeq: 
     if (need(mid) <= perSeq) lo = mid;
     else hi = mid;
   }
-  return lo;
+  // Memory may hold more than the model reads: Qwen3-30B-A3B on one RTX PRO 6000
+  // has room for 81k tokens a request at four requests, past its 40,960.
+  return Math.min(lo, arch.maxContext ?? Infinity);
 }
 
 /** The fewest GPUs of `usableGiB` each that hold the deployment, counting the
@@ -779,7 +781,7 @@ export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number): La
           layout: { gpus, ...shape, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(b, shape, users) },
           fits: layoutPerGpu(b, shape, users) <= usableGiB,
           maxUsers,
-          maxContext: Math.min(contextWithin(arch, kvDtype, b.batch.tokens, perSeq), arch.maxContext ?? Infinity),
+          maxContext: contextWithin(arch, kvDtype, b.batch.tokens, perSeq),
         });
       }
     }

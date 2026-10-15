@@ -103,11 +103,14 @@ for (const [name, arch] of [
   ["Qwen3-Next", archFromConfig(repo("Qwen_Qwen3-Next-80B-A3B-Instruct").config, 81.3e9)!],
   ["Llama 3.1 8B", archFromConfig(cfg("unsloth_Llama-3.1-8B-Instruct"), 8.03e9)!],
 ] as const) {
-  const input = { arch, weightDtype: "fp8" as const, kvDtype: "fp16" as const, concurrency: 4 };
+  // Memory's bound, with the model's own limit taken away; then the model's.
+  const input = { arch: { ...arch, maxContext: undefined }, weightDtype: "fp8" as const, kvDtype: "fp16" as const, concurrency: 4 };
   const budget = 141 * 0.95;
   const ctx = maxContextLength(input, budget);
   const at = (c: number) => calculate({ ...input, contextLength: c }).totalGiB;
   check(`${name}: the longest context fits and one more token does not`, ctx > 0 && at(ctx) <= budget && at(ctx + 1) > budget, `${ctx} tokens`);
+  const capped = maxContextLength({ ...input, arch }, budget);
+  check(`${name}: …and never past the model's ${arch.maxContext}`, capped === Math.min(ctx, arch.maxContext ?? Infinity), `${capped} tokens`);
 }
 
 console.log("\n--- Y2: MoE reads per decode step ---");
