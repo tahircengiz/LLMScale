@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DeepSeek V3 Kaç GB VRAM İster? | LLMScale</title>
-<meta name="description" content="DeepSeek V3, 8k context'te tek kullanıcı için BF16'da 1279,2 GiB, INT4'te 345,4 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta name="description" content="DeepSeek V3, 8k context'te tek kullanıcı için BF16'da 1278,7 GiB, INT4'te 344,8 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/models/deepseek-v3.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/deepseek-v3.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/deepseek-v3.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DeepSeek V3 kaç GB VRAM ister?">
-<meta property="og:description" content="DeepSeek V3, 8k context'te tek kullanıcı için BF16'da 1279,2 GiB, INT4'te 345,4 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta property="og:description" content="DeepSeek V3, 8k context'te tek kullanıcı için BF16'da 1278,7 GiB, INT4'te 344,8 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/models/deepseek-v3.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="DeepSeek V3 kaç GB VRAM ister?">
-<meta name="twitter:description" content="DeepSeek V3, 8k context'te tek kullanıcı için BF16'da 1279,2 GiB, INT4'te 345,4 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta name="twitter:description" content="DeepSeek V3, 8k context'te tek kullanıcı için BF16'da 1278,7 GiB, INT4'te 344,8 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -160,18 +160,18 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <p class="lede">DeepSeek V3, 61 katmanda 684,53B parametreye sahiptir. Multi-head latent attention (MLA) kullanır: her katman, her head için key ve value yerine token başına 576 boyutlu tek bir sıkıştırılmış latent saklar; bu da KV cache'ini alışılmış formülün vereceğinden 24,9× küçük yapar. Mixture-of-Experts modelidir: toplam 684,53B parametrenin token başına yaklaşık 37,00B kadarı aktiftir; bellek hepsini tutmak zorundadır, her token ise yalnızca aktif kısımdan geçer. En fazla 163.840 token context alır; bu uzunlukta tek bir kullanıcı, ağırlıkların üstüne FP16'da 10,72 GiB KV cache ister.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · tek kullanıcı</div>
-  <div class="big">1279,2 GiB</div>
-  <p>1275,0 GiB ağırlık, 549 MiB KV cache ve 3,61 GiB vLLM'in ek yükü. Aynı iş yükü INT4'te 345,4 GiB ister.</p>
+  <div class="big">1278,7 GiB</div>
+  <p>1275,0 GiB ağırlık, 549 MiB KV cache ve 3,08 GiB vLLM'in ek yükü. Aynı iş yükü INT4'te 344,8 GiB ister.</p>
   <ul class="spec"><li>61 katman</li><li>hidden 7168</li><li>128/128 heads</li><li>head_dim 56</li><li>160k maks context</li><li>MoE</li><li>MLA</li></ul>
 </div>
 <h2>Hassasiyet ve context'e göre DeepSeek V3 belleği</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Hassasiyet</th><th scope="col">8k context</th><th scope="col">32k context</th><th scope="col">128k context</th><th scope="col">160k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>1279,2 GiB<small>KV cache 549 MiB</small></td><td>1280,8 GiB<small>KV cache 2,14 GiB</small></td><td>1287,2 GiB<small>KV cache 8,58 GiB</small></td><td>1289,4 GiB<small>KV cache 10,72 GiB</small></td></tr><tr><th scope="row">FP8</th><td>643,4 GiB<small>KV cache 549 MiB</small></td><td>645,0 GiB<small>KV cache 2,14 GiB</small></td><td>651,4 GiB<small>KV cache 8,58 GiB</small></td><td>653,6 GiB<small>KV cache 10,72 GiB</small></td></tr><tr><th scope="row">INT4</th><td>345,4 GiB<small>KV cache 549 MiB</small></td><td>347,0 GiB<small>KV cache 2,14 GiB</small></td><td>353,4 GiB<small>KV cache 8,58 GiB</small></td><td>355,5 GiB<small>KV cache 10,72 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>1278,7 GiB<small>KV cache 549 MiB</small></td><td>1280,3 GiB<small>KV cache 2,14 GiB</small></td><td>1286,7 GiB<small>KV cache 8,58 GiB</small></td><td>1288,8 GiB<small>KV cache 10,72 GiB</small></td></tr><tr><th scope="row">FP8</th><td>642,9 GiB<small>KV cache 549 MiB</small></td><td>644,5 GiB<small>KV cache 2,14 GiB</small></td><td>650,9 GiB<small>KV cache 8,58 GiB</small></td><td>653,1 GiB<small>KV cache 10,72 GiB</small></td></tr><tr><th scope="row">INT4</th><td>344,8 GiB<small>KV cache 549 MiB</small></td><td>346,4 GiB<small>KV cache 2,14 GiB</small></td><td>352,9 GiB<small>KV cache 8,58 GiB</small></td><td>355,0 GiB<small>KV cache 10,72 GiB</small></td></tr></tbody>
 </table></div>
 <p class="note">Tek kullanıcı, FP16 KV cache ve 70 GB altı bir kartın varsayılanlarıyla tek GPU'da vLLM'in ek yükü. Quantization ağırlıkları küçültür, KV cache'i değil; bu yüzden context büyüdükçe kazanç daralır.</p>
 <h2>Onu tek başına taşıyan GPU'lar</h2>
-<ul class="plain"><li><strong>BF16</strong> (1279,2 GiB): tek bir GPU'ya sığmaz — bellek olarak 32× <a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, 16× <a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a>, 8× <a href="/LLMScale/tr/gpus/b200-192.html">B200 180GB</a> gerekir.</li><li><strong>FP8</strong> (643,4 GiB): tek bir GPU'ya sığmaz — bellek olarak 16× <a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a>, 8× <a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a>, 8× <a href="/LLMScale/tr/gpus/b200-192.html">B200 180GB</a> gerekir.</li><li><strong>INT4</strong> (345,4 GiB): <a href="/LLMScale/tr/gpus/apple-m3ultra-512.html">Apple M3 Ultra (512GB)</a></li></ul>
+<ul class="plain"><li><strong>BF16</strong> (1278,7 GiB): tek bir GPU'ya sığmaz — hesaplayıcının yerleşimiyle en az: 20× <a href="/LLMScale/tr/gpus/h100-80.html">H100 SXM 80GB</a>, 12× <a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a>, 8× <a href="/LLMScale/tr/gpus/b200-192.html">B200 180GB</a>.</li><li><strong>FP8</strong> (642,9 GiB): tek bir GPU'ya sığmaz — hesaplayıcının yerleşimiyle en az: 10× <a href="/LLMScale/tr/gpus/h100-80.html">H100 SXM 80GB</a>, 6× <a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a>, 5× <a href="/LLMScale/tr/gpus/b200-192.html">B200 180GB</a>.</li><li><strong>INT4</strong> (344,8 GiB): <a href="/LLMScale/tr/gpus/apple-m3ultra-512.html">Apple M3 Ultra (512GB)</a></li></ul>
 <p class="note">8k context ve tek kullanıcı için, en küçük kartlar önce. Ayrık kartlarda vLLM'in varsayılanı olan bellek payı %92, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır; her cihaz kendi varsayılanlarıyla vLLM'in ek yükünü taşır.</p>
 <h2>Kaç kullanıcı sığar</h2>
 <p>Buradaki hiçbir kart onu herhangi bir hassasiyette tek başına taşıyamaz; servis etmek, tensor parallel ile birden çok GPU'ya bölmek demektir.</p>

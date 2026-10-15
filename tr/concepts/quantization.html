@@ -172,7 +172,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <li><strong>INT8</strong> — ölçek katsayılarıyla 8-bit tam sayılar, ağırlık başına bir byte.</li>
 <li><strong>AWQ ve GPTQ</strong> — 4-bit, yalnızca ağırlık yöntemleri: ağırlıklar 4 bitte saklanır, 16 bitte hesaplanır. safetensors olarak gelirler ve vLLM gibi GPU servis motorlarını hedeflerler.</li>
 <li><strong>GGUF</strong> — llama.cpp'nin dosya formatı; quantization seviyeleri bit sayısıyla adlandırılır (Q4, Q5, Q8…) ve CPU, Apple Silicon ve tüketici GPU'larında kullanılır.</li>
-<li><strong>NVFP4 ve MXFP4</strong> — ortak ölçekli 4-bit kayan nokta formatları. gpt-oss uzman ağırlıklarını MXFP4 ile yayımlar; <a href="/LLMScale/tr/models/gpt-oss-120b.html">gpt-oss 120B</a> modelinin tek bir 80 GB GPU'ya sığması bu sayededir: 8k context ve tek kullanıcıyla 62,39 GiB, <a href="/LLMScale/tr/gpus/h100-80.html">H100 (SXM/PCIe) 80GB</a> üzerindeki 73,60 GiB kullanılabilir belleğe karşı.</li>
+<li><strong>NVFP4 ve MXFP4</strong> — ortak ölçekli 4-bit kayan nokta formatları. gpt-oss uzman ağırlıklarını MXFP4 ile yayımlar; <a href="/LLMScale/tr/models/gpt-oss-120b.html">gpt-oss 120B</a> modelinin tek bir 80 GB GPU'ya sığması bu sayededir: 8k context ve tek kullanıcıyla 62,39 GiB, <a href="/LLMScale/tr/gpus/h100-80.html">H100 SXM 80GB</a> üzerindeki 72,82 GiB kullanılabilir belleğe karşı.</li>
 <li><strong>NF4</strong> — QLoRA'nın 4-bit NormalFloat'ı; dondurulmuş, quantize edilmiş bir temel model üzerinde adaptör eğitmek için.</li>
 </ul>
 <h2>4-bit neden tam yarım byte değil</h2>
