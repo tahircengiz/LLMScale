@@ -20,6 +20,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import {
   calculate,
+  kvBytesPerFullLayerToken,
   kvBytesPerToken,
   maxConcurrency,
   maxContextLength,
@@ -143,7 +144,8 @@ function modelPage(lang: Lang, m: KnownModel): string {
   const fitItems = PRECISIONS.map((d) => {
     const need = size(m, d, ctx).totalGiB;
     const input = { arch: m, weightDtype: d, contextLength: ctx, concurrency: 1, ...WORK };
-    const holding = ALL_BY_SIZE.filter((g) => needOn(input, g) <= usableGiB(g)).slice(0, 4);
+    // Not a card vLLM 0.31 does not run on (V100, audit F2).
+    const holding = ALL_BY_SIZE.filter((g) => !g.noVllm && needOn(input, g) <= usableGiB(g)).slice(0, 4);
     const label = `<strong>${LABEL[d]}</strong> (${gib(lang, need)})`;
     if (holding.length) return `<li>${label}: ${holding.map((g) => gpuLink(lang, g)).join(", ")}</li>`;
     const counts = MULTI_CARDS.map((g) => `${cardsFor(input, g) ?? "—"}× ${gpuLink(lang, g)}`).join(en ? ", " : ", ");
@@ -179,6 +181,16 @@ function modelPage(lang: Lang, m: KnownModel): string {
   }).join("");
 
   const kib = dec(lang, (kvBytesPerToken(m, "fp16") / 1024).toFixed(1));
+  // A sliding window caps most of a Gemma's or gpt-oss's layers: without it the
+  // per-token figure contradicts the long-context column of the table above.
+  const sliding = m.slidingWindow ? Math.min(m.slidingLayers ?? 0, m.attnLayers ?? m.numLayers) : 0;
+  const fullLayers = (m.attnLayers ?? m.numLayers) - sliding;
+  const pastWindow = dec(lang, ((fullLayers * kvBytesPerFullLayerToken(m, "fp16")) / 1024).toFixed(1));
+  const windowNote = sliding
+    ? en
+      ? ` ${sliding} of its ${m.numLayers} layers attend over a sliding window of the last ${int(lang, m.slidingWindow!)} tokens and hold no more than that, so past it each further token adds ${pastWindow} KiB, the other ${fullLayers} layers' share.`
+      : ` ${m.numLayers} katmanının ${sliding} tanesi son ${int(lang, m.slidingWindow!)} token'lık kayan pencereye bakar ve bundan fazlasını tutmaz; pencereden sonra eklenen her token, diğer ${fullLayers} katmanın payı olan ${pastWindow} KiB ekler.`
+    : "";
   const kvFormula = usesMla(m)
     ? en ? "With MLA the KV cache is <code>layers × (kv_lora_rank + qk_rope_head_dim) × bytes × context × users</code>." : "MLA'da KV cache <code>katman × (kv_lora_rank + qk_rope_head_dim) × byte × context × kullanıcı</code> olur."
     : en ? "The KV cache is <code>2 × layers × key-value heads × head dimension × bytes × context × users</code>." : "KV cache <code>2 × katman × key-value head × head boyutu × byte × context × kullanıcı</code> olur.";
@@ -213,8 +225,8 @@ ${usersBlock}
       : "Dizi uzunluğu 2.048, batch 1, gradient checkpointing açık, Adam. Tam ince ayar aktivasyonlardan önce parametre başına 16 byte tutar; QLoRA dondurulmuş temel modeli 4-bit NF4 olarak saklar."}</p>
 <h2>${en ? "Where the numbers come from" : "Sayılar nereden geliyor"}</h2>
 <p>${en
-      ? `Weights are <code>parameters × bytes per parameter</code>. ${kvFormula} For ${esc(name)} that is ${kib} KiB per token at FP16. These are capacity-planning figures: the serving engine — vLLM, TGI, llama.cpp — and its paged-attention efficiency still move the real number.`
-      : `Ağırlıklar <code>parametre × parametre başına byte</code> olur. ${kvFormula} ${esc(name)} için bu, FP16'da token başına ${kib} KiB eder. Bunlar kapasite planlama sayılarıdır: servis motoru — vLLM, TGI, llama.cpp — ve paged-attention verimliliği gerçek değeri yine değiştirir.`}</p>
+      ? `Weights are <code>parameters × bytes per parameter</code>. ${kvFormula} For ${esc(name)} that is ${kib} KiB per token at FP16.${windowNote} These are capacity-planning figures: the serving engine — vLLM, TGI, llama.cpp — and its paged-attention efficiency still move the real number.`
+      : `Ağırlıklar <code>parametre × parametre başına byte</code> olur. ${kvFormula} ${esc(name)} için bu, FP16'da token başına ${kib} KiB eder.${windowNote} Bunlar kapasite planlama sayılarıdır: servis motoru — vLLM, TGI, llama.cpp — ve paged-attention verimliliği gerçek değeri yine değiştirir.`}</p>
 <p>${en
       ? `More on <a href="${href(lang, CONCEPT_FILES.kvCache)}">KV cache size</a> and on <a href="${href(lang, CONCEPT_FILES.attention)}">GQA, MQA and MLA</a>.`
       : `Daha fazlası: <a href="${href(lang, CONCEPT_FILES.kvCache)}">KV cache boyutu</a> ve <a href="${href(lang, CONCEPT_FILES.attention)}">GQA, MQA ve MLA</a>.`}</p>

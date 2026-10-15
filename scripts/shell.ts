@@ -42,7 +42,9 @@ export const gib = (lang: Lang, n: number) => dec(lang, formatGiB(n));
 export const int = (lang: Lang, n: number) => n.toLocaleString(lang === "tr" ? "tr-TR" : "en-US");
 export const params = (lang: Lang, n: number) => dec(lang, formatParams(n));
 export const ratio = (lang: Lang, r: number) => `${dec(lang, String(Math.round(r * 10) / 10))}×`;
-export const ctxK = (c: number) => `${c % 1000 === 0 ? c / 1000 : Math.round(c / 1024)}k`;
+/** A context length as people say it: 8k, 128k, 1M; Llama 4 Scout's 10,485,760 read "10240k". */
+export const ctxK = (c: number) =>
+  c >= 1048576 && c % 1048576 === 0 ? `${c / 1048576}M` : c >= 1e6 && c % 1e6 === 0 ? `${c / 1e6}M` : `${c % 1000 === 0 ? c / 1000 : Math.round(c / 1024)}k`;
 export const words = (html: string) =>
   html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").split(/\s+/).filter(Boolean).length;
 
