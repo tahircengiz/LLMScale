@@ -1,7 +1,7 @@
 // Core VRAM sizing engine.
 // All math is pure and React-free so it can be unit-tested with `node calc.ts`.
 
-import { overheadPerGpu, SMALL_CARD_BATCH, type BatchShape } from "./overhead.ts";
+import { COMM_GIB, overheadPerGpu, SMALL_CARD_BATCH, type BatchShape } from "./overhead.ts";
 import { tpValid } from "./parallel.ts";
 
 export type Dtype = "fp32" | "fp16" | "bf16" | "fp8" | "int8" | "int4";
@@ -590,4 +590,95 @@ export function gpusNeeded(input: CalcInput, usableGiB: number, limit = 64, vali
     if (calculate({ ...input, gpus: n }).perGpuGiB <= usableGiB) return n;
   }
   return null;
+}
+
+/** Bytes of the weights in routed experts: what expert parallelism shards. Each
+ *  token skips experts − k of them, so the total less the active parameters is
+ *  (experts − k)/experts of all expert weights. 0 for a dense model. */
+export function expertWeightBytes(arch: ModelArch, dtype: Dtype): number {
+  const e = arch.numExperts ?? 0;
+  const k = arch.expertsPerToken ?? 0;
+  if (e <= 1 || k <= 0 || k >= e || !arch.activeParams || !(arch.numParams > 0)) return 0;
+  const params = ((arch.numParams - arch.activeParams) * e) / (e - k);
+  return params > 0 && params < arch.numParams ? weightsBytes(arch, dtype) * (params / arch.numParams) : 0;
+}
+
+/**
+ * How a deployment spreads over GPUs: `dp` replicas of `tp` GPUs each, every replica
+ * serving its share of the requests. With `ep` a MoE runs its attention data-parallel
+ * and shards its routed experts across all `gpus` (vLLM's --data-parallel-size with
+ * --enable-expert-parallel, the layout DeepSeek's vLLM recipes use).
+ */
+export interface Layout {
+  gpus: number;
+  tp: number;
+  dp: number;
+  ep: boolean;
+  /** Requests each replica serves, and what one of its GPUs holds. */
+  usersPerReplica: number;
+  perGpuGiB: number;
+}
+
+/** What one GPU holds in a layout: its share of the weights, the cache of its
+ *  replica's requests (split across the replica's tensor-parallel GPUs as far as
+ *  the KV heads go) and the overhead. */
+function layoutPerGpu(input: CalcInput, tp: number, dp: number, ep: boolean): number {
+  const { arch, weightDtype, kvDtype, contextLength } = input;
+  const batch = input.batch ?? SMALL_CARD_BATCH;
+  const users = Math.ceil(Math.max(1, input.concurrency) / dp);
+  const weights = weightsBytes(arch, weightDtype);
+  const experts = ep ? expertWeightBytes(arch, weightDtype) : 0;
+  const share = (weights - experts) / tp + experts / (tp * dp);
+  const kv = (kvReservedPerSeq(arch, kvDtype, contextLength, batch.tokens) * users) / kvSplit(arch, tp);
+  const o = overheadPerGpu(arch, batch, tp);
+  // Expert parallelism exchanges tokens between every GPU, tensor parallel or not.
+  const comm = ep && tp === 1 ? COMM_GIB : 0;
+  return (share + kv) / BYTES_PER_GIB + o.totalGiB + comm;
+}
+
+/**
+ * The fewest GPUs of `usableGiB` each that serve the deployment, and how: replicas
+ * of a tensor-parallel group vLLM accepts, or for a MoE data-parallel attention
+ * with its experts spread over every GPU. Tensor parallelism alone cannot hold
+ * more requests than one card's cache once the KV heads run out (one MLA latent or
+ * one KV head is held whole on every GPU), so more requests take more replicas.
+ * Expert parallelism takes GPU counts that split the experts evenly. Adding requests
+ * or context never lowers the count. Equal counts go to the layout with fewer
+ * replicas. null when none up to `limit` GPUs does.
+ */
+export function layoutFor(input: CalcInput, usableGiB: number, limit = 1024): Layout | null {
+  const { arch } = input;
+  const heads = arch.numAttentionHeads;
+  const kv = arch.numKeyValueHeads || heads;
+  const users = Math.max(1, input.concurrency);
+  const moe = expertWeightBytes(arch, input.weightDtype) > 0;
+  const experts = arch.numExperts ?? 0;
+  let best: Layout | null = null;
+  for (let tp = 1; tp <= Math.min(heads, limit); tp++) {
+    if (!tpValid(tp, heads, kv)) continue;
+    for (const ep of moe ? [false, true] : [false]) {
+      // Without expert parallelism, replicas past one per request add nothing.
+      const top = ep ? Math.floor(limit / tp) : Math.min(Math.floor(limit / tp), users);
+      // Expert parallelism takes GPU counts that split the experts evenly.
+      const counts = ep
+        ? Array.from({ length: Math.max(0, top - 1) }, (_, i) => i + 2).filter((dp) => experts % (tp * dp) === 0)
+        : Array.from({ length: top }, (_, i) => i + 1);
+      const fits = (dp: number) => layoutPerGpu(input, tp, dp, ep) <= usableGiB;
+      if (!counts.length || !fits(counts[counts.length - 1])) continue;
+      // What a GPU holds only falls as replicas are added: halve towards the fewest.
+      let lo = -1;
+      let hi = counts.length - 1;
+      while (hi - lo > 1) {
+        const mid = Math.floor((lo + hi) / 2);
+        if (fits(counts[mid])) hi = mid;
+        else lo = mid;
+      }
+      const dp = counts[hi];
+      const gpus = tp * dp;
+      if (!best || gpus < best.gpus || (gpus === best.gpus && dp < best.dp)) {
+        best = { gpus, tp, dp, ep, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(input, tp, dp, ep) };
+      }
+    }
+  }
+  return best;
 }

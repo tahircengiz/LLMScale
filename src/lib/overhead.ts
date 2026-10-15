@@ -64,7 +64,7 @@ const RUNTIME_GIB = 0.15;
 const SAMPLER_BYTES = 4;
 /** NCCL's buffers when the model is split. Not measured here (one GPU); NCCL's
  *  defaults and vLLM's all-reduce buffers put them near half a GiB. */
-const COMM_GIB = 0.5;
+export const COMM_GIB = 0.5;
 /** Bytes a token holds in the feed-forward block at the profiling peak, per
  *  element of its width. */
 const FORWARD_BYTES = 8;

@@ -1,7 +1,7 @@
 import { FEATURED_GPU_IDS, gpuPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "./StaticPageLink";
 import { useEffect, useState } from "react";
-import { calculate, gpusNeeded, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch, type TypicalLoad } from "../lib/calc";
+import { calculate, layoutFor, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type ModelArch, type TypicalLoad } from "../lib/calc";
 import { computeEfficiency, batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
@@ -80,11 +80,11 @@ export function GpuFit({
     const input = { ...base, contextLength, concurrency, batch: batchFor(g, mig) };
     const need = calculate(input).totalGiB;
     const fits = need <= usable;
-    // How many cards memory alone asks for, and the fewest vLLM can split the
-    // heads across; they differ when the first does not divide the heads.
-    const raw = fits ? 1 : gpusNeeded(input, usable, 1024, false) ?? Math.ceil(need / usable);
-    const tp = fits ? 1 : gpusNeeded(input, usable);
-    return { usable, need, pct: need / usable, fits, raw, tp, needed: tp ?? raw };
+    // The fewest cards that serve it, and how: replicas of a tensor-parallel group,
+    // or for a MoE its experts spread over every card. Never a plain memory ratio:
+    // a cache held whole on every card does not shrink as cards are added.
+    const layout = fits ? null : layoutFor(input, usable);
+    return { usable, need, pct: need / usable, fits, layout, needed: fits ? 1 : layout?.gpus ?? null };
   }
   function usage(g: Gpu, mig = "") {
     const key = `${g.id}|${mig}`;
@@ -95,7 +95,7 @@ export function GpuFit({
   const selUsage = usage(selected, migId);
   const kvHeads = arch.numKeyValueHeads ?? arch.numAttentionHeads;
   const heads = arch.numAttentionHeads;
-  const tpOk = selUsage.tp;
+  const layout = selUsage.layout;
   const selBatch = batchFor(selected, migId);
   const maxUsers = maxConcurrency({ ...base, contextLength, batch: selBatch }, effUsable);
   const maxCtx = maxContextLength({ ...base, concurrency, batch: selBatch }, effUsable);
@@ -191,8 +191,8 @@ export function GpuFit({
           {u.fits
             ? t("gpu.cardFits", { p: Math.round(u.pct * 100) })
             : overBudget
-              ? `${t("gpu.cardOverBudget")} · ${t("gpu.cardNeeds", { n: u.needed })}`
-              : t("gpu.cardNeeds", { n: u.needed })}
+              ? `${t("gpu.cardOverBudget")} · ${u.needed ? t("gpu.cardNeeds", { n: u.needed }) : t("gpu.cardNone")}`
+              : u.needed ? t("gpu.cardNeeds", { n: u.needed }) : t("gpu.cardNone")}
         </div>
       </button>
     );
@@ -257,7 +257,7 @@ export function GpuFit({
             {selUsage.fits ? (
               <Badge tone="good">{t("gpu.fits")}</Badge>
             ) : (
-              <Badge tone="bad">{selected.unified ? t("gpu.noFitSingle") : t("gpu.needs", { n: selUsage.needed })}</Badge>
+              <Badge tone="bad">{selected.unified ? t("gpu.noFitSingle") : selUsage.needed ? t("gpu.needs", { n: selUsage.needed }) : t("gpu.needsNone")}</Badge>
             )}
           </div>
           {FEATURED_GPU_IDS.includes(selected.id) && (
@@ -427,35 +427,45 @@ export function GpuFit({
           </p>
         )}
 
-        {/* "needs N x GPUs" is only a memory ratio. Say what running one model
-            across N cards actually requires, and hand the setup to the vLLM page. */}
+        {/* Say how N cards serve the model — one tensor-parallel group, replicas of
+            one, or experts spread over all — and hand a single group to the vLLM page. */}
         {!selUsage.fits &&
           (selected.unified ? (
             <p className="mt-3 rounded-xl bg-ink-800/60 p-3 text-[11.5px] leading-relaxed text-slate-300">
               {t("gpu.unifiedSingle")}
             </p>
+          ) : !layout ? (
+            <p className="mt-3 rounded-xl bg-ink-800/60 p-3 text-[11.5px] leading-relaxed text-slate-300">
+              {t("gpu.layoutNone")}
+            </p>
           ) : (
             <div className="mt-3 rounded-xl bg-ink-800/60 p-3">
               <div className="mb-1.5 text-[11.5px] font-semibold text-white">
-                {t("gpu.tpTitle", { n: selUsage.needed })}
+                {layout.ep
+                  ? t("gpu.epTitle", { n: layout.gpus })
+                  : layout.dp > 1
+                    ? t("gpu.dpTitle", { n: layout.gpus, dp: layout.dp, tp: layout.tp })
+                    : t("gpu.tpTitle", { n: layout.gpus })}
               </div>
               <ul className="space-y-1 text-[11.5px] leading-relaxed text-slate-400">
-                <li>
-                  {tpOk !== null && tpOk === selUsage.raw
-                    ? t("gpu.tpHeadsOk", { n: tpOk, h: heads, kv: kvHeads })
-                    : tpOk !== null
-                      ? t("gpu.tpHeads", { h: heads, kv: kvHeads, ok: tpOk })
-                      : t("gpu.tpNone", { n: selUsage.raw, h: heads })}
-                </li>
+                {layout.tp > 1 && <li>{t("gpu.tpHeadsOk", { n: layout.tp, h: heads, kv: kvHeads })}</li>}
+                {layout.ep ? (
+                  <li>{t("gpu.epHow", { n: layout.gpus, dp: layout.dp, u: layout.usersPerReplica, users: concurrency, e: arch.numExperts ?? 0 })}</li>
+                ) : (
+                  layout.dp > 1 && <li>{t("gpu.dpHow", { dp: layout.dp, tp: layout.tp, u: layout.usersPerReplica, users: concurrency })}</li>
+                )}
                 {selected.category === "consumer" && <li>{t("gpu.tpNvlink")}</li>}
-                <li>{t("gpu.tpOverhead")}</li>
+                <li>{t(layout.dp > 1 ? "gpu.dpOverhead" : "gpu.tpOverhead")}</li>
               </ul>
-              <a
-                href={`${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${tpOk ?? selUsage.needed}&ctx=${contextLength}`}
-                className="mt-2 inline-block text-[11.5px] font-medium text-brand-400 hover:underline"
-              >
-                {t("gpu.tpLink")}
-              </a>
+              {/* The vLLM page sets up one tensor-parallel group; replicas are more of it. */}
+              {layout.dp === 1 && (
+                <a
+                  href={`${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${layout.tp}&ctx=${contextLength}`}
+                  className="mt-2 inline-block text-[11.5px] font-medium text-brand-400 hover:underline"
+                >
+                  {t("gpu.tpLink")}
+                </a>
+              )}
             </div>
           ))}
       </div>
