@@ -74,6 +74,10 @@ export interface ModelArch {
   /** Config keys that shape the cache in ways the sizing does not model yet
    *  (layers.ts, unmodelledCacheKeys). The figures for such a model are approximate. */
   unmodelled?: string[];
+  /** vLLM 0.31.0 will not load this model (vllmSupport.ts): the class it would
+   *  load, the last release that served it, or `linear` for Nemotron NAS blocks
+   *  its model code cannot build. The figures still show, beside a warning. */
+  notInVllm?: { arch: string; until?: string; linear?: boolean };
   /** Layers that keep a KV cache, when not all of them do: hybrids keep a fixed
    *  state in their linear-attention or Mamba layers instead (layers.ts). */
   attnLayers?: number;

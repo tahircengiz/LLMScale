@@ -68,5 +68,33 @@ console.log("--- B1: Gemma 4 ---");
     archFromConfig({ model_type: "gemma3_text", num_hidden_layers: 26, hidden_size: 1152, num_attention_heads: 4, num_key_value_heads: 1, head_dim: 256, global_head_dim: 512 }, 1e9)!.globalAttn === undefined);
 }
 
+console.log("\n--- B3: Nemotron NAS ---");
+{
+  const s49 = archFromConfig(cfg("nvidia_Llama-3_3-Nemotron-Super-49B-v1_5"), 49.87e9)!;
+  check("Super-49B v1.5: 49 attention layers of 8 KV heads, 31 with none", s49.attnLayers === 49 && s49.numKeyValueHeads === 8, `${s49.attnLayers} × ${s49.numKeyValueHeads}`);
+  const at32 = gib(kvReservedPerSeq(s49, "bf16", 32768));
+  // Before: 80 layers × 64 heads, 80 GiB at 32k.
+  check("…6.125 GiB at 32k, not 80", at32 === 6.125, at32.toFixed(3));
+  check("its MLP width is the widest block's (ffn_mult 5.25 → 28,672)", s49.intermediateSize === 28672, String(s49.intermediateSize));
+  check("nothing flagged, and vLLM loads it", !s49.unmodelled && !s49.notInVllm, JSON.stringify(s49.unmodelled));
+  const n51 = archFromConfig(cfg("nvidia_Llama-3_1-Nemotron-51B-Instruct"), 51.5e9)!;
+  // 44 blocks of 8 KV heads, 6 of 2, 3 of 1, 1 of 4: 371 heads, as 46.375 layers of 8.
+  check("51B: its blocks' heads add up to 371", n51.numKeyValueHeads === 8 && n51.attnLayers === 46.375 && kvBytesPerToken(n51, "bf16") === 371 * 2 * 128 * 2,
+    `${n51.attnLayers} layers × 8`);
+  check("51B: vLLM 0.31 cannot build its linear blocks", n51.notInVllm?.linear === true && n51.notInVllm.arch === "DeciLMForCausalLM");
+  const back = decodeState(encodeState({ ...DEFAULT_STATE, arch: n51 }));
+  check("a link keeps the layer count and the warning", back.arch?.attnLayers === 46.375 && JSON.stringify(back.arch?.notInVllm) === JSON.stringify(n51.notInVllm));
+}
+
+console.log("\n--- B15: models vLLM 0.31 does not load ---");
+{
+  const mllama = archFromConfig({ architectures: ["MllamaForConditionalGeneration"], text_config: { num_hidden_layers: 40, hidden_size: 4096, num_attention_heads: 32, num_key_value_heads: 8 } }, 10.6e9)!;
+  check("Llama 3.2 Vision: dropped after v0.10.2", mllama.notInVllm?.until === "0.10.2");
+  const back = decodeState(encodeState({ ...DEFAULT_STATE, arch: mllama }));
+  check("…and a link keeps it", back.arch?.notInVllm?.until === "0.10.2" && back.arch.notInVllm.arch === "MllamaForConditionalGeneration");
+  check("a Llama loads", !archFromConfig({ architectures: ["LlamaForCausalLM"], num_hidden_layers: 32, hidden_size: 4096, num_attention_heads: 32 }, 8e9)!.notInVllm);
+  check("a forged value is dropped", decodeState("p=1e9&L=4&h=512&a=8&k=8&nv=%3Cscript%3E").arch?.notInVllm === undefined);
+}
+
 console.log(fails ? `\n${fails} FAILED` : "\nALL PASS");
 process.exit(fails ? 1 : 0);

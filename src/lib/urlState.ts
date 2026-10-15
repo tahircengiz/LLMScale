@@ -110,6 +110,7 @@ export function encodeState(s: AppState): string {
       p.set("dx", [d.topk, d.indexDim, d.indexLayers].join("."));
     }
     if (a.unmodelled?.length) p.set("um", a.unmodelled.join(","));
+    if (a.notInVllm) p.set("nv", `${a.notInVllm.arch}${a.notInVllm.until ? `@${a.notInVllm.until}` : ""}${a.notInVllm.linear ? "!" : ""}`);
     if (a.stateBytesPerSeq) p.set("st", String(a.stateBytesPerSeq));
     if (a.stateLayers) p.set("sn", String(a.stateLayers));
     if (a.numExperts && a.expertsPerToken) {
@@ -161,6 +162,16 @@ function sparseOf(v: string | null): ModelArch["sparseAttn"] {
   const n = (v ?? "").split(".").map(Number);
   if (n.length !== 3 || !n.every((x) => Number.isInteger(x) && x > 0)) return undefined;
   return { topk: n[0], indexDim: n[1], indexLayers: n[2] };
+}
+
+/** "Class@version" or "Class!", as encodeState writes it. */
+function notInVllmOf(v: string | null): ModelArch["notInVllm"] {
+  const m = /^([A-Za-z0-9_]{1,64})(?:@([0-9.]{1,12}))?(!)?$/.exec(v ?? "");
+  if (!m || (!m[2] && !m[3])) return undefined;
+  const out: NonNullable<ModelArch["notInVllm"]> = { arch: m[1] };
+  if (m[2]) out.until = m[2];
+  if (m[3]) out.linear = true;
+  return out;
 }
 
 /** Config key names, as encodeState writes them; anything else is dropped. */
@@ -226,6 +237,7 @@ export function decodeState(search: string): Partial<AppState> {
       compressedAttn: compressedOf(p.get("cx")),
       sparseAttn: sparseOf(p.get("dx")),
       unmodelled: unmodelledOf(p.get("um")),
+      notInVllm: notInVllmOf(p.get("nv")),
       stateBytesPerSeq: pos(p.get("st")),
       stateLayers: pos(p.get("sn")),
       numExperts: pos(p.get("ne")),

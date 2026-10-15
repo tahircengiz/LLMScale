@@ -342,6 +342,14 @@ export function ModelPicker({
       {arch?.unmodelled?.length ? (
         <p className="mt-2 text-xs text-warn">{t("warning.archPartial", { keys: arch.unmodelled.join(", ") })}</p>
       ) : null}
+      {/* vLLM 0.31 will not load it: the figures stay, so nobody plans a deployment that will not start. */}
+      {arch?.notInVllm ? (
+        <p className="mt-2 text-xs text-warn">
+          {arch.notInVllm.until
+            ? t("warning.vllmRemoved", { arch: arch.notInVllm.arch, v: arch.notInVllm.until })
+            : t("warning.vllmLinear", { arch: arch.notInVllm.arch })}
+        </p>
+      ) : null}
     </div>
   );
 }

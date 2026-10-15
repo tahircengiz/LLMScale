@@ -56,6 +56,8 @@ const en: Dict = {
     "Could not read this model's config — enter the architecture manually below.",
   "warning.archFromBase": "Architecture loaded from the base model (this repo has no config of its own).",
   "warning.archPartial": "Partly modelled: its config sets {keys}, which change what some layers cache in ways LLMScale does not size yet. Treat the KV cache and the figures built on it as approximate.",
+  "warning.vllmRemoved": "vLLM 0.31 no longer loads {arch}: its last release with it was v{v}. The figures show what the model would hold; serve it with that release or another engine.",
+  "warning.vllmLinear": "vLLM 0.31 cannot build this config's linear-replacement blocks ({arch}), so it will not load the model. The figures follow the config, where those blocks keep no cache.",
 
   "quality.wd.fp32": "Full precision. Twice the memory of BF16 for no practical inference gain — almost nobody serves at FP32.",
   "quality.wd.fp16": "The reference point. Every quality note below is relative to this.",
@@ -1343,6 +1345,8 @@ const tr: Dict = {
   "warning.configFailed": "Modelin config'i okunamadı — mimariyi aşağıdan manuel gir.",
   "warning.archFromBase": "Mimari base model'den yüklendi (bu repo'nun kendi config'i yok).",
   "warning.archPartial": "Kısmen modellendi: config'i {keys} ayarlarını taşıyor; bunlar bazı katmanların neyi önbelleğe aldığını LLMScale'in henüz hesaplamadığı biçimde değiştirir. KV cache'i ve ona dayanan rakamları yaklaşık say.",
+  "warning.vllmRemoved": "vLLM 0.31 artık {arch} yüklemiyor: onu destekleyen son sürüm v{v}. Rakamlar modelin ne tutacağını gösterir; o sürümle ya da başka bir motorla servis et.",
+  "warning.vllmLinear": "vLLM 0.31 bu config'in doğrusal katmanla değiştirilmiş bloklarını ({arch}) kuramaz, bu yüzden modeli yüklemez. Rakamlar config'i izler; o bloklar cache tutmaz.",
 
   "quality.wd.fp32": "Tam hassasiyet. BF16'nın iki katı bellek, çıkarımda pratik bir kazanç yok — FP32 ile servis eden neredeyse yok.",
   "quality.wd.fp16": "Referans nokta. Aşağıdaki kalite notları buna göre.",

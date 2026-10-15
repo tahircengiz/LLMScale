@@ -6,7 +6,8 @@
 import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
-import { compressedLayers, layerPlan, sparseIndexer, unmodelledCacheKeys } from "./layers.ts";
+import { vllmRefuses } from "./vllmSupport.ts";
+import { compressedLayers, layerPlan, nasAttention, sparseIndexer, unmodelledCacheKeys } from "./layers.ts";
 
 const HF = "https://huggingface.co";
 
@@ -176,6 +177,18 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
  *  when the config does not say. */
 const TIED_BY_DEFAULT = new Set(["gemma", "gemma2", "gemma3", "gemma3_text", "gpt2", "falcon"]);
 
+/** The feed-forward width. Gemma 3n lists one per layer, which made the overhead
+ *  NaN; the widest sets the activation peak (overhead.ts). */
+function ffnWidth(c: any): number | undefined {
+  const w = c.intermediate_size ?? c.ffn_dim ?? c.n_inner;
+  if (typeof w === "number" && w > 0) return w;
+  if (Array.isArray(w)) {
+    const max = Math.max(...w.filter((x: unknown): x is number => typeof x === "number"));
+    return max > 0 ? max : undefined;
+  }
+  return undefined;
+}
+
 /** Pull various config key spellings into our normalized arch shape. Exported for
  *  scripts/test-moe.ts. */
 export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
@@ -188,15 +201,16 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   // Every spelling vLLM reads (model_arch_config_convertor.py): Falcon's n_head_kv
   // and multi_query, ChatGLM's multi_query_group_num, Step's num_attention_groups.
   // Falling back to every head made Falcon-7B's cache 71x and GLM-4-9B's 16x too large.
+  const nas = nasAttention(c, numLayers);
   const numKeyValueHeads =
     c.num_key_value_heads ?? c.num_kv_heads ?? c.n_head_kv ??
     (c.multi_query_attention !== false ? c.multi_query_group_num : undefined) ??
-    c.num_attention_groups ?? (c.multi_query === true ? 1 : undefined) ?? numAttentionHeads;
+    c.num_attention_groups ?? (c.multi_query === true ? 1 : undefined) ?? nas?.kvHeads ?? numAttentionHeads;
   const arch: ModelArch = {
     numParams,
     numLayers,
     hiddenSize,
-    intermediateSize: c.intermediate_size ?? c.ffn_dim ?? c.n_inner ?? undefined,
+    intermediateSize: ffnWidth(c) ?? nas?.ffn,
     numAttentionHeads,
     numKeyValueHeads,
     headDim: c.head_dim,
@@ -228,6 +242,8 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   // What the sizing does not follow yet, said beside the figures.
   const unmodelled = unmodelledCacheKeys(c);
   if (unmodelled.length) arch.unmodelled = unmodelled;
+  const refused = vllmRefuses(cfg);
+  if (refused) arch.notInVllm = refused;
   // Sliding windows and hybrid layers cache less than every layer at full context.
   const plan = compressed ? undefined : layerPlan(c);
   if (plan) {

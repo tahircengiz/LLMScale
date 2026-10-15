@@ -58,6 +58,48 @@ export function hybridLayers(
   return undefined;
 }
 
+/** Nemotron NAS (DeciLM: Llama-3.3-Nemotron-Super-49B, Llama-3.1-Nemotron-Ultra-253B,
+ *  Llama-3.1-Nemotron-51B) gives every layer its own block. A block whose attention is
+ *  `no_op` has none, and the rest keep num_attention_heads / n_heads_in_group KV heads
+ *  (DeciLMDecoderLayer in vllm/model_executor/models/nemotron_nas.py); the config's
+ *  num_key_value_heads is null. vLLM reports the first attention block's heads as the
+ *  model's (NemotronNasModelArchConfigConvertor), and as all its layers are full
+ *  attention it keeps them in one group whose page is the sum of theirs. Where the
+ *  blocks differ in heads (the 51B), `attention` counts layers of `kvHeads` heads that
+ *  hold as much, so it may not be whole. `linear` blocks (`replace_with_linear`) keep
+ *  no cache; vLLM 0.31 cannot build them. Read as 80 layers of 64 heads, Super-49B's
+ *  cache came out 13x too large. */
+export function nasAttention(c: Json, L: number): { attention: number; kvHeads: number; linear: number; ffn?: number } | undefined {
+  if (!Array.isArray(c?.block_configs) || typeof c.num_attention_heads !== "number") return undefined;
+  const blocks: Json[] = L > 0 ? c.block_configs.slice(0, L) : c.block_configs;
+  let first = 0;
+  let heads = 0;
+  let linear = 0;
+  let ffn = 0;
+  for (const b of blocks) {
+    // vLLM sizes a block's MLP from ffn_mult: 2/3 of it times the width, rounded up to 256.
+    const f = b?.ffn;
+    if (f && !f.no_op) {
+      const width = typeof f.ffn_mult === "number" ? Math.ceil(Math.floor((2 * f.ffn_mult * c.hidden_size) / 3) / 256) * 256 : f.intermediate_size;
+      if (typeof width === "number" && width > ffn) ffn = width;
+    }
+    const a = b?.attention;
+    if (!a || a.no_op) continue;
+    if (a.replace_with_linear) {
+      linear++;
+      continue;
+    }
+    if (typeof a.n_heads_in_group !== "number" || a.n_heads_in_group <= 0) return undefined;
+    const kv = Math.floor(c.num_attention_heads / a.n_heads_in_group);
+    if (!first) first = kv;
+    heads += kv;
+  }
+  if (!first) return undefined;
+  const out: { attention: number; kvHeads: number; linear: number; ffn?: number } = { attention: heads / first, kvHeads: first, linear };
+  if (ffn > 0) out.ffn = ffn;
+  return out;
+}
+
 /** Layers at the end of the stack that read an earlier layer's cache instead of
  *  keeping their own: Gemma 3n's and Gemma 4's `num_kv_shared_layers`. vLLM gives
  *  each a kv_sharing_target_layer_name, the last earlier layer of its kind, and no
@@ -192,8 +234,9 @@ export function unmodelledCacheKeys(c: Json): string[] {
   if (!c || typeof c !== "object") return [];
   const found: string[] = [];
   const num = (k: string) => typeof c[k] === "number";
-  if (Array.isArray(c.block_configs)) found.push("block_configs");
-  if (c.num_key_value_heads === null) found.push("num_key_value_heads: null");
+  const nas = nasAttention(c, c.num_hidden_layers ?? 0);
+  if (Array.isArray(c.block_configs) && !nas) found.push("block_configs");
+  if (c.num_key_value_heads === null && !nas) found.push("num_key_value_heads: null");
   if (c.linear_attn_config && typeof c.linear_attn_config === "object") found.push("linear_attn_config");
   if (c.hybrid_layer_pattern !== undefined) found.push("hybrid_layer_pattern");
   if (Array.isArray(c.attn_type_list)) found.push("attn_type_list");
@@ -228,14 +271,15 @@ export function layerPlan(c: Json): LayerPlan | undefined {
   const L = c?.num_hidden_layers ?? 0;
   if (!L) return undefined;
   const hybrid = hybridLayers(c, L);
+  const nas = hybrid ? undefined : nasAttention(c, L);
   const shared = hybrid ? 0 : kvSharedLayers(c, L);
   const window = activeWindow(c, L - shared);
   // A window the config does not assign to layers is left out: counting the whole
   // context for every layer overstates the cache, counting none would understate it.
   const sliding = window && window.sliding > 0 ? window.sliding : 0;
-  const attention = hybrid ? hybrid.attention : L - shared;
+  const attention = hybrid ? hybrid.attention : nas ? nas.attention : L - shared;
   const global = attention > sliding ? globalAttnShape(c) : undefined;
-  if (!hybrid && !sliding && !shared && !global) return undefined;
+  if (!hybrid && !sliding && !shared && !global && !(nas && nas.attention !== L)) return undefined;
   const plan: LayerPlan = {
     attention,
     sliding: Math.min(sliding, attention),
