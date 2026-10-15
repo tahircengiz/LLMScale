@@ -1,0 +1,44 @@
+{
+"id": "cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit",
+"gated": false,
+"safetensors": {
+"parameters": {
+"I64": 37248,
+"I32": 29896998912,
+"BF16": 1569404928
+},
+"total": 5306567040
+},
+"config": {
+"model_type": "qwen3_moe"
+},
+"tags": [
+"base_model:Qwen/Qwen3-Coder-30B-A3B-Instruct",
+"base_model:quantized:Qwen/Qwen3-Coder-30B-A3B-Instruct"
+],
+"cardData": {
+"base_model": "Qwen/Qwen3-Coder-30B-A3B-Instruct"
+},
+"siblings": [
+{
+"rfilename": "config.json",
+"size": 3514
+},
+{
+"rfilename": "model-00001-of-00004.safetensors",
+"size": 5001707008
+},
+{
+"rfilename": "model-00002-of-00004.safetensors",
+"size": 5001283696
+},
+{
+"rfilename": "model-00003-of-00004.safetensors",
+"size": 5001283912
+},
+{
+"rfilename": "model-00004-of-00004.safetensors",
+"size": 3090232736
+}
+]
+}

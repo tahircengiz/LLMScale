@@ -5,7 +5,7 @@
 
 import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
-import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
+import { activeParamsOf, expertCount, expertsPerToken, expertWidth, lookupParams, specParamsOf } from "./moe.ts";
 import { vllmRefuses } from "./vllmSupport.ts";
 import { compressedLayers, crossAttention, layerPlan, mimoAttention, nasAttention, sparseIndexer, unmodelledCacheKeys } from "./layers.ts";
 
@@ -233,13 +233,10 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   // mllama's cross-attention layers keep one image's keys and values.
   const cross = crossAttention(cfg, numLayers);
   if (cross) arch.crossAttn = cross;
-  // Decode speed reads the ACTIVE parameters (perf.ts). Nothing set them for a
-  // model resolved from its config, so every live MoE was estimated as if dense.
-  arch.activeParams = activeParamsOf(arch, c);
   const experts = expertCount(c);
   const perTok = expertsPerToken(c);
   if (experts && experts > 1 && perTok) [arch.numExperts, arch.expertsPerToken] = [experts, perTok];
-  const moeWidth = c.moe_intermediate_size ?? c.expert_intermediate_size;
+  const moeWidth = expertWidth(c);
   if (arch.numExperts && typeof moeWidth === "number") arch.moeIntermediateSize = moeWidth;
   // An absent flag takes the family's default in Transformers: tied for Gemma, GPT-2
   // and Falcon, untied for the rest (Llama, Qwen, Mistral…). Reading every absent
@@ -251,6 +248,9 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   // DeepSeek Sparse Attention keeps an indexer key per token beside MLA's latent (calc.ts).
   const sparse = sparseIndexer(c);
   if (sparse) arch.sparseAttn = sparse;
+  // Decode speed reads the ACTIVE parameters (perf.ts), and the weights leave the
+  // speculative-decoding layers out (calc.ts).
+  countParams(arch, c);
   // What the sizing does not follow yet, said beside the figures.
   const unmodelled = unmodelledCacheKeys(c);
   if (unmodelled.length) arch.unmodelled = unmodelled;
@@ -265,6 +265,21 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     if (plan.globalAttn) arch.globalAttn = plan.globalAttn;
   }
   return arch;
+}
+
+/** The parameter counts read from a config beyond the total: the ACTIVE ones a
+ *  token passes through, those in layers only speculative decoding runs, and those
+ *  in lookup tables (moe.ts). Called again once a packed checkpoint's total is
+ *  known: from the 5.3B elements a Qwen3-Coder AWQ repo reports, its active count
+ *  came out 1.76B where 3.3B is right. */
+export function countParams(arch: ModelArch, c: any): void {
+  const set = (k: "activeParams" | "specParams" | "lookupParams", v: number | undefined) => {
+    if (v && v > 0) arch[k] = v;
+    else delete arch[k];
+  };
+  set("activeParams", activeParamsOf(arch, c));
+  set("specParams", specParamsOf(arch, c));
+  set("lookupParams", lookupParams(c?.text_config ?? c?.llm_config ?? c));
 }
 
 /** JSON as Python writes it: NVIDIA's Nemotron-H configs carry a bare `Infinity`
@@ -317,16 +332,20 @@ function dtypeFromQuantConfig(q: any): Dtype | null {
   if (m.includes("bitsandbytes") || m === "bnb") return q.load_in_8bit ? "int8" : "int4";
   // 4-bit float families (MXFP4 in gpt-oss, NVFP4 in TensorRT/RedHat repos).
   if (m.includes("fp4")) return "int4";
-  // compressed-tensors: inspect the first group's weight quant
+  // compressed-tensors, and ModelOpt's MIXED_PRECISION: every group. The narrowest
+  // format holds the bulk — nvidia's Qwen3.6-35B-A3B-NVFP4 keeps attention in FP8
+  // (group_0) and its experts in NVFP4, and read by its first group it came out FP8.
   const groups = q.config_groups;
-  if (groups) {
-    const g: any = groups.group_0 ?? Object.values(groups)[0];
-    const w = g?.weights;
-    if (w?.num_bits) {
-      if (String(w.type ?? "").toLowerCase() === "float" && w.num_bits === 8) return "fp8";
-      if (w.num_bits === 8) return "int8";
-      if (w.num_bits <= 4) return "int4";
+  if (groups && typeof groups === "object") {
+    let pick: Dtype | null = null;
+    let fewest = Infinity;
+    for (const g of Object.values(groups) as any[]) {
+      const w = g?.weights;
+      if (typeof w?.num_bits !== "number" || w.num_bits >= fewest) continue;
+      const d: Dtype | null = w.num_bits <= 4 ? "int4" : w.num_bits === 8 ? (String(w.type ?? "").toLowerCase() === "float" ? "fp8" : "int8") : null;
+      if (d) [pick, fewest] = [d, w.num_bits];
     }
+    if (pick) return pick;
   }
   if (m.includes("fp8")) return "fp8";
   if (bits === 8) return "int8";
@@ -404,10 +423,30 @@ async function sizeShipped(arch: ModelArch, info: HfModelInfo | null, dtype: Dty
   const bytes = info?.weightFileBytes;
   if (!bytes || (dtype !== "int4" && dtype !== "int8" && dtype !== "fp8")) return;
   arch.shipped = { dtype, bytes };
-  if (dtype === "int4" && arch.numParams > 0 && bytes / arch.numParams > 0.8 && info?.baseModel) {
-    const base = await fetchModelInfo(info.baseModel).catch(() => null);
+  if (dtype === "int4" && arch.numParams > 0 && bytes / arch.numParams > 0.8) {
+    const base = info?.baseModel ? await fetchModelInfo(info.baseModel).catch(() => null) : null;
     if (base?.numParams && base.numParams > arch.numParams) arch.numParams = base.numParams;
+    else {
+      // No base model to ask (RedHatAI's Llama-3.3-70B NVFP4 names one that does not
+      // exist): unpack the stored elements instead.
+      const unpacked = unpackedParams(info?.dtypeParams);
+      if (unpacked && unpacked > arch.numParams) arch.numParams = unpacked;
+    }
   }
+}
+
+/** Parameters an FP4 checkpoint holds, from the elements it stores: two FP4 values
+ *  to a byte (U8), plus the 16- and 32-bit tensors kept whole. Its block scales are
+ *  F8 beside them and are left out: RedHatAI's Llama-3.3-70B NVFP4 stores 34.2B U8,
+ *  2.1B BF16 and 4.3B F8 scales, 70.55B parameters. The Hub's count of 4-bit
+ *  integers packed in I32 does not add up the same way across repos, so it is not
+ *  unpacked. undefined when there is no U8. */
+export function unpackedParams(dtypeParams: Record<string, number> | undefined): number | undefined {
+  const u8 = dtypeParams?.U8;
+  if (!u8 || u8 <= 0) return undefined;
+  let n = u8 * 2;
+  for (const [k, v] of Object.entries(dtypeParams!)) if (/^(BF16|F16|F32)$/.test(k) && typeof v === "number") n += v;
+  return n;
 }
 
 /**
@@ -435,9 +474,12 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
   if (cfg) {
     const arch = archFromConfig(cfg, numParams || known?.numParams || 0);
     if (arch && arch.numParams > 0) {
+      const counted = arch.numParams;
+      await sizeShipped(arch, info, weightDtype);
+      // A packed checkpoint's total was corrected: count the rest from it.
+      if (arch.numParams !== counted) countParams(arch, cfg?.text_config ?? cfg?.llm_config ?? cfg);
       // A preset's active count comes from its model card; prefer it to the estimate.
       if (known?.activeParams) arch.activeParams = known.activeParams;
-      await sizeShipped(arch, info, weightDtype);
       const modelType = cfg.text_config?.model_type ?? cfg.model_type ?? info?.modelType;
       return {
         hfId,

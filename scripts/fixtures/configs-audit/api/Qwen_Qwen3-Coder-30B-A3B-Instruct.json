@@ -1,0 +1,87 @@
+{
+"id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+"gated": false,
+"safetensors": {
+"parameters": {
+"BF16": 30532122624
+},
+"total": 30532122624
+},
+"config": {
+"model_type": "qwen3_moe"
+},
+"tags": [],
+"cardData": {
+"base_model": null
+},
+"siblings": [
+{
+"rfilename": "config.json",
+"size": 963
+},
+{
+"rfilename": "model-00001-of-00016.safetensors",
+"size": 3998893112
+},
+{
+"rfilename": "model-00002-of-00016.safetensors",
+"size": 3999974192
+},
+{
+"rfilename": "model-00003-of-00016.safetensors",
+"size": 3997360832
+},
+{
+"rfilename": "model-00004-of-00016.safetensors",
+"size": 3999975056
+},
+{
+"rfilename": "model-00005-of-00016.safetensors",
+"size": 3999975400
+},
+{
+"rfilename": "model-00006-of-00016.safetensors",
+"size": 3999975400
+},
+{
+"rfilename": "model-00007-of-00016.safetensors",
+"size": 3999975472
+},
+{
+"rfilename": "model-00008-of-00016.safetensors",
+"size": 3997362064
+},
+{
+"rfilename": "model-00009-of-00016.safetensors",
+"size": 3999975408
+},
+{
+"rfilename": "model-00010-of-00016.safetensors",
+"size": 3999975400
+},
+{
+"rfilename": "model-00011-of-00016.safetensors",
+"size": 3999975408
+},
+{
+"rfilename": "model-00012-of-00016.safetensors",
+"size": 3987924896
+},
+{
+"rfilename": "model-00013-of-00016.safetensors",
+"size": 3999975088
+},
+{
+"rfilename": "model-00014-of-00016.safetensors",
+"size": 3999975400
+},
+{
+"rfilename": "model-00015-of-00016.safetensors",
+"size": 3999975400
+},
+{
+"rfilename": "model-00016-of-00016.safetensors",
+"size": 1085307128
+}
+]
+}

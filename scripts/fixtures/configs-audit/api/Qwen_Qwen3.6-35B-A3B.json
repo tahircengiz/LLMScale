@@ -1,0 +1,127 @@
+{
+"id": "Qwen/Qwen3.6-35B-A3B",
+"gated": false,
+"safetensors": {
+"parameters": {
+"BF16": 35951822704
+},
+"total": 35951822704
+},
+"config": {
+"model_type": "qwen3_5_moe"
+},
+"tags": [],
+"cardData": {
+"base_model": null
+},
+"siblings": [
+{
+"rfilename": "config.json",
+"size": 3686
+},
+{
+"rfilename": "model-00001-of-00026.safetensors",
+"size": 3996199712
+},
+{
+"rfilename": "model-00002-of-00026.safetensors",
+"size": 1284907696
+},
+{
+"rfilename": "model-00003-of-00026.safetensors",
+"size": 3357898360
+},
+{
+"rfilename": "model-00004-of-00026.safetensors",
+"size": 3370808712
+},
+{
+"rfilename": "model-00005-of-00026.safetensors",
+"size": 3357898360
+},
+{
+"rfilename": "model-00006-of-00026.safetensors",
+"size": 3959424904
+},
+{
+"rfilename": "model-00007-of-00026.safetensors",
+"size": 1096788232
+},
+{
+"rfilename": "model-00008-of-00026.safetensors",
+"size": 3946842008
+},
+{
+"rfilename": "model-00009-of-00026.safetensors",
+"size": 1096460848
+},
+{
+"rfilename": "model-00010-of-00026.safetensors",
+"size": 3946841992
+},
+{
+"rfilename": "model-00011-of-00026.safetensors",
+"size": 1096460752
+},
+{
+"rfilename": "model-00012-of-00026.safetensors",
+"size": 3409971080
+},
+{
+"rfilename": "model-00013-of-00026.safetensors",
+"size": 1633331664
+},
+{
+"rfilename": "model-00014-of-00026.safetensors",
+"size": 3422553872
+},
+{
+"rfilename": "model-00015-of-00026.safetensors",
+"size": 1633659224
+},
+{
+"rfilename": "model-00016-of-00026.safetensors",
+"size": 3946842136
+},
+{
+"rfilename": "model-00017-of-00026.safetensors",
+"size": 1096460608
+},
+{
+"rfilename": "model-00018-of-00026.safetensors",
+"size": 3946841992
+},
+{
+"rfilename": "model-00019-of-00026.safetensors",
+"size": 1096460808
+},
+{
+"rfilename": "model-00020-of-00026.safetensors",
+"size": 3409971072
+},
+{
+"rfilename": "model-00021-of-00026.safetensors",
+"size": 1633331744
+},
+{
+"rfilename": "model-00022-of-00026.safetensors",
+"size": 3370808752
+},
+{
+"rfilename": "model-00023-of-00026.safetensors",
+"size": 3357898392
+},
+{
+"rfilename": "model-00024-of-00026.safetensors",
+"size": 3370808752
+},
+{
+"rfilename": "model-00025-of-00026.safetensors",
+"size": 3832888256
+},
+{
+"rfilename": "model-00026-of-00026.safetensors",
+"size": 2231416848
+}
+]
+}

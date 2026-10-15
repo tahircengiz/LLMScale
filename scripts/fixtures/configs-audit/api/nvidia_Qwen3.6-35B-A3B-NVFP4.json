@@ -1,0 +1,46 @@
+{
+"id": "nvidia/Qwen3.6-35B-A3B-NVFP4",
+"gated": false,
+"safetensors": {
+"parameters": {
+"BF16": 1825916784,
+"F8_E4M3": 1279262720,
+"U8": 16423321600
+},
+"total": 18683860336
+},
+"config": {
+"model_type": "qwen3_5_moe"
+},
+"tags": [
+"base_model:Qwen/Qwen3.6-35B-A3B",
+"base_model:quantized:Qwen/Qwen3.6-35B-A3B"
+],
+"cardData": {
+"base_model": [
+"Qwen/Qwen3.6-35B-A3B"
+]
+},
+"siblings": [
+{
+"rfilename": "config.json",
+"size": 58110
+},
+{
+"rfilename": "hf_quant_config.json",
+"size": 35085
+},
+{
+"rfilename": "model-00001-of-00003.safetensors",
+"size": 10006877608
+},
+{
+"rfilename": "model-00002-of-00003.safetensors",
+"size": 10003595752
+},
+{
+"rfilename": "model-00003-of-00003.safetensors",
+"size": 3413864960
+}
+]
+}

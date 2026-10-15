@@ -49,8 +49,16 @@ export interface ModelArch {
    *  needs it to size adapters on the MLP projections; ratios to hiddenSize run
    *  from ~2.7x to ~5.3x across families, so guessing it is not good enough. */
   intermediateSize?: number;
-  /** Mixture-of-Experts active params (informational only; VRAM uses total). */
+  /** Parameters a token passes through: a MoE's routed few, and for any model
+   *  the total less what follows (perf.ts reads it; VRAM uses the total). */
   activeParams?: number;
+  /** Parameters in layers only speculative decoding runs (DeepSeek's MTP, V4's
+   *  DSpark draft, Qwen3.5's MTP): part of numParams, but vLLM does not load them
+   *  unless a speculative config asks, so the weights leave them out (moe.ts). */
+  specParams?: number;
+  /** Parameters in lookup tables a token reads a few rows of (Qwen4Exp's n-gram
+   *  embeddings, Gemma's per-layer embeddings): held, not read per step. */
+  lookupParams?: number;
   /**
    * Multi-head latent attention (DeepSeek V2/V3 and friends). When both are
    * present the KV cache is NOT the usual per-head tensor pair: MLA caches one
@@ -186,19 +194,23 @@ export function resolveHeadDim(arch: ModelArch): number {
  *  both about 4.25 bits. 8-bit formats carry per-channel or per-block scales. */
 export const QUANT_BITS: Partial<Record<Dtype, number>> = { int4: 4.25, int8: 8, fp8: 8 };
 
-/** Weight memory at a precision. A checkpoint that ships at that precision is
+/** Weight memory at a precision, without the layers only speculative decoding
+ *  runs. A checkpoint that ships at that precision is
  *  sized by its files. Otherwise a quantized precision covers the transformer
  *  layers only: the embedding and the output head stay 16-bit, as AWQ, GPTQ,
  *  FP8-dynamic and NVFP4 checkpoints keep them. Checked against real checkpoints
  *  in scripts/test-calc.ts — Qwen3-8B-FP8-dynamic is 8.79 GiB on disk and here. */
 export function weightsBytes(arch: ModelArch, dtype: Dtype): number {
-  if (arch.shipped && arch.shipped.dtype === dtype) return arch.shipped.bytes;
+  // vLLM leaves the speculative-decoding layers out unless asked for them (C6).
+  const spec = arch.specParams && arch.specParams < arch.numParams ? arch.specParams : 0;
+  const params = arch.numParams - spec;
+  if (arch.shipped && arch.shipped.dtype === dtype) return arch.shipped.bytes * (params / arch.numParams);
   const bits = QUANT_BITS[dtype];
   if (bits && arch.vocabSize && arch.hiddenSize) {
     const embed = arch.vocabSize * arch.hiddenSize * (arch.tieEmbeddings ? 1 : 2);
-    if (embed < arch.numParams) return ((arch.numParams - embed) * bits) / 8 + embed * 2;
+    if (embed < params) return ((params - embed) * bits) / 8 + embed * 2;
   }
-  return arch.numParams * DTYPE_BYTES[dtype];
+  return params * DTYPE_BYTES[dtype];
 }
 
 /** KV cache bytes ONE layer keeps for ONE token. For DeepSeek Sparse Attention,

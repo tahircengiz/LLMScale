@@ -54,8 +54,10 @@ export interface DecodeEstimate {
  * the active count for a whole batch overstated its throughput about threefold.
  */
 export function paramsReadPerStep(arch: ModelArch, n: number): number {
-  const total = arch.numParams;
-  const active = arch.activeParams ?? total;
+  // What a step can read at all: not the speculative-decoding layers vLLM leaves
+  // unloaded, nor lookup tables a token reads a few rows of (moe.ts).
+  const total = arch.numParams - (arch.specParams ?? 0) - (arch.lookupParams ?? 0);
+  const active = Math.min(arch.activeParams ?? total, total);
   const E = arch.numExperts;
   const k = arch.expertsPerToken;
   if (!E || !k || k >= E || active >= total || n <= 1) return active;
@@ -78,7 +80,8 @@ export function estimateDecode(i: DecodeInput): DecodeEstimate | null {
   // through only a few, so the read per step follows the experts the batch
   // touches, not the total — the active count for one sequence, nearly all of
   // them for a large batch.
-  const readShare = i.arch.numParams > 0 ? paramsReadPerStep(i.arch, i.concurrency) / i.arch.numParams : 1;
+  const loaded = i.arch.numParams - (i.arch.specParams ?? 0);
+  const readShare = loaded > 0 ? paramsReadPerStep(i.arch, i.concurrency) / loaded : 1;
   const weightBytes = weightsBytes(i.arch, i.weightDtype) * readShare;
 
   // Attention reads the cache for every sequence in the batch on every step: all of

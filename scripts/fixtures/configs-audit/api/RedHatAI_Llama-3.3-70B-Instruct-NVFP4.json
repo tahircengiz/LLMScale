@@ -1,0 +1,62 @@
+{
+"id": "RedHatAI/Llama-3.3-70B-Instruct-NVFP4",
+"gated": false,
+"safetensors": {
+"parameters": {
+"F32": 1120,
+"BF16": 2102665216,
+"F8_E4M3": 4278190080,
+"U8": 34225520640
+},
+"total": 40606377056
+},
+"config": {
+"model_type": "llama"
+},
+"tags": [],
+"cardData": {
+"base_model": "meta-llama/Meta-Llama-3.3-70B-Instruct"
+},
+"siblings": [
+{
+"rfilename": "config.json",
+"size": 1954
+},
+{
+"rfilename": "model-00001-of-00009.safetensors",
+"size": 4989342120
+},
+{
+"rfilename": "model-00002-of-00009.safetensors",
+"size": 4898262560
+},
+{
+"rfilename": "model-00003-of-00009.safetensors",
+"size": 4945447192
+},
+{
+"rfilename": "model-00004-of-00009.safetensors",
+"size": 4945447184
+},
+{
+"rfilename": "model-00005-of-00009.safetensors",
+"size": 4992667504
+},
+{
+"rfilename": "model-00006-of-00009.safetensors",
+"size": 4983196400
+},
+{
+"rfilename": "model-00007-of-00009.safetensors",
+"size": 4945447184
+},
+{
+"rfilename": "model-00008-of-00009.safetensors",
+"size": 4992667504
+},
+{
+"rfilename": "model-00009-of-00009.safetensors",
+"size": 3016840824
+}
+]
+}

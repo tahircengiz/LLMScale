@@ -4,8 +4,8 @@
 // rules (docs/audit-2026-10-15/kv-vllm-tablolari.md) and the configs as published.
 // Run: node scripts/test-audit2.ts
 import { readFileSync } from "node:fs";
-import { BYTES_PER_GIB, calculate, kvBytesPerToken, kvReservedPerSeq, type ModelArch } from "../src/lib/calc.ts";
-import { archFromConfig, parseConfigJson } from "../src/lib/hf.ts";
+import { BYTES_PER_GIB, calculate, kvBytesPerToken, kvReservedPerSeq, weightsBytes, type ModelArch } from "../src/lib/calc.ts";
+import { archFromConfig, parseConfigJson, resolveModel, unpackedParams } from "../src/lib/hf.ts";
 import { ssmStateBytes, unmodelledCacheKeys } from "../src/lib/layers.ts";
 import { overheadPerGpu } from "../src/lib/overhead.ts";
 import { decodeState, DEFAULT_STATE, encodeState } from "../src/lib/urlState.ts";
@@ -17,6 +17,8 @@ function check(name: string, cond: boolean, detail = "") {
 }
 const cfg = (n: string) => parseConfigJson(readFileSync(new URL(`./fixtures/configs-audit/${n}.json`, import.meta.url), "utf8"));
 const gib = (b: number) => b / BYTES_PER_GIB;
+const b2 = (n: number | undefined) => `${((n ?? 0) / 1e9).toFixed(2)}B`;
+const near = (a: number | undefined, lo: number, hi: number) => !!a && a >= lo && a <= hi;
 /** vLLM's reservation for one request, in GiB, against the audit's figure to its 3 decimals. */
 function reserved(name: string, arch: ModelArch, rows: [ctx: number, batch: number, vllm: number][]) {
   for (const [ctx, batch, vllm] of rows) {
@@ -180,6 +182,92 @@ console.log("\n--- B5: hybrid and local layouts ---");
     check(`${name}: a link keeps the reservation`, kvReservedPerSeq(back, "bf16", 32768) === kvReservedPerSeq(a, "bf16", 32768),
       `${kvReservedPerSeq(back, "bf16", 32768)} vs ${kvReservedPerSeq(a, "bf16", 32768)}`);
   }
+}
+
+console.log("\n--- D3: active parameters ---");
+{
+  const active = (name: string, params: number) => archFromConfig(cfg(name), params)!;
+  const b = b2;
+  // Before: no top-k key read, so Hunyuan counted all 80.4B and ERNIE read as dense.
+  const hy = active("tencent_Hunyuan-A13B-Instruct", 80.39e9);
+  check("Hunyuan-A13B: moe_topk 8 of 64, about 13B active", hy.expertsPerToken === 8 && near(hy.activeParams, 12.5e9, 13.5e9), b(hy.activeParams));
+  check("…its unrouted experts' three 4,096 × 3,072 projections in 32 layers", hy.activeParams === 80.39e9 - 56 * 3 * 4096 * 3072 * 32);
+  const e21 = active("baidu_ERNIE-4.5-21B-A3B-PT", 21.95e9);
+  check("ERNIE 4.5 21B-A3B: moe_k 6 of 64 in layers 1–27, about 3B active", e21.expertsPerToken === 6 && near(e21.activeParams, 2.6e9, 3.4e9), b(e21.activeParams));
+  const e300 = active("baidu_ERNIE-4.5-300B-A47B-PT", 300.47e9);
+  // ERNIE's MTP layer is a dense Llama layer (vllm ernie_mtp.py), not one with experts.
+  check("ERNIE 4.5 300B-A47B: about 47B active", near(e300.activeParams, 46e9, 49e9), b(e300.activeParams));
+  // The speculative layers are left out whole: V4-Flash-0731's three DSpark layers
+  // made it 27.4B active, where its card says about 13B.
+  const v4 = archFromConfig(parseConfigJson(readFileSync(new URL("./fixtures/configs/deepseek-ai_DeepSeek-V4-Flash-0731.json", import.meta.url), "utf8")), 304.18e9)!;
+  check("DeepSeek-V4-Flash-0731: about 13–14B active, not 27.4", near(v4.activeParams, 12.5e9, 14.5e9), b(v4.activeParams));
+  check("…its three draft layers, about 20B, out of the weights", near(v4.specParams, 19e9, 21e9), b(v4.specParams));
+  const v4a = active("deepseek-ai_DeepSeek-V4-Flash", 290.94e9);
+  check("the first V4-Flash, one MTP layer: the same active count", Math.abs(v4a.activeParams! - v4.activeParams!) < 0.3e9, `${b(v4a.activeParams)} vs ${b(v4.activeParams)}`);
+  // Qwen3.8-Flash-Next: a 51.2B n-gram table a token reads 16 rows of.
+  const q38 = active("Qwen_Qwen3.8-Flash-Next", 180e9);
+  check("Qwen3.8-Flash-Next: the n-gram table is held, not read", q38.lookupParams === 20e6 * 2560, b(q38.lookupParams));
+  check("…about 8B active with the embeddings, not 61.6", near(q38.activeParams, 7e9, 9e9), b(q38.activeParams));
+  const kimi = active("moonshotai_Kimi-Linear-48B-A3B-Instruct", 49.12e9);
+  check("Kimi-Linear: num_experts_per_token 8 of 256, about 3.5B active", kimi.expertsPerToken === 8 && near(kimi.activeParams, 3.3e9, 3.7e9), b(kimi.activeParams));
+  const jamba = active("ai21labs_Jamba-v0.1", 51.6e9);
+  check("Jamba v0.1: experts in every other layer, about 12B active", near(jamba.activeParams, 11.5e9, 12.5e9), b(jamba.activeParams));
+  const e2b = active("google_gemma-4-E2B-it", 5.1e9);
+  check("Gemma 4 E2B: its 2.35B per-layer embeddings are held, not read", e2b.lookupParams === 256 * 35 * 262144 && e2b.activeParams === 5.1e9 - 256 * 35 * 262144);
+  const back = decodeState(encodeState({ ...DEFAULT_STATE, arch: v4 }))!.arch!;
+  check("a link keeps the speculative and lookup counts", back.specParams === Math.round(v4.specParams!) &&
+    decodeState(encodeState({ ...DEFAULT_STATE, arch: q38 })).arch?.lookupParams === q38.lookupParams);
+}
+
+console.log("\n--- C6: speculative layers out of the weights ---");
+{
+  const v3 = archFromConfig(parseConfigJson(readFileSync(new URL("./fixtures/configs/deepseek-ai_DeepSeek-V3.json", import.meta.url), "utf8")), 684.53e9)!;
+  // One MTP layer of 62: (684.53B − 1.85B of embeddings) / 62.
+  check("DeepSeek-V3: its MTP layer, about 11B, is not loaded", near(v3.specParams, 10.8e9, 11.2e9), `${((v3.specParams ?? 0) / 1e9).toFixed(2)}B`);
+  check("…so FP8 weights are 11 GB lighter", Math.abs(weightsBytes({ ...v3, specParams: undefined }, "fp8") - weightsBytes(v3, "fp8") - v3.specParams!) < 1e6);
+  const shipped = { ...v3, shipped: { dtype: "fp8" as const, bytes: 641.3 * BYTES_PER_GIB } };
+  check("…and a shipped checkpoint's files by the same share", Math.abs(gib(weightsBytes(shipped, "fp8")) - 641.3 * (1 - v3.specParams! / 684.53e9)) < 1e-6,
+    `${gib(weightsBytes(shipped, "fp8")).toFixed(1)} GiB of 641.3`);
+  check("a model with no speculative layers is unchanged", archFromConfig({ num_hidden_layers: 32, hidden_size: 4096, num_attention_heads: 32 }, 8e9)!.specParams === undefined);
+}
+
+console.log("\n--- B7: mixed-precision and packed checkpoints ---");
+{
+  // resolveModel against the Hub's own answers for these repos (2026-10-15).
+  const real = globalThis.fetch;
+  const file = (n: string) => new URL(`./fixtures/configs-audit/${n}`, import.meta.url);
+  globalThis.fetch = (async (input: string | URL) => {
+    const url = String(input);
+    const api = /\/api\/models\/([^?]+)/.exec(url);
+    const raw = /huggingface\.co\/([^/]+\/[^/]+)\/resolve\/main\/(.+)$/.exec(url);
+    const name = (id: string) => id.replace("/", "_");
+    try {
+      if (api) return new Response(readFileSync(file(`api/${name(api[1])}.json`), "utf8"), { status: 200 });
+      if (raw && raw[2] === "config.json") return new Response(readFileSync(file(`${name(raw[1])}.json`), "utf8"), { status: 200 });
+      if (raw) return new Response(readFileSync(file(`api/${name(raw[1])}.${raw[2]}`), "utf8"), { status: 200 });
+    } catch {
+      // not in the fixtures: the Hub's 404
+    }
+    return new Response("not found", { status: 404 });
+  }) as typeof fetch;
+  try {
+    const nv = await resolveModel("nvidia/Qwen3.6-35B-A3B-NVFP4");
+    // Before: FP8 from its first group, 18.7B parameters, BF16 34.8 GiB.
+    check("nvidia Qwen3.6-35B-A3B-NVFP4: NVFP4, not FP8 from its first group", nv.weightDtype === "int4", String(nv.weightDtype));
+    check("…35.95B parameters from its base model, not 18.7B packed", nv.numParams === 35951822704, b2(nv.numParams));
+    check("…sized by its 21.8 GiB of files", Math.abs(gib(weightsBytes(nv.arch!, "int4")) - 21.82 * (1 - nv.arch!.specParams! / nv.numParams)) < 0.01, gib(weightsBytes(nv.arch!, "int4")).toFixed(2));
+    check("…and active parameters counted from that total", (nv.arch!.activeParams ?? 0) > 2.9e9, b2(nv.arch!.activeParams));
+    const rh = await resolveModel("RedHatAI/Llama-3.3-70B-Instruct-NVFP4");
+    // Its base_model does not exist: the count comes from the stored elements.
+    check("RedHatAI Llama-3.3-70B NVFP4: 70.55B unpacked from 34.2B U8, not 40.6B", rh.numParams === 34225520640 * 2 + 2102665216 + 1120, b2(rh.numParams));
+    check("…its INT4 weights are its files", Math.abs(gib(weightsBytes(rh.arch!, "int4")) - 39.78) < 0.01);
+    const cy = await resolveModel("cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit");
+    // Before: 1.76B, counted from the 5.3B elements the Hub reports.
+    check("Qwen3-Coder AWQ: 3.35B active, counted after the base model's total", cy.numParams === 30532122624 && Math.abs(cy.arch!.activeParams! - 3.353e9) < 0.01e9, b2(cy.arch!.activeParams));
+  } finally {
+    globalThis.fetch = real;
+  }
+  check("unpacking needs FP4's U8", unpackedParams({ I32: 3.7e9, BF16: 1.5e9 }) === undefined);
 }
 
 console.log("\n--- B15: models vLLM 0.31 does not load ---");

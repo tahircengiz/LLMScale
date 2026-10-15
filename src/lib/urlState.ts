@@ -83,6 +83,10 @@ export function encodeState(s: AppState): string {
     // Without it a MoE model decodes back as dense on every reload and shared link,
     // and its decode estimate reads every expert instead of the routed few.
     if (s.arch.activeParams) p.set("ap", String(Math.round(s.arch.activeParams)));
+    // Without these the weights count the speculative-decoding layers again, and
+    // decode reads lookup tables in full.
+    if (s.arch.specParams) p.set("xp", String(Math.round(s.arch.specParams)));
+    if (s.arch.lookupParams) p.set("lk", String(Math.round(s.arch.lookupParams)));
     // The same for everything else the sizing reads (calc.ts, perf.ts): without
     // them a reload or a shared link counts every layer at full context again,
     // sizes a quantized checkpoint per parameter, and reads every MoE expert as
@@ -238,6 +242,8 @@ export function decodeState(search: string): Partial<AppState> {
       kvLoraRank: pos(p.get("kl")),
       qkRopeHeadDim: nonneg(p.get("qr")),
       activeParams: pos(p.get("ap")),
+      specParams: pos(p.get("xp")),
+      lookupParams: pos(p.get("lk")),
       vocabSize: pos(p.get("v")),
       intermediateSize: pos(p.get("i")),
       moeIntermediateSize: pos(p.get("mi")),
