@@ -186,7 +186,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 </table></div>
 <p class="note">Sequence length 2,048, batch size 1, gradient checkpointing on, Adam. Full fine-tuning keeps 16 bytes per parameter before activations; QLoRA stores the frozen base in 4-bit NF4.</p>
 <h2>Where the numbers come from</h2>
-<p>Weights are <code>parameters × bytes per parameter</code>. The KV cache is <code>2 × layers × key-value heads × head dimension × bytes × context × users</code>. For gpt-oss 120B that is 72.0 KiB per token at FP16. These are capacity-planning figures: the serving engine — vLLM, TGI, llama.cpp — and its paged-attention efficiency still move the real number.</p>
+<p>Weights are <code>parameters × bytes per parameter</code>. The KV cache is <code>2 × layers × key-value heads × head dimension × bytes × context × users</code>. For gpt-oss 120B that is 72.0 KiB per token at FP16. 18 of its 36 layers attend over a sliding window of the last 128 tokens and hold no more than that, so past it each further token adds 36.0 KiB, the other 18 layers' share. These are capacity-planning figures: the serving engine — vLLM, TGI, llama.cpp — and its paged-attention efficiency still move the real number.</p>
 <p>More on <a href="/LLMScale/concepts/kv-cache.html">KV cache size</a> and on <a href="/LLMScale/concepts/gqa-mqa-mla.html">GQA, MQA and MLA</a>.</p>
 <h2>Work with gpt-oss 120B</h2>
 <ul class="links">

@@ -171,7 +171,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 </table></div>
 <p class="note">One user, FP16 KV cache and vLLM's overhead on one GPU at its defaults for a card under 70 GB. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
 <h2>Which single GPUs hold it</h2>
-<ul class="plain"><li><strong>BF16</strong> (22.48 GiB): <a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro, A100 40GB</li><li><strong>FP8</strong> (14.73 GiB): NVIDIA L4, Apple M4, NVIDIA A30, <a href="/LLMScale/gpus/rtx3090-24.html">RTX 3090 / Ti</a></li><li><strong>INT4</strong> (11.09 GiB): NVIDIA T4, <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
+<ul class="plain"><li><strong>BF16</strong> (22.48 GiB): <a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a>, Apple M4 Pro, A100 40GB, <a href="/LLMScale/gpus/l40s-48.html">NVIDIA L40S</a></li><li><strong>FP8</strong> (14.73 GiB): NVIDIA L4, Apple M4, NVIDIA A30, <a href="/LLMScale/gpus/rtx3090-24.html">RTX 3090 / Ti</a></li><li><strong>INT4</strong> (11.09 GiB): NVIDIA T4, <a href="/LLMScale/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
 <p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at vLLM's default 92% of its memory, a unified-memory device at the share its GPU can address, and each carries vLLM's overhead at its own defaults.</p>
 <h2>How many users fit</h2>
 <div class="scroll"><table>
@@ -186,7 +186,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 </table></div>
 <p class="note">Sequence length 2,048, batch size 1, gradient checkpointing on, Adam. Full fine-tuning keeps 16 bytes per parameter before activations; QLoRA stores the frozen base in 4-bit NF4.</p>
 <h2>Where the numbers come from</h2>
-<p>Weights are <code>parameters × bytes per parameter</code>. The KV cache is <code>2 × layers × key-value heads × head dimension × bytes × context × users</code>. For Gemma 2 9B IT that is 336.0 KiB per token at FP16. These are capacity-planning figures: the serving engine — vLLM, TGI, llama.cpp — and its paged-attention efficiency still move the real number.</p>
+<p>Weights are <code>parameters × bytes per parameter</code>. The KV cache is <code>2 × layers × key-value heads × head dimension × bytes × context × users</code>. For Gemma 2 9B IT that is 336.0 KiB per token at FP16. 21 of its 42 layers attend over a sliding window of the last 4,096 tokens and hold no more than that, so past it each further token adds 168.0 KiB, the other 21 layers' share. These are capacity-planning figures: the serving engine — vLLM, TGI, llama.cpp — and its paged-attention efficiency still move the real number.</p>
 <p>More on <a href="/LLMScale/concepts/kv-cache.html">KV cache size</a> and on <a href="/LLMScale/concepts/gqa-mqa-mla.html">GQA, MQA and MLA</a>.</p>
 <h2>Work with Gemma 2 9B IT</h2>
 <ul class="links">
@@ -198,7 +198,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
   <li><a href="/LLMScale/serving.html?m=google%2Fgemma-2-9b-it">What its files say about serving it</a></li>
 </ul>
 <h2>Other Gemma models</h2>
-<ul class="links"><li><a href="/LLMScale/models/gemma-2-27b.html">Gemma 2 27B IT</a></li></ul>
+<ul class="links"><li><a href="/LLMScale/models/gemma-3-1b.html">Gemma 3 1B IT</a></li><li><a href="/LLMScale/models/gemma-3-4b.html">Gemma 3 4B IT</a></li><li><a href="/LLMScale/models/gemma-3-12b.html">Gemma 3 12B IT</a></li><li><a href="/LLMScale/models/gemma-2-27b.html">Gemma 2 27B IT</a></li><li><a href="/LLMScale/models/gemma-3-27b.html">Gemma 3 27B IT</a></li></ul>
 </div>
 </main>
 <footer class="ffoot">

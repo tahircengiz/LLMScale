@@ -171,7 +171,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 </table></div>
 <p class="note">Tek kullanıcı, FP16 KV cache ve 70 GB altı bir kartın varsayılanlarıyla tek GPU'da vLLM'in ek yükü. Quantization ağırlıkları küçültür, KV cache'i değil; bu yüzden context büyüdükçe kazanç daralır.</p>
 <h2>Onu tek başına taşıyan GPU'lar</h2>
-<ul class="plain"><li><strong>BF16</strong> (22,48 GiB): <a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a>, Tesla V100 32GB, Apple M4 Pro, A100 40GB</li><li><strong>FP8</strong> (14,73 GiB): NVIDIA L4, Apple M4, NVIDIA A30, <a href="/LLMScale/tr/gpus/rtx3090-24.html">RTX 3090 / Ti</a></li><li><strong>INT4</strong> (11,09 GiB): NVIDIA T4, <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
+<ul class="plain"><li><strong>BF16</strong> (22,48 GiB): <a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a>, Apple M4 Pro, A100 40GB, <a href="/LLMScale/tr/gpus/l40s-48.html">NVIDIA L40S</a></li><li><strong>FP8</strong> (14,73 GiB): NVIDIA L4, Apple M4, NVIDIA A30, <a href="/LLMScale/tr/gpus/rtx3090-24.html">RTX 3090 / Ti</a></li><li><strong>INT4</strong> (11,09 GiB): NVIDIA T4, <a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a>, RTX 4070 Ti Super, RTX 4080 / Super</li></ul>
 <p class="note">8k context ve tek kullanıcı için, en küçük kartlar önce. Ayrık kartlarda vLLM'in varsayılanı olan bellek payı %92, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır; her cihaz kendi varsayılanlarıyla vLLM'in ek yükünü taşır.</p>
 <h2>Kaç kullanıcı sığar</h2>
 <div class="scroll"><table>
@@ -186,7 +186,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 </table></div>
 <p class="note">Dizi uzunluğu 2.048, batch 1, gradient checkpointing açık, Adam. Tam ince ayar aktivasyonlardan önce parametre başına 16 byte tutar; QLoRA dondurulmuş temel modeli 4-bit NF4 olarak saklar.</p>
 <h2>Sayılar nereden geliyor</h2>
-<p>Ağırlıklar <code>parametre × parametre başına byte</code> olur. KV cache <code>2 × katman × key-value head × head boyutu × byte × context × kullanıcı</code> olur. Gemma 2 9B IT için bu, FP16'da token başına 336,0 KiB eder. Bunlar kapasite planlama sayılarıdır: servis motoru — vLLM, TGI, llama.cpp — ve paged-attention verimliliği gerçek değeri yine değiştirir.</p>
+<p>Ağırlıklar <code>parametre × parametre başına byte</code> olur. KV cache <code>2 × katman × key-value head × head boyutu × byte × context × kullanıcı</code> olur. Gemma 2 9B IT için bu, FP16'da token başına 336,0 KiB eder. 42 katmanının 21 tanesi son 4.096 token'lık kayan pencereye bakar ve bundan fazlasını tutmaz; pencereden sonra eklenen her token, diğer 21 katmanın payı olan 168,0 KiB ekler. Bunlar kapasite planlama sayılarıdır: servis motoru — vLLM, TGI, llama.cpp — ve paged-attention verimliliği gerçek değeri yine değiştirir.</p>
 <p>Daha fazlası: <a href="/LLMScale/tr/concepts/kv-cache.html">KV cache boyutu</a> ve <a href="/LLMScale/tr/concepts/gqa-mqa-mla.html">GQA, MQA ve MLA</a>.</p>
 <h2>Gemma 2 9B IT ile çalış</h2>
 <ul class="links">
@@ -198,7 +198,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
   <li><a href="/LLMScale/tr/serving.html?m=google%2Fgemma-2-9b-it">Dosyaları servis hakkında ne diyor</a></li>
 </ul>
 <h2>Diğer Gemma modelleri</h2>
-<ul class="links"><li><a href="/LLMScale/tr/models/gemma-2-27b.html">Gemma 2 27B IT</a></li></ul>
+<ul class="links"><li><a href="/LLMScale/tr/models/gemma-3-1b.html">Gemma 3 1B IT</a></li><li><a href="/LLMScale/tr/models/gemma-3-4b.html">Gemma 3 4B IT</a></li><li><a href="/LLMScale/tr/models/gemma-3-12b.html">Gemma 3 12B IT</a></li><li><a href="/LLMScale/tr/models/gemma-2-27b.html">Gemma 2 27B IT</a></li><li><a href="/LLMScale/tr/models/gemma-3-27b.html">Gemma 3 27B IT</a></li></ul>
 </div>
 </main>
 <footer class="ffoot">

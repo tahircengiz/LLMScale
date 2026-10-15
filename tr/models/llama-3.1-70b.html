@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Llama 3.1 70B Instruct Kaç GB VRAM İster? | LLMScale</title>
+<meta name="description" content="Llama 3.1 70B Instruct, 8k context'te tek kullanıcı için BF16'da 137,6 GiB, INT4'te 44,01 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<link rel="canonical" href="https://tahircengiz.github.io/LLMScale/tr/models/llama-3.1-70b.html">
+<link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/llama-3.1-70b.html">
+<link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/llama-3.1-70b.html">
+<link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/models/llama-3.1-70b.html">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Tahir Ali Cengiz">
+<link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Llama 3.1 70B Instruct kaç GB VRAM ister?">
+<meta property="og:description" content="Llama 3.1 70B Instruct, 8k context'te tek kullanıcı için BF16'da 137,6 GiB, INT4'te 44,01 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta property="og:url" content="https://tahircengiz.github.io/LLMScale/tr/models/llama-3.1-70b.html">
+<meta property="og:site_name" content="LLMScale">
+<meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Llama 3.1 70B Instruct kaç GB VRAM ister?">
+<meta name="twitter:description" content="Llama 3.1 70B Instruct, 8k context'te tek kullanıcı için BF16'da 137,6 GiB, INT4'te 44,01 GiB GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.">
+<meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
+<script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+<style>:root{color-scheme:dark;--ink-950:#0e1013;--ink-900:#16181d;--ink-850:#1d2026;--ink-800:#262a31;--ink-700:#353a44;--c-white:#fff;--fg:#e4e7ec;--slate-300:#c1c6cf;--slate-400:#a1a7b2;--slate-500:#8a919d;--brand-400:#7eaaff;--brand-500:#4d8bff;--brand-600:#1f63e6;--accent-400:#29c48a;--accent-500:#3dc28c;--bad-c:#f26b6b;--onbrand:#fff;--bg:var(--ink-950);--card:var(--ink-900);--inset:var(--ink-850);--line:color-mix(in oklab,var(--c-white) 10%,transparent);--text:var(--fg);--muted:var(--slate-300);--faint:var(--slate-400);--brand:var(--brand-400);--button:var(--brand-600);--good:var(--accent-400);--bad:var(--bad-c)}
+.light{color-scheme:light;--ink-950:#eef1f5;--ink-900:#fff;--ink-850:#f5f7fa;--ink-800:#eaedf2;--ink-700:#d9dee6;--c-white:#121620;--fg:#121620;--slate-300:#343a46;--slate-400:#4a515e;--slate-500:#5c6471;--brand-400:#0a47b0;--brand-500:#0f62fe;--brand-600:#0f5be0;--accent-400:#0b6e4a;--accent-500:#0a8f62;--bad-c:#be212d}
+.glass{color-scheme:light;--ink-950:#e2e8f2;--ink-900:#fff;--ink-850:#f2f5fa;--ink-800:#e7ecf4;--ink-700:#ccd5e3;--c-white:#0d1422;--fg:#0d1422;--slate-300:#29324a;--slate-400:#333d58;--slate-500:#39445f;--brand-400:#0946b8;--brand-500:#0f62fe;--brand-600:#0f5be0;--accent-400:#03553a;--accent-500:#046443;--bad-c:#ad011e}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(1100px 620px at 18% -14%,rgba(77,139,255,.08),transparent 62%),var(--ink-950);color:var(--fg);font:400 1rem/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.glass body{background:radial-gradient(46% 42% at 8% 2%,rgba(47,107,255,.55) 0%,transparent 60%),radial-gradient(40% 40% at 96% 6%,rgba(111,179,255,.52) 0%,transparent 62%),radial-gradient(44% 44% at 84% 96%,rgba(19,176,170,.42) 0%,transparent 60%),radial-gradient(38% 38% at 6% 92%,rgba(142,166,212,.5) 0%,transparent 60%),radial-gradient(34% 30% at 50% 46%,rgba(169,212,255,.35) 0%,transparent 66%),var(--ink-950);background-attachment:fixed}
+a{color:var(--brand);text-underline-offset:2px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;vertical-align:top}
+thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+th[scope=row]{font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.card{background:color-mix(in oklab,var(--ink-900) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);box-shadow:0 20px 25px -5px rgb(0 0 0/.3),0 8px 10px -6px rgb(0 0 0/.3)}
+.hdr{position:relative;z-index:40;border-bottom:1px solid var(--line);padding:.5rem 1rem}
+.hin{max-width:72rem;margin:0 auto}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem}
+.brand{display:flex;align-items:center;gap:.5rem;text-decoration:none}
+.brand img{width:28px;height:28px}
+.brand b{font-size:1.125rem;line-height:1.75rem;font-weight:700;letter-spacing:-.025em;color:var(--c-white)}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:.125rem .5rem;font-size:11px;line-height:1rem;font-weight:500;color:var(--accent-400);background:color-mix(in oklab,var(--accent-500) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--accent-500) 30%,transparent)}
+.ctrls{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.seg{display:flex;flex-shrink:0;gap:.25rem;border-radius:.75rem;background:var(--ink-850);padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}
+.seg a,.seg button{display:block;border:0;background:none;font:inherit;font-size:.75rem;line-height:1rem;font-weight:500;padding:.25rem .625rem;border-radius:.5rem;color:var(--slate-300);text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .15s,color .15s}
+.seg a:hover,.seg button:hover,.tab:hover{background:color-mix(in oklab,var(--c-white) 5%,transparent)}
+.seg [aria-pressed=true],.seg [aria-current=page],.tab[aria-current=page],.tab.on{background:var(--brand-600);color:var(--onbrand);box-shadow:0 1px 3px 0 rgb(0 0 0/.1),0 1px 2px -1px rgb(0 0 0/.1)}
+.pnav{margin-top:.5rem;display:flex;justify-content:center}
+.navpill{width:100%;border-radius:.75rem;background:var(--ink-850);padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}
+.tab{display:block;border:0;background:none;font:inherit;border-radius:.5rem;padding:.25rem .625rem;font-size:.875rem;line-height:1.25rem;font-weight:500;white-space:nowrap;color:var(--slate-300);text-decoration:none;cursor:pointer;transition:background-color .15s,color .15s}
+.mbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.mbar button,.trig{display:flex;align-items:center;gap:.375rem}
+.mbar svg,.trig svg{width:14px;height:14px;flex-shrink:0;transition:transform .2s}
+.mbar [aria-expanded=true] svg,.trig[aria-expanded=true] svg{transform:rotate(180deg)}
+#site-nav{display:none;flex-direction:column;gap:.5rem;margin-top:.25rem}
+#site-nav.open{display:flex}
+.grp{display:flex;flex-direction:column;gap:.25rem;border-top:1px solid var(--line);padding-top:.5rem}
+.grp:first-child{border-top:0;padding-top:0}
+.grp .row{display:flex;flex-wrap:wrap;gap:.25rem}
+.cap{margin:0;padding:0 .625rem .25rem;font-size:11px;line-height:1rem;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--slate-500)}
+.menus{display:none;position:relative;align-items:center;gap:.25rem}
+.menus .sep{height:1rem;width:1px;margin:0 .25rem;background:color-mix(in oklab,var(--c-white) 15%,transparent)}
+.trig .gn{opacity:.75}.trig .dot{opacity:.5}
+.panel{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);z-index:50;width:34rem;max-width:calc(100vw - 2rem);padding-top:.5rem}
+.panel.open{display:block}
+.pin{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.375rem;border-radius:.75rem;background:var(--ink-850);padding:.375rem;box-shadow:inset 0 0 0 1px var(--line),0 25px 50px -12px rgb(0 0 0/.25)}
+.panel .sec+.sec{margin-top:.375rem;border-top:1px solid var(--line);padding-top:.375rem}
+.panel a{display:block;border-radius:.5rem;padding:.375rem .75rem;text-decoration:none;transition:background-color .15s}
+.panel a.lit{background:color-mix(in oklab,var(--brand-600) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--brand-500) 50%,transparent)}
+.panel a.lit b{color:var(--brand-400)}
+.panel a[aria-current=page]{background:var(--brand-600);box-shadow:0 1px 3px 0 rgb(0 0 0/.1)}
+.panel a[aria-current=page] b{color:var(--onbrand)}
+.panel a[aria-current=page] span{color:color-mix(in oklab,var(--onbrand) 80%,transparent)}
+.panel b{display:block;font-size:.875rem;line-height:1.25rem;font-weight:500;color:var(--c-white)}
+.panel a span{display:block;margin-top:.125rem;font-size:.75rem;line-height:1.1rem;color:var(--slate-400)}
+.peek{border-radius:.5rem;background:color-mix(in oklab,var(--ink-900) 60%,transparent);padding:.75rem;box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--c-white) 5%,transparent)}
+.peek .cap{padding:0}
+.peek strong{display:block;margin-top:.375rem;font-size:.875rem;line-height:1.25rem;font-weight:600;letter-spacing:-.015em;color:var(--c-white)}
+.peek p.t{margin:.25rem 0 0;font-size:.75rem;line-height:1.6;color:var(--slate-300)}
+@media (min-width:640px){.hdr{padding-inline:1.5rem}.navpill{width:auto;max-width:100%}.mbar,#site-nav,#site-nav.open{display:none}.menus{display:flex}}
+@media (max-width:360px){.seg a,.seg button{padding-inline:.375rem}.ctrls{gap:.375rem}}
+@media (scripting:none){#site-nav,#site-nav.open{display:flex}.mbar button,.menus{display:none}}
+.glass .card{background:rgba(255,255,255,.52);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.65);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),inset 0 -1px 0 0 rgba(255,255,255,.25),0 12px 32px -14px rgba(20,28,66,.42)}
+.glass .hdr{background:rgba(255,255,255,.46);-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);border-bottom-color:rgba(255,255,255,.55)}
+.glass .navpill{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.8)}
+.glass .pin{background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),0 18px 40px -16px rgba(20,28,66,.45)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.92)}}
+@media (prefers-reduced-transparency:reduce){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}}
+.theme-switching,.theme-switching *,.theme-switching *::before,.theme-switching *::after{transition:none!important}
+.fmain{max-width:72rem;margin:0 auto;padding:1.5rem 1rem 2rem}
+.ffoot{max-width:72rem;margin:0 auto;padding:1.5rem 1rem 5rem;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:.5rem;text-align:center;font-size:.875rem;color:var(--slate-400)}
+.ffoot .links,.ffoot nav{display:flex;flex-wrap:wrap;justify-content:center;gap:.25rem 1rem}
+.ffoot .links a{color:var(--slate-400);text-decoration:none}
+.ffoot .links a:hover{color:var(--brand)}
+.ffoot nav a{font-size:.75rem;font-weight:500;color:var(--brand);text-decoration:none}
+.ffoot nav a:hover{text-decoration:underline}
+.ffoot p{margin:0;font-size:.75rem;color:var(--slate-500)}
+@media (min-width:640px){.fmain{padding-inline:1.5rem}}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--ink-900);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--slate-300)}
+.langsuggest a{background:var(--brand-600);color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
+.langsuggest button{background:none;border:0;color:var(--slate-400);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}
+.guide{max-width:54rem;margin:0 auto;padding:1.25rem 1.5rem 1.5rem;border-radius:1rem}
+.crumbs{font-size:.8125rem;color:var(--faint);margin:0 0 .6rem}
+.crumbs a{color:var(--faint)}
+.guide h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
+.guide h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
+.guide p{margin:0 0 .9rem;max-width:68ch}
+.lede{color:var(--muted)}
+.answer{background:var(--inset);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
+.cap{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.big{font-size:2.1rem;font-weight:700;line-height:1.1;margin:.25rem 0 .45rem;font-variant-numeric:tabular-nums}
+.guide .answer p{margin:0;color:var(--muted);font-size:.9375rem}
+.spec{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;padding:0;margin:.85rem 0 0}
+.spec li{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
+/* positioned, so a table's screen-reader text (.sr, absolute) scrolls with it instead of widening the page */
+.scroll{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--inset)}
+.guide table{font-size:.875rem}
+.guide th,.guide td{padding:.5rem .75rem;border-bottom:1px solid var(--line);white-space:nowrap}
+.guide tbody tr:last-child>*{border-bottom:0}
+.guide thead th{background:var(--ink-800)}
+.guide td small{display:block;color:var(--faint);font-size:.75rem}
+.ok{color:var(--good);font-weight:600}
+.no{color:var(--bad)}
+.note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
+ul.plain{padding-left:1.1rem;margin:0 0 .9rem}
+ul.plain li{margin:.3rem 0}
+.links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
+.links a{display:inline-block;background:var(--inset);border:1px solid var(--line);border-radius:.75rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
+.links a:hover{border-color:var(--brand)}
+.links a.primary{background:var(--brand-600);border-color:transparent;color:var(--onbrand)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+pre{background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.75rem 1rem;overflow-x:auto;margin:0 0 .9rem;line-height:1.55}
+pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
+@media (max-width:40rem){.guide{padding:1rem;margin-inline:-.25rem}}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/tr/"},{"@type":"ListItem","position":2,"name":"Modeller","item":"https://tahircengiz.github.io/LLMScale/tr/models/"},{"@type":"ListItem","position":3,"name":"Llama 3.1 70B Instruct","item":"https://tahircengiz.github.io/LLMScale/tr/models/llama-3.1-70b.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Llama 3.1 70B Instruct kaç GB VRAM ister?","inLanguage":"tr","url":"https://tahircengiz.github.io/LLMScale/tr/models/llama-3.1-70b.html","about":"Llama 3.1 70B Instruct","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/tr/"},"author":{"@type":"Person","name":"Tahir Ali Cengiz","url":"https://github.com/tahircengiz"}}</script>
+</head>
+<body>
+<header class="hdr"><div class="hin">
+<div class="hrow"><a class="brand" href="/LLMScale/tr/"><img src="/LLMScale/favicon.svg" alt="" width="28" height="28"><b>LLMScale</b><span class="badge">canlı Hugging Face verisi</span></a>
+<div class="ctrls"><div class="seg" role="group" aria-label="Tema"><button type="button" data-theme-set="dark" aria-pressed="false">Koyu</button><button type="button" data-theme-set="light" aria-pressed="false">Açık</button><button type="button" data-theme-set="glass" aria-pressed="false">Cam</button></div><div class="seg" role="group" aria-label="Dil"><a href="/LLMScale/models/llama-3.1-70b.html" hreflang="en" lang="en" data-lang="en">EN</a><a href="/LLMScale/tr/models/llama-3.1-70b.html" hreflang="tr" lang="tr" data-lang="tr" aria-current="page">TR</a></div></div></div>
+<nav class="pnav" aria-label="LLMScale"><div class="navpill">
+<div class="mbar"><span class="tab on">Modeller</span><button type="button" class="tab" aria-controls="site-nav" aria-expanded="false">Menü<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button></div>
+<div class="menus"><a class="tab" href="/LLMScale/tr/">VRAM Hesabı</a><span class="sep" aria-hidden="true"></span><div class="menu"><button type="button" class="tab trig" aria-expanded="false" aria-controls="nm-model">Model<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button><div class="panel" id="nm-model"><div class="pin"><div><div class="sec"><a href="/LLMScale/tr/fit.html" data-more="Bir model ve bir görev seç — sohbet, kod, RAG, ajanlar, akıl yürütme, görsel ya da embedding — modelin beyan ettiği yeteneklerin görevle ne kadar örtüştüğünü kriter kriter gör. Yanıt kalitesine değil; ince ayarına, modalitesine, boyutuna ve context'ine bakar."><b>Görev Uygunluğu</b><span>Bu model bu iş için doğru mu?</span></a><a href="/LLMScale/tr/compare.html" data-more="İki ila dört model sütun sütun: parametreler, uzmanlar, context, lisans ve temel model, ağırlıkların geldiği hassasiyet, token başına KV cache, 8k token ve tek kullanıcı için bellek ve görev bazında uyum."><b>Model Karşılaştırma</b><span>İki ila dört model yan yana</span></a><a href="/LLMScale/tr/anatomy.html" data-more="Tek bir modelin görsel röntgeni: parametrelerinin embedding, attention ve feed-forward ya da uzmanlar arasında nasıl bölündüğü, her hassasiyette ne kadar yer tuttuğu, attention head'lerinin belleği nasıl paylaştığı ve KV cache'in nasıl büyüdüğü."><b>Model Anatomisi</b><span>Parametreleri ve belleği nereye gidiyor</span></a><a href="/LLMScale/tr/config.html" data-more="Bir modelin config.json'undaki her alan sade dille açıklanır; boyut, context, token başına KV cache, attention düzeni, uzmanlar ve hassasiyet gibi neleri belirlediği gösterilir. Her cevap, dayandığı satırlara işaret eder."><b>Config Çözücü</b><span>config.json'u sade dille</span></a><a href="/LLMScale/tr/decode.html" data-more="Bir model adı yaz, her parçasının ne anlama geldiğini gör — boyut, aktif parametreler, ince ayar türü, quantization, paketleme — renk kodlu ve açıklamalı."><b>İsim Çözücü</b><span>Model adında 70B, A3B, AWQ ya da FP8 ne demek</span></a></div><div class="sec"><a href="/LLMScale/tr/train.html" data-more="LoRA, QLoRA ya da tam ince ayar için GPU belleği: ağırlıklar, gradyanlar, optimizer durumu ve aktivasyonlar, bunların sığdığı kartlarla birlikte. ZeRO ve QLoRA makaleleriyle karşılaştırılarak doğrulandı."><b>İnce ayar</b><span>LoRA, QLoRA ve tam ince ayar belleği</span></a></div></div><div class="peek"><p class="cap">Burada ne bulursun</p><strong>Görev Uygunluğu</strong><p class="t">Bir model ve bir görev seç — sohbet, kod, RAG, ajanlar, akıl yürütme, görsel ya da embedding — modelin beyan ettiği yeteneklerin görevle ne kadar örtüştüğünü kriter kriter gör. Yanıt kalitesine değil; ince ayarına, modalitesine, boyutuna ve context'ine bakar.</p></div></div></div></div><div class="menu"><button type="button" class="tab trig" aria-expanded="false" aria-controls="nm-serve">Servis<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button><div class="panel" id="nm-serve"><div class="pin"><div><div class="sec"><a href="/LLMScale/tr/serving.html" data-more="Bir reponun dosyaları servis hakkında ne diyor: sohbet şablonu ve parser'ları, örnekleme varsayılanları ve durma token'ları, tensör adlarından okunan quantization, MTP katmanları ve gereken vLLM ve SGLang bayrakları."><b>Servis Özeti</b><span>Dosyaları servis hakkında ne diyor</span></a><a href="/LLMScale/tr/vllm.html" data-more="Bir model, GPU'lar, context, bir öncelik ve bir görev seç; her bayrağın gerekçesiyle bir vllm serve komutu ve aynı bayrakları Kubernetes argümanları olarak al."><b>vLLM Parametreleri</b><span>Ayarlı bir vllm serve komutu</span></a><a href="/LLMScale/tr/plan.html" data-more="Saniyedeki istek, prompt ve cevap uzunlukları ve gecikme hedeflerinden kopya sayısı, tensor-parallel boyutu ve toplam GPU sayısı, ayrıca her kopyayı neyin sınırladığı."><b>Kapasite Planı</b><span>Yükün için gereken GPU sayısı</span></a><a href="/LLMScale/tr/gpu-compare.html" data-more="İki ila dört GPU sütun sütun, veri sayfalarındaki haliyle: mimari, çekirdekler, tipi ve bant genişliğiyle bellek, yoğun BF16, FP8 ve FP4 işlem gücü, güç, form faktörü, iki cihaz arasındaki bağlantı, MIG ve modelleri servis eden motor."><b>GPU Karşılaştırma</b><span>İki ila dört GPU'nun veri sayfası yan yana</span></a></div></div><div class="peek"><p class="cap">Burada ne bulursun</p><strong>Servis Özeti</strong><p class="t">Bir reponun dosyaları servis hakkında ne diyor: sohbet şablonu ve parser'ları, örnekleme varsayılanları ve durma token'ları, tensör adlarından okunan quantization, MTP katmanları ve gereken vLLM ve SGLang bayrakları.</p></div></div></div></div><div class="menu"><button type="button" class="tab trig" aria-expanded="false" aria-controls="nm-learn">Öğren<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button><div class="panel" id="nm-learn"><div class="pin"><div><div class="sec"><a href="/LLMScale/tr/learn.html" data-more="Bir dil modelinin bir cümleyi nasıl sıradaki kelimeye dönüştürdüğünü anlatan etkileşimli, animasyonlu bir yolculuk: token'lar, embedding'ler, attention, katmanlar ve örnekleme."><b>LLM 101</b><span>Bir dil modeli nasıl çalışır, adım adım</span></a><a href="/LLMScale/tr/feed/" data-more="Yeni modeller, servis motorları ve donanım üzerine kaynaklara dayalı kısa postlar; bir model hakkındaki post, onu çalıştırmak için gerekenleri gösterir. Yapay zekâyla taslak olarak hazırlanır ve incelemeden sonra yayınlanır."><b>Akış</b><span>Yeni modeller, motorlar ve donanım</span></a></div><div class="sec"><p class="cap">Rehberler</p><a href="/LLMScale/tr/models/" data-more="Popüler her model için bir sayfa: hassasiyet ve context'e göre belleği, onu tek başına taşıyan GPU'lar, kaç kullanıcının sığdığı ve ince ayarın ne gerektirdiği."><b>Modele göre VRAM gereksinimleri</b></a><a href="/LLMScale/tr/gpus/" data-more="Tüketici kartlarından veri merkezi ve birleşik bellekli cihazlara kadar sık aranan her GPU için bir sayfa: hangi LLM'lerin bu GPU'ya hangi hassasiyet ve context'le sığdığı."><b>Hangi GPU'ya hangi LLM sığar</b></a><a href="/LLMScale/tr/concepts/" data-more="Üç kısa rehber — KV cache, attention türleri (GQA, MQA, MLA) ve quantization — hesaplayıcının kullandığı formüllerle."><b>LLM belleği nasıl çalışır</b></a></div></div><div class="peek"><p class="cap">Burada ne bulursun</p><strong>LLM 101</strong><p class="t">Bir dil modelinin bir cümleyi nasıl sıradaki kelimeye dönüştürdüğünü anlatan etkileşimli, animasyonlu bir yolculuk: token'lar, embedding'ler, attention, katmanlar ve örnekleme.</p></div></div></div></div></div>
+<div id="site-nav"><div class="grp"><div class="row"><a class="tab" href="/LLMScale/tr/">VRAM Hesabı</a></div></div><div class="grp"><p class="cap">Model</p><div class="row"><a class="tab" href="/LLMScale/tr/fit.html">Görev Uygunluğu</a><a class="tab" href="/LLMScale/tr/compare.html">Model Karşılaştırma</a><a class="tab" href="/LLMScale/tr/anatomy.html">Model Anatomisi</a><a class="tab" href="/LLMScale/tr/config.html">Config Çözücü</a><a class="tab" href="/LLMScale/tr/decode.html">İsim Çözücü</a><a class="tab" href="/LLMScale/tr/train.html">İnce ayar</a></div></div><div class="grp"><p class="cap">Servis</p><div class="row"><a class="tab" href="/LLMScale/tr/serving.html">Servis Özeti</a><a class="tab" href="/LLMScale/tr/vllm.html">vLLM Parametreleri</a><a class="tab" href="/LLMScale/tr/plan.html">Kapasite Planı</a><a class="tab" href="/LLMScale/tr/gpu-compare.html">GPU Karşılaştırma</a></div></div><div class="grp"><p class="cap">Öğren</p><div class="row"><a class="tab" href="/LLMScale/tr/learn.html">LLM 101</a><a class="tab" href="/LLMScale/tr/feed/">Akış</a><a class="tab" href="/LLMScale/tr/models/">Modele göre VRAM gereksinimleri</a><a class="tab" href="/LLMScale/tr/gpus/">Hangi GPU'ya hangi LLM sığar</a><a class="tab" href="/LLMScale/tr/concepts/">LLM belleği nasıl çalışır</a></div></div></div>
+</div></nav>
+</div></header>
+<main class="fmain">
+<div class="guide card">
+<nav class="crumbs" aria-label="Konum"><a href="/LLMScale/tr/">LLMScale</a> › <a href="/LLMScale/tr/models/">Modeller</a> › Llama 3.1 70B Instruct</nav>
+<h1>Llama 3.1 70B Instruct kaç GB VRAM ister?</h1>
+<p class="lede">Llama 3.1 70B Instruct, 80 katmanda 70,55B parametreye sahiptir. Grouped-query attention kullanır: 64 query head, 8 key-value head'i paylaşır; bu yüzden KV cache'i tam multi-head attention'a göre 8× küçüktür. En fazla 131.072 token context alır; bu uzunlukta tek bir kullanıcı, ağırlıkların üstüne FP16'da 40,00 GiB KV cache ister. Hugging Face deposu erişim onayı gerektirdiği için LLMScale mimarisini yerleşik veritabanında taşır.</p>
+<div class="answer">
+  <div class="cap">BF16 · 8k context · tek kullanıcı</div>
+  <div class="big">137,6 GiB</div>
+  <p>131,4 GiB ağırlık, 2,50 GiB KV cache ve 3,73 GiB vLLM'in ek yükü. Aynı iş yükü INT4'te 44,01 GiB ister.</p>
+  <ul class="spec"><li>80 katman</li><li>hidden 8192</li><li>64/8 heads</li><li>head_dim 128</li><li>128k maks context</li></ul>
+</div>
+<h2>Hassasiyet ve context'e göre Llama 3.1 70B Instruct belleği</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">Hassasiyet</th><th scope="col">8k context</th><th scope="col">32k context</th><th scope="col">128k context</th></tr></thead>
+<tbody><tr><th scope="row">BF16</th><td>137,6 GiB<small>KV cache 2,50 GiB</small></td><td>145,1 GiB<small>KV cache 10,00 GiB</small></td><td>175,1 GiB<small>KV cache 40,00 GiB</small></td></tr><tr><th scope="row">FP8</th><td>73,89 GiB<small>KV cache 2,50 GiB</small></td><td>81,39 GiB<small>KV cache 10,00 GiB</small></td><td>111,4 GiB<small>KV cache 40,00 GiB</small></td></tr><tr><th scope="row">INT4</th><td>44,01 GiB<small>KV cache 2,50 GiB</small></td><td>51,51 GiB<small>KV cache 10,00 GiB</small></td><td>81,51 GiB<small>KV cache 40,00 GiB</small></td></tr></tbody>
+</table></div>
+<p class="note">Tek kullanıcı, FP16 KV cache ve 70 GB altı bir kartın varsayılanlarıyla tek GPU'da vLLM'in ek yükü. Quantization ağırlıkları küçültür, KV cache'i değil; bu yüzden context büyüdükçe kazanç daralır.</p>
+<h2>Onu tek başına taşıyan GPU'lar</h2>
+<ul class="plain"><li><strong>BF16</strong> (137,6 GiB): Apple M2 Ultra, <a href="/LLMScale/tr/gpus/b200-192.html">B200 180GB</a>, AMD MI300X, Apple M3 Ultra (256GB)</li><li><strong>FP8</strong> (73,89 GiB): H100 NVL 94GB, GH200 96GB, <a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a>, RTX PRO 6000 Blackwell Server</li><li><strong>INT4</strong> (44,01 GiB): AMD Ryzen AI Max+ 395 (64GB), Apple M4 Max (64GB), NVIDIA Jetson AGX Orin (64GB), AMD MI210</li></ul>
+<p class="note">8k context ve tek kullanıcı için, en küçük kartlar önce. Ayrık kartlarda vLLM'in varsayılanı olan bellek payı %92, unified bellekli cihazlarda GPU'nun kullanabildiği pay hesaba katılır; her cihaz kendi varsayılanlarıyla vLLM'in ek yükünü taşır.</p>
+<h2>Kaç kullanıcı sığar</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
+<tbody><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h100-80.html">H100 SXM 80GB</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td>12</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td>6</td><td>18</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td>6</td><td>18</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/h200-141.html">H200 141GB</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">sığmaz</span></td><td>22</td><td>34</td></tr><tr><th scope="row"><a href="/LLMScale/tr/gpus/b200-192.html">B200 180GB</a></th><td>10</td><td>35</td><td>47</td></tr></tbody>
+</table></div>
+<p class="note">Kullanıcı başına 8k context ile, tek kartta. ✗: ağırlıklar tek bir kullanıcıya bile yer bırakmıyor.</p>
+<h2>Llama 3.1 70B Instruct ince ayarı</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">Yöntem</th><th scope="col">Bellek</th><th scope="col">En küçük GPU</th></tr></thead>
+<tbody><tr><th scope="row">Tam ince ayar</th><td>1054,8 GiB</td><td>birden çok GPU, paylaştırılmış</td></tr><tr><th scope="row">LoRA (rank 16, attention)</th><td>135,8 GiB</td><td>Apple M2 Ultra</td></tr><tr><th scope="row">QLoRA (rank 16, attention)</th><td>38,26 GiB</td><td><a href="/LLMScale/tr/gpus/l40s-48.html">NVIDIA L40S</a></td></tr></tbody>
+</table></div>
+<p class="note">Dizi uzunluğu 2.048, batch 1, gradient checkpointing açık, Adam. Tam ince ayar aktivasyonlardan önce parametre başına 16 byte tutar; QLoRA dondurulmuş temel modeli 4-bit NF4 olarak saklar.</p>
+<h2>Sayılar nereden geliyor</h2>
+<p>Ağırlıklar <code>parametre × parametre başına byte</code> olur. KV cache <code>2 × katman × key-value head × head boyutu × byte × context × kullanıcı</code> olur. Llama 3.1 70B Instruct için bu, FP16'da token başına 320,0 KiB eder. Bunlar kapasite planlama sayılarıdır: servis motoru — vLLM, TGI, llama.cpp — ve paged-attention verimliliği gerçek değeri yine değiştirir.</p>
+<p>Daha fazlası: <a href="/LLMScale/tr/concepts/kv-cache.html">KV cache boyutu</a> ve <a href="/LLMScale/tr/concepts/gqa-mqa-mla.html">GQA, MQA ve MLA</a>.</p>
+<h2>Llama 3.1 70B Instruct ile çalış</h2>
+<ul class="links">
+  <li><a class="primary" href="/LLMScale/tr/?m=meta-llama%2FLlama-3.1-70B-Instruct">Kendi iş yüküne göre hesapla</a></li>
+  <li><a href="/LLMScale/tr/train.html?m=meta-llama%2FLlama-3.1-70B-Instruct">İnce ayar belleği</a></li>
+  <li><a href="/LLMScale/tr/vllm.html?m=meta-llama%2FLlama-3.1-70B-Instruct">vLLM parametreleri</a></li>
+  <li><a href="/LLMScale/tr/anatomy.html?m=meta-llama%2FLlama-3.1-70B-Instruct">Model anatomisi</a></li>
+  <li><a href="/LLMScale/tr/config.html?m=meta-llama%2FLlama-3.1-70B-Instruct">config.json'u, açıklamalı</a></li>
+  <li><a href="/LLMScale/tr/serving.html?m=meta-llama%2FLlama-3.1-70B-Instruct">Dosyaları servis hakkında ne diyor</a></li>
+</ul>
+<h2>Diğer Llama modelleri</h2>
+<ul class="links"><li><a href="/LLMScale/tr/models/llama-3.2-1b.html">Llama 3.2 1B Instruct</a></li><li><a href="/LLMScale/tr/models/llama-3.2-3b.html">Llama 3.2 3B Instruct</a></li><li><a href="/LLMScale/tr/models/llama-3.1-8b.html">Llama 3.1 8B Instruct</a></li><li><a href="/LLMScale/tr/models/llama-3.3-70b.html">Llama 3.3 70B Instruct</a></li><li><a href="/LLMScale/tr/models/llama-4-scout.html">Llama 4 Scout 17B-16E Instruct</a></li><li><a href="/LLMScale/tr/models/llama-3.1-405b.html">Llama 3.1 405B Instruct</a></li></ul>
+</div>
+</main>
+<footer class="ffoot">
+<div class="links"><a href="https://github.com/tahircengiz/LLMScale" rel="noreferrer">github.com/tahircengiz/LLMScale</a><a href="https://tr.linkedin.com/in/tahircengiz" rel="noreferrer">linkedin.com/tahircengiz</a><a href="/LLMScale/models/llama-3.1-70b.html" hreflang="en" lang="en" data-lang="en">English</a></div>
+<nav aria-label="Rehberler"><a href="/LLMScale/tr/models/">Modele göre VRAM gereksinimleri</a><a href="/LLMScale/tr/gpus/">Hangi GPU'ya hangi LLM sığar</a><a href="/LLMScale/tr/concepts/">LLM belleği nasıl çalışır</a></nav>
+<p>Hesaplama tarayıcında yapılır — hesap yok, sunucu yok. Ziyaretler anonim ve çerezsiz sayılır.</p>
+</footer>
+<script>(function(d){var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(p!=="en"&&p!=="tr")p=/^tr/.test(navigator.language||"")?"tr":"en";if(p===d.L)return;var b=document.createElement("div");b.className="langsuggest";b.lang=d.O;b.setAttribute("role","region");b.setAttribute("aria-label",d.S.text);var s=document.createElement("span");s.textContent=d.S.text;var a=document.createElement("a");a.href=d.H;a.hreflang=d.O;a.textContent=d.S.go;a.onclick=function(){try{localStorage.setItem("lang",d.O)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\u2715";c.setAttribute("aria-label",d.S.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})({"L":"tr","O":"en","S":{"text":"This page is also available in English.","go":"Switch to English","dismiss":"Dismiss"},"H":"/LLMScale/models/llama-3.1-70b.html"});</script>
+<script>(function(){var r=document.documentElement,bs=document.querySelectorAll("[data-theme-set]");
+function cur(){return r.classList.contains("glass")?"glass":r.classList.contains("light")?"light":"dark"}
+function mark(){var c=cur();bs.forEach(function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-theme-set")===c))})}
+function show(t){r.classList.add("theme-switching");r.classList.toggle("light",t==="light");r.classList.toggle("glass",t==="glass");void getComputedStyle(r).transitionProperty;r.classList.remove("theme-switching");mark()}
+bs.forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-theme-set");show(t);try{localStorage.setItem("theme",t)}catch(e){}})});mark();
+try{var mq=matchMedia("(prefers-color-scheme: dark)");mq.addEventListener("change",function(e){var s=null;try{s=localStorage.getItem("theme")}catch(x){}if(s!=="dark"&&s!=="light"&&s!=="glass")show(e.matches?"dark":"glass")})}catch(e){}
+var mb=document.querySelector("[aria-controls=site-nav]"),l=document.getElementById("site-nav");if(mb&&l)mb.addEventListener("click",function(){mb.setAttribute("aria-expanded",String(l.classList.toggle("open")))});
+var ts=document.querySelectorAll(".trig"),tm=0;function shut(x){ts.forEach(function(t){if(t===x)return;t.setAttribute("aria-expanded","false");var p=document.getElementById(t.getAttribute("aria-controls"));if(p)p.classList.remove("open")})}
+function show(t){clearTimeout(tm);shut(t);if(!t)return;t.setAttribute("aria-expanded","true");var p=document.getElementById(t.getAttribute("aria-controls"));if(p)p.classList.add("open")}
+function isOpen(){return!!document.querySelector(".trig[aria-expanded=true]")}
+ts.forEach(function(t){var pb="mouse";t.addEventListener("pointerdown",function(e){pb=e.pointerType});t.addEventListener("click",function(e){var o=t.getAttribute("aria-expanded")==="true";show(o&&(e.detail===0||pb!=="mouse")?null:t)});t.addEventListener("keydown",function(e){if(e.key!=="ArrowDown")return;e.preventDefault();show(t);var a=document.querySelector("#"+t.getAttribute("aria-controls")+" a");if(a)a.focus()})});
+document.querySelectorAll(".menu").forEach(function(m){var t=m.querySelector(".trig");m.addEventListener("pointerenter",function(e){if(e.pointerType!=="mouse")return;clearTimeout(tm);if(isOpen())show(t);else tm=setTimeout(function(){show(t)},90)});m.addEventListener("pointerleave",function(e){if(e.pointerType!=="mouse")return;clearTimeout(tm);tm=setTimeout(function(){show(null)},220)});m.addEventListener("focusout",function(e){if(!m.contains(e.relatedTarget))shut(null)});
+var pk=m.querySelector(".peek");m.querySelectorAll(".panel a").forEach(function(a){function lit(){m.querySelectorAll(".panel a.lit").forEach(function(x){x.classList.remove("lit")});a.classList.add("lit");if(pk&&a.dataset.more){pk.querySelector("strong").textContent=a.querySelector("b").textContent;pk.querySelector("p.t").textContent=a.dataset.more}}a.addEventListener("pointerenter",lit);a.addEventListener("focus",lit)})});
+document.addEventListener("pointerdown",function(e){if(!(e.target.closest&&e.target.closest(".menu")))shut(null)});
+document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;var t=document.querySelector(".trig[aria-expanded=true]");if(t){shut(null);t.focus()}else if(mb&&l&&l.classList.contains("open")){l.classList.remove("open");mb.setAttribute("aria-expanded","false");mb.focus()}});
+document.querySelectorAll("[data-lang]").forEach(function(a){a.addEventListener("click",function(){try{localStorage.setItem("lang",a.getAttribute("data-lang"))}catch(e){}})})})();</script>
+</body>
+</html>

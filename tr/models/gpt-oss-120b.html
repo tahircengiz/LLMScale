@@ -186,7 +186,7 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 </table></div>
 <p class="note">Dizi uzunluğu 2.048, batch 1, gradient checkpointing açık, Adam. Tam ince ayar aktivasyonlardan önce parametre başına 16 byte tutar; QLoRA dondurulmuş temel modeli 4-bit NF4 olarak saklar.</p>
 <h2>Sayılar nereden geliyor</h2>
-<p>Ağırlıklar <code>parametre × parametre başına byte</code> olur. KV cache <code>2 × katman × key-value head × head boyutu × byte × context × kullanıcı</code> olur. gpt-oss 120B için bu, FP16'da token başına 72,0 KiB eder. Bunlar kapasite planlama sayılarıdır: servis motoru — vLLM, TGI, llama.cpp — ve paged-attention verimliliği gerçek değeri yine değiştirir.</p>
+<p>Ağırlıklar <code>parametre × parametre başına byte</code> olur. KV cache <code>2 × katman × key-value head × head boyutu × byte × context × kullanıcı</code> olur. gpt-oss 120B için bu, FP16'da token başına 72,0 KiB eder. 36 katmanının 18 tanesi son 128 token'lık kayan pencereye bakar ve bundan fazlasını tutmaz; pencereden sonra eklenen her token, diğer 18 katmanın payı olan 36,0 KiB ekler. Bunlar kapasite planlama sayılarıdır: servis motoru — vLLM, TGI, llama.cpp — ve paged-attention verimliliği gerçek değeri yine değiştirir.</p>
 <p>Daha fazlası: <a href="/LLMScale/tr/concepts/kv-cache.html">KV cache boyutu</a> ve <a href="/LLMScale/tr/concepts/gqa-mqa-mla.html">GQA, MQA ve MLA</a>.</p>
 <h2>gpt-oss 120B ile çalış</h2>
 <ul class="links">
