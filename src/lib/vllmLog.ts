@@ -21,7 +21,7 @@
 //
 // React-free: scripts/test-vllmlog.ts runs it against logs from real runs.
 
-import { BYTES_PER_GIB, kvReservedPerSeq, kvSplit, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
+import { BYTES_PER_GIB, kvReservedPerSeq, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
 import { overheadPerGpu, VLLM_UTIL, vllmBatch, type BatchShape } from "./overhead.ts";
 
 export interface VllmLog {
@@ -153,7 +153,7 @@ export function compareLog(
   if (budget !== undefined && log.availableKvGiB !== undefined)
     rows.push({ key: "kv", vllm: log.availableKvGiB, ours: budget - weights - overhead, unit: "GiB" });
   if (log.availableKvGiB !== undefined && log.availableKvGiB > 0 && log.maxModelLen) {
-    const perSeq = kvReservedPerSeq(m.arch, kvDtype, log.maxModelLen, batch.tokens) / kvSplit(m.arch, tp);
+    const perSeq = kvReservedPerSeq(m.arch, kvDtype, log.maxModelLen, batch.tokens, tp);
     const conc = perSeq > 0 ? (log.availableKvGiB * BYTES_PER_GIB) / perSeq : 0;
     if (log.maxConcurrency !== undefined) rows.push({ key: "concurrency", vllm: log.maxConcurrency, ours: conc, unit: "x" });
     if (log.kvTokens !== undefined) rows.push({ key: "tokens", vllm: log.kvTokens, ours: Math.floor(conc * log.maxModelLen), unit: "tokens" });

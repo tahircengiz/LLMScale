@@ -234,6 +234,7 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     if (plan.attention !== numLayers) arch.attnLayers = plan.attention;
     if (plan.sliding && plan.window) [arch.slidingLayers, arch.slidingWindow] = [plan.sliding, plan.window];
     if (plan.stateBytesPerSeq) [arch.stateBytesPerSeq, arch.stateLayers] = [plan.stateBytesPerSeq, plan.stateLayers];
+    if (plan.globalAttn) arch.globalAttn = plan.globalAttn;
   }
   return arch;
 }

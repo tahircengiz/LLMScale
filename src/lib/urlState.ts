@@ -97,6 +97,8 @@ export function encodeState(s: AppState): string {
       p.set("sl", String(a.slidingLayers));
       p.set("sw", String(a.slidingWindow));
     }
+    // Gemma 4's global layers: without them every layer takes the sliding shape.
+    if (a.globalAttn) p.set("ga", `${a.globalAttn.kvHeads}.${a.globalAttn.headDim}`);
     // DeepSeek V4's compressed layers: without them it decodes as one entry per token.
     if (a.compressedAttn) {
       const c = a.compressedAttn;
@@ -145,6 +147,13 @@ function compressedOf(v: string | null): ModelArch["compressedAttn"] {
   const out: ModelArch["compressedAttn"] = { csa: n[0], hca: n[1], window: n[2], indexDim: n[3] };
   if (n[4]) out.topk = n[4];
   return out;
+}
+
+/** "kvHeads.headDim", as encodeState writes it. */
+function globalOf(v: string | null): ModelArch["globalAttn"] {
+  const n = (v ?? "").split(".").map(Number);
+  if (n.length !== 2 || !n.every((x) => Number.isInteger(x) && x > 0)) return undefined;
+  return { kvHeads: n[0], headDim: n[1] };
 }
 
 /** "topk.indexDim.indexLayers", as encodeState writes it. */
@@ -213,6 +222,7 @@ export function decodeState(search: string): Partial<AppState> {
       attnLayers: nonneg(p.get("al")),
       slidingLayers: pos(p.get("sl")),
       slidingWindow: pos(p.get("sw")),
+      globalAttn: globalOf(p.get("ga")),
       compressedAttn: compressedOf(p.get("cx")),
       sparseAttn: sparseOf(p.get("dx")),
       unmodelled: unmodelledOf(p.get("um")),

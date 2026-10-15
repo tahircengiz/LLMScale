@@ -20,9 +20,10 @@ export function expertCount(c: Config | null | undefined): number | undefined {
   return typeof n === "number" ? n : undefined;
 }
 
-/** Experts each token is routed through (gpt-oss also spells it experts_per_token). */
+/** Experts each token is routed through, under any of the spellings configs use:
+ *  gpt-oss's experts_per_token, Gemma 4's top_k_experts. */
 export function expertsPerToken(c: Config | null | undefined): number | undefined {
-  const n = c?.num_experts_per_tok ?? c?.experts_per_token ?? c?.moe_top_k;
+  const n = c?.num_experts_per_tok ?? c?.experts_per_token ?? c?.moe_top_k ?? c?.top_k_experts;
   return typeof n === "number" ? n : undefined;
 }
 

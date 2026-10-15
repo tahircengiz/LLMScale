@@ -81,6 +81,11 @@ export interface ModelArch {
    *  tokens (Gemma 2 and 3, gpt-oss). */
   slidingLayers?: number;
   slidingWindow?: number;
+  /** The full-attention layers' own key-value shape, where it differs from the
+   *  sliding layers' (numKeyValueHeads × headDim): Gemma 4 widens its global
+   *  layers' heads to `global_head_dim` and, with `attention_k_eq_v`, keeps
+   *  `num_global_key_value_heads` of them (vllm/transformers_utils/configs/gemma4.py). */
+  globalAttn?: { kvHeads: number; headDim: number };
   /** The fixed state a hybrid keeps per sequence, in bytes, whatever the context,
    *  and how many linear-attention or Mamba layers keep it. */
   stateBytesPerSeq?: number;
@@ -201,6 +206,22 @@ export function kvBytesPerLayerToken(arch: ModelArch, kvDtype: Dtype): number {
   return 2 * arch.numKeyValueHeads * resolveHeadDim(arch) * DTYPE_BYTES[kvDtype];
 }
 
+/** The same for a full-attention layer, which in Gemma 4 has a shape of its own
+ *  (ModelArch.globalAttn). Gemma 4's `attention_k_eq_v` loads one projection into
+ *  both K and V, but vLLM still caches the two (gemma4.py). */
+export function kvBytesPerFullLayerToken(arch: ModelArch, kvDtype: Dtype): number {
+  const g = arch.globalAttn;
+  if (!g || usesMla(arch) || usesCompressedAttn(arch)) return kvBytesPerLayerToken(arch, kvDtype);
+  return 2 * g.kvHeads * g.headDim * DTYPE_BYTES[kvDtype];
+}
+
+/** Layers that keep a cache, split by kind: full attention, sliding window. */
+function attnCounts(arch: ModelArch): { full: number; sliding: number } {
+  const attn = arch.attnLayers ?? arch.numLayers;
+  const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, attn) : 0;
+  return { full: attn - sliding, sliding };
+}
+
 /** KV cache bytes for ONE token of ONE sequence, across every layer that keeps a
  *  cache: what a token costs while the context is shorter than any window. For
  *  DeepSeek V4, what each further token adds to a long context: a quarter of an
@@ -217,7 +238,8 @@ export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
     const layers = arch.attnLayers ?? arch.numLayers;
     return layers * b.row + Math.min(arch.sparseAttn!.indexLayers, layers) * b.index;
   }
-  return (arch.attnLayers ?? arch.numLayers) * kvBytesPerLayerToken(arch, kvDtype);
+  const n = attnCounts(arch);
+  return n.full * kvBytesPerFullLayerToken(arch, kvDtype) + n.sliding * kvBytesPerLayerToken(arch, kvDtype);
 }
 
 /**
@@ -337,11 +359,13 @@ export function kvBytesPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: nu
     );
   }
   if (usesDsa(arch)) return kvBytesPerToken(arch, kvDtype) * contextLength;
-  const perLayer = kvBytesPerLayerToken(arch, kvDtype);
-  const layers = arch.attnLayers ?? arch.numLayers;
-  const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, layers) : 0;
-  const windowed = sliding * Math.min(contextLength, arch.slidingWindow ?? contextLength);
-  return perLayer * ((layers - sliding) * contextLength + windowed) + (arch.stateBytesPerSeq ?? 0);
+  const n = attnCounts(arch);
+  const windowed = n.sliding * Math.min(contextLength, arch.slidingWindow ?? contextLength);
+  return (
+    kvBytesPerFullLayerToken(arch, kvDtype) * n.full * contextLength +
+    kvBytesPerLayerToken(arch, kvDtype) * windowed +
+    (arch.stateBytesPerSeq ?? 0)
+  );
 }
 
 /** KV cache bytes ONE decode step reads for ONE sequence: all a sequence holds
@@ -373,54 +397,74 @@ export function kvBytesReadPerStep(arch: ModelArch, kvDtype: Dtype, contextLengt
 
 /** How many ways the KV cache splits across `gpus`: by key-value head, so a model
  *  with fewer KV heads than GPUs replicates them, and MLA's single latent per token
- *  is held whole on every GPU (vLLM shards attention by head; the latent has none). */
+ *  is held whole on every GPU (vLLM shards attention by head; the latent has none).
+ *  A model whose layers differ in head count (Gemma 4) splits each kind its own
+ *  way: kvReservedPerSeq takes the tensor-parallel size and sizes one GPU's share. */
 export function kvSplit(arch: ModelArch, gpus: number): number {
   if (usesMla(arch) || usesCompressedAttn(arch)) return 1;
   return Math.max(1, Math.min(gpus, arch.numKeyValueHeads || gpus));
+}
+
+/** One GPU's share of a cache with `heads` key-value heads over `tp` GPUs. */
+function headShare(heads: number, tp: number): number {
+  return 1 / Math.max(1, Math.min(tp, heads || tp));
 }
 
 /** vLLM's KV block, in tokens (CacheConfig.block_size on CUDA). */
 const VLLM_BLOCK = 16;
 
 /**
- * KV cache and state vLLM 0.31.0 holds back for ONE request at `contextLength`:
- * the bound it sizes its pool and admits requests by
- * (get_max_concurrency_for_kv_cache_config in vllm/v1/core/kv_cache_utils.py,
- * max_admission_blocks_per_request in vllm/v1/kv_cache_interface.py). It is more
- * than the cache attention reads (kvBytesPerSeq) in three ways:
- *   - a sliding layer keeps window − 1 tokens plus every token in flight, two
- *     batches of max_num_batched_tokens under async scheduling, plus one block;
- *   - a Mamba or linear-attention layer keeps two state blocks (prefix caching's
- *     "align" mode), and the attention layers' blocks grow to the state's page;
- *   - each kind of layer is cut into groups of equal size, the last one padded.
- * Checked against vLLM's own figures for Gemma 3 1B (51.0× vs 51.02×) and
- * Granite 4.0-H Micro (23.2× vs 23.21×) in scripts/test-vllmlog.ts.
+ * How vLLM 0.31.0 lays out a model's cache on one GPU of a `tp`-wide group: the
+ * page every layer's block takes, and for each kind of layer — full attention,
+ * sliding window, fixed state — how many tokens a block holds and how many equal
+ * groups the kind is cut into.
+ *   - A hybrid's attention block grows until its page holds a state
+ *     (Platform._align_hybrid_block_size; to a multiple of 128 tokens under MLA).
+ *   - Kinds whose page is smaller then scale their block until the pages are equal,
+ *     or pad the page when it does not divide; a state's page is padded
+ *     (unify_kv_cache_spec_page_size in vllm/v1/core/kv_cache_utils.py). Gemma 4's
+ *     global layers, 4 heads of 512 against 16 of 256, take 32-token blocks.
+ *   - The fewest layers of any kind set the group size, unless the kinds are close
+ *     in size (_get_kv_cache_groups_uniform_page_size).
  */
-/** How vLLM lays out a model's cache: one block size and page for every layer, and
- *  how many equal groups each kind of layer is cut into. */
-function kvLayout(arch: ModelArch, kvDtype: Dtype) {
-  const perLayer = kvBytesPerLayerToken(arch, kvDtype);
-  const attn = arch.attnLayers ?? arch.numLayers;
-  const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, attn) : 0;
-  const full = attn - sliding;
+function kvLayout(arch: ModelArch, kvDtype: Dtype, tp = 1) {
+  const n = attnCounts(arch);
+  const mla = usesMla(arch);
+  const share = mla ? 1 : headShare(arch.numKeyValueHeads, tp);
+  const slidingTok = kvBytesPerLayerToken(arch, kvDtype) * share;
+  const fullTok = kvBytesPerFullLayerToken(arch, kvDtype) * (mla || !arch.globalAttn ? share : headShare(arch.globalAttn.kvHeads, tp));
   const stateLayers = arch.stateBytesPerSeq ? arch.stateLayers ?? 0 : 0;
-  const statePerLayer = stateLayers ? arch.stateBytesPerSeq! / stateLayers : 0;
-  // One page size for every layer: an attention block holds at least one state.
-  const block = statePerLayer > 0 && perLayer > 0 ? Math.ceil(statePerLayer / perLayer / VLLM_BLOCK) * VLLM_BLOCK : VLLM_BLOCK;
-  const page = Math.max(block * perLayer, statePerLayer);
-  const kinds = [full, sliding, stateLayers].filter((n) => n > 0);
-  if (!kinds.length || !(page > 0)) return null;
-  const lo = Math.min(...kinds);
-  const hi = Math.max(...kinds);
-  // The fewest layers of any kind sets the group, unless the kinds are close in size.
+  // A state splits by its own heads; vLLM shards Mamba and linear-attention heads
+  // as it shards attention, so the KV heads' split stands in for it.
+  const statePerLayer = stateLayers ? (arch.stateBytesPerSeq! / stateLayers) * headShare(arch.numKeyValueHeads, tp) : 0;
+  const baseTok = n.full ? fullTok : slidingTok;
+  const align = mla ? 128 : VLLM_BLOCK;
+  const base = statePerLayer > 0 && baseTok > 0 ? Math.ceil(statePerLayer / baseTok / align) * align : VLLM_BLOCK;
+  const attn = [
+    { layers: n.full, tok: fullTok, sliding: false },
+    { layers: n.sliding, tok: slidingTok, sliding: true },
+  ].filter((k) => k.layers > 0);
+  const page = Math.max(statePerLayer, ...attn.map((k) => base * k.tok));
+  const counts = [...attn.map((k) => k.layers), stateLayers].filter((x) => x > 0);
+  if (!counts.length || !(page > 0)) return null;
+  const lo = Math.min(...counts);
+  const hi = Math.max(...counts);
   const group = hi < lo * 1.5 ? hi : lo;
-  const groups = (n: number) => Math.ceil(n / group);
-  return { block, page, group, full: groups(full), sliding: sliding ? groups(sliding) : 0, state: groups(stateLayers) };
+  const groups = (x: number) => Math.ceil(x / group);
+  const kinds = attn.map((k) => {
+    const own = base * k.tok;
+    // A page that divides the largest grows its block; one that does not is padded.
+    const ratio = page / own;
+    const block = Math.abs(ratio - Math.round(ratio)) < 1e-9 ? base * Math.round(ratio) : base;
+    return { sliding: k.sliding, block, groups: groups(k.layers) };
+  });
+  return { page, group, kinds, state: groups(stateLayers) };
 }
 
 /**
- * KV cache and state vLLM 0.31.0 holds back for ONE request at `contextLength`:
- * the bound it sizes its pool and admits requests by
+ * KV cache and state vLLM 0.31.0 holds back for ONE request at `contextLength`,
+ * on one GPU of a `tp`-wide tensor-parallel group (the whole cache at the default
+ * 1): the bound it sizes its pool and admits requests by
  * (get_max_concurrency_for_kv_cache_config in vllm/v1/core/kv_cache_utils.py,
  * max_admission_blocks_per_request in vllm/v1/kv_cache_interface.py). It is more
  * than the cache attention reads (kvBytesPerSeq) in three ways:
@@ -432,18 +476,19 @@ function kvLayout(arch: ModelArch, kvDtype: Dtype) {
  * Checked against vLLM's own figures for Gemma 3 1B (51.0× vs 51.02×) and
  * Granite 4.0-H Micro (23.2× vs 23.21×) in scripts/test-vllmlog.ts.
  */
-export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens = 2048): number {
+export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens = 2048, tp = 1): number {
   if (usesCompressedAttn(arch)) {
     const r = v4Reserved(arch, kvDtype, contextLength, batchTokens);
     return r.grow + r.fixed;
   }
   if (usesDsa(arch)) return Math.ceil(contextLength / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
-  const l = kvLayout(arch, kvDtype);
+  const l = kvLayout(arch, kvDtype, tp);
   if (!l) return 0;
-  const blocksOf = (tokens: number) => Math.ceil(tokens / l.block);
-  let blocks = l.full * blocksOf(contextLength);
-  if (l.sliding) blocks += l.sliding * (blocksOf(Math.min(arch.slidingWindow! - 1 + 2 * batchTokens, contextLength)) + 1);
-  blocks += l.state * 2;
+  let blocks = l.state * 2;
+  for (const k of l.kinds) {
+    const tokens = k.sliding ? Math.min(arch.slidingWindow! - 1 + 2 * batchTokens, contextLength) : contextLength;
+    blocks += k.groups * (Math.ceil(tokens / k.block) + (k.sliding ? 1 : 0));
+  }
   return blocks * l.group * l.page;
 }
 
@@ -465,13 +510,14 @@ export function tokensInUse(load: TypicalLoad, contextLength: number): number {
 /** The part of a request's cache prefix caching shares: the full-attention
  *  layers' whole blocks of the common prefix. Sliding layers keep only their
  *  window and a hybrid's state is per request, so neither is shared. */
-export function kvSharedPrefix(arch: ModelArch, kvDtype: Dtype, prefixTokens: number): number {
+export function kvSharedPrefix(arch: ModelArch, kvDtype: Dtype, prefixTokens: number, tp = 1): number {
   // DeepSeek V4 shares its compressed caches' whole 256-token blocks.
   if (usesCompressedAttn(arch)) return Math.floor(Math.max(0, prefixTokens) / V4_BLOCK) * v4Reserved(arch, kvDtype, 1, 1).perBlock;
   if (usesDsa(arch)) return Math.floor(Math.max(0, prefixTokens) / DSA_BLOCK) * DSA_BLOCK * kvBytesPerToken(arch, kvDtype);
-  const l = kvLayout(arch, kvDtype);
-  if (!l || !l.full) return 0;
-  return l.full * Math.floor(Math.max(0, prefixTokens) / l.block) * l.group * l.page;
+  const l = kvLayout(arch, kvDtype, tp);
+  const full = l?.kinds.find((k) => !k.sliding);
+  if (!l || !full) return 0;
+  return full.groups * Math.floor(Math.max(0, prefixTokens) / full.block) * l.group * l.page;
 }
 
 /**
@@ -487,10 +533,11 @@ export function typicalConcurrency(
   load: TypicalLoad,
 ): { users: number; inUse: number; capped: boolean } {
   const inUse = tokensInUse(load, input.contextLength);
-  const room = kvRoom(input, usableGiB) * kvSplit(input.arch, input.gpus ?? 1);
+  const tp = input.gpus ?? 1;
+  const room = kvRoom(input, usableGiB);
   const batch = input.batch ?? SMALL_CARD_BATCH;
-  const per = kvReservedPerSeq(input.arch, input.kvDtype, inUse, batch.tokens);
-  const shared = Math.min(kvSharedPrefix(input.arch, input.kvDtype, Math.min(load.sharedPrefix, inUse)), per);
+  const per = kvReservedPerSeq(input.arch, input.kvDtype, inUse, batch.tokens, tp);
+  const shared = Math.min(kvSharedPrefix(input.arch, input.kvDtype, Math.min(load.sharedPrefix, inUse), tp), per);
   if (room <= 0 || !(per > 0)) return { users: 0, inUse, capped: false };
   // The shared blocks sit in the pool once; each request adds the rest of its own.
   const unique = per - shared;
@@ -507,11 +554,15 @@ export function calculate(input: CalcInput): CalcResult {
   const weights = weightsBytes(arch, weightDtype);
   const kvPerToken = kvBytesPerToken(arch, kvDtype);
   // Sized as vLLM reserves it, at the batch it profiles with.
-  const kvPerSeq = kvReservedPerSeq(arch, kvDtype, contextLength, (input.batch ?? SMALL_CARD_BATCH).tokens);
+  const tokens = (input.batch ?? SMALL_CARD_BATCH).tokens;
+  const kvPerSeq = kvReservedPerSeq(arch, kvDtype, contextLength, tokens);
   const kvTotal = kvPerSeq * concurrency;
 
   const o = overheadPerGpu(arch, input.batch, gpus);
-  const perGpu = (weights / gpus + kvTotal / kvSplit(arch, gpus)) / BYTES_PER_GIB + o.totalGiB;
+  // Each GPU holds its share of every request's cache: its key-value heads, or a
+  // replica of one where a kind of layer has fewer heads than GPUs.
+  const kvPerGpu = (gpus > 1 ? kvReservedPerSeq(arch, kvDtype, contextLength, tokens, gpus) : kvPerSeq) * concurrency;
+  const perGpu = (weights / gpus + kvPerGpu) / BYTES_PER_GIB + o.totalGiB;
 
   const result: CalcResult = {
     weightsGiB: weights / BYTES_PER_GIB,
@@ -550,11 +601,11 @@ function kvRoom(input: Omit<CalcInput, "concurrency" | "contextLength">, usableG
 export function maxConcurrency(input: Omit<CalcInput, "concurrency">, usableGiB: number): number {
   const room = kvRoom(input, usableGiB);
   if (room <= 0) return 0;
-  const kvPerSeq = kvReservedPerSeq(input.arch, input.kvDtype, input.contextLength, (input.batch ?? SMALL_CARD_BATCH).tokens);
+  const kvPerSeq = kvReservedPerSeq(input.arch, input.kvDtype, input.contextLength, (input.batch ?? SMALL_CARD_BATCH).tokens, input.gpus ?? 1);
   // Guard a degenerate arch (0 KV heads / 0 context) so we never divide by zero
   // and surface an "Infinity" in the UI.
   if (!(kvPerSeq > 0)) return 0;
-  return Math.floor((room * kvSplit(input.arch, input.gpus ?? 1)) / kvPerSeq);
+  return Math.floor(room / kvPerSeq);
 }
 
 /**
@@ -564,13 +615,14 @@ export function maxConcurrency(input: Omit<CalcInput, "concurrency">, usableGiB:
 export function maxContextLength(input: Omit<CalcInput, "contextLength">, usableGiB: number): number {
   const { arch, kvDtype, concurrency } = input;
   if (!(concurrency > 0)) return 0;
-  const perSeq = (kvRoom(input, usableGiB) * kvSplit(arch, input.gpus ?? 1)) / concurrency;
-  return contextWithin(arch, kvDtype, (input.batch ?? SMALL_CARD_BATCH).tokens, perSeq);
+  const perSeq = kvRoom(input, usableGiB) / concurrency;
+  return contextWithin(arch, kvDtype, (input.batch ?? SMALL_CARD_BATCH).tokens, perSeq, input.gpus ?? 1);
 }
 
-/** The longest context whose reservation fits in `perSeq` bytes, up to the model's own. */
-function contextWithin(arch: ModelArch, kvDtype: Dtype, tokens: number, perSeq: number): number {
-  const need = (ctx: number) => kvReservedPerSeq(arch, kvDtype, ctx, tokens);
+/** The longest context whose reservation on one GPU of a `tp`-wide group fits in
+ *  `perSeq` bytes, up to the model's own. */
+function contextWithin(arch: ModelArch, kvDtype: Dtype, tokens: number, perSeq: number, tp = 1): number {
+  const need = (ctx: number) => kvReservedPerSeq(arch, kvDtype, ctx, tokens, tp);
   if (perSeq <= 0 || !(need(VLLM_BLOCK) > 0) || need(1) > perSeq) return 0;
   // The reservation grows with the context, in steps of a block; past the
   // sliding layers' bound only the full-attention layers keep growing, and a
@@ -648,6 +700,7 @@ function layoutBasis(input: Omit<CalcInput, "concurrency">) {
   const { arch, weightDtype, kvDtype, contextLength } = input;
   const batch = input.batch ?? SMALL_CARD_BATCH;
   const overhead = new Map<number, number>();
+  const request = new Map<number, number>();
   return {
     arch,
     batch,
@@ -655,7 +708,11 @@ function layoutBasis(input: Omit<CalcInput, "concurrency">) {
     experts: arch.numExperts ?? 0,
     weights: weightsBytes(arch, weightDtype),
     expertBytes: expertWeightBytes(arch, weightDtype),
-    perRequest: kvReservedPerSeq(arch, kvDtype, contextLength, batch.tokens),
+    /** What one request's cache reserves on a GPU of a tensor-parallel group, cached. */
+    perRequest(tp: number): number {
+      if (!request.has(tp)) request.set(tp, kvReservedPerSeq(arch, kvDtype, contextLength, batch.tokens, tp));
+      return request.get(tp)!;
+    },
     /** Overhead per GPU at a tensor-parallel size (overhead.ts), cached. */
     overhead(tp: number): number {
       if (!overhead.has(tp)) overhead.set(tp, overheadPerGpu(arch, batch, tp).totalGiB);
@@ -687,7 +744,7 @@ function layoutFixedGiB(b: Basis, l: Shape): number {
 /** One request's cache on a GPU of the layout, in GiB: its stage's layers, split
  *  across the tensor-parallel group as far as the KV heads go. */
 function layoutRequestGiB(b: Basis, l: Shape): number {
-  return (b.perRequest * stageShare(b, l.pp)) / kvSplit(b.arch, l.tp) / BYTES_PER_GIB;
+  return (b.perRequest(l.tp) * stageShare(b, l.pp)) / BYTES_PER_GIB;
 }
 
 function layoutPerGpu(b: Basis, l: Shape, users: number): number {
@@ -783,12 +840,12 @@ export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number): La
         const per = layoutRequestGiB(b, shape);
         const maxUsers = room > 0 && per > 0 ? Math.floor(room / per) * dp : 0;
         // The longest context each replica's share of the requests fits in.
-        const perSeq = room > 0 ? (room * BYTES_PER_GIB * kvSplit(arch, tp)) / stageShare(b, pp) / Math.ceil(users / dp) : 0;
+        const perSeq = room > 0 ? (room * BYTES_PER_GIB) / stageShare(b, pp) / Math.ceil(users / dp) : 0;
         out.push({
           layout: { gpus, ...shape, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(b, shape, users) },
           fits: layoutPerGpu(b, shape, users) <= usableGiB,
           maxUsers,
-          maxContext: contextWithin(arch, kvDtype, b.batch.tokens, perSeq),
+          maxContext: contextWithin(arch, kvDtype, b.batch.tokens, perSeq, tp),
         });
       }
     }

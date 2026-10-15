@@ -58,17 +58,44 @@ export function hybridLayers(
   return undefined;
 }
 
+/** Layers at the end of the stack that read an earlier layer's cache instead of
+ *  keeping their own: Gemma 3n's and Gemma 4's `num_kv_shared_layers`. vLLM gives
+ *  each a kv_sharing_target_layer_name, the last earlier layer of its kind, and no
+ *  cache (vllm/model_executor/models/gemma4.py, gemma3n.py). Counting them put
+ *  Gemma 4 E2B's cache 94% high at 4k tokens. */
+export function kvSharedLayers(c: Json, L: number): number {
+  const n = c?.num_kv_shared_layers;
+  return typeof n === "number" && n > 0 && n < L ? n : 0;
+}
+
+/** Gemma 4's full-attention layers' key-value shape, where it differs from the
+ *  sliding layers': head_dim becomes `global_head_dim`, and with
+ *  `attention_k_eq_v` the heads become `num_global_key_value_heads`
+ *  (gemma4_layer_config in vllm/transformers_utils/configs/gemma4.py). Read as
+ *  the sliding shape, the 31B's cache came out 72% high at 128k tokens. */
+export function globalAttnShape(c: Json): { kvHeads: number; headDim: number } | undefined {
+  if (!c || typeof c !== "object" || (c.model_type !== undefined && !/gemma4/.test(String(c.model_type)))) return undefined;
+  const headDim = typeof c.global_head_dim === "number" && c.global_head_dim > 0 ? c.global_head_dim : c.head_dim;
+  const global = c.num_global_key_value_heads;
+  const kvHeads = c.attention_k_eq_v === true && typeof global === "number" && global > 0 ? global : c.num_key_value_heads;
+  if (typeof headDim !== "number" || typeof kvHeads !== "number") return undefined;
+  if (headDim === c.head_dim && kvHeads === c.num_key_value_heads) return undefined;
+  return { kvHeads, headDim };
+}
+
 /** A sliding window that is actually in use, and how many layers use it
- *  (0 when the config does not say which). */
-export function activeWindow(c: Json): { size: number; sliding: number; path: string } | undefined {
+ *  (0 when the config does not say which). `own` limits the count to the layers
+ *  that keep a cache of their own (kvSharedLayers). */
+export function activeWindow(c: Json, own?: number): { size: number; sliding: number; path: string } | undefined {
   const size = c.sliding_window;
   if (typeof size !== "number" || size <= 0 || c.use_sliding_window === false) return undefined;
   // Phi-3.5-mini declares a 262,144-token window over a 131,072-token context.
   const maxCtx = c.max_position_embeddings;
   if (typeof maxCtx === "number" && size >= maxCtx) return undefined;
   const L = c.num_hidden_layers;
+  const upTo = typeof own === "number" && own > 0 ? own : L;
   const types: string[] | undefined = Array.isArray(c.layer_types)
-    ? (typeof L === "number" && L > 0 ? c.layer_types.slice(0, L) : c.layer_types).map(String)
+    ? (typeof upTo === "number" && upTo > 0 ? c.layer_types.slice(0, upTo) : c.layer_types).map(String)
     : undefined;
   let sliding = types ? types.filter((t) => t.includes("sliding")).length : 0;
   if (types && sliding === 0) return undefined;
@@ -171,9 +198,6 @@ export function unmodelledCacheKeys(c: Json): string[] {
   if (c.hybrid_layer_pattern !== undefined) found.push("hybrid_layer_pattern");
   if (Array.isArray(c.attn_type_list)) found.push("attn_type_list");
   if (num("attn_layer_period")) found.push("attn_layer_period");
-  if (num("num_kv_shared_layers") && c.num_kv_shared_layers > 0) found.push("num_kv_shared_layers");
-  if (num("global_head_dim") && c.global_head_dim !== c.head_dim) found.push("global_head_dim");
-  if (num("num_global_key_value_heads") && c.num_global_key_value_heads !== c.num_key_value_heads) found.push("num_global_key_value_heads");
   if (c.mamba_d_ssm !== undefined && !Array.isArray(c.layer_types) && c.hybrid_override_pattern === undefined) found.push("mamba_d_ssm");
   if (Array.isArray(c.cross_attention_layers)) found.push("cross_attention_layers");
   const ssm = c.mamba_ssm_cache_dtype ?? c.mamba_ssm_dtype;
@@ -183,7 +207,7 @@ export function unmodelledCacheKeys(c: Json): string[] {
 }
 
 export interface LayerPlan {
-  /** Layers that keep a KV cache (full or sliding). */
+  /** Layers that keep a KV cache of their own (full or sliding). */
   attention: number;
   /** Of those, the ones that keep only the last `window` tokens. */
   sliding: number;
@@ -192,6 +216,8 @@ export interface LayerPlan {
   stateBytesPerSeq: number;
   /** How many layers keep that state. */
   stateLayers: number;
+  /** The full-attention layers' shape where it differs (Gemma 4). */
+  globalAttn?: { kvHeads: number; headDim: number };
 }
 
 /** How a config's layers cache, or undefined when every layer is plain full
@@ -202,17 +228,21 @@ export function layerPlan(c: Json): LayerPlan | undefined {
   const L = c?.num_hidden_layers ?? 0;
   if (!L) return undefined;
   const hybrid = hybridLayers(c, L);
-  const window = activeWindow(c);
+  const shared = hybrid ? 0 : kvSharedLayers(c, L);
+  const window = activeWindow(c, L - shared);
   // A window the config does not assign to layers is left out: counting the whole
   // context for every layer overstates the cache, counting none would understate it.
   const sliding = window && window.sliding > 0 ? window.sliding : 0;
-  if (!hybrid && !sliding) return undefined;
-  const attention = hybrid ? hybrid.attention : L;
-  return {
+  const attention = hybrid ? hybrid.attention : L - shared;
+  const global = attention > sliding ? globalAttnShape(c) : undefined;
+  if (!hybrid && !sliding && !shared && !global) return undefined;
+  const plan: LayerPlan = {
     attention,
     sliding: Math.min(sliding, attention),
     window: sliding ? window!.size : undefined,
     stateBytesPerSeq: hybrid ? hybrid.state * stateElementsPerLayer(c) * 2 : 0,
     stateLayers: hybrid ? hybrid.state : 0,
   };
+  if (global) plan.globalAttn = global;
+  return plan;
 }

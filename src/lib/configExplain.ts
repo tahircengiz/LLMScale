@@ -19,7 +19,7 @@ import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
 import type { Lang } from "./dict.ts";
 import { lookupField, type FieldGroup, type GlossaryEntry, type Relevance } from "./configGlossary.ts";
-import { activeWindow, compressedLayers, hybridLayers } from "./layers.ts";
+import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers } from "./layers.ts";
 
 // Configs are free-form JSON.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -459,7 +459,10 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
   if (arch) {
     const dt: Dtype = "bf16";
     // Every layer's cost first; the hybrid line below then says how much of it is real.
-    const perToken = kvBytesPerToken({ ...arch, attnLayers: undefined }, dt);
+    // Gemma 4 and 3n: the layers that reuse an earlier cache never count.
+    const shared = hybrid ? 0 : kvSharedLayers(c, L);
+    const perToken = kvBytesPerToken({ ...arch, attnLayers: shared ? arch.attnLayers : undefined }, dt);
+    const global = arch.globalAttn;
     const hd = resolveHeadDim(arch);
     const mla = usesMla(arch);
     const sparse = usesDsa(arch) ? arch.sparseAttn! : undefined;
@@ -478,7 +481,10 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
         ? [{ k: "kv.w.mla", v: { L: F(L), r: F(arch.kvLoraRank!), q: F(arch.qkRopeHeadDim!), b: F(perToken) } }]
         : compressed
           ? [{ k: "kv.w.compressed", v: { csa: F(compressed.csa), hca: F(compressed.hca), e: F(kvBytesPerLayerToken(arch, dt)), i: F(compressed.indexDim + Math.ceil(compressed.indexDim / 128) * 4), b: F(Math.round(perToken)) } }]
-          : [{ k: "kv.w.gqa", v: { L: F(L), kv: F(arch.numKeyValueHeads), hd: F(hd), b: F(perToken) } }];
+          : global
+            ? [{ k: "kv.w.gqaGlobal", v: { s: F(arch.slidingLayers ?? 0), kv: F(arch.numKeyValueHeads), hd: F(hd), g: F((arch.attnLayers ?? L) - (arch.slidingLayers ?? 0)), gkv: F(global.kvHeads), ghd: F(global.headDim), b: F(perToken) } }]
+            : [{ k: "kv.w.gqa", v: { L: F(L - shared), kv: F(arch.numKeyValueHeads), hd: F(hd), b: F(perToken) } }];
+    if (shared) parts.push({ k: "kv.shared", v: { n: F(shared), L: F(L) } });
     let tone: Answer["tone"];
     if (hybrid) {
       const counted = kvBytesPerToken({ ...arch, numLayers: hybrid.attention }, dt);
@@ -500,7 +506,8 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
           ? cites(at("compress_ratios"), at("sliding_window"), at("head_dim"), at("index_head_dim"))
           : cites(at("num_hidden_layers", "n_layer", "num_layers"), at("num_key_value_heads", "num_kv_heads"), at("head_dim"),
             c.head_dim === undefined ? at("hidden_size", "n_embd") : undefined,
-            c.head_dim === undefined ? at("num_attention_heads", "n_head") : undefined, hybrid ? prefix + hybrid.path : undefined, window ? prefix + window.path : undefined),
+            c.head_dim === undefined ? at("num_attention_heads", "n_head") : undefined, hybrid ? prefix + hybrid.path : undefined, window ? prefix + window.path : undefined,
+            global ? at("global_head_dim") : undefined, global && c.attention_k_eq_v ? at("num_global_key_value_heads") : undefined, shared ? at("num_kv_shared_layers") : undefined),
     });
   }
 
