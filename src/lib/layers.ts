@@ -21,7 +21,9 @@ type Json = any;
 /** Transformers' defaults for the keys a nested language-model config may leave
  *  out, because they equal its class's: llava 1.5's Vicuna and Janus's Llama,
  *  llava-next's Mistral, DeepSeek-VL2's V2 (whose vocab_size vLLM sets to
- *  102,400, vllm/transformers_utils/configs/deepseek_vl2.py). */
+ *  102,400, vllm/transformers_utils/configs/deepseek_vl2.py). vLLM decides MLA by
+ *  kv_lora_rank alone, not use_mla, so a config that leaves it out is MLA there
+ *  too; DeepSeek-VL2-tiny, which is not, sets it to null. */
 const TEXT_DEFAULTS: Record<string, Json> = {
   llama: { hidden_size: 4096, intermediate_size: 11008, num_hidden_layers: 32, num_attention_heads: 32, max_position_embeddings: 2048, vocab_size: 32000 },
   mistral: { hidden_size: 4096, intermediate_size: 14336, num_hidden_layers: 32, num_attention_heads: 32, num_key_value_heads: 8, max_position_embeddings: 131072, vocab_size: 32000 },

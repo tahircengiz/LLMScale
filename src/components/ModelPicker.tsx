@@ -152,8 +152,10 @@ export function ModelPicker({
       numAttentionHeads: 32,
       numKeyValueHeads: 8,
     };
-    // Values typed in are the user's own: no longer a placeholder.
-    const next = { ...base, ...patch, placeholder: undefined };
+    // Values typed in are the user's own: no longer a placeholder, and counts read
+    // from the old total (speculative layers, lookup tables) no longer apply to a new one.
+    const next: ModelArch = { ...base, ...patch, placeholder: undefined };
+    if (patch.numParams !== undefined) [next.specParams, next.lookupParams] = [undefined, undefined];
     const m: ResolvedMeta = { source: "partial", gated: false };
     onModel("", next, m);
   }

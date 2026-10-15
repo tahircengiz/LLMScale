@@ -601,7 +601,10 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
   // the 2026-10-15 audit: a public mirror's config.json is read, nothing else).
   // Gemma 3, Llama 3.1 70B, Llama 4 and Gemma 3n had been sized on a 32-layer
   // placeholder: Gemma 3 1B's cache 17x too large, Llama 3.1 70B's 2.5x too small.
-  for (const id of [...mirrorIds(hfId), ...(info?.baseModel ? mirrorIds(info.baseModel) : [])]) {
+  // Only for a gated repo, or for the base model a repo names when its own config
+  // could not be read: a public repo's failure is not the gate, and a repo of the
+  // same name under unsloth/ need not be the same model.
+  for (const id of [...(gated ? mirrorIds(hfId) : []), ...(info?.baseModel ? mirrorIds(info.baseModel) : [])]) {
     const mirrorCfg = await fetchConfig(id);
     const arch = mirrorCfg ? archFromConfig(mirrorCfg, numParams || 0) : null;
     if (!arch || !(arch.numParams > 0)) continue;

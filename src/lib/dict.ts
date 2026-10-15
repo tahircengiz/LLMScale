@@ -57,7 +57,7 @@ const en: Dict = {
   "warning.configFailed":
     "Could not read this model's config — enter the architecture manually below.",
   "warning.archFromBase": "Architecture loaded from the base model (this repo has no config of its own).",
-  "warning.archFromMirror": "Gated model — architecture read from Unsloth's public copy of its config.",
+  "warning.archFromMirror": "Its own config could not be read (gated), so the architecture comes from Unsloth's public copy of it.",
   "warning.placeholder": "Not this model's architecture: its config could not be read, so the figures use a generic 32-layer placeholder of the same parameter count. Enter the real values under Custom, or pick another repository.",
   "warning.archPartial": "Partly modelled: its config sets {keys}, which change what some layers cache in ways LLMScale does not size yet. Treat the KV cache and the figures built on it as approximate.",
   "warning.vllmRemoved": "vLLM 0.31 no longer loads {arch}: its last release with it was v{v}. The figures show what the model would hold; serve it with that release or another engine.",
@@ -894,7 +894,7 @@ const en: Dict = {
   "config.json.hide": "Hide config.json",
   "config.json.rebuilt": "rebuilt",
   "config.source.base": "This repository has no config.json of its own, so this is its base model's: {base}.",
-  "config.source.mirror": "This model is gated, so this is the public copy of its config.json that Unsloth publishes: {base}.",
+  "config.source.mirror": "Its config.json could not be read (it is gated), so this is the public copy Unsloth publishes: {base}.",
   "config.source.bundled":
     "Hugging Face doesn't let a browser read this gated repository's config.json. What follows is rebuilt from LLMScale's built-in database: the architecture numbers only, not the real file.",
   "config.source.bundledFailed":
@@ -1355,7 +1355,7 @@ const tr: Dict = {
     "Gated model ve gömülü veri tabanında yok — mimariyi aşağıdan manuel gir.",
   "warning.configFailed": "Modelin config'i okunamadı — mimariyi aşağıdan manuel gir.",
   "warning.archFromBase": "Mimari base model'den yüklendi (bu repo'nun kendi config'i yok).",
-  "warning.archFromMirror": "Gated model — mimari, config'inin Unsloth'taki açık kopyasından okundu.",
+  "warning.archFromMirror": "Kendi config'i okunamadı (gated); mimari, onun Unsloth'taki açık kopyasından okundu.",
   "warning.placeholder": "Bu modelin mimarisi değil: config'i okunamadı, rakamlar aynı parametre sayısında genel bir 32 katmanlı yer tutucuyla hesaplandı. Gerçek değerleri Manuel sekmesine gir ya da başka bir repo seç.",
   "warning.archPartial": "Kısmen modellendi: config'i {keys} ayarlarını taşıyor; bunlar bazı katmanların neyi önbelleğe aldığını LLMScale'in henüz hesaplamadığı biçimde değiştirir. KV cache'i ve ona dayanan rakamları yaklaşık say.",
   "warning.vllmRemoved": "vLLM 0.31 artık {arch} yüklemiyor: onu destekleyen son sürüm v{v}. Rakamlar modelin ne tutacağını gösterir; o sürümle ya da başka bir motorla servis et.",
@@ -2185,7 +2185,7 @@ const tr: Dict = {
   "config.json.hide": "config.json'u gizle",
   "config.json.rebuilt": "yeniden kuruldu",
   "config.source.base": "Bu reponun kendi config.json'u yok; gösterilen, base model'inin config'i: {base}.",
-  "config.source.mirror": "Bu model gated; gösterilen, config.json'unun Unsloth'un yayımladığı açık kopyası: {base}.",
+  "config.source.mirror": "config.json'u okunamadı (gated); gösterilen, Unsloth'un yayımladığı açık kopyası: {base}.",
   "config.source.bundled":
     "Hugging Face, erişimi kısıtlı bu reponun config.json'unu tarayıcıya vermiyor. Aşağıdakiler LLMScale'in yerleşik veritabanından yeniden kuruldu: yalnızca mimari sayıları, gerçek dosya değil.",
   "config.source.bundledFailed":

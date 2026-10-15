@@ -56,8 +56,10 @@ export interface DecodeEstimate {
 export function paramsReadPerStep(arch: ModelArch, n: number): number {
   // What a step can read at all: not the speculative-decoding layers vLLM leaves
   // unloaded, nor lookup tables a token reads a few rows of (moe.ts).
-  const total = arch.numParams - (arch.specParams ?? 0) - (arch.lookupParams ?? 0);
-  const active = Math.min(arch.activeParams ?? total, total);
+  const spec = arch.specParams && arch.specParams < arch.numParams ? arch.specParams : 0;
+  const lookup = arch.lookupParams && arch.lookupParams < arch.numParams - spec ? arch.lookupParams : 0;
+  const total = arch.numParams - spec - lookup;
+  const active = Math.max(0, Math.min(arch.activeParams ?? total, total));
   const E = arch.numExperts;
   const k = arch.expertsPerToken;
   if (!E || !k || k >= E || active >= total || n <= 1) return active;
@@ -80,7 +82,7 @@ export function estimateDecode(i: DecodeInput): DecodeEstimate | null {
   // through only a few, so the read per step follows the experts the batch
   // touches, not the total — the active count for one sequence, nearly all of
   // them for a large batch.
-  const loaded = i.arch.numParams - (i.arch.specParams ?? 0);
+  const loaded = i.arch.numParams - (i.arch.specParams && i.arch.specParams < i.arch.numParams ? i.arch.specParams : 0);
   const readShare = loaded > 0 ? paramsReadPerStep(i.arch, i.concurrency) / loaded : 1;
   const weightBytes = weightsBytes(i.arch, i.weightDtype) * readShare;
 

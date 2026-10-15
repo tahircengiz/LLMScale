@@ -4,7 +4,8 @@
 // rules (docs/audit-2026-10-15/kv-vllm-tablolari.md) and the configs as published.
 // Run: node scripts/test-audit2.ts
 import { readFileSync } from "node:fs";
-import { BYTES_PER_GIB, calculate, kvBytesPerSeq, kvBytesPerToken, kvReservedPerSeq, weightsBytes, type ModelArch } from "../src/lib/calc.ts";
+import { BYTES_PER_GIB, calculate, expertWeightBytes, kvBytesPerSeq, kvBytesPerToken, kvReservedPerSeq, weightsBytes, type ModelArch } from "../src/lib/calc.ts";
+import { compareLog } from "../src/lib/vllmLog.ts";
 import { archFromConfig, mirrorIds, paramsFromName, parseConfigJson, placeholderArch, resolveModel, unpackedParams } from "../src/lib/hf.ts";
 import { batchFor, GPUS } from "../src/lib/gpus.ts";
 import { KNOWN_MODELS } from "../src/lib/models.ts";
@@ -241,6 +242,11 @@ console.log("\n--- D3: active parameters ---");
   check("Jamba v0.1: experts in every other layer, about 12B active", near(jamba.activeParams, 11.5e9, 12.5e9), b(jamba.activeParams));
   const e2b = active("google_gemma-4-E2B-it", 5.1e9);
   check("Gemma 4 E2B: its 2.35B per-layer embeddings are held, not read", e2b.lookupParams === 256 * 35 * 262144 && e2b.activeParams === 5.1e9 - 256 * 35 * 262144);
+  // Expert parallelism spreads the routed experts only: not the n-gram table, not
+  // the speculative layers vLLM leaves unloaded (review of phase 2).
+  const share = expertWeightBytes(q38, "bf16") / weightsBytes(q38, "bf16");
+  const routed = (180e9 - q38.specParams! - q38.lookupParams! - q38.activeParams!) * 512 / 502 / (180e9 - q38.specParams!);
+  check("Qwen3.8-Flash-Next: the experts are 68% of its weights, not 98%", Math.abs(share - routed) < 1e-9 && share < 0.7, share.toFixed(3));
   const back = decodeState(encodeState({ ...DEFAULT_STATE, arch: v4 }))!.arch!;
   check("a link keeps the speculative and lookup counts", back.specParams === Math.round(v4.specParams!) &&
     decodeState(encodeState({ ...DEFAULT_STATE, arch: q38 })).arch?.lookupParams === q38.lookupParams);
@@ -354,6 +360,11 @@ console.log("\n--- C3: the card sets a DSA row ---");
     `${(at("fp8") / at("fp8", "sm100")).toFixed(3)}x`);
   const pro = calculate({ arch: v32, weightDtype: "fp8", kvDtype: "bf16", contextLength: ctx, concurrency: 1, batch: batchFor(gpu("rtxpro6000-96")) });
   check("…and the calculator takes it from the card", Math.abs(pro.kvPerSeqGiB - gib(at("bf16", "sm120"))) < 1e-9, `${pro.kvPerSeqGiB.toFixed(2)} GiB on an RTX PRO 6000`);
+  // The vLLM page's log check builds its batch shape itself: it keeps the family too.
+  const log = compareLog({ tp: 1, maxModelLen: ctx, availableKvGiB: 10, maxConcurrency: 1 }, { arch: v32, weightDtype: "fp8", cardGiB: 96, cardName: "RTX PRO 6000 Blackwell" });
+  const conc = log.rows.find((r) => r.key === "concurrency");
+  check("…and so does the vLLM log check", log.batch.sparseMla === "sm120" && !!conc && Math.abs(conc.ours - (10 * BYTES_PER_GIB) / at("bf16", "sm120")) < 1e-9,
+    `${conc?.ours.toFixed(2)}x`);
 }
 
 console.log("\n--- B15: models vLLM 0.31 does not load ---");

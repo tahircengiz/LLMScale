@@ -205,9 +205,9 @@ export const QUANT_BITS: Partial<Record<Dtype, number>> = { int4: 4.25, int8: 8,
  *  in scripts/test-calc.ts — Qwen3-8B-FP8-dynamic is 8.79 GiB on disk and here. */
 export function weightsBytes(arch: ModelArch, dtype: Dtype): number {
   // vLLM leaves the speculative-decoding layers out unless asked for them (C6).
-  const spec = arch.specParams && arch.specParams < arch.numParams ? arch.specParams : 0;
+  const spec = specOf(arch);
   const params = arch.numParams - spec;
-  if (arch.shipped && arch.shipped.dtype === dtype) return arch.shipped.bytes * (params / arch.numParams);
+  if (arch.shipped && arch.shipped.dtype === dtype) return spec ? arch.shipped.bytes * (params / arch.numParams) : arch.shipped.bytes;
   const bits = QUANT_BITS[dtype];
   if (bits && arch.vocabSize && arch.hiddenSize) {
     const embed = arch.vocabSize * arch.hiddenSize * (arch.tieEmbeddings ? 1 : 2);
@@ -504,8 +504,10 @@ function kvLayout(arch: ModelArch, kvDtype: Dtype, tp = 1) {
   const slidingTok = kvBytesPerLayerToken(arch, kvDtype) * share;
   const fullTok = kvBytesPerFullLayerToken(arch, kvDtype) * (mla || !arch.globalAttn ? share : headShare(arch.globalAttn.kvHeads, tp));
   const stateLayers = arch.stateBytesPerSeq ? arch.stateLayers ?? 0 : 0;
-  // A state splits by its own heads; vLLM shards Mamba and linear-attention heads
-  // as it shards attention, so the KV heads' split stands in for it.
+  // A state splits by its own heads, which vLLM shards across every GPU of the
+  // group. The KV heads' split stands in for that: the same where there are at
+  // least as many KV heads as GPUs, too little past it (Qwen3.5-397B's 2 KV heads
+  // at TP 8 leave each GPU 4x the state it holds), as the sizing always had it.
   const statePerLayer = stateLayers ? (arch.stateBytesPerSeq! / stateLayers) * headShare(arch.numKeyValueHeads, tp) : 0;
   const baseTok = n.full ? fullTok : slidingTok;
   const align = mla ? 128 : VLLM_BLOCK;
@@ -747,8 +749,21 @@ export function expertWeightBytes(arch: ModelArch, dtype: Dtype): number {
   const e = arch.numExperts ?? 0;
   const k = arch.expertsPerToken ?? 0;
   if (e <= 1 || k <= 0 || k >= e || !arch.activeParams || !(arch.numParams > 0)) return 0;
-  const params = ((arch.numParams - arch.activeParams) * e) / (e - k);
-  return params > 0 && params < arch.numParams ? weightsBytes(arch, dtype) * (params / arch.numParams) : 0;
+  // The loaded weights hold no speculative layers; lookup tables are not experts
+  // and stay whole on every GPU. Counting both as unrouted experts put Qwen3.8-
+  // Flash-Next's expert share at 98% of its weights, where it is 68%.
+  const loaded = arch.numParams - specOf(arch);
+  const unrouted = loaded - lookupOf(arch) - arch.activeParams;
+  const params = (unrouted * e) / (e - k);
+  return params > 0 && params < loaded ? weightsBytes(arch, dtype) * (params / loaded) : 0;
+}
+
+/** The speculative and lookup-table parameters, where they are a part of the total. */
+function specOf(arch: ModelArch): number {
+  return arch.specParams && arch.specParams < arch.numParams ? arch.specParams : 0;
+}
+function lookupOf(arch: ModelArch): number {
+  return arch.lookupParams && arch.lookupParams < arch.numParams - specOf(arch) ? arch.lookupParams : 0;
 }
 
 /**
