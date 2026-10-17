@@ -145,11 +145,11 @@ Efor: **S** < yarım gün · **M** 1–2 gün · **L** 3+ gün. Kaynak kodlar aj
 
 | ID | Durum |
 |---|---|
-| D1 | Kalibre: adım başına katman maliyeti (0,065 ms), bant verimi %92, KV okuma %75; MoE'de bayt hesabı düzeltildi (MXFP4'te BF16 dikkat, untied giriş embedding'i okunmaz), Marlin MoE'ye katman başı 0,08 ms. Ayrı MoE katsayısı veriyle desteklenmedi. X570'te tek GPU decode %10 içinde. |
+| D1 | Kalibre: adım başına katman maliyeti (0,065 ms), bant verimi %92, KV okuma %75; MoE'de bayt hesabı düzeltildi (MXFP4'te BF16 dikkat, untied giriş embedding'i okunmaz), nicel checkpoint'te 16-bit tablolar expert baytından ayrıldı. Ayrı MoE katsayısı veriyle desteklenmedi; MoE ek yüküne fused-MoE çalışma alanı eklendi. X570'te tek GPU decode %10 içinde. |
 | D4 | Kalibre: istek başı 6 ms + geçişin katman maliyeti; prompt FLOP'undan embedding ve son token dışı çıkış katmanı düşüldü. Qwen3-0.6B 512 token: 8,9 → 14,5 ms (ölçüm 15,7). MoE prompt okuması üst sınır (K13). |
 | D2 | Yayınlanmış verilere uyduruldu: katman başına iki all-reduce × 0,014 ms; 2/4/8 GPU'lu 6 ölçümün hepsi %14 içinde (önce 1,4–4,3× hızlı). |
 | E1 | Etiketlendi: NCCL'in çift sayıldığına dair kanıt yok; çok GPU'lu büyük MoE ek yükü "alt sınır" notuyla gösteriliyor. |
 | E5 | Düzeltildi: MXFP4'te yalnız expert'ler 4-bit; vLLM 0.31'in kart ailesine göre expert dolgusu. H100 TP2 31,02 (log 31,36), A100 TP2 34,31 (34,38), L40S 13,70 (13,72). |
 | C4 | Kalibre: görüntü kodlayıcı profil geçişi (patch × genişlik × 23 bayt, bütçeye sığan öğe sayısı kadar); Qwen2.5-VL-3B ve Gemma 3 4B loglarına 0,2 GiB içinde. |
 
-Açık: GTR9 (Strix Halo, vLLM ROCm) ölçümü kullanıcı onayı bekliyor; AMD/birleşik bellek hızları üst sınır etiketinde.
+GTR9 (Strix Halo, vLLM ROCm, 2026-10-17, kullanıcı onayıyla): katman başı 0,36 ms (eager) ve %34 tensor verimi cihaz sabiti; Qwen3-8B tek dizi 77,4 vs 77,6 ms, Qwen3-30B-A3B AWQ 26,6 vs 30,6 ms (önce 9,8). Dörtten fazla dizi ve kısa prompt'lar Strix'te üst sınır.

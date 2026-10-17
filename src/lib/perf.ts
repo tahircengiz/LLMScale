@@ -31,16 +31,10 @@ export const BANDWIDTH_EFFICIENCY = 0.92;
 export const KV_EFFICIENCY = 0.75;
 /** What a step costs beyond its reads, per layer: the kernels between the reads,
  *  replayed from a CUDA graph. Fitted with BANDWIDTH_EFFICIENCY on the RTX 4070 Ti.
- *  A MoE layer needs nothing more: routed experts cost what they read, and once
- *  their bytes are counted right (calc.ts, MXFP4) gpt-oss-20b and -120b land within
- *  14% of published single-GPU speeds with no MoE factor. */
+ *  A MoE layer needs nothing more: routed experts cost what they read, BF16 or GPTQ,
+ *  and once their bytes are counted right (calc.ts: 16-bit tables, MXFP4) gpt-oss-20b
+ *  and -120b land within 14% of published single-GPU speeds with no MoE factor. */
 export const LAYER_MS = 0.065;
-/** Integer-quantized experts (AWQ, GPTQ) run through vLLM's Marlin MoE kernel, which
- *  costs more per MoE layer than its reads: Qwen1.5-MoE-A2.7B GPTQ on the RTX 4070
- *  Ti took 1.7 to 2.0 ms more per step than the same reads in BF16 would, from 1 to
- *  16 sequences, 0.08 ms for each of its 24 layers. MXFP4 and BF16 experts showed
- *  no such cost. */
-export const QUANT_MOE_LAYER_MS = 0.08;
 /** Tensor parallelism adds two all-reduces per layer to every step: fitted to
  *  published batch-1 figures for Llama 70B and 405B on 2, 4 and 8 H100s and MI300Xs
  *  (docs/audit-2026-10-15/hiz-kaynaklari.md, N7, N8, A1-A3), all within 14%. */
@@ -153,12 +147,11 @@ export function estimateDecode(i: DecodeInput): DecodeEstimate | null {
 }
 
 /** A step's fixed cost on `gpus` GPUs of a tensor-parallel group: every layer's
- *  kernels, the Marlin MoE kernel's own cost for integer-quantized experts, and the
- *  group's two all-reduces per layer. */
-export function stepFloorMs(arch: ModelArch, gpus = 1, weightDtype?: Dtype): number {
+ *  kernels (`layerMs` where a device measured its own, gpus.ts), and the group's two
+ *  all-reduces per layer. */
+export function stepFloorMs(arch: ModelArch, gpus = 1, layerMs = LAYER_MS): number {
   const layers = Math.max(1, arch.numLayers);
-  const marlin = weightDtype === "int4" && arch.numExperts && arch.expertsPerToken && !arch.mxfp4 ? QUANT_MOE_LAYER_MS : 0;
-  return layers * (LAYER_MS + marlin + (gpus > 1 ? 2 * ALLREDUCE_MS : 0));
+  return layers * (layerMs + (gpus > 1 ? 2 * ALLREDUCE_MS : 0));
 }
 
 /** Share of the vendor's dense tensor peak a serving engine's matrix multiplies
@@ -231,13 +224,13 @@ export function prefillTime(
   arch: ModelArch,
   weightDtype: Dtype,
   tokens: number,
-  device: { tflops: Tflops; bandwidthGBs: number; computeEfficiency?: number },
+  device: { tflops: Tflops; bandwidthGBs: number; computeEfficiency?: number; layerMs?: number },
   gpus = 1,
 ): PrefillEstimate {
   const eff = device.computeEfficiency ?? COMPUTE_EFFICIENCY;
   const compute = prefillFlops(arch, tokens) / (computeTflops(device.tflops, weightDtype) * 1e12 * eff * gpus);
   const memory = weightBytesRead(arch, weightDtype, tokens) / (device.bandwidthGBs * 1e9 * BANDWIDTH_EFFICIENCY * gpus);
-  const fixed = (stepFloorMs(arch, gpus, weightDtype) + REQUEST_MS) / 1000;
+  const fixed = (stepFloorMs(arch, gpus, device.layerMs) + REQUEST_MS) / 1000;
   return compute >= memory ? { seconds: compute + fixed, bound: "compute" } : { seconds: memory + fixed, bound: "memory" };
 }
 
@@ -261,7 +254,7 @@ export interface DecodePoint {
 export function decodeStep(
   i: Omit<DecodeInput, "concurrency" | "bandwidthGBs">,
   batch: number,
-  device: { tflops?: Tflops; bandwidthGBs: number; computeEfficiency?: number },
+  device: { tflops?: Tflops; bandwidthGBs: number; computeEfficiency?: number; layerMs?: number },
   gpus = 1,
 ): DecodePoint | null {
   const mem = estimateDecode({ ...i, concurrency: batch, bandwidthGBs: device.bandwidthGBs * gpus });
@@ -283,7 +276,7 @@ export function decodeStep(
     const computeMs = (flops / (computeTflops(device.tflops, i.weightDtype) * 1e12 * (device.computeEfficiency ?? COMPUTE_EFFICIENCY) * gpus)) * 1000;
     if (computeMs > stepMs) [stepMs, bound] = [computeMs, "compute"];
   }
-  stepMs += stepFloorMs(i.arch, gpus, i.weightDtype);
+  stepMs += stepFloorMs(i.arch, gpus, device.layerMs);
   return { batch, stepMs, perUser: 1000 / stepMs, total: (1000 / stepMs) * batch, bound };
 }
 
@@ -292,7 +285,7 @@ export function decodeStep(
 export function decodeCurve(
   i: Omit<DecodeInput, "concurrency" | "bandwidthGBs">,
   maxBatch: number,
-  device: { tflops?: Tflops; bandwidthGBs: number; computeEfficiency?: number },
+  device: { tflops?: Tflops; bandwidthGBs: number; computeEfficiency?: number; layerMs?: number },
   gpus = 1,
 ): DecodePoint[] {
   const out: DecodePoint[] = [];

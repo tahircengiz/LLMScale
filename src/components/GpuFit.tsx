@@ -177,6 +177,7 @@ export function GpuFit({
     bandwidthGBs: (g.bandwidthGBs ?? 0) * scale,
     tflops: g.tflops ? { bf16: g.tflops.bf16 * scale, fp8: g.tflops.fp8 && g.tflops.fp8 * scale, fp4: g.tflops.fp4 && g.tflops.fp4 * scale } : undefined,
     computeEfficiency: computeEfficiency(g),
+    layerMs: g.layerMs,
   });
   const decodeIn = { arch, weightDtype, kvDtype, contextLength };
   const speedOf = (g: Gpu) => (g.bandwidthGBs ? decodeStep(decodeIn, concurrency, deviceOf(g)) : null);

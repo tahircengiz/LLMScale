@@ -32,6 +32,10 @@ export interface Gpu {
   noVllm?: boolean;
   /** Dense tensor throughput from the vendor's datasheet, TFLOPS (perf.ts). */
   tflops?: Tflops;
+  /** Where measured: the share of that peak vLLM's matrix multiplies reach, and what
+   *  each layer of a step costs beyond its reads, ms (perf.ts, LAYER_MS otherwise). */
+  computeEfficiency?: number;
+  layerMs?: number;
   note?: string;
 }
 
@@ -92,9 +96,12 @@ export const GPUS: Gpu[] = [
   { id: "apple-m3ultra-256", name: "Apple M3 Ultra (256GB)", vramGiB: 192, totalGiB: 256, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 819, note: "Unified memory; ~75% usable by the GPU by default" },
   { id: "apple-m3ultra-512", name: "Apple M3 Ultra (512GB)", vramGiB: 384, totalGiB: 512, category: "apple", vendor: "Apple", unified: true, bandwidthGBs: 819, note: "Unified memory; ~75% usable by the GPU by default" },
 
-  // Unified-memory AI PCs / APUs — system RAM assigned to the SoC's GPU.
-  { id: "amd-strixhalo-64", name: "AMD Ryzen AI Max+ 395 (64GB)", vramGiB: 48, totalGiB: 64, category: "apu", vendor: "AMD", unified: true, bandwidthGBs: 256, tflops: { bf16: 60 }, note: "Strix Halo · LPDDR5X; ~75% to the iGPU via Variable Graphics Memory" },
-  { id: "amd-strixhalo-128", name: "AMD Ryzen AI Max+ 395 (128GB)", vramGiB: 96, totalGiB: 128, category: "apu", vendor: "AMD", unified: true, bandwidthGBs: 256, tflops: { bf16: 60 }, note: "Strix Halo · LPDDR5X; up to 96 GB to the iGPU (Variable Graphics Memory)" },
+  // Unified-memory AI PCs / APUs — system RAM assigned to the SoC's GPU. Strix Halo's
+  // speed constants are measured on GTR9 with vLLM's ROCm build (0.20.1, --enforce-eager,
+  // which gfx1151 needs): 0.36 ms per layer per step, 34% of the rated tensor peak
+  // (scripts/fixtures/vllm/calib-strixhalo-2026-10-17.json).
+  { id: "amd-strixhalo-64", name: "AMD Ryzen AI Max+ 395 (64GB)", vramGiB: 48, totalGiB: 64, category: "apu", vendor: "AMD", unified: true, bandwidthGBs: 256, tflops: { bf16: 60 }, computeEfficiency: 0.34, layerMs: 0.36, note: "Strix Halo · LPDDR5X; ~75% to the iGPU via Variable Graphics Memory" },
+  { id: "amd-strixhalo-128", name: "AMD Ryzen AI Max+ 395 (128GB)", vramGiB: 96, totalGiB: 128, category: "apu", vendor: "AMD", unified: true, bandwidthGBs: 256, tflops: { bf16: 60 }, computeEfficiency: 0.34, layerMs: 0.36, note: "Strix Halo · LPDDR5X; up to 96 GB to the iGPU (Variable Graphics Memory)" },
   { id: "nv-dgxspark-128", name: "NVIDIA DGX Spark (GB10)", vramGiB: 120, visibleGiB: 121.63, totalGiB: 128, category: "apu", vendor: "NVIDIA", unified: true, bandwidthGBs: 273, tflops: { bf16: 125, fp8: 250, fp4: 500 }, note: "Grace-Blackwell GB10 · LPDDR5X; full pool shared CPU/GPU; vLLM is commonly run at --gpu-memory-utilization 0.8 here" },
   { id: "nv-jetson-orin-64", name: "NVIDIA Jetson AGX Orin (64GB)", vramGiB: 56, totalGiB: 64, category: "apu", vendor: "NVIDIA", unified: true, bandwidthGBs: 204, tflops: { bf16: 42.5 }, note: "Edge module · unified LPDDR5" },
 ];
@@ -230,8 +237,10 @@ export function usableGiB(g: Gpu, migId?: string, share: number = VLLM_UTIL): nu
 }
 
 /** The share of its rated tensor peak a device reaches serving (perf.ts): measured
- *  on a GeForce card, which runs above its rated clock; estimated for the rest. */
+ *  on a GeForce card, which runs above its rated clock, and on Strix Halo; estimated
+ *  for the rest. */
 export function computeEfficiency(g: Gpu): number {
+  if (g.computeEfficiency) return g.computeEfficiency;
   return g.category === "consumer" && g.vendor === "NVIDIA" ? CONSUMER_COMPUTE_EFFICIENCY : COMPUTE_EFFICIENCY;
 }
 

@@ -97,7 +97,7 @@ function operate(m: ModelSetup, w: Workload, device: Device, tp: number, prefill
   return { ok: !fails, batch: b, tpotMs, ttftS, fails };
 }
 
-type Device = { tflops?: Gpu["tflops"]; bandwidthGBs: number; computeEfficiency: number };
+type Device = { tflops?: Gpu["tflops"]; bandwidthGBs: number; computeEfficiency: number; layerMs?: number };
 
 /** Every tensor-parallel size from `sizes` the model fits on and the heads allow,
  *  with what it takes to carry the load; cheapest first. */
@@ -114,7 +114,7 @@ export function planOptions(
   const batch = batchFor(g);
   const load: TypicalLoad = { promptTokens: w.promptTokens, outputTokens: w.outputTokens, sharedPrefix: w.sharedPrefix };
   const inUse = tokensInUse(load, m.maxModelLen);
-  const device: Device = { tflops: g.tflops, bandwidthGBs: g.bandwidthGBs ?? 0, computeEfficiency: computeEfficiency(g) };
+  const device: Device = { tflops: g.tflops, bandwidthGBs: g.bandwidthGBs ?? 0, computeEfficiency: computeEfficiency(g), layerMs: g.layerMs };
   const heads = m.arch.numAttentionHeads;
   const kvHeads = m.arch.numKeyValueHeads || heads;
 

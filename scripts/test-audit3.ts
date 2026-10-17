@@ -14,7 +14,7 @@ import { BYTES_PER_GIB, mxfp4Pad, weightsBytes, weightsOnGpu, type Dtype, type M
 import { decodeStep, prefillTime, REQUEST_MS, stepFloorMs } from "../src/lib/perf.ts";
 import { mxfp4Kernel, overheadPerGpu, vllmBatch } from "../src/lib/overhead.ts";
 import { KNOWN_MODELS } from "../src/lib/models.ts";
-import { GPUS } from "../src/lib/gpus.ts";
+import { computeEfficiency, GPUS } from "../src/lib/gpus.ts";
 import { overheadFromLog, parseVllmLog } from "../src/lib/vllmLog.ts";
 import { decodeState, encodeState } from "../src/lib/urlState.ts";
 
@@ -32,7 +32,7 @@ const pct = (ours: number, theirs: number) => `${ours.toFixed(2)} vs ${theirs.to
 const cal = JSON.parse(readFileSync(new URL("./fixtures/vllm/calib-rtx4070ti-2026-10-16.json", import.meta.url), "utf8"));
 const dev = cal.device as { bandwidthGBs: number; tflops: { bf16: number; fp8: number }; computeEfficiency: number };
 type Run = {
-  tag: string; id: string; weightDtype: Dtype; kind: "dense" | "moe" | "vl"; params: number; shippedBytes?: number; config: any;
+  tag: string; id: string; weightDtype: Dtype; kind: "dense" | "moe" | "vl"; params: number; shippedBytes?: number; config: any; startup?: any;
   api?: { ttftMs: Record<string, number>; itlMs: Record<string, number> };
 };
 const runs = cal.models as Run[];
@@ -195,6 +195,42 @@ console.log("\n--- C4: the vision encoder's profiling peak ---");
   check("a text-only config has no encoder", visionEncoder({ hidden_size: 4096 }) === undefined);
   const url = decodeState(encodeState({ hfId: "", arch: a, weightDtype: "bf16", kvDtype: "bf16", contextLength: 8192, concurrency: 1 } as any));
   check("the encoder survives the URL", JSON.stringify(url.arch?.vision) === JSON.stringify(a.vision));
+}
+
+console.log("\n--- Strix Halo (GTR9): vLLM ROCm, eager, measured 2026-10-17 ---");
+{
+  const sx = JSON.parse(readFileSync(new URL("./fixtures/vllm/calib-strixhalo-2026-10-17.json", import.meta.url), "utf8"));
+  const strix = gpu("amd-strixhalo-128");
+  const d = { tflops: strix.tflops!, bandwidthGBs: strix.bandwidthGBs!, computeEfficiency: computeEfficiency(strix), layerMs: strix.layerMs };
+  check("the device carries its measured constants", strix.layerMs === 0.36 && computeEfficiency(strix) === 0.34);
+  for (const r of sx.models as Run[]) {
+    const a = archOf(r);
+    const one = decodeStep({ arch: a, weightDtype: r.weightDtype, kvDtype: "bf16", contextLength: CTX }, 1, d)!.stepMs;
+    check(`${r.tag}, one sequence: within 15%`, within(one, r.api!.itlMs["1"], 0.15), `${one.toFixed(1)} vs ${r.api!.itlMs["1"].toFixed(1)} ms`);
+    // Past four sequences ROCm leaves its skinny GEMV kernels for general GEMMs and
+    // the step jumps: still an upper bound (K13), measured within 2.5x.
+    for (const b of ["8", "32"]) {
+      const ours = decodeStep({ arch: a, weightDtype: r.weightDtype, kvDtype: "bf16", contextLength: CTX }, +b, d)!.stepMs;
+      const ms = r.api!.itlMs[b];
+      check(`${r.tag}, ${b} sequences: upper bound, measured within 2.5x`, ours <= ms * 1.1 && ms <= ours * 2.5, `${ours.toFixed(1)} vs ${ms.toFixed(1)} ms`);
+    }
+    const long = prefillTime(a, r.weightDtype, 4096, d).seconds * 1000;
+    if (r.kind === "dense") check(`${r.tag}, 4,096-token prompt: within 15%`, within(long, r.api!.ttftMs["4096"], 0.15), `${long.toFixed(0)} vs ${r.api!.ttftMs["4096"].toFixed(0)} ms`);
+    for (const p of ["64", "256"]) {
+      const ours = prefillTime(a, r.weightDtype, +p, d).seconds * 1000;
+      const ms = r.api!.ttftMs[p];
+      // Short prompts run slower still on ROCm (and a MoE's more so): an upper bound.
+      check(`${r.tag}, ${p}-token prompt: upper bound, measured within 3.2x`, ours <= ms * 1.15 && ms <= ours * 3.2, `${ours.toFixed(0)} vs ${ms.toFixed(0)} ms`);
+    }
+  }
+  // The audit's case: 108 tok/s shown where vLLM-ROCm ran 31.8 (now 32.7 here).
+  const awq = (sx.models as Run[]).find((x) => x.kind === "moe")!;
+  const perUser = decodeStep({ arch: archOf(awq), weightDtype: "int4", kvDtype: "bf16", contextLength: 512 }, 1, d)!.perUser;
+  check("Qwen3-30B-A3B AWQ: no longer three times vLLM-ROCm's speed", perUser < 40, `${perUser.toFixed(1)} tok/s`);
+  const overhead = overheadPerGpu(archOf(awq), vllmBatch(96, strix.name)).totalGiB;
+  const st = awq.startup;
+  const spent = st.requestedGiB - st.weightsGiB - st.kvGiB;
+  check("Qwen3-30B-A3B AWQ startup: overhead within 0.5 GiB (no graphs in eager mode)", Math.abs(overhead - spent) <= 0.5, `${overhead.toFixed(2)} vs ${spent.toFixed(2)} GiB`);
 }
 
 console.log("\n--- overhead.ts against the 2026-10-16 startups (scripts/fixtures/vllm/1016-*.txt) ---");

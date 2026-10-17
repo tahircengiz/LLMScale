@@ -22,7 +22,37 @@ token-id lists, so their length is exact; prefix caching off. Decode: B requests
 each with `ignore_eos`; per request the median gap between streamed tokens 10 to 120, then the median over requests;
 two rounds. The offline `LLM` timings repeat the 2026-10-13 method (`calib-rtx4070ti.json`).
 
-## Raw figures
+## GTR9: Strix Halo, vLLM ROCm (2026-10-17, with the user's yes)
+
+| | |
+|---|---|
+| Machine | GTR9, Ryzen AI Max+ 395, Radeon 8060S (gfx1151), 96 GiB carve-out, LPDDR5X 256 GB/s |
+| vLLM | the existing `~/vllm-venv` (0.20.1rc1.dev133, torch 2.10, HIP 7.2), the build of the 2026-08-22 31.8 tok/s run; no install |
+| Flags | `--enforce-eager` (HIP graphs hang on gfx1151), `--gpu-memory-utilization 0.22`, serve defaults otherwise (8,192 tokens, 1,024 sequences), `--host 127.0.0.1`, prefix caching off; LiteLLM untouched |
+| Guard | a loop would have stopped vLLM below 2.5 GiB of available host memory or above 95 GiB of VRAM; it never fired (lowest 14.5 GiB available, VRAM 92.4 GiB) |
+| Duration | 11:31–11:44 UTC; VRAM back to 70.86 GiB, port and processes gone, scratch removed |
+| Models | `cpatonn/Qwen3-30B-A3B-Instruct-2507-AWQ-4bit` (already in `~/hf-cache`), `Qwen/Qwen3-8B` BF16 (through ModelServ's `hdd` pool) |
+
+`torch.cuda.mem_get_info()` reported **95.83 of 96.0 GiB free** while llama.cpp's Vulkan servers held 70.86 GiB of the
+same carve-out: HIP does not see Vulkan's allocations, so vLLM's free-memory check cannot stop it from overcommitting a
+shared Strix Halo. At 0.22 the budget (21.12 GiB) fit the real 25 GiB.
+
+| model | decode b=1 | b=8 | b=32 | TTFT 64 | 256 | 1,024 | 4,096 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Qwen3-30B-A3B AWQ (W4A16 g32) | 30.61 ms (32.7 tok/s) | 86.92 | 157.76 | 214.8 | 291.5 | 594.9 | 2,718.2 |
+| Qwen3-8B BF16 | 77.56 ms (12.9 tok/s) | 175.24 | 186.09 | 194.5 | 373.2 | 779.0 | 3,060.5 |
+
+Startup (GiB): AWQ weights 17.04, peak activation 2.15, non-torch 0.29, graphs 0 (eager), KV 1.64 (17,888 tokens);
+Qwen3-8B 15.27, 2.19, 0.26, 0, 3.39 (24,704 tokens). Logs: `scripts/fixtures/vllm/1017-strix-*.txt`; data:
+`calib-strixhalo-2026-10-17.json`.
+
+Fitted, as device constants of Strix Halo (gpus.ts): every layer of a step costs **0.36 ms** in eager mode (0.065 with
+CUDA graphs on NVIDIA), and matrix multiplies reach **34%** of the rated 60 TFLOPS. Qwen3-8B then lands at 77.4 ms per
+token (measured 77.6) and 3,051 ms for 4,096 tokens (3,061); Qwen3-30B-A3B AWQ at 26.6 ms (30.6), where 9.8 was shown.
+Past four sequences ROCm leaves its skinny GEMV kernels and each step costs 2–2.2× more; short prompts read 2–3× slower;
+both stay labelled as upper bounds.
+
+## Raw figures (X570)
 
 ### Decode: time between tokens (ms), `vllm serve`, 128-token prompts
 
@@ -99,8 +129,8 @@ not load the vision tower (1.25 GiB less weight).
   the same for dense and MoE models. Once it is in, weights stream at ~92% of rated bandwidth. The "MoE inefficiency" of
   the audit was mostly bytes: gpt-oss keeps attention, router and embeddings in BF16, so by parameter share its step read
   half of what it does; and an untied input embedding is a lookup, not a read. No separate MoE factor fits: granite's BF16
-  experts cost what they read. Integer-quantized experts through vLLM's Marlin MoE do cost more, 0.08 ms per MoE layer
-  (Qwen1.5-MoE GPTQ, +1.7–2.0 ms from 1 to 16 sequences). From 4 to 16 sequences a MoE touches fewer experts than uniform
+  experts cost what they read, and so do GPTQ experts through Marlin once a quantized checkpoint's 16-bit embedding and
+  head are kept out of the experts' bytes. From 4 to 16 sequences a MoE touches fewer experts than uniform
   routing predicts, so the model is up to 20% slow there (the safe side).
 - **D4, time to first token.** A request costs ~6 ms before its prompt is read (`vllm serve` here; NVIDIA's 200-token
   figure on an H100 leaves 5.5 ms), plus the pass's per-layer cost. Prompt FLOPs leave out the embedding lookup and run the
@@ -114,6 +144,9 @@ not load the vision tower (1.25 GiB less weight).
   same; Hopper's Triton kernel only the expert width, to 64; ROCm 256 both (gpt-oss's SwiGLU variant is not SiLU). With the
   BF16 attention, `gpt-oss-120b` on 2 H100s is 31.02 GiB per GPU (log 31.36, v0.23), on 2 A100s 34.31 (34.38), gpt-oss-20b
   on an L40S 13.70 (13.72). The GH200 log (64.38 GiB) is v0.16, which padded differently; 0.31's rule gives 60.77.
+- **MoE overhead.** vLLM's fused MoE kernels hold, per token and routed expert, the gate-up output, its activation
+  and the down output: 2 × tokens × k × (3·I + H) bytes. Added to the profiling peak, it brings the four MoE startups
+  (granite 1B/3B, Qwen1.5-MoE GPTQ, Qwen3-30B-A3B AWQ on GTR9) within 0.15 GiB.
 - **E1, overhead on several GPUs.** The NCCL 0.5 GiB is not double-counted: the only recent TP2 log with a
   non-torch figure (vllm#54559, A100 TP2 + EP) shows 1.15 GiB, which the same terms (runtime, sampler, 0.5 GiB of NCCL) put at about 1.2. The large misses (Qwen3-235B TP4 7.7 GiB,
   DeepSeek-V3.2 DP8+EP ~10, DeepSeek DP16+EPLB 24) are MoE runs with expert-parallel all-to-all backends and older vLLM
@@ -157,10 +190,10 @@ Ratios above 1 mean the app was too fast (speed) or too large (memory). "Before"
 | x570 granite-3b-a800m ttft64 ms | 16.36 | 22.30 | 19.75 | 1.21 | 0.89 |
 | x570 granite-3b-a800m ttft512 ms | 16.36 | 22.30 | 28.30 | 1.73 | 1.27 |
 | x570 granite-3b-a800m ttft4096 ms | 123.05 | 122.56 | 171.33 | 1.39 | 1.40 |
-| x570 qwen1.5-moe-gptq b1 ms | 4.01 | 5.65 | 5.73 | 1.43 | 1.01 |
-| x570 qwen1.5-moe-gptq b16 ms | 16.34 | 16.64 | 14.54 | 0.89 | 0.87 |
-| x570 qwen1.5-moe-gptq ttft64 ms | 20.86 | 26.09 | 22.86 | 1.10 | 0.88 |
-| x570 qwen1.5-moe-gptq ttft4096 ms | 328.05 | 266.91 | 313.96 | 0.96 | 1.18 |
+| x570 qwen1.5-moe-gptq b1 ms | 4.01 | 5.33 | 5.73 | 1.43 | 1.07 |
+| x570 qwen1.5-moe-gptq b16 ms | 16.34 | 15.29 | 14.54 | 0.89 | 0.95 |
+| x570 qwen1.5-moe-gptq ttft64 ms | 20.86 | 24.19 | 22.86 | 1.10 | 0.95 |
+| x570 qwen1.5-moe-gptq ttft4096 ms | 328.05 | 264.99 | 313.96 | 0.96 | 1.18 |
 | N1 8B fp8 H100 ms | 3.46 | 4.76 | 4.53 | 1.31 | 0.95 |
 | N2 8B bf16 H100 ms | 6.07 | 7.03 | 6.52 | 1.07 | 0.93 |
 | N3 8B fp8 L40S ms | 13.42 | 12.49 | 13.97 | 1.04 | 1.12 |
@@ -174,7 +207,6 @@ Ratios above 1 mean the app was too fast (speed) or too large (memory). "Before"
 | G2 oss20b 4090 tok/s | 365.14 | 191.01 | 221.95 | 1.65 | 0.86 |
 | G3 oss120b PRO6000 tok/s | 514.14 | 191.75 | 196.31 | 2.62 | 0.98 |
 | T1 oss120b 8xB200 tok/s | 17218.22 | 291.27 | 420.00 | 41.00 | 0.69 |
-| GTR9 Qwen3-30B-A3B int4 tok/s | 107.66 | 80.37 | 31.80 | 3.39 | 2.53 |
 | N1 ttft1000 ms | 13.75 | 20.06 | 19.03 | 1.38 | 0.95 |
 | N2b ttft200 ms | 5.99 | 12.95 | 11.96 | 2.00 | 0.92 |
 | E5 oss120b H100 TP2 GiB/GPU | 29.69 | 31.02 | 31.36 | 0.95 | 0.99 |
@@ -182,8 +214,14 @@ Ratios above 1 mean the app was too fast (speed) or too large (memory). "Before"
 | E5 oss20b L40S GiB | 11.93 | 13.70 | 13.72 | 0.87 | 1.00 |
 | C4 Qwen2.5-VL-3B overhead GiB | 1.27 | 3.06 | 2.97 | 0.43 | 1.03 |
 | C4 Gemma3-4B overhead GiB | 2.07 | 2.87 | 1.67 | 1.24 | 1.72 |
+| strix qwen3-30b-a3b-awq b1 ms | 9.79 | 26.55 | 30.61 | 3.12 | 1.15 |
+| strix qwen3-30b-a3b-awq b8 ms | 39.03 | 50.87 | 86.92 | 2.23 | 1.71 |
+| strix qwen3-30b-a3b-awq ttft4096 ms | 946.25 | 1443.26 | 2718.23 | 2.87 | 1.88 |
+| strix qwen3-8b b1 ms | 80.13 | 77.38 | 77.56 | 0.97 | 1.00 |
+| strix qwen3-8b b8 ms | 81.09 | 78.41 | 175.24 | 2.16 | 2.23 |
+| strix qwen3-8b ttft4096 ms | 2001.29 | 3050.89 | 3060.52 | 1.53 | 1.00 |
 
-Left: GTR9's own vLLM-ROCm figure (Qwen3-30B-A3B AWQ, 31.8 tok/s, eager mode, vLLM 0.20.1) is still 2.5× slower than the
-model, which matches llama.cpp on the same box (88 tok/s) instead; ROCm and unified-memory speeds stay labelled as upper
-bounds until GTR9 is measured. TRT-LLM on 8× B200 (T1) runs faster than the model's per-layer cost allows. Gemma 3 4B's
-language-model overhead is over-estimated by ~1.1 GiB (its 262k-entry output layer); an over-estimate, kept for now.
+Left: on Strix Halo, more than four sequences and short prompts run 2–3× slower than the model (ROCm leaves its skinny
+GEMV kernels past batch 4), and a MoE's prompt is read slower still; labelled as upper bounds. TRT-LLM on 8× B200 (T1)
+runs faster than the model's per-layer cost allows. Gemma 3 4B's language-model overhead is over-estimated by ~1.1 GiB
+(its 262k-entry output layer); an over-estimate, kept for now.
