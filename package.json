@@ -34,6 +34,7 @@
     "test:vllmlog": "node scripts/test-vllmlog.ts",
     "test:load": "node scripts/test-load.ts",
     "test:planner": "node scripts/test-planner.ts",
+    "test:agreement": "node scripts/test-agreement.ts",
     "test:gpucompare": "node scripts/test-gpucompare.ts",
     "test:presets": "node scripts/test-presets.ts",
     "test:choices": "node scripts/test-choices.ts",
