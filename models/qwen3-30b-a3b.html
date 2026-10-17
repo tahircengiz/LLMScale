@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Qwen3 30B A3B VRAM Requirements | LLMScale</title>
-<meta name="description" content="Qwen3 30B A3B needs 58.93 GiB of GPU memory at BF16 and 18.02 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="description" content="Qwen3 30B A3B needs 59.07 GiB of GPU memory at BF16 and 18.15 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/models/qwen3-30b-a3b.html">
 <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/models/qwen3-30b-a3b.html">
 <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/models/qwen3-30b-a3b.html">
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Qwen3 30B A3B: how much VRAM does it need?">
-<meta property="og:description" content="Qwen3 30B A3B needs 58.93 GiB of GPU memory at BF16 and 18.02 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta property="og:description" content="Qwen3 30B A3B needs 59.07 GiB of GPU memory at BF16 and 18.15 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/models/qwen3-30b-a3b.html">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
@@ -22,7 +22,7 @@
 <meta property="og:locale:alternate" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Qwen3 30B A3B: how much VRAM does it need?">
-<meta name="twitter:description" content="Qwen3 30B A3B needs 58.93 GiB of GPU memory at BF16 and 18.02 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
+<meta name="twitter:description" content="Qwen3 30B A3B needs 59.07 GiB of GPU memory at BF16 and 18.15 GiB at INT4 for one user at 8k context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.">
 <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
 <script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
 <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
@@ -160,23 +160,23 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <p class="lede">Qwen3 30B A3B has 30.53B parameters in 48 layers. It uses grouped-query attention: 32 query heads share 4 key-value heads, so its KV cache is 8× smaller than full multi-head attention would need. It is a Mixture-of-Experts model with about 3.30B of its 30.53B parameters active per token: memory has to hold all of them, while each token passes through only the active share. It takes up to 40,960 tokens of context; one user at that length needs 3.75 GiB of KV cache at FP16 on top of the weights.</p>
 <div class="answer">
   <div class="cap">BF16 · 8k context · one user</div>
-  <div class="big">58.93 GiB</div>
-  <p>56.87 GiB of weights, 768 MiB of KV cache and 1.31 GiB of vLLM's overhead. At INT4 the same workload needs 18.02 GiB.</p>
+  <div class="big">59.07 GiB</div>
+  <p>56.87 GiB of weights, 768 MiB of KV cache and 1.44 GiB of vLLM's overhead. At INT4 the same workload needs 18.15 GiB.</p>
   <ul class="spec"><li>48 layers</li><li>hidden 2048</li><li>32/4 heads</li><li>head_dim 128</li><li>40k max context</li><li>MoE</li></ul>
 </div>
 <h2>Qwen3 30B A3B memory by precision and context</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">Precision</th><th scope="col">8k context</th><th scope="col">32k context</th><th scope="col">40k context</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td>58.93 GiB<small>KV cache 768 MiB</small></td><td>61.18 GiB<small>KV cache 3.00 GiB</small></td><td>61.93 GiB<small>KV cache 3.75 GiB</small></td></tr><tr><th scope="row">FP8</th><td>31.08 GiB<small>KV cache 768 MiB</small></td><td>33.33 GiB<small>KV cache 3.00 GiB</small></td><td>34.08 GiB<small>KV cache 3.75 GiB</small></td></tr><tr><th scope="row">INT4</th><td>18.02 GiB<small>KV cache 768 MiB</small></td><td>20.27 GiB<small>KV cache 3.00 GiB</small></td><td>21.02 GiB<small>KV cache 3.75 GiB</small></td></tr></tbody>
+<tbody><tr><th scope="row">BF16</th><td>59.07 GiB<small>KV cache 768 MiB</small></td><td>61.32 GiB<small>KV cache 3.00 GiB</small></td><td>62.07 GiB<small>KV cache 3.75 GiB</small></td></tr><tr><th scope="row">FP8</th><td>31.21 GiB<small>KV cache 768 MiB</small></td><td>33.46 GiB<small>KV cache 3.00 GiB</small></td><td>34.21 GiB<small>KV cache 3.75 GiB</small></td></tr><tr><th scope="row">INT4</th><td>18.15 GiB<small>KV cache 768 MiB</small></td><td>20.40 GiB<small>KV cache 3.00 GiB</small></td><td>21.15 GiB<small>KV cache 3.75 GiB</small></td></tr></tbody>
 </table></div>
 <p class="note">One user, FP16 KV cache and vLLM's overhead on one GPU at its defaults for a card under 70 GB. Quantizing shrinks the weights, not the KV cache, so the saving narrows as the context grows.</p>
 <h2>Which single GPUs hold it</h2>
-<ul class="plain"><li><strong>BF16</strong> (58.93 GiB): RTX PRO 5000 Blackwell (72GB), <a href="/LLMScale/gpus/a100-80.html">A100 80GB</a>, <a href="/LLMScale/gpus/h100-80.html">H100 SXM 80GB</a>, H100 PCIe 80GB</li><li><strong>FP8</strong> (31.08 GiB): Apple M4 Pro, A100 40GB, <a href="/LLMScale/gpus/l40s-48.html">NVIDIA L40S</a>, <a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></li><li><strong>INT4</strong> (18.02 GiB): NVIDIA L4, Apple M4, NVIDIA A30, <a href="/LLMScale/gpus/rtx3090-24.html">RTX 3090 / Ti</a></li></ul>
+<ul class="plain"><li><strong>BF16</strong> (59.07 GiB): RTX PRO 5000 Blackwell (72GB), <a href="/LLMScale/gpus/a100-80.html">A100 80GB</a>, <a href="/LLMScale/gpus/h100-80.html">H100 SXM 80GB</a>, H100 PCIe 80GB</li><li><strong>FP8</strong> (31.21 GiB): Apple M4 Pro, A100 40GB, <a href="/LLMScale/gpus/l40s-48.html">NVIDIA L40S</a>, <a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></li><li><strong>INT4</strong> (18.15 GiB): NVIDIA L4, Apple M4, NVIDIA A30, <a href="/LLMScale/gpus/rtx3090-24.html">RTX 3090 / Ti</a></li></ul>
 <p class="note">At 8k context for one user, the smallest cards first. A discrete card is budgeted at vLLM's default 92% of its memory, a unified-memory device at the share its GPU can address, and each carries vLLM's overhead at its own defaults.</p>
 <h2>How many users fit</h2>
 <div class="scroll"><table>
 <thead><tr><th scope="col">GPU</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th></tr></thead>
-<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>5</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>15</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>17</td><td>35</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 SXM 80GB</a></th><td>18</td><td>56</td><td>73</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>38</td><td>75</td><td>92</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>39</td><td>76</td><td>94</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>93</td><td>130</td><td>147</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 180GB</a></th><td>139</td><td>177</td><td>194</td></tr></tbody>
+<tbody><tr><th scope="row"><a href="/LLMScale/gpus/rtx4090-24.html">RTX 4090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>5</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx5090-32.html">RTX 5090</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>15</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></th><td><span class="no" aria-hidden="true">✗</span><span class="sr">does not fit</span></td><td>17</td><td>35</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h100-80.html">H100 SXM 80GB</a></th><td>18</td><td>55</td><td>72</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></th><td>37</td><td>74</td><td>92</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></th><td>38</td><td>76</td><td>93</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/h200-141.html">H200 141GB</a></th><td>92</td><td>129</td><td>147</td></tr><tr><th scope="row"><a href="/LLMScale/gpus/b200-192.html">B200 180GB</a></th><td>138</td><td>175</td><td>193</td></tr></tbody>
 </table></div>
 <p class="note">Users at 8k context each, on one card. ✗: the weights leave no room for even one.</p>
 <h2>Fine-tuning Qwen3 30B A3B</h2>
