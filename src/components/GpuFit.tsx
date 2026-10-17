@@ -528,9 +528,11 @@ export function GpuFit({
                   </button>
                 )}
                 {/* The vLLM page sets up the same layout on as many GPUs. */}
-                <a href={vllmLink(layout)} className="text-[11.5px] font-medium text-brand-400 hover:underline">
-                  {t("gpu.tpLink")}
-                </a>
+                {hfId && (
+                  <a href={vllmLink(layout)} className="text-[11.5px] font-medium text-brand-400 hover:underline">
+                    {t("gpu.tpLink")}
+                  </a>
+                )}
               </div>
             </div>
           ))}

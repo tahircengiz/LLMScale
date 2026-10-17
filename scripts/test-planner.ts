@@ -45,7 +45,7 @@ console.log("--- a model that does not fit one card ---");
 {
   const m70: ModelSetup = { arch: llama70, weightDtype: "bf16", kvDtype: "fp16", maxModelLen: 8192 };
   const r = planOptions(m70, chat, H100);
-  check("Llama 3.3 70B at BF16 cannot run on one H100", r.infeasible.some((x) => x.tp === 1 && x.reason === "memory"));
+  check("Llama 3.3 70B at BF16 cannot run on one H100", r.infeasible.some((x) => x.size === 1 && x.reason === "memory"));
   check("…so every option splits it", r.options.length > 0 && r.options.every((o) => o.size >= 2), r.options.slice(0, 6).map((o) => `${o.replicas}×${layoutLabel(o)}`).join(", "));
   const fp8 = planOptions({ ...m70, weightDtype: "fp8" }, chat, H100).options[0];
   check("FP8 weights need no more GPUs than BF16", fp8.gpus <= r.options[0].gpus, `${fp8.gpus} vs ${r.options[0].gpus}`);

@@ -34,7 +34,8 @@ function initial() {
     task: task && VLLM_TASKS.includes(task) ? task : "chat",
     swappedFrom: usable ? null : GPUS.find((g) => g.id === wanted)?.name ?? null,
     gpuId: usable ? wanted : "h100-80",
-    gpuCount: Number(p.get("n")) || 1,
+    // As many as the calculator lays out (calc.ts, layoutFor): a link cannot ask for more.
+    gpuCount: Math.min(64, Math.max(1, Math.floor(Number(p.get("n")) || 1))),
     ctx: Number(p.get("ctx")) || 8192,
     mig: p.get("mig") || "",
     // A layout the calculator or the planner picked (parallel.ts, layoutKey).
@@ -56,6 +57,8 @@ export function VllmPage() {
   const [gpuCount, setGpuCount] = useState(init.gpuCount);
   const [migId, setMigId] = useState(init.mig);
   const [maxLen, setMaxLen] = useState(init.ctx);
+  // The layout a link or the picker named. It was sized for one model, card,
+  // context and priority, so changing any of them drops it for the page's own.
   const [lay, setLay] = useState(init.lay);
   const [copied, setCopied] = useState<string | null>(null);
   // Parsers read from the chat template, the same reading the Serving Brief does.
@@ -148,6 +151,7 @@ export function VllmPage() {
                 setHfId(id);
                 setArch(a);
                 setMeta(m ?? null);
+                setLay("");
               }}
             />
           </Card>
@@ -159,7 +163,10 @@ export function VllmPage() {
               </div>
               <Segmented<Priority>
                 value={priority}
-                onChange={setPriority}
+                onChange={(v) => {
+                  setPriority(v);
+                  setLay("");
+                }}
                 size="sm"
                 options={PRIORITIES.map((p) => ({ value: p, label: t(`vllm.prio.${p}`), hint: t(`vllm.prioHint.${p}`) }))}
               />
@@ -200,6 +207,7 @@ export function VllmPage() {
                   onChange={(id) => {
                     setGpuId(id);
                     setMigId("");
+                    setLay("");
                   }}
                 />
                 {init.swappedFrom && (
@@ -228,7 +236,10 @@ export function VllmPage() {
                 aside={arch?.maxContext ? t("controls.contextMax", { n: formatInt(arch.maxContext) }) : undefined}
                 value={maxLen}
                 options={contextChoices(t, lang, arch?.maxContext)}
-                onChange={(v) => setMaxLen(Math.max(512, v))}
+                onChange={(v) => {
+                  setMaxLen(Math.max(512, v));
+                  setLay("");
+                }}
                 min={512}
                 step={1024}
                 suffix="tok"
@@ -266,7 +277,10 @@ export function VllmPage() {
                       hint: t("gpu.migHint", { gb: m.memGiB, n: m.max }),
                     })),
                   ]}
-                  onChange={setMigId}
+                  onChange={(v) => {
+                    setMigId(v);
+                    setLay("");
+                  }}
                 />
               </Field>
             )}

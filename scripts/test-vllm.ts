@@ -5,7 +5,7 @@ import { layoutFor, layoutsOn, type ModelArch } from "../src/lib/calc.ts";
 import { archFromConfig } from "../src/lib/hf.ts";
 import { GPUS, batchFor } from "../src/lib/gpus.ts";
 import { findKnownByHfId } from "../src/lib/models.ts";
-import { layoutFlags, layoutKey, layoutLabel, parseLayoutKey } from "../src/lib/parallel.ts";
+import { layoutFlags, layoutKey, layoutLabel, parseLayoutKey, sameLayout } from "../src/lib/parallel.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -128,9 +128,11 @@ console.log("\n--- layouts: the calculator's (A3) ---");
   check("layout keys round-trip", layoutKey(parseLayoutKey("tp2.pp3.dp1")!) === "tp2.pp3.dp1" && parseLayoutKey("tp1.pp1.dp4.ep")!.ep && parseLayoutKey("tp0.pp1.dp1") === null && parseLayoutKey("x") === null);
 
   // --max-num-seqs counts per data-parallel rank, so its cap is one replica's share.
-  const thr = recommend(v4in({ gpuCount: 4, priority: "throughput" }));
-  const per = Math.floor(thr.layouts[0].maxUsers / thr.layout!.dp);
-  check("throughput on DP 4: --max-num-seqs is capped at one rank's share", seqsOf(thr.command) === Math.min(512, per), `${seqsOf(thr.command)} vs ${per} per rank`);
+  const dpEp = { tp: 1, pp: 1, dp: 4, ep: true };
+  const thr = recommend(v4in({ gpuCount: 4, priority: "throughput", layout: dpEp }));
+  const ranks = thr.layouts.find((f) => sameLayout(f.layout, dpEp));
+  const per = Math.floor((ranks?.maxUsers ?? 0) / 4);
+  check("throughput on DP 4 · EP: --max-num-seqs is capped at one rank's share", !!ranks && sameLayout(thr.layout!, dpEp) && seqsOf(thr.command) === Math.min(512, per) && per > 0 && per < ranks.maxUsers, `${thr.layout && layoutLabel(thr.layout)}: ${seqsOf(thr.command)} vs ${per} per rank of ${ranks?.maxUsers}`);
 
   // Too big for one GPU: the warning gives the calculator's count and layout.
   const l70 = findKnownByHfId("meta-llama/Llama-3.3-70B-Instruct")!;

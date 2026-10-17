@@ -71,7 +71,9 @@ for (const m of MODELS) {
           gpuVramGiB: g.visibleGiB ?? g.vramGiB, gpuName: g.name, gpuCount, maxModelLen: ctx, layout,
         });
       const one = page(1);
-      // The cache precision the page sets: fp8 for V4 (its recipe), else vLLM's auto.
+      // The calculator set to the cache precision the page sets: fp8 for V4 (its
+      // recipe), else vLLM's auto. At its 16-bit default the calculator sizes V4's
+      // plain bf16 rows, which FlashInfer's backends serve; that is another command.
       const kvDtype: Dtype = one.flags.some((f) => f.flag === "--kv-cache-dtype" && f.value === "fp8") ? "fp8" : "fp16";
       // The calculator's GPU fit for one request at --max-model-len (GpuFit.tsx).
       const input = { arch: m.arch, weightDtype: m.weightDtype, kvDtype, contextLength: ctx, concurrency: 1, batch: batchFor(g) };
