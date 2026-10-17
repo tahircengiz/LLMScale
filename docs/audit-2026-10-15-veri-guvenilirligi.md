@@ -136,3 +136,20 @@ Efor: **S** < yarım gün · **M** 1–2 gün · **L** 3+ gün. Kaynak kodlar aj
 2. Modellenmemiş mimarilerde sayı: uyarıyla göster mi, gösterme mi? — Önerim: uyarı + "tam modellenmedi" rozeti.
 3. Gated eksik modeller için açık ayna config'i (`unsloth/…`) okumak kabul mü? — Önerim: evet, yalnız config.
 4. Ölçüm kampanyası (X570 `ai-on`, GTR9 vLLM ROCm) — zaman ve onay.
+
+## Faz 3b sonucu (2026-10-16/17)
+
+Ölçüm kampanyası X570'te (RTX 4070 Ti, vLLM 0.31.0) yapıldı; ham ölçümler ve yöntem
+[`audit-2026-10-15/olcum-kampanyasi-2026-10-16.md`](audit-2026-10-15/olcum-kampanyasi-2026-10-16.md), testler
+`scripts/test-audit3.ts`.
+
+| ID | Durum |
+|---|---|
+| D1 | Kalibre: adım başına katman maliyeti (0,065 ms), bant verimi %92, KV okuma %75; MoE'de bayt hesabı düzeltildi (MXFP4'te BF16 dikkat, untied giriş embedding'i okunmaz), Marlin MoE'ye katman başı 0,08 ms. Ayrı MoE katsayısı veriyle desteklenmedi. X570'te tek GPU decode %10 içinde. |
+| D4 | Kalibre: istek başı 6 ms + geçişin katman maliyeti; prompt FLOP'undan embedding ve son token dışı çıkış katmanı düşüldü. Qwen3-0.6B 512 token: 8,9 → 14,5 ms (ölçüm 15,7). MoE prompt okuması üst sınır (K13). |
+| D2 | Yayınlanmış verilere uyduruldu: katman başına iki all-reduce × 0,014 ms; 2/4/8 GPU'lu 6 ölçümün hepsi %14 içinde (önce 1,4–4,3× hızlı). |
+| E1 | Etiketlendi: NCCL'in çift sayıldığına dair kanıt yok; çok GPU'lu büyük MoE ek yükü "alt sınır" notuyla gösteriliyor. |
+| E5 | Düzeltildi: MXFP4'te yalnız expert'ler 4-bit; vLLM 0.31'in kart ailesine göre expert dolgusu. H100 TP2 31,02 (log 31,36), A100 TP2 34,31 (34,38), L40S 13,70 (13,72). |
+| C4 | Kalibre: görüntü kodlayıcı profil geçişi (patch × genişlik × 23 bayt, bütçeye sığan öğe sayısı kadar); Qwen2.5-VL-3B ve Gemma 3 4B loglarına 0,2 GiB içinde. |
+
+Açık: GTR9 (Strix Halo, vLLM ROCm) ölçümü kullanıcı onayı bekliyor; AMD/birleşik bellek hızları üst sınır etiketinde.
