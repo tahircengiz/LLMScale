@@ -14,6 +14,7 @@
 // dense figures are peaks; the efficiencies are stated where they are applied.
 
 import { DTYPE_BYTES, expertWeightBytes, kvBytesReadPerStep, QUANT_BITS, resolveHeadDim, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
+import type { LayoutShape } from "./parallel.ts";
 
 /**
  * Share of peak bandwidth the weight reads of a decode step reach. Fitted with the
@@ -101,6 +102,15 @@ export function paramsReadPerStep(arch: ModelArch, n: number): number {
  *  keeps its embedding and head in 16-bit and an MXFP4 one its attention too: read
  *  by parameter share, gpt-oss-20b's step came out half of what it reads. */
 export function weightBytesRead(arch: ModelArch, weightDtype: Dtype, n: number): number {
+  const r = weightReads(arch, weightDtype);
+  if (r.experts > 0 && r.E > r.k && r.k > 0) return r.read - r.experts * Math.pow(1 - r.k / r.E, Math.max(1, n));
+  // A MoE known only by its active count reads that share, whatever the batch.
+  return r.read * Math.min(1, paramsReadPerStep(arch, n) / Math.max(1, r.params));
+}
+
+/** What weightBytesRead reads from: the bytes a pass can read at all, the routed
+ *  experts' part of them, and the parameters behind the first. */
+function weightReads(arch: ModelArch, weightDtype: Dtype) {
   const all = weightsBytes(arch, weightDtype);
   const bits = QUANT_BITS[weightDtype];
   // The embedding stays 16-bit in a quantized checkpoint; a lookup table is counted
@@ -111,12 +121,13 @@ export function weightBytesRead(arch: ModelArch, weightDtype: Dtype, n: number):
   const spec = arch.specParams && arch.specParams < arch.numParams ? arch.specParams : 0;
   const lookup = arch.lookupParams && arch.lookupParams < arch.numParams - spec ? arch.lookupParams * (bits ? bits / 8 : DTYPE_BYTES[weightDtype]) : 0;
   const unread = table + lookup < all ? table + lookup : 0;
-  const experts = Math.min(expertWeightBytes(arch, weightDtype), all - unread);
-  const E = arch.numExperts ?? 0;
-  const k = arch.expertsPerToken ?? 0;
-  if (experts > 0 && E > k && k > 0) return all - unread - experts * Math.pow(1 - k / E, Math.max(1, n));
-  // A MoE known only by its active count reads that share, whatever the batch.
-  return (all - unread) * Math.min(1, paramsReadPerStep(arch, n) / Math.max(1, arch.numParams - spec - (lookup ? arch.lookupParams! : 0)));
+  return {
+    read: all - unread,
+    experts: Math.min(expertWeightBytes(arch, weightDtype), all - unread),
+    E: arch.numExperts ?? 0,
+    k: arch.expertsPerToken ?? 0,
+    params: arch.numParams - spec - (lookup ? arch.lookupParams! : 0),
+  };
 }
 
 /**
@@ -263,7 +274,21 @@ export function decodeStep(
 ): DecodePoint | null {
   const mem = estimateDecode({ ...i, concurrency: batch, bandwidthGBs: device.bandwidthGBs * gpus });
   if (!mem) return null;
-  let stepMs = mem.stepMs;
+  return withCompute(i, batch, device, gpus, mem.stepMs, stepFloorMs(i.arch, gpus, device.layerMs));
+}
+
+/** A step from its read time: the slower of that and the FLOPs `batch` sequences
+ *  do on `gpus` GPUs (two per active parameter, plus attention over each one's
+ *  context), plus the step's fixed cost `floorMs`. */
+function withCompute(
+  i: Omit<DecodeInput, "concurrency" | "bandwidthGBs">,
+  batch: number,
+  device: { tflops?: Tflops; computeEfficiency?: number },
+  gpus: number,
+  readMs: number,
+  floorMs: number,
+): DecodePoint {
+  let stepMs = readMs;
   let bound: DecodePoint["bound"] = "memory";
   if (device.tflops) {
     // Every token runs the output head; the input embedding is a lookup.
@@ -280,8 +305,55 @@ export function decodeStep(
     const computeMs = (flops / (computeTflops(device.tflops, i.weightDtype) * 1e12 * (device.computeEfficiency ?? COMPUTE_EFFICIENCY) * gpus)) * 1000;
     if (computeMs > stepMs) [stepMs, bound] = [computeMs, "compute"];
   }
-  stepMs += stepFloorMs(i.arch, gpus, device.layerMs);
+  stepMs += floorMs;
   return { batch, stepMs, perUser: 1000 / stepMs, total: (1000 / stepMs) * batch, bound };
+}
+
+/**
+ * One decode step for `batch` sequences on one replica of a layout (calc.ts,
+ * Layout): `pp` pipeline stages of `tp` GPUs, or with `ep` one of `dp`
+ * data-parallel ranks whose routed experts are spread over every GPU of the stage.
+ *
+ * Pipeline stages: vLLM keeps a batch in flight per stage (VllmConfig.
+ * max_concurrent_batches), so the sequences split into `pp` batches and each token
+ * passes every stage: a sequence sees the step its batch, a `pp`th of them, takes
+ * on `tp` GPUs, paced by the busiest stage (get_pp_indices gives the first ones
+ * the remainder) and handed between stages once per boundary. That is the speed
+ * `pp` replicas of `tp` GPUs would have; stages are for a model those cannot hold.
+ *
+ * Expert parallelism: the ranks step together. A rank reads its share of the shared
+ * weights and of its own sequences' cache on `tp` GPUs, and its GPUs' share of the
+ * experts every rank's tokens touch; each layer adds a dispatch and a combine
+ * across the ranks.
+ *
+ * The handovers and the dispatch are costed as one all-reduce each (ALLREDUCE_MS):
+ * an estimate, not a measurement, like the rest of the multi-GPU figures.
+ */
+export function layoutStep(
+  i: Omit<DecodeInput, "concurrency" | "bandwidthGBs">,
+  batch: number,
+  device: { tflops?: Tflops; bandwidthGBs: number; computeEfficiency?: number; layerMs?: number },
+  l: LayoutShape,
+): DecodePoint | null {
+  if (!device.bandwidthGBs || device.bandwidthGBs <= 0) return null;
+  const m = Math.max(1, Math.ceil(batch / Math.max(1, l.pp)));
+  const layers = Math.max(1, i.arch.numLayers);
+  const pace = (l.pp * Math.ceil(layers / l.pp)) / layers;
+  let p: DecodePoint | null;
+  const r = weightReads(i.arch, i.weightDtype);
+  if (l.ep && l.dp > 1 && r.experts > 0 && r.E > r.k && r.k > 0) {
+    const bps = device.bandwidthGBs * 1e9;
+    const touched = (n: number) => r.experts * (1 - Math.pow(1 - r.k / r.E, Math.max(1, n)));
+    const weights = (r.read - r.experts) / l.tp + touched(m * l.dp) / (l.tp * l.dp);
+    const kv = (kvBytesReadPerStep(i.arch, i.kvDtype, i.contextLength) * m) / l.tp;
+    const readMs = (weights / (bps * BANDWIDTH_EFFICIENCY) + kv / (bps * KV_EFFICIENCY)) * 1000;
+    p = withCompute(i, m, device, l.tp, readMs, stepFloorMs(i.arch, l.tp, device.layerMs) + layers * 2 * ALLREDUCE_MS);
+  } else {
+    p = decodeStep(i, m, device, l.tp);
+  }
+  if (!p) return null;
+  const stepMs = p.stepMs * pace + (l.pp - 1) * ALLREDUCE_MS;
+  return { batch, stepMs, perUser: 1000 / stepMs, total: (1000 / stepMs) * batch, bound: p.bound };
 }
 
 /** Decode speed from one sequence up to `maxBatch`, doubling: the curve a

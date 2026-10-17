@@ -3,7 +3,8 @@ import type { Dtype, ModelArch } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
 import { findKnownByHfId } from "../lib/models";
 import { GPUS, GPU_CATEGORIES, runsVllm, type Gpu } from "../lib/gpus";
-import { planOptions, type Limit, type Workload } from "../lib/planner";
+import { planOptions, type Infeasible, type Limit, type Workload } from "../lib/planner";
+import { layoutKey, layoutLabel } from "../lib/parallel";
 import { formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
@@ -13,9 +14,11 @@ import { contextChoices, gpuHint, outputChoices, prefixChoices, promptChoices, r
 import { PresetChips } from "../components/PresetChips";
 
 // "How many GPUs does my load take?" (planner.ts): requests per second, their
-// lengths and latency targets in; replicas, tensor-parallel size and GPU count out.
+// lengths and latency targets in; replicas, their layout and the GPU count out.
 
 const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
+/** Rows of the options table: the cheapest layouts, and the sizes below them. */
+const MAX_ROWS = 8;
 /** Devices the plan can run on: vLLM serves them, and both bounds are known. */
 const PLANNABLE = GPUS.filter((g) => runsVllm(g) && g.tflops && g.bandwidthGBs);
 
@@ -108,9 +111,23 @@ export function PlanPage() {
   );
   const best = plan?.options[0];
   const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
+  // The vLLM page sets up one replica, laid out as the plan lays it out.
   const vllmLink = best && gpu
-    ? `${home}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${gpu.id}&n=${best.tp}&ctx=${maxLen}`
+    ? `${home}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${gpu.id}&n=${best.size}&ctx=${maxLen}&lay=${layoutKey(best)}`
     : null;
+  /** The cheapest layouts; the rest differ only in cost. */
+  const shownOptions = plan?.options.slice(0, MAX_ROWS) ?? [];
+  /** Why no smaller replica works: a row per size below the cheapest option's. */
+  const blocked = (() => {
+    const bySize = new Map<number, Set<Infeasible["reason"]>>();
+    for (const x of plan?.infeasible ?? []) {
+      if (best && x.size >= best.size) continue;
+      if (!bySize.has(x.size)) bySize.set(x.size, new Set());
+      bySize.get(x.size)!.add(x.reason);
+    }
+    return [...bySize].sort((a, b) => a[0] - b[0]).slice(0, MAX_ROWS);
+  })();
+  const blockedText = (reasons: Set<Infeasible["reason"]>) => [...reasons].map((r) => t(`plan.no.${r}`)).join("; ");
   const limitText = (l: Limit) => t(`plan.limit.${l}`);
   /** The chips: a few common values out of each setting's options. */
   const pick = (opts: Choice<number>[], values: number[]) => opts.filter((o) => values.includes(o.value));
@@ -215,7 +232,7 @@ export function PlanPage() {
                       {best.gpus} × {gpu?.name}
                     </div>
                     <div className="text-xs text-slate-400">
-                      {t(best.tp === 1 ? "plan.shape1" : "plan.shape", { r: best.replicas, tp: best.tp, rps: best.replicaRps.toFixed(1) })}
+                      {t(best.size === 1 ? "plan.shape1" : "plan.shape", { r: best.replicas, n: best.size, layout: layoutLabel(best), rps: best.replicaRps.toFixed(1) })}
                     </div>
                   </div>
                   <Badge tone="neutral">{limitText(best.limit)}</Badge>
@@ -228,7 +245,7 @@ export function PlanPage() {
                 </div>
                 {vllmLink && (
                   <a href={vllmLink} className="mt-3 inline-block text-[11.5px] font-medium text-brand-400 hover:underline">
-                    {t("plan.toVllm", { tp: best.tp })}
+                    {t("plan.toVllm", { layout: layoutLabel(best) })}
                   </a>
                 )}
 
@@ -237,7 +254,7 @@ export function PlanPage() {
                   <table className="w-full border-collapse text-left text-xs">
                     <thead>
                       <tr className="border-b border-white/10 text-[11px] text-slate-400">
-                        <th scope="col" className="px-3 py-2 font-medium">TP</th>
+                        <th scope="col" className="px-3 py-2 font-medium">{t("plan.col.layout")}</th>
                         <th scope="col" className="px-3 py-2 text-right font-medium">{t("plan.col.replicas")}</th>
                         <th scope="col" className="px-3 py-2 text-right font-medium">GPU</th>
                         <th scope="col" className="px-3 py-2 text-right font-medium">{t("plan.col.rps")}</th>
@@ -245,19 +262,19 @@ export function PlanPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                      {plan!.options.map((o) => (
-                        <tr key={o.tp} className={o === best ? "bg-brand-600/10" : undefined}>
-                          <th scope="row" className="px-3 py-2 font-medium text-white">{o.tp}</th>
+                      {shownOptions.map((o) => (
+                        <tr key={layoutKey(o) + o.size} className={o === best ? "bg-brand-600/10" : undefined}>
+                          <th scope="row" className="px-3 py-2 font-medium text-white">{layoutLabel(o)}</th>
                           <td className="px-3 py-2 text-right tabular-nums text-slate-200">{o.replicas}</td>
                           <td className="px-3 py-2 text-right tabular-nums text-white">{o.gpus}</td>
                           <td className="px-3 py-2 text-right tabular-nums text-slate-200">{o.replicaRps.toFixed(1)}</td>
                           <td className="px-3 py-2 text-slate-400">{limitText(o.limit)}</td>
                         </tr>
                       ))}
-                      {plan!.infeasible.map((x) => (
-                        <tr key={`x${x.tp}`}>
-                          <th scope="row" className="px-3 py-2 font-medium text-slate-500">{x.tp}</th>
-                          <td colSpan={4} className="px-3 py-2 text-slate-500">{t(`plan.no.${x.reason}`)}</td>
+                      {blocked.map(([size, reasons]) => (
+                        <tr key={`x${size}`}>
+                          <th scope="row" className="px-3 py-2 font-medium text-slate-500">{t("plan.sizeRow", { n: size })}</th>
+                          <td colSpan={4} className="px-3 py-2 text-slate-500">{blockedText(reasons)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -268,9 +285,9 @@ export function PlanPage() {
               <div className="space-y-2 py-4">
                 <p className="text-sm text-warn">{t("plan.none")}</p>
                 <ul className="space-y-1 text-xs text-slate-400">
-                  {plan?.infeasible.map((x) => (
-                    <li key={x.tp}>
-                      TP {x.tp}: {t(`plan.no.${x.reason}`)}
+                  {blocked.map(([size, reasons]) => (
+                    <li key={size}>
+                      {t("plan.sizeRow", { n: size })}: {blockedText(reasons)}
                     </li>
                   ))}
                 </ul>

@@ -7,6 +7,7 @@
 import { planOptions, type ModelSetup, type Workload } from "../src/lib/planner.ts";
 import { findKnownByHfId } from "../src/lib/models.ts";
 import type { Gpu } from "../src/lib/gpus.ts";
+import { layoutLabel } from "../src/lib/parallel.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -28,7 +29,7 @@ console.log("--- a small model ---");
   // A 2k prompt is ~57 ms of prefill; at ~10 req/s that is 60% of the GPU's time,
   // and decode, stretched by it, reaches the 50 ms per token target. A request's
   // fixed costs (perf.ts) add to its first token, not to the GPU's busy time.
-  check("Llama 3.1 8B, 10 req/s on H100s: one GPU", p.tp === 1 && p.replicas === 1, `${p.replicas}× TP${p.tp}, ${p.replicaRps.toFixed(1)} req/s each`);
+  check("Llama 3.1 8B, 10 req/s on H100s: one GPU", p.size === 1 && p.replicas === 1, `${p.replicas}× ${p.size} GPU, ${p.replicaRps.toFixed(1)} req/s each`);
   check("…and 15 req/s two", best(m8, { ...chat, rps: 15 }).gpus === 2);
   check("…held back by time per token", p.limit === "tpot", p.limit);
   check("…within both targets at its share", p.tpotMs <= 50 && p.ttftS <= 1, `${p.tpotMs.toFixed(1)} ms, ${p.ttftS.toFixed(2)} s`);
@@ -45,7 +46,7 @@ console.log("--- a model that does not fit one card ---");
   const m70: ModelSetup = { arch: llama70, weightDtype: "bf16", kvDtype: "fp16", maxModelLen: 8192 };
   const r = planOptions(m70, chat, H100);
   check("Llama 3.3 70B at BF16 cannot run on one H100", r.infeasible.some((x) => x.tp === 1 && x.reason === "memory"));
-  check("…so every option splits it", r.options.length > 0 && r.options.every((o) => o.tp >= 2), r.options.map((o) => `${o.replicas}×TP${o.tp}`).join(", "));
+  check("…so every option splits it", r.options.length > 0 && r.options.every((o) => o.size >= 2), r.options.slice(0, 6).map((o) => `${o.replicas}×${layoutLabel(o)}`).join(", "));
   const fp8 = planOptions({ ...m70, weightDtype: "fp8" }, chat, H100).options[0];
   check("FP8 weights need no more GPUs than BF16", fp8.gpus <= r.options[0].gpus, `${fp8.gpus} vs ${r.options[0].gpus}`);
 }

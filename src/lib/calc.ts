@@ -970,6 +970,31 @@ export function layoutFor(input: CalcInput, usableGiB: number, limit = 1024): La
   return layoutsOn(input, usableGiB, best.gpus).find((f) => f.fits)?.layout ?? best;
 }
 
+/**
+ * typicalConcurrency on one replica of a layout (layoutsOn): the requests each
+ * data-parallel rank of it — the whole replica, without expert parallelism —
+ * serves at once under a typical load, at most max_num_seqs, which vLLM counts per
+ * rank. A stage's GPUs hold their layers' share of each request, a shared prefix
+ * once. On one tensor-parallel group it is typicalConcurrency's figure.
+ */
+export function typicalOnLayout(
+  input: Omit<CalcInput, "concurrency" | "gpus">,
+  usableGiB: number,
+  load: TypicalLoad,
+  l: Pick<Layout, "tp" | "pp" | "dp" | "ep">,
+): number {
+  const inUse = tokensInUse(load, input.contextLength);
+  const b = layoutBasis({ ...input, contextLength: inUse });
+  const room = usableGiB - layoutFixedGiB(b, l);
+  const per = layoutRequestGiB(b, l);
+  if (room <= 0 || !(per > 0)) return 0;
+  const prefix = kvSharedPrefix(input.arch, input.kvDtype, Math.min(load.sharedPrefix, inUse), l.tp, b.batch.sparseMla);
+  const shared = Math.min((prefix * stageShare(b, l.pp)) / BYTES_PER_GIB, per);
+  const unique = per - shared;
+  const fit = unique > 0 ? Math.floor((room - shared) / unique) : b.batch.seqs;
+  return Math.max(0, Math.min(fit, b.batch.seqs));
+}
+
 /** One layout of a given number of GPUs, sized for a load. */
 export interface LayoutFit {
   layout: Layout;
