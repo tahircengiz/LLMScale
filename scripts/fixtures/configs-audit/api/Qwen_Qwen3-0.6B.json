@@ -1,0 +1,49 @@
+{
+"id": "Qwen/Qwen3-0.6B",
+"gated": false,
+"safetensors": {
+"parameters": {
+"BF16": 751632384
+},
+"total": 751632384
+},
+"gguf": null,
+"config": {
+"model_type": "qwen3"
+},
+"tags": [
+"base_model:Qwen/Qwen3-0.6B-Base",
+"base_model:finetune:Qwen/Qwen3-0.6B-Base"
+],
+"cardData": {
+"base_model": [
+"Qwen/Qwen3-0.6B-Base"
+]
+},
+"siblings": [
+{
+"rfilename": "config.json",
+"size": 726
+},
+{
+"rfilename": "generation_config.json",
+"size": 239
+},
+{
+"rfilename": "model.safetensors",
+"size": 1503300328
+},
+{
+"rfilename": "tokenizer.json",
+"size": 11422654
+},
+{
+"rfilename": "tokenizer_config.json",
+"size": 9732
+},
+{
+"rfilename": "vocab.json",
+"size": 2776833
+}
+]
+}

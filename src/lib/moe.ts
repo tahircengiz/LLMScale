@@ -93,6 +93,26 @@ export function specParamsOf(arch: ModelArch, cfg: Config | null | undefined): n
   return body > 0 ? (body * spec) / (L + spec) : 0;
 }
 
+/** Parameters a plain decoder's config adds up to: the embedding table, once more
+ *  for an untied head, and in every layer q, k, v and o at the head width and a
+ *  gated MLP (gate, up, down) of intermediate_size. Norms and biases, a few
+ *  hundredths of a percent, are left out. undefined for any other shape (experts,
+ *  latent or compressed attention, state layers, cross-attention, a vision tower,
+ *  speculative layers, lookup tables), which this would not count to the percent;
+ *  a non-gated MLP (GPT-2, OPT) comes out a third of its MLP too high. */
+export function denseParamsOf(arch: ModelArch, cfg: Config | null | undefined): number | undefined {
+  const c = textConfig(cfg);
+  const ffn = arch.intermediateSize;
+  const vocab = arch.vocabSize;
+  if (!c || !ffn || !vocab) return undefined;
+  if (arch.numExperts || arch.kvLoraRank || arch.compressedAttn || arch.sparseAttn || arch.stateLayers ||
+    arch.attnLayers !== undefined || arch.crossAttn || arch.globalAttn || arch.vHeadDim || arch.vision) return undefined;
+  if (specLayers(c, arch.numLayers) || lookupParams(c)) return undefined;
+  const h = arch.hiddenSize;
+  const attention = 2 * h * resolveHeadDim(arch) * (arch.numAttentionHeads + arch.numKeyValueHeads);
+  return vocab * h * (arch.tieEmbeddings ? 1 : 2) + arch.numLayers * (attention + 3 * h * ffn);
+}
+
 function embeddingParams(arch: ModelArch, c: Config | null | undefined): number {
   return (arch.vocabSize ?? c?.vocab_size ?? 0) * arch.hiddenSize * (arch.tieEmbeddings ?? c?.tie_word_embeddings ? 1 : 2);
 }

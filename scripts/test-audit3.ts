@@ -8,8 +8,8 @@
 // (startup logs). Every check states its tolerance; where the model is still only an
 // upper bound (K13), the check pins how far the measurement may fall below it.
 
-import { readFileSync } from "node:fs";
-import { archFromConfig, visionEncoder } from "../src/lib/hf.ts";
+import { readdirSync, readFileSync } from "node:fs";
+import { archFromConfig, resolveModel, storedTiedHead, visionEncoder } from "../src/lib/hf.ts";
 import { BYTES_PER_GIB, mxfp4Pad, weightsBytes, weightsOnGpu, type Dtype, type ModelArch } from "../src/lib/calc.ts";
 import { decodeStep, prefillTime, REQUEST_MS, stepFloorMs } from "../src/lib/perf.ts";
 import { mxfp4Kernel, overheadPerGpu, vllmBatch } from "../src/lib/overhead.ts";
@@ -257,6 +257,77 @@ console.log("\n--- overhead.ts against the 2026-10-16 startups (scripts/fixtures
   const g = parseVllmLog(readFileSync(new URL("./fixtures/vllm/1016-gemma-3-4b-skip.txt", import.meta.url), "utf8"));
   const og = overheadPerGpu({ ...archOf(runs.find((x) => x.tag === "gemma-3-4b")!), vision: undefined }, { tokens: 2048, seqs: 256 }).totalGiB;
   check("Gemma 3 4B without the encoder: an over-estimate, not over 1.3 GiB", og >= overheadFromLog(g)! && og - overheadFromLog(g)! <= 1.3, `${og.toFixed(2)} vs ${overheadFromLog(g)!.toFixed(2)} GiB`);
+}
+
+console.log("\n--- Tied heads a checkpoint stores twice ---");
+{
+  // Qwen3-0.6B and 1.7B tie the output head to the embedding but ship
+  // lm_head.weight anyway. The Hub counts both copies; vLLM skips the second.
+  const fixture = (dir: string, n: string) => JSON.parse(readFileSync(new URL(`./fixtures/${dir}/${n}.json`, import.meta.url), "utf8"));
+  const loaded = (log: string) => parseVllmLog(readFileSync(new URL(`./fixtures/vllm/${log}.txt`, import.meta.url), "utf8")).weightsGiB!;
+  const table = (a: ModelArch) => a.vocabSize! * a.hiddenSize;
+  // The Hub's totals (api/models, 2026-10-17), and the GiB they used to give.
+  const pins: [string, string, string, number][] = [
+    ["Qwen3-0.6B", "Qwen_Qwen3-0.6B", "qwen3-0.6b", 1.4],
+    ["Qwen3-1.7B", "Qwen_Qwen3-1.7B", "1016-qwen3-1.7b", 3.78],
+  ];
+  for (const [name, n, log, was] of pins) {
+    const hub = fixture("configs-audit/api", n).safetensors.total as number;
+    const a = archFromConfig(fixture("configs-audit", n), hub)!;
+    check(`${name}: the Hub's ${hub.toLocaleString("en")} less one ${a.vocabSize!.toLocaleString("en")} × ${a.hiddenSize} table`, a.numParams === hub - table(a), a.numParams.toLocaleString("en"));
+    const ours = weightsBytes(a, "bf16") / GiB;
+    check(`${name}: within 0.02 GiB of the ${loaded(log)} vLLM loaded, not ${was}`, Math.abs(ours - loaded(log)) <= 0.02 && Math.abs(hub * 2 / GiB - was) < 0.01, `${ours.toFixed(3)} GiB`);
+    check(`${name}: a count already without the copy stays as it is`, archFromConfig(fixture("configs-audit", n), a.numParams)!.numParams === a.numParams);
+    check(`${name}: an untied config keeps the Hub's count`, archFromConfig({ ...fixture("configs-audit", n), tie_word_embeddings: false }, hub)!.numParams === hub);
+  }
+  const q4 = fixture("repos", "Qwen_Qwen3-4B");
+  check("Qwen3-4B stores its tied head once: the Hub's count stands", archFromConfig(q4.config, q4.numParams)!.numParams === q4.numParams);
+  const granite = runs.find((x) => x.tag === "granite-1b-a400m")!;
+  check("a tied MoE is not counted from its config: its count stands", archFromConfig(granite.config, granite.params)!.numParams === granite.params);
+  // The signal against the tensor names, in every snapshot that has them: a stored
+  // tied head is exactly a tied config whose checkpoint names lm_head.weight.
+  const dir = new URL("./fixtures/repos/", import.meta.url);
+  const seen: string[] = [];
+  let agree = true;
+  for (const f of readdirSync(dir).filter((x) => x.endsWith(".json"))) {
+    const r = JSON.parse(readFileSync(new URL(f, dir), "utf8"));
+    if (!r.tensors || !r.numParams || !r.config) continue;
+    const a = archFromConfig(r.config, r.numParams);
+    if (!a) continue;
+    const named = !!a.tieEmbeddings && Object.keys(r.tensors.templates).some((t) => /(^|\.)lm_head\.weight$/.test(t));
+    if ((storedTiedHead(a, r.config, r.numParams) > 0) !== named) agree = false;
+    if (named) seen.push(r.id);
+  }
+  check("the counts agree with the tensor names in every repo snapshot", agree && seen.join() === "Qwen/Qwen3-0.6B", seen.join());
+
+  // Through resolveModel, as the page reads them (the Hub's answers in fixtures/configs-audit).
+  const real = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL) => {
+    const url = String(input);
+    const name = (id: string) => id.replace("/", "_");
+    const api = /\/api\/models\/([^?]+)/.exec(url);
+    const raw = /huggingface\.co\/([^/]+\/[^/]+)\/resolve\/main\/config\.json$/.exec(url);
+    try {
+      if (api) return new Response(readFileSync(new URL(`./fixtures/configs-audit/api/${name(api[1])}.json`, import.meta.url), "utf8"));
+      if (raw) return new Response(readFileSync(new URL(`./fixtures/configs-audit/${name(raw[1])}.json`, import.meta.url), "utf8"));
+    } catch {
+      // not in the fixtures
+    }
+    return new Response("not found", { status: 404 });
+  }) as typeof fetch;
+  try {
+    const q06 = await resolveModel("Qwen/Qwen3-0.6B");
+    const q17 = await resolveModel("Qwen/Qwen3-1.7B");
+    check("the page: Qwen3-0.6B at 596.0M, Qwen3-1.7B at 1.72B", q06.numParams === 596_049_920 && q17.numParams === 1_720_574_976, `${q06.numParams} ${q17.numParams}`);
+    // Its FP8 release keeps both 16-bit copies beside 440M FP8 weights: 1.06 GB of files.
+    const fp8 = await resolveModel("Qwen/Qwen3-0.6B-FP8");
+    const files = 1_062_975_744, copy = 2 * 151_936 * 1024;
+    check("Qwen3-0.6B-FP8: sized by its files less the stored copy, 0.70 GiB not 0.99",
+      fp8.weightDtype === "fp8" && weightsBytes(fp8.arch!, "fp8") === files - copy && fp8.numParams === 751_659_264 - copy / 2,
+      `${fp8.weightDtype} ${(weightsBytes(fp8.arch!, "fp8") / GiB).toFixed(3)} GiB, ${fp8.numParams}`);
+  } finally {
+    globalThis.fetch = real;
+  }
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);

@@ -137,10 +137,10 @@ for (const r of RUNS.filter((x, i, a) => a.findIndex((y) => y.repo === x.repo) =
   const ours = weightsBytes(arch, dtype) / BYTES_PER_GIB;
   if (r.repo === "Qwen_Qwen3-0.6B") {
     // Its checkpoint ships lm_head.weight although the head is tied; the Hub
-    // counts it, vLLM does not load it.
-    const head = arch.vocabSize! * arch.hiddenSize * 2;
-    check("Qwen3-0.6B: the Hub's count includes a tied head shipped twice", Math.abs(ours - head / BYTES_PER_GIB - p.weightsGiB!) < 0.03,
-      `${ours.toFixed(2)} − ${(head / BYTES_PER_GIB).toFixed(2)} vs ${p.weightsGiB} GiB`);
+    // counts it, vLLM does not load it, and neither does the estimate (hf.ts).
+    const head = arch.vocabSize! * arch.hiddenSize;
+    check("Qwen3-0.6B: the tied head the Hub counts twice is left out", arch.numParams === repo(r.repo).numParams - head && Math.abs(ours - p.weightsGiB!) < 0.02,
+      `${ours.toFixed(3)} vs ${p.weightsGiB} GiB`);
     continue;
   }
   check(`${r.repo}: within 6% of what vLLM loaded`, Math.abs(ours / p.weightsGiB! - 1) <= 0.06, `${ours.toFixed(2)} vs ${p.weightsGiB} GiB`);

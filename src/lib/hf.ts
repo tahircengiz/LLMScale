@@ -5,7 +5,7 @@
 
 import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
-import { activeParamsOf, expertCount, expertsPerToken, expertWidth, lookupParams, specParamsOf } from "./moe.ts";
+import { activeParamsOf, denseParamsOf, expertCount, expertsPerToken, expertWidth, lookupParams, specParamsOf } from "./moe.ts";
 import { vllmRefuses } from "./vllmSupport.ts";
 import { compressedLayers, crossAttention, layerPlan, mimoAttention, nasAttention, sparseIndexer, textConfig, unmodelledCacheKeys } from "./layers.ts";
 
@@ -297,7 +297,31 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     if (plan.stateBytesPerSeq) [arch.stateBytesPerSeq, arch.stateLayers] = [plan.stateBytesPerSeq, plan.stateLayers];
     if (plan.globalAttn) arch.globalAttn = plan.globalAttn;
   }
+  // A tied head the checkpoint stores anyway: the Hub counts it, vLLM never loads it.
+  const stored = storedTiedHead(arch, c, numParams);
+  if (stored) {
+    arch.numParams = numParams - stored;
+    countParams(arch, c);
+  }
   return arch;
+}
+
+/** Parameters of an output head a checkpoint stores although its config ties the
+ *  head to the embedding. Qwen3-0.6B and 1.7B ship lm_head.weight beside
+ *  model.embed_tokens.weight; the Hub counts both (751.6M and 2.03B) and vLLM skips
+ *  the copy (qwen3.py loads with skip_prefixes ["lm_head."] when tied): 1.12 and
+ *  3.22 GiB loaded, where the Hub's count made them 26% and 18% heavier. The Hub's
+ *  API names no tensors, so the copy is read from the counts: the Hub's total is
+ *  the config's (denseParamsOf) plus one vocabulary × hidden table, to within 1% of
+ *  that table. 0 for an untied head, a config denseParamsOf does not count, or
+ *  totals that do not differ by the table (Qwen3-4B, Llama 3.2 and Gemma store
+ *  the embedding once). */
+export function storedTiedHead(arch: ModelArch, cfg: any, hubParams: number): number {
+  if (!arch.tieEmbeddings || !arch.vocabSize || !(hubParams > 0)) return 0;
+  const counted = denseParamsOf(arch, cfg);
+  if (!counted) return 0;
+  const head = arch.vocabSize * arch.hiddenSize;
+  return Math.abs(hubParams - head - counted) <= 0.01 * head ? head : 0;
 }
 
 /** A multimodal model's vision encoder as vLLM profiles it: the patches of the
@@ -475,13 +499,17 @@ async function fetchHfQuantConfig(hfId: string): Promise<any | null> {
  *  count is of stored elements, not parameters — 40.6 billion for an NVFP4 Llama
  *  3.3 70B — so when the files hold more than 0.8 bytes per counted parameter, a
  *  4-bit checkpoint takes its parameter count from its base model. */
-async function sizeShipped(arch: ModelArch, info: HfModelInfo | null, dtype: Dtype | undefined): Promise<void> {
-  const bytes = info?.weightFileBytes;
-  if (!bytes || (dtype !== "int4" && dtype !== "int8" && dtype !== "fp8")) return;
+async function sizeShipped(arch: ModelArch, info: HfModelInfo | null, dtype: Dtype | undefined, c: any): Promise<void> {
+  const files = info?.weightFileBytes;
+  if (!files || (dtype !== "int4" && dtype !== "int8" && dtype !== "fp8")) return;
+  // A tied head stored anyway sits in the files in 16-bit beside the quantized
+  // layers (Qwen3-0.6B-FP8: 311M BF16 elements, the embedding twice); vLLM skips it.
+  const bytes = files - 2 * (info?.numParams ? storedTiedHead(arch, c, info.numParams) : 0);
   arch.shipped = { dtype, bytes };
   if (dtype === "int4" && arch.numParams > 0 && bytes / arch.numParams > 0.8) {
     const base = info?.baseModel ? await fetchModelInfo(info.baseModel).catch(() => null) : null;
-    if (base?.numParams && base.numParams > arch.numParams) arch.numParams = base.numParams;
+    const baseParams = base?.numParams ? base.numParams - storedTiedHead(arch, c, base.numParams) : 0;
+    if (baseParams > arch.numParams) arch.numParams = baseParams;
     else {
       // No base model to ask (RedHatAI's Llama-3.3-70B NVFP4 names one that does not
       // exist): unpack the stored elements instead.
@@ -531,7 +559,7 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
     const arch = archFromConfig(cfg, numParams || known?.numParams || 0);
     if (arch && arch.numParams > 0) {
       const counted = arch.numParams;
-      await sizeShipped(arch, info, weightDtype);
+      await sizeShipped(arch, info, weightDtype, textConfig(cfg));
       // A packed checkpoint's total was corrected: count the rest from it.
       if (arch.numParams !== counted) countParams(arch, textConfig(cfg));
       // A preset's active count comes from its model card; prefer it to the estimate.
