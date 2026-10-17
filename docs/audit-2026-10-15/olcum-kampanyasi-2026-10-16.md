@@ -223,5 +223,27 @@ Ratios above 1 mean the app was too fast (speed) or too large (memory). "Before"
 
 Left: on Strix Halo, more than four sequences and short prompts run 2–3× slower than the model (ROCm leaves its skinny
 GEMV kernels past batch 4), and a MoE's prompt is read slower still; labelled as upper bounds. TRT-LLM on 8× B200 (T1)
-runs faster than the model's per-layer cost allows. Gemma 3 4B's language-model overhead is over-estimated by ~1.1 GiB
-(its 262k-entry output layer); an over-estimate, kept for now.
+runs faster than the model's per-layer cost allows. Gemma 3 4B's language-model overhead was over-estimated by ~1.1 GiB;
+fixed in the follow-up below.
+
+## Follow-up, 2026-10-17: the two sizing errors the campaign found
+
+- **Tied heads stored twice.** Qwen3-0.6B and 1.7B ship `lm_head.weight` although `tie_word_embeddings` is true; the
+  Hub counts it (751.6M, 2.03B) and vLLM skips it. `archFromConfig` now leaves the copy out when the Hub's total is the
+  config's dense count plus one vocabulary × hidden table (to 1% of the table): 1.110 vs 1.12 GiB and 3.205 vs 3.22 GiB
+  loaded, where 1.40 and 3.78 were shown. The FP8 release (Qwen3-0.6B-FP8) is sized by its files less the BF16 copy.
+  The signal agrees with the tensor names in every repo snapshot under `scripts/fixtures/repos/`.
+- **Gemma 3 4B's overhead.** In vLLM 0.31's model runner (`v1/worker/gpu/model_runner.py`) the profile's sampler run
+  keeps one 16-bit row of logits per sequence (no top-k/top-p for the dummy batch). The 2 × vocab × hidden term is a copy
+  of the embedding table that every text-only startup peaked at; a multimodal model's compiled language model takes
+  `inputs_embeds`, and none of its logs shows the copy (Gemma 3 4B stayed at 0.85 GiB against a 1.25 GiB table). The term
+  now counts for text-only models only, beside the logits; the vision constant was refitted to 24 B (least squares on the
+  two deltas). Every text-only startup measured compiled its graph afresh, so whether a cached graph keeps the copy is
+  open.
+
+| startup | before | after | vLLM |
+|---|---:|---:|---:|
+| Gemma 3 4B, --skip-mm-profiling | 2.07 | 0.97 | 0.97 |
+| Gemma 3 4B | 2.87 | 1.82 | 1.67 |
+| Qwen2.5-VL-3B, --skip-mm-profiling | 1.27 | 0.85 | 1.00 |
+| Qwen2.5-VL-3B | 3.06 | 2.73 | 2.97 |

@@ -182,14 +182,14 @@ console.log("\n--- C4: the vision encoder's profiling peak ---");
   for (const v of cal.vision as { tag: string; id: string; deltaGiB: number; items: string }[]) {
     const ar = archOf(runs.find((x) => x.id === v.id)!);
     const batch = { tokens: 2048, seqs: 256 };
-    const delta = overheadPerGpu(ar, batch).totalGiB - overheadPerGpu({ ...ar, vision: undefined }, batch).totalGiB;
+    const delta = overheadPerGpu(ar, batch).visionGiB;
     check(`${v.tag} (${v.items}): the encoder's share within 0.25 GiB of vLLM's`, Math.abs(delta - v.deltaGiB) <= 0.25, `${delta.toFixed(2)} vs ${v.deltaGiB} GiB`);
   }
   const g3 = archOf(runs.find((x) => x.id === "unsloth/gemma-3-4b-it")!);
   check("Gemma 3's SigLIP: 4,096 patches pooled to 256 tokens", g3.vision?.patches === 4096 && g3.vision.tokens === 256);
   // The budget holds as many images as max_num_batched_tokens has room for: eight
   // on a 12 GB card, 64 at a B200's 16,384 tokens; Qwen-VL's one video fills any budget.
-  const share = (a: ModelArch, t: number) => overheadPerGpu(a, { tokens: t, seqs: 256 }).activationGiB - overheadPerGpu({ ...a, vision: undefined }, { tokens: t, seqs: 256 }).activationGiB;
+  const share = (a: ModelArch, t: number) => overheadPerGpu(a, { tokens: t, seqs: 256 }).visionGiB;
   check("Gemma 3's share grows with the budget", Math.abs(share(g3, 16384) / share(g3, 2048) - 8) < 1e-9);
   check("Qwen-VL's does not", Math.abs(share(a, 16384) - share(a, 2048)) < 1e-9);
   check("a text-only config has no encoder", visionEncoder({ hidden_size: 4096 }) === undefined);
@@ -237,26 +237,40 @@ console.log("\n--- overhead.ts against the 2026-10-16 startups (scripts/fixtures
 {
   // What vLLM spent outside the weights and the KV cache, against overheadPerGpu at
   // the run's batch. Single GPU; MoE and multimodal models new since the 10-13 set.
-  const logs: [string, string, number, ModelArch?][] = [
+  // With --skip-mm-profiling ("skip") the encoder's share is left out.
+  const logs: [string, string, number, boolean?][] = [
     ["1016-qwen3-1.7b", "qwen3-1.7b", 0.15],
     ["1016-granite-1b-a400m", "granite-1b-a400m", 0.15],
     ["1016-granite-3b-a800m", "granite-3b-a800m", 0.15],
     // Marlin's MoE path holds ~0.2 GiB more than the forward-pass term at 2,048 tokens.
     ["1016-qwen1.5-moe-gptq", "qwen1.5-moe-gptq", 0.25],
+    // Qwen2.5-VL keeps ~0.12 GiB more beside its weights than the runtime term.
     ["1016-qwen2.5-vl-3b", "qwen2.5-vl-3b", 0.3],
+    ["1016-qwen2.5-vl-3b-skip", "qwen2.5-vl-3b", 0.2, true],
+    ["1016-gemma-3-4b", "gemma-3-4b", 0.2],
+    // Was 2.07 GiB against 0.97: the 262k-entry table counted for a multimodal model.
+    ["1016-gemma-3-4b-skip", "gemma-3-4b", 0.15, true],
   ];
-  for (const [file, tag, tol] of logs) {
+  for (const [file, tag, tol, skip] of logs) {
     const p = parseVllmLog(readFileSync(new URL(`./fixtures/vllm/${file}.txt`, import.meta.url), "utf8"));
     const r = runs.find((x) => x.tag === tag)!;
-    const ours = overheadPerGpu(archOf(r), { tokens: p.maxNumBatchedTokens ?? 2048, seqs: 256 }).totalGiB;
+    const o = overheadPerGpu(archOf(r), { tokens: p.maxNumBatchedTokens ?? 2048, seqs: 256 });
+    const ours = skip ? o.totalGiB - o.visionGiB : o.totalGiB;
     const theirs = overheadFromLog(p)!;
     check(`${file}: within ${tol} GiB`, Math.abs(ours - theirs) <= tol, `${ours.toFixed(2)} vs ${theirs.toFixed(2)} GiB`);
   }
-  // Known and left: Gemma 3 4B's language model costs vLLM ~1.1 GiB less than its
-  // 262k-entry output layer suggests here (an over-estimate, the safe side).
-  const g = parseVllmLog(readFileSync(new URL("./fixtures/vllm/1016-gemma-3-4b-skip.txt", import.meta.url), "utf8"));
-  const og = overheadPerGpu({ ...archOf(runs.find((x) => x.tag === "gemma-3-4b")!), vision: undefined }, { tokens: 2048, seqs: 256 }).totalGiB;
-  check("Gemma 3 4B without the encoder: an over-estimate, not over 1.3 GiB", og >= overheadFromLog(g)! && og - overheadFromLog(g)! <= 1.3, `${og.toFixed(2)} vs ${overheadFromLog(g)!.toFixed(2)} GiB`);
+  // The embedding table's copy belongs to a text-only model's profile, not to a
+  // multimodal one's (overhead.ts): Gemma 3 4B's 262k × 2560 table is 1.25 GiB.
+  const g4 = archOf(runs.find((x) => x.tag === "gemma-3-4b")!);
+  const table = (2 * g4.vocabSize! * g4.hiddenSize) / GiB;
+  const act = (a: ModelArch) => overheadPerGpu(a, { tokens: 2048, seqs: 256 });
+  check("Gemma 3 4B: no embedding-table copy in its profile", act(g4).activationGiB - act(g4).visionGiB < 0.2 && Math.abs(table - 1.25) < 0.01,
+    `${(act(g4).activationGiB - act(g4).visionGiB).toFixed(2)} GiB`);
+  check("…which the same shape without its encoder counts", Math.abs(act({ ...g4, vision: undefined }).activationGiB - table) < 1e-9);
+  // The sampler's logits, one 16-bit row per sequence, outweigh the forward pass for a
+  // large vocabulary at many sequences and few tokens.
+  const many = overheadPerGpu(g4, { tokens: 1024, seqs: 1024 });
+  check("…and its logits set the peak at 1,024 sequences of 1,024 tokens", Math.abs(many.activationGiB - many.visionGiB - (2 * 1024 * g4.vocabSize!) / GiB) < 1e-9);
 }
 
 console.log("\n--- Tied heads a checkpoint stores twice ---");
