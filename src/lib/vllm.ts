@@ -2,9 +2,9 @@
 // Rules are grounded in the current vLLM V1 docs (engine args, optimization,
 // tool calling, quantized KV cache). Reason/warning strings are i18n keys.
 
-import { calculate, gpusNeeded, maxConcurrency } from "./calc.ts";
+import { calculate, layoutFor, layoutsOn, maxConcurrency, usesCompressedAttn, type Layout, type LayoutFit } from "./calc.ts";
 import { VLLM_UTIL, vllmBatch, type BatchShape } from "./overhead.ts";
-import { largestTpAtMost, tpValid } from "./parallel.ts";
+import { layoutArgs, layoutKey, layoutLabel, sameLayout, tpValid, type LayoutShape } from "./parallel.ts";
 import type { Parsers } from "./serving.ts";
 import type { Dtype, ModelArch } from "./calc";
 
@@ -18,7 +18,6 @@ export interface VllmInput {
   hfId: string;
   arch: ModelArch;
   modelType?: string;
-  isMoE?: boolean;
   vision?: boolean;
   priority: Priority;
   task: VllmTask;
@@ -29,6 +28,9 @@ export interface VllmInput {
   maxModelLen: number;
   /** Serving on a single MIG slice (no tensor parallelism across MIG). */
   mig?: boolean;
+  /** One of the layouts on `gpuCount` GPUs (VllmRec.layouts), as a link from the
+   *  calculator or the planner names it; any other falls back to the first. */
+  layout?: LayoutShape;
   /** Config-detected weight precision (e.g. MXFP4 for gpt-oss) — overrides the
    * name-based quant guess for the VRAM-fit sanity check so natively-quantized
    * models aren't sized as bf16. */
@@ -55,6 +57,10 @@ export interface VllmRec {
   k8sArgs: string;
   flags: VllmFlag[];
   warnings: VllmWarn[];
+  /** The layout the command sets up, and every one on these GPUs, best first
+   *  (calc.ts, layoutsOn); null and empty on one GPU or a MIG slice. */
+  layout: Layout | null;
+  layouts: LayoutFit[];
 }
 
 /** Detect a pre-applied quantization from the repo id. */
@@ -106,49 +112,41 @@ export function recommend(i: VllmInput): VllmRec {
   const quant = detectQuant(i.hfId);
   const longCtx = i.maxModelLen >= 32768 || i.task === "rag";
   const wantFp8Kv = i.priority === "memory" || i.priority === "throughput";
+  // DeepSeek V4: its compressed caches as the calculator sizes them (calc.ts, v4Reserved).
+  const v4 = usesCompressedAttn(i.arch);
 
   // --- context length ---
   const modelMax = i.arch.maxContext ?? 0;
   if (modelMax && i.maxModelLen > modelMax) warnings.push({ key: "vllm.w.ctxcap", vars: { max: modelMax } });
   flags.push({ flag: "--max-model-len", value: String(i.maxModelLen), reasonKey: "vllm.r.maxlen" });
 
-  // --- parallelism ---
-  let tp = 1;
-  if (i.mig) {
-    warnings.push({ key: "vllm.w.mig" });
-  } else if (i.gpuCount > 1) {
-    // vLLM refuses a size that does not divide the heads, so the command never
-    // carries one: it uses the largest that works and the warning says so.
-    const heads = i.arch.numAttentionHeads;
-    const kv = i.arch.numKeyValueHeads ?? heads;
-    tp = tpValid(i.gpuCount, heads, kv) ? i.gpuCount : largestTpAtMost(i.gpuCount, heads, kv);
-    if (tp !== i.gpuCount) warnings.push({ key: "vllm.w.tp", vars: { n: i.gpuCount, h: heads, ok: tp } });
-    if (tp > 1) flags.push({ flag: "--tensor-parallel-size", value: String(tp), reasonKey: "vllm.r.tp" });
-    if (i.isMoE) flags.push({ flag: "--enable-expert-parallel", reasonKey: "vllm.r.ep" });
-  }
-
   // --- gpu memory utilization ---
   // 0.92 is vLLM's default (CacheConfig), so only the leaner priorities say it.
   const util = i.priority === "throughput" || i.priority === "memory" ? 0.95 : VLLM_UTIL;
-  if (util !== VLLM_UTIL) flags.push({ flag: "--gpu-memory-utilization", value: util.toFixed(2), reasonKey: "vllm.r.gpuutil" });
+  const usableGiB = i.gpuVramGiB * util;
 
   // --- KV cache precision ---
+  // V4 keeps DeepSeek's fp8_ds_mla rows: --kv-cache-dtype auto resolves to them on
+  // that layout, and 16-bit is refused there (vllm/models/deepseek_v4/attention.py,
+  // _resolve_dsv4_kv_cache_dtype); its vLLM recipe sets fp8 outright.
   let kvDtype: Dtype = "fp16";
-  if (i.priority === "accuracy") {
+  if (v4) {
+    kvDtype = "fp8";
+  } else if (i.priority === "accuracy") {
     warnings.push({ key: "vllm.w.kvfull" });
   } else if (wantFp8Kv && longCtx) {
-    flags.push({ flag: "--kv-cache-dtype", value: "fp8", reasonKey: "vllm.r.kvfp8" });
     warnings.push({ key: "vllm.w.fp8acc" });
     kvDtype = "fp8";
   }
 
   // --- memory budget ---
-  // Sized before the scheduler flags, because the KV cache is what decides how
-  // many sequences can actually be resident. The sizing page's engine (calc.ts),
-  // at the batch these flags set: each GPU holds util × its memory, its share of
-  // the weights and the cache, and vLLM's overhead (overhead.ts).
-  // Prefer the config-detected precision (handles MXFP4 / config-only FP8 that
-  // the name-based detectQuant misses); fall back to the name-based guess.
+  // Sized before the parallelism and scheduler flags, because the KV cache is what
+  // decides how the GPUs are laid out and how many sequences can be resident. The
+  // sizing page's engine (calc.ts), at the batch these flags set: each GPU holds
+  // util × its memory, its share of the weights and the cache, and vLLM's overhead
+  // (overhead.ts). Prefer the config-detected precision (handles MXFP4 /
+  // config-only FP8 that the name-based detectQuant misses); fall back to the
+  // name-based guess.
   const wDtype = servingDtype(i.hfId, i.weightDtype);
   const card = vllmBatch(i.gpuVramGiB, i.gpuName);
   const preset = i.priority === "throughput" ? 512 : i.priority === "latency" ? 32 : i.priority === "memory" ? 64 : undefined;
@@ -160,10 +158,51 @@ export function recommend(i: VllmInput): VllmRec {
     ...(card.sparseMla ? { sparseMla: card.sparseMla } : {}),
     ...(card.mxfp4 ? { mxfp4: card.mxfp4 } : {}),
   };
-  const sizing = { arch: i.arch, weightDtype: wDtype, kvDtype, contextLength: i.maxModelLen, batch, gpus: tp };
-  const usableGiB = i.gpuVramGiB * util;
-  /** Full-length sequences the KV cache can hold once the weights are resident. */
-  const seqCap = Math.max(1, maxConcurrency(sizing, usableGiB));
+  const sizing = { arch: i.arch, weightDtype: wDtype, kvDtype, contextLength: i.maxModelLen, batch };
+  /** One sequence at the full length: what the layouts and the fit check are sized for. */
+  const one = { ...sizing, concurrency: 1 };
+
+  // --- parallelism ---
+  // The calculator's layout (calc.ts, layoutsOn): of every way vLLM can run the
+  // model on these GPUs — tensor parallel where the heads allow, pipeline stages,
+  // replicas, and for a MoE its experts spread over the GPUs — the one that holds
+  // the most requests at --max-model-len, unless a link asked for another of them.
+  // Tensor parallelism alone had the page contradict the calculator in half the
+  // audit's cases: DeepSeek V4 on 4× H200 got TP 4 where the calculator runs DP 4.
+  const n = i.mig ? 1 : Math.max(1, Math.floor(i.gpuCount));
+  if (i.mig) warnings.push({ key: "vllm.w.mig" });
+  const layouts = n > 1 ? layoutsOn(one, usableGiB, n) : [];
+  const picked = (i.layout && layouts.find((f) => sameLayout(f.layout, i.layout!))) || layouts[0];
+  const layout = picked?.layout ?? null;
+  if (layout) {
+    const heads = i.arch.numAttentionHeads;
+    const kv = i.arch.numKeyValueHeads ?? heads;
+    // vLLM refuses a TP size that does not divide the heads, so the command never
+    // carries one; the warning says why the GPUs are split another way.
+    if (!tpValid(n, heads, kv) && layout.tp < n) warnings.push({ key: "vllm.w.tp", vars: { n, h: heads, layout: layoutLabel(layout) } });
+    const why: Record<string, Pick<VllmFlag, "reasonKey" | "reasonVars">> = {
+      "--tensor-parallel-size": { reasonKey: "vllm.r.tp", reasonVars: { n: layout.tp } },
+      "--pipeline-parallel-size": { reasonKey: "vllm.r.pp", reasonVars: { L: i.arch.numLayers, pp: layout.pp, k: Math.ceil(i.arch.numLayers / layout.pp) } },
+      "--data-parallel-size": { reasonKey: layout.ep ? "vllm.r.dpEp" : "vllm.r.dp", reasonVars: { dp: layout.dp } },
+      "--enable-expert-parallel": { reasonKey: "vllm.r.ep", reasonVars: { e: i.arch.numExperts ?? 0, n: layout.tp * layout.dp } },
+    };
+    for (const a of layoutArgs(layout)) flags.push({ ...a, ...why[a.flag] });
+  }
+
+  if (util !== VLLM_UTIL) flags.push({ flag: "--gpu-memory-utilization", value: util.toFixed(2), reasonKey: "vllm.r.gpuutil" });
+  if (v4) {
+    flags.push({ flag: "--kv-cache-dtype", value: "fp8", reasonKey: "vllm.r.kvV4" });
+    // The recipe's block size: the one V4's sparse-MLA kernel takes (vllm/models/
+    // deepseek_v4/sparse_mla.py) and the sizing assumes (calc.ts, V4_BLOCK). Without
+    // it vLLM picks a size its backends share; the flag holds 256 on every platform.
+    flags.push({ flag: "--block-size", value: "256", reasonKey: "vllm.r.blockV4" });
+  } else if (kvDtype === "fp8") {
+    flags.push({ flag: "--kv-cache-dtype", value: "fp8", reasonKey: "vllm.r.kvfp8" });
+  }
+
+  /** Full-length sequences the KV cache holds once the weights are resident, on one
+   *  replica: --max-num-seqs counts per data-parallel rank (data_parallel_deployment.md). */
+  const seqCap = Math.max(1, picked ? Math.floor(picked.maxUsers / picked.layout.dp) : maxConcurrency({ ...sizing, gpus: 1 }, usableGiB));
   // A sliding layer holds its window plus every token in flight, two batches of
   // --max-num-batched-tokens (kvReservedPerSeq in calc.ts), so the batch, not the
   // window, sets what Gemma-style models keep.
@@ -240,19 +279,17 @@ export function recommend(i: VllmInput): VllmRec {
   else if (quant) warnings.push({ key: "vllm.w.quant", vars: { q: quant.toUpperCase() } });
 
   // --- VRAM fit sanity (same budget the scheduler caps were sized against) ---
-  // One sequence at the full length, on each GPU of the group.
-  const one = calculate({ ...sizing, concurrency: 1 });
-  if (one.perGpuGiB > usableGiB) {
-    // A GPU count vLLM can split the heads across, not just enough memory.
-    const enough = gpusNeeded({ ...sizing, concurrency: 1 }, usableGiB);
-    warnings.push({
-      key: "vllm.w.fit",
-      vars: {
-        need: one.perGpuGiB.toFixed(1),
-        have: usableGiB.toFixed(1),
-        gpus: enough ?? Math.max(2, Math.ceil(one.totalGiB / usableGiB)),
-      },
-    });
+  // One sequence at the full length, on each GPU of the layout. Too big, the
+  // count is the calculator's (layoutFor): the fewest of these GPUs, laid out.
+  const needGiB = picked ? picked.layout.perGpuGiB : calculate({ ...one, gpus: 1 }).perGpuGiB;
+  if (needGiB > usableGiB) {
+    const enough = layoutFor(one, usableGiB);
+    const vars = { need: needGiB.toFixed(1), have: usableGiB.toFixed(1), ctx: i.maxModelLen.toLocaleString("en-US") };
+    warnings.push(
+      enough
+        ? { key: "vllm.w.fit", vars: { ...vars, gpus: enough.gpus, layout: layoutLabel(enough), lay: layoutKey(enough) } }
+        : { key: "vllm.w.fitNone", vars },
+    );
   }
 
   // --- assemble shell command ---
@@ -266,5 +303,5 @@ export function recommend(i: VllmInput): VllmRec {
     .map((f) => `${f.flag}${f.value !== undefined ? "=" + stripQuotes(f.value) : ""}`)
     .join("\n");
 
-  return { command, k8sArgs, flags, warnings };
+  return { command, k8sArgs, flags, warnings, layout, layouts };
 }

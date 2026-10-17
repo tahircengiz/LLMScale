@@ -13,7 +13,8 @@ import { Card, Field, SectionTitle, Segmented } from "../components/ui";
 import { AdvancedToggle, PickField, Select } from "../components/choice";
 import { Tip } from "../components/tip";
 import { contextChoices, gpuCountChoices, gpuHint } from "../lib/choices";
-import { formatInt } from "../lib/format";
+import { formatGiB, formatInt } from "../lib/format";
+import { layoutKey, layoutLabel, parseLayoutKey } from "../lib/parallel";
 import { LogCheck } from "../components/LogCheck";
 
 const HERO = findKnownByHfId("meta-llama/Llama-3.1-8B-Instruct")!;
@@ -36,6 +37,8 @@ function initial() {
     gpuCount: Number(p.get("n")) || 1,
     ctx: Number(p.get("ctx")) || 8192,
     mig: p.get("mig") || "",
+    // A layout the calculator or the planner picked (parallel.ts, layoutKey).
+    lay: parseLayoutKey(p.get("lay")) ? p.get("lay")! : "",
   };
 }
 
@@ -53,6 +56,7 @@ export function VllmPage() {
   const [gpuCount, setGpuCount] = useState(init.gpuCount);
   const [migId, setMigId] = useState(init.mig);
   const [maxLen, setMaxLen] = useState(init.ctx);
+  const [lay, setLay] = useState(init.lay);
   const [copied, setCopied] = useState<string | null>(null);
   // Parsers read from the chat template, the same reading the Serving Brief does.
   const [parsers, setParsers] = useState<{ id: string; p: Parsers } | null>(null);
@@ -94,8 +98,9 @@ export function VllmPage() {
     p.set("n", String(gpuCount));
     p.set("ctx", String(maxLen));
     if (migId) p.set("mig", migId);
+    if (lay && !migId && gpuCount > 1) p.set("lay", lay);
     window.history.replaceState(null, "", `${window.location.pathname}?${p.toString()}`);
-  }, [hfId, priority, task, gpuId, gpuCount, migId, maxLen]);
+  }, [hfId, priority, task, gpuId, gpuCount, migId, maxLen, lay]);
 
   const gpu = GPUS.find((g) => g.id === gpuId) ?? GPUS.find((g) => g.id === "h100-80")!;
   const migProfiles = migProfilesFor(gpu.id);
@@ -110,12 +115,13 @@ export function VllmPage() {
       isMoE: meta?.isMoE, tags: meta?.tags, pipelineTag: meta?.pipelineTag,
     });
     return recommend({
-      hfId, arch, modelType: meta?.modelType, isMoE: caps.isMoE, vision: caps.vision,
+      hfId, arch, modelType: meta?.modelType, vision: caps.vision,
       weightDtype: meta?.weightDtype,
       parsers: parsers?.id === hfId ? parsers.p : undefined,
       priority, task, gpuVramGiB: effVram, gpuName: gpu.name, gpuCount: effCount, maxModelLen: maxLen, mig: !!migId,
+      layout: parseLayoutKey(lay) ?? undefined,
     });
-  }, [hfId, arch, meta, parsers, priority, task, effVram, gpu.name, effCount, migId, maxLen]);
+  }, [hfId, arch, meta, parsers, priority, task, effVram, gpu.name, effCount, migId, maxLen, lay]);
 
   async function copyText(text: string, which: string) {
     try {
@@ -208,7 +214,10 @@ export function VllmPage() {
                 aside={migId ? "MIG = 1" : undefined}
                 value={migId ? 1 : gpuCount}
                 options={gpuCountChoices(t)}
-                onChange={(v) => setGpuCount(Math.max(1, Math.min(16, v)))}
+                onChange={(v) => {
+                  setGpuCount(Math.max(1, Math.min(16, v)));
+                  setLay("");
+                }}
                 min={1}
                 max={16}
                 custom={(n) => String(n)}
@@ -226,6 +235,24 @@ export function VllmPage() {
                 custom={(n) => `${formatInt(n)} tok`}
               />
             </div>
+            {/* Several GPUs: every way vLLM can run the model on them, as the
+                calculator sizes them; the first holds the most requests. */}
+            {rec && rec.layouts.length > 1 && (
+              <Field label={t("vllm.layout")} info={t("vllm.layoutInfo")}>
+                <Select
+                  label={t("vllm.layout")}
+                  value={rec.layout ? layoutKey(rec.layout) : ""}
+                  options={rec.layouts.map((f) => ({
+                    value: layoutKey(f.layout),
+                    label: layoutLabel(f.layout),
+                    hint: f.fits
+                      ? t("vllm.layoutOpt", { u: formatInt(f.maxUsers), g: formatGiB(f.layout.perGpuGiB) })
+                      : t("vllm.layoutNoFit"),
+                  }))}
+                  onChange={setLay}
+                />
+              </Field>
+            )}
             {migProfiles.length > 0 && (
               <Field label={t("gpu.mig")}>
                 <Select
@@ -308,7 +335,22 @@ export function VllmPage() {
                       {rec.warnings.map((w, idx) => (
                         <li key={idx} className="flex items-start gap-2 rounded-lg bg-warn/10 px-3 py-2 text-xs text-warn ring-1 ring-warn/20">
                           <span aria-hidden>⚠</span>
-                          <span>{t(w.key, w.vars)}</span>
+                          <span>
+                            {t(w.key, w.vars)}
+                            {/* The calculator's count, set up here with its layout. */}
+                            {w.key === "vllm.w.fit" && !migId && Number(w.vars?.gpus) <= 16 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setGpuCount(Number(w.vars!.gpus));
+                                  setLay(String(w.vars!.lay));
+                                }}
+                                className="ml-1 font-medium underline hover:no-underline"
+                              >
+                                {t("vllm.useLayout", { n: w.vars!.gpus, layout: w.vars!.layout })}
+                              </button>
+                            )}
+                          </span>
                         </li>
                       ))}
                     </ul>

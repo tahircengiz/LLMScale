@@ -9,6 +9,7 @@ import { GREEN, RED } from "../lib/palette";
 import { BANDWIDTH_EFFICIENCY, decodeStep, LAYER_MS } from "../lib/perf";
 import { SpeedPanel } from "./SpeedPanel";
 import { useLang } from "../lib/i18n";
+import { layoutFlags, layoutKey, layoutLabel } from "../lib/parallel";
 import { Badge, SectionTitle, Stat } from "./ui";
 
 function ctxLabel(n: number): string {
@@ -19,22 +20,6 @@ function ctxLabel(n: number): string {
 const COUNTS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 24, 32, 64];
 
 const FLAGS_CLASS = "mt-2 block overflow-x-auto whitespace-nowrap rounded-lg bg-ink-900/60 px-2 py-1.5 font-mono text-[11px] text-slate-300";
-
-/** A layout in the engine's own terms: "TP 2 · PP 3", "DP 4 · EP". */
-function layoutLabel(l: Layout): string {
-  const parts = [l.tp > 1 && `TP ${l.tp}`, l.pp > 1 && `PP ${l.pp}`, l.dp > 1 && `DP ${l.dp}`, l.ep && "EP"].filter(Boolean);
-  return parts.length ? parts.join(" · ") : "1 GPU";
-}
-
-/** The vllm serve flags that set a layout up. */
-function layoutFlags(l: Layout): string {
-  return [
-    l.tp > 1 && `--tensor-parallel-size ${l.tp}`,
-    l.pp > 1 && `--pipeline-parallel-size ${l.pp}`,
-    l.dp > 1 && `--data-parallel-size ${l.dp}`,
-    l.ep && "--enable-expert-parallel",
-  ].filter(Boolean).join(" ");
-}
 
 export function GpuFit({
   hfId,
@@ -122,6 +107,9 @@ export function GpuFit({
   }
 
   const selUsage = usage(selected, migId);
+  /** The vLLM page for this model on this card, set up with a layout. */
+  const vllmLink = (l: Layout) =>
+    `${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${l.gpus}&ctx=${contextLength}&lay=${layoutKey(l)}`;
   const kvHeads = arch.numKeyValueHeads ?? arch.numAttentionHeads;
   const heads = arch.numAttentionHeads;
   const layout = selUsage.layout;
@@ -539,15 +527,10 @@ export function GpuFit({
                     {t("gpu.useCount", { n: layout.gpus })}
                   </button>
                 )}
-                {/* The vLLM page sets up one tensor-parallel group. */}
-                {layout.dp === 1 && layout.pp === 1 && (
-                  <a
-                    href={`${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${layout.tp}&ctx=${contextLength}`}
-                    className="text-[11.5px] font-medium text-brand-400 hover:underline"
-                  >
-                    {t("gpu.tpLink")}
-                  </a>
-                )}
+                {/* The vLLM page sets up the same layout on as many GPUs. */}
+                <a href={vllmLink(layout)} className="text-[11.5px] font-medium text-brand-400 hover:underline">
+                  {t("gpu.tpLink")}
+                </a>
               </div>
             </div>
           ))}
@@ -568,6 +551,11 @@ export function GpuFit({
             )}
             <ul className="space-y-1 text-[11.5px] leading-relaxed text-slate-400">{layoutBullets(best.layout, true)}</ul>
             {layoutFlags(best.layout) && <code className={FLAGS_CLASS}>vllm serve {hfId || "<model>"} {layoutFlags(best.layout)}</code>}
+            {hfId && (
+              <a href={vllmLink(best.layout)} className="mt-2 inline-block text-[11.5px] font-medium text-brand-400 hover:underline">
+                {t("gpu.tpLink")}
+              </a>
+            )}
             {multi.length > 1 && (
               <div className="mt-3 overflow-x-auto">
                 <div className="mb-1 text-[11px] font-medium text-slate-300">{t("gpu.altTitle", { n: count })}</div>
