@@ -38,6 +38,8 @@
     "test:gpucompare": "node scripts/test-gpucompare.ts",
     "test:presets": "node scripts/test-presets.ts",
     "test:choices": "node scripts/test-choices.ts",
+    "test:regression": "node scripts/test-regression.ts",
+    "vllm:watch": "node scripts/vllm-watch.ts",
     "newsroom": "node newsroom/cli.ts",
     "test:all": "for f in scripts/test-*.ts; do echo \"== $f\"; node \"$f\" > /dev/null || { node \"$f\" | grep FAIL; exit 1; }; done && echo \"ALL SUITES PASS\""
   },

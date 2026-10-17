@@ -79,6 +79,13 @@ each check is a permanent test:
 - **MoE active parameters** — estimated from the real configs and held to their
   model cards: Qwen3-30B-A3B at 3.35B against 3.3B, Mixtral 8x7B at 12.88B
   against 12.9B.
+- **83 real Hugging Face repos, pinned** — every family a 2026 data audit found
+  misread, run through the resolver from saved Hub answers; the architecture, KV
+  cache, weights and active parameters of each are held to a golden file
+  ([`scripts/fixtures/configs-regression/`](scripts/fixtures/configs-regression/README.md)).
+  Property sweeps check that totals, max users, max context and GPU counts move
+  the right way, that forward and reverse answers agree, and that every field
+  survives the URL.
 
 The suites run through Node's type stripping, without a build step:
 
@@ -89,7 +96,13 @@ npm run test:mla          # multi-head latent attention, against the paper
 npm run test:moe          # MoE active parameters, against model cards
 npm run test:train        # fine-tuning memory
 npm run test:invariants   # guards against silent drift between lists
+npm run test:regression   # 83 real repos against the golden file
 ```
+
+When a change moves a pinned number on purpose, `node scripts/test-regression.ts
+--update` rewrites the golden file; commit it with the reason. The sizing follows
+vLLM 0.31.0; `npm run vllm:watch` reports what changed since then in the vLLM
+files it follows (report only, needs the network).
 
 ![Model anatomy for Qwen3 32B](docs/media/anatomy.png)
 
