@@ -130,6 +130,8 @@ export function encodeState(s: AppState): string {
       p.set("sd", a.shipped.dtype);
       p.set("sb", String(a.shipped.bytes));
     }
+    // MXFP4 experts: the rest of the model stays 16-bit, and vLLM pads them per card.
+    if (a.mxfp4) p.set("mx", "1");
   }
   p.set("wd", s.weightDtype);
   p.set("kd", s.kvDtype);
@@ -265,6 +267,7 @@ export function decodeState(search: string): Partial<AppState> {
       stateLayers: pos(p.get("sn")),
       numExperts: pos(p.get("ne")),
       expertsPerToken: pos(p.get("ek")),
+      mxfp4: p.get("mx") === "1" ? true : undefined,
     } as ModelArch;
     const sd = dtype(p.get("sd"));
     const sb = pos(p.get("sb"));

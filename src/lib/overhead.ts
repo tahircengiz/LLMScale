@@ -40,6 +40,10 @@ export interface BatchShape {
    *  (calc.ts, dsaBytes): "sm100" on B200/B300, "sm120" on RTX 50, RTX PRO
    *  Blackwell and DGX Spark; Hopper and the rest otherwise. */
   sparseMla?: "sm100" | "sm120";
+  /** The kernel vLLM 0.31.0 runs MXFP4 experts with here, which sets how it pads
+   *  them (calc.ts, mxfp4Pad): FlashInfer TRT-LLM on B200/B300, the Triton kernels
+   *  on Hopper, Marlin on Turing to Ada and on SM120 Blackwell, ROCm's on AMD. */
+  mxfp4?: "trtllm" | "triton" | "marlin" | "rocm";
 }
 
 /** `vllm serve`'s defaults for a card of this much memory (EngineArgs in
@@ -48,7 +52,10 @@ export interface BatchShape {
 export function vllmBatch(cardGiB: number, name = ""): BatchShape {
   const graphCap = /\b(g?b[23]00)\b/i.test(name) ? 1024 : 512;
   const sparseMla = sparseMlaFamily(name);
-  const shape = (tokens: number, seqs: number): BatchShape => (sparseMla ? { tokens, seqs, graphCap, sparseMla } : { tokens, seqs, graphCap });
+  const mxfp4 = mxfp4Kernel(name);
+  const shape = (tokens: number, seqs: number): BatchShape => ({
+    tokens, seqs, graphCap, ...(sparseMla ? { sparseMla } : {}), ...(mxfp4 ? { mxfp4 } : {}),
+  });
   if (cardGiB >= 160) return shape(16384, 1024);
   if (cardGiB >= 70 && !/a100/i.test(name)) return shape(8192, 1024);
   return shape(2048, 256);
@@ -61,6 +68,19 @@ export function sparseMlaFamily(name: string): BatchShape["sparseMla"] {
   if (/\b(g?b[23]00)\b/i.test(name)) return "sm100";
   if (/\bRTX 50\d0|RTX PRO \d{4} Blackwell|GB10\b|DGX Spark/i.test(name)) return "sm120";
   return undefined;
+}
+
+/** Which MXFP4 MoE kernel vLLM 0.31.0 picks for gpt-oss on a card, by its name
+ *  (fused_moe/oracle/mxfp4.py, _get_priority_backends_for_gpt_oss and each kernel's
+ *  device check): TRT-LLM on SM100, Triton on SM90 (it stops short of SM120), and
+ *  Marlin on every other NVIDIA card from SM75. Apple and Intel run no vLLM CUDA. */
+export function mxfp4Kernel(name: string): BatchShape["mxfp4"] {
+  if (!name) return undefined;
+  if (/\b(g?b[23]00)\b/i.test(name)) return "trtllm";
+  if (/\b(h100|h200|gh200|h800|h20)\b/i.test(name)) return "triton";
+  if (/\b(amd|mi\d{3}x?|radeon)\b/i.test(name)) return "rocm";
+  if (/\b(apple|intel|arc)\b/i.test(name)) return undefined;
+  return "marlin";
 }
 
 export const SMALL_CARD_BATCH: BatchShape = { tokens: 2048, seqs: 256 };

@@ -125,6 +125,10 @@ export interface ModelArch {
    *  files hold. Read from the repository, it is exact where a per-parameter
    *  estimate is not (hf.ts). */
   shipped?: { dtype: Dtype; bytes: number };
+  /** The routed experts ship as MXFP4 (quant_method mxfp4, gpt-oss): only they are
+   *  4-bit, attention, router and embeddings stay 16-bit, and vLLM pads the expert
+   *  matrices to its kernel's tile on each card (mxfp4Pad). */
+  mxfp4?: boolean;
 }
 
 /** Does this architecture cache a compressed latent instead of K and V tensors? */
@@ -164,6 +168,8 @@ export interface CalcInput {
 }
 
 export interface CalcResult {
+  /** The weights across the GPUs as vLLM loads them on the card the batch is for:
+   *  the checkpoint, plus the tile padding of MXFP4 experts (mxfp4Pad). */
   weightsGiB: number;
   kvCacheGiB: number;
   /** KV cache for a single sequence at the given context. */
@@ -208,6 +214,12 @@ export function weightsBytes(arch: ModelArch, dtype: Dtype): number {
   const spec = specOf(arch);
   const params = arch.numParams - spec;
   if (arch.shipped && arch.shipped.dtype === dtype) return spec ? arch.shipped.bytes * (params / arch.numParams) : arch.shipped.bytes;
+  // MXFP4 leaves everything but the routed experts in 16-bit (gpt-oss: attention,
+  // router, embeddings), which counted 4-bit put gpt-oss-120b 1.3 GiB light.
+  if (arch.mxfp4 && dtype === "int4") {
+    const experts = expertParams(arch);
+    if (experts > 0) return (experts * QUANT_BITS.int4!) / 8 + (params - experts) * 2;
+  }
   const bits = QUANT_BITS[dtype];
   if (bits && arch.vocabSize && arch.hiddenSize) {
     const embed = arch.vocabSize * arch.hiddenSize * (arch.tieEmbeddings ? 1 : 2);
@@ -634,7 +646,6 @@ export function calculate(input: CalcInput): CalcResult {
   const gpus = Math.max(1, input.gpus ?? 1);
 
   const headDim = resolveHeadDim(arch);
-  const weights = weightsBytes(arch, weightDtype);
   const kvPerToken = kvBytesPerToken(arch, kvDtype);
   // Sized as vLLM reserves it, at the batch it profiles with.
   const { tokens, sparseMla } = input.batch ?? SMALL_CARD_BATCH;
@@ -645,10 +656,12 @@ export function calculate(input: CalcInput): CalcResult {
   // Each GPU holds its share of every request's cache: its key-value heads, or a
   // replica of one where a kind of layer has fewer heads than GPUs.
   const kvPerGpu = (gpus > 1 ? kvReservedPerSeq(arch, kvDtype, contextLength, tokens, gpus, sparseMla) : kvPerSeq) * concurrency;
-  const perGpu = (weights / gpus + kvPerGpu) / BYTES_PER_GIB + o.totalGiB;
+  // The weights as vLLM loads them on this card: the files, and MXFP4 experts padded.
+  const held = weightsOnGpu(arch, weightDtype, gpus, input.batch) * gpus;
+  const perGpu = (held / gpus + kvPerGpu) / BYTES_PER_GIB + o.totalGiB;
 
   const result: CalcResult = {
-    weightsGiB: weights / BYTES_PER_GIB,
+    weightsGiB: held / BYTES_PER_GIB,
     kvCacheGiB: kvTotal / BYTES_PER_GIB,
     kvPerSeqGiB: kvPerSeq / BYTES_PER_GIB,
     kvPerTokenBytes: kvPerToken,
@@ -657,7 +670,7 @@ export function calculate(input: CalcInput): CalcResult {
     gpus,
     batch: input.batch ?? SMALL_CARD_BATCH,
     perGpuGiB: perGpu,
-    totalGiB: (weights + kvTotal) / BYTES_PER_GIB + gpus * o.totalGiB,
+    totalGiB: (held + kvTotal) / BYTES_PER_GIB + gpus * o.totalGiB,
     headDim,
   };
   if (usesCompressedAttn(arch)) {
@@ -673,7 +686,7 @@ export function calculate(input: CalcInput): CalcResult {
 function kvRoom(input: Omit<CalcInput, "concurrency" | "contextLength">, usableGiB: number): number {
   const gpus = Math.max(1, input.gpus ?? 1);
   const o = overheadPerGpu(input.arch, input.batch, gpus);
-  return (usableGiB - o.totalGiB) * BYTES_PER_GIB - weightsBytes(input.arch, input.weightDtype) / gpus;
+  return (usableGiB - o.totalGiB) * BYTES_PER_GIB - weightsOnGpu(input.arch, input.weightDtype, gpus, input.batch);
 }
 
 /**
@@ -746,16 +759,54 @@ export function gpusNeeded(input: CalcInput, usableGiB: number, limit = 64, vali
  *  token skips experts − k of them, so the total less the active parameters is
  *  (experts − k)/experts of all expert weights. 0 for a dense model. */
 export function expertWeightBytes(arch: ModelArch, dtype: Dtype): number {
+  const params = expertParams(arch);
+  if (!params) return 0;
+  // MXFP4 experts are the checkpoint's only 4-bit tensors, so by bytes they are a
+  // smaller share than by count: 93% of gpt-oss-120b's, not 99%.
+  if (arch.mxfp4 && dtype === "int4") return Math.min(weightsBytes(arch, dtype), (params * QUANT_BITS.int4!) / 8);
+  return weightsBytes(arch, dtype) * (params / (arch.numParams - specOf(arch)));
+}
+
+/** Parameters in the routed experts: what a token skips, scaled up by E/(E − k).
+ *  The loaded weights hold no speculative layers; lookup tables are not experts and
+ *  stay whole on every GPU. Counting both as unrouted experts put Qwen3.8-Flash-
+ *  Next's expert share at 98% of its weights, where it is 68%. 0 for a dense model. */
+function expertParams(arch: ModelArch): number {
   const e = arch.numExperts ?? 0;
   const k = arch.expertsPerToken ?? 0;
   if (e <= 1 || k <= 0 || k >= e || !arch.activeParams || !(arch.numParams > 0)) return 0;
-  // The loaded weights hold no speculative layers; lookup tables are not experts
-  // and stay whole on every GPU. Counting both as unrouted experts put Qwen3.8-
-  // Flash-Next's expert share at 98% of its weights, where it is 68%.
   const loaded = arch.numParams - specOf(arch);
   const unrouted = loaded - lookupOf(arch) - arch.activeParams;
   const params = (unrouted * e) / (e - k);
-  return params > 0 && params < loaded ? weightsBytes(arch, dtype) * (params / loaded) : 0;
+  return params > 0 && params < loaded ? params : 0;
+}
+
+/** How much more room vLLM 0.31.0 gives MXFP4 routed experts on one GPU than their
+ *  files take: its kernels want whole tiles of the hidden width and of each GPU's
+ *  share of the expert width, and it pads both (fused_moe/oracle/mxfp4.py,
+ *  mxfp4_round_up_hidden_size_and_intermediate_size). gpt-oss's 2880 is no multiple
+ *  of 256, so Marlin (Turing to Ada, and GeForce and RTX PRO Blackwell) and
+ *  FlashInfer's TRT-LLM kernel (B200, B300) hold its experts 9% larger at TP1; the
+ *  Triton kernel on Hopper pads only the expert width, to 64. Under expert
+ *  parallelism a GPU holds whole experts: `shards` is 1. 1 when nothing pads. */
+export function mxfp4Pad(arch: ModelArch, kernel: BatchShape["mxfp4"], shards: number): number {
+  if (!arch.mxfp4 || !kernel) return 1;
+  const h = arch.hiddenSize;
+  const i = Math.ceil((arch.moeIntermediateSize ?? arch.intermediateSize ?? 0) / Math.max(1, shards));
+  if (!(h > 0) || !(i > 0)) return 1;
+  // ROCm's 256 holds for gpt-oss, whose SwiGLU variant is neither SiLU nor SiTU.
+  const [th, ti] = kernel === "triton" ? [1, 64] : kernel === "rocm" ? [256, 256] : [256, 128];
+  const up = (x: number, t: number) => Math.ceil(x / t) * t;
+  return (up(h, th) / h) * (up(i, ti) / i);
+}
+
+/** One GPU's weights as vLLM holds them, in bytes: its 1/`shards` share, with MXFP4
+ *  experts padded to the card's kernel tile (mxfp4Pad). */
+export function weightsOnGpu(arch: ModelArch, dtype: Dtype, shards: number, batch?: BatchShape): number {
+  const n = Math.max(1, shards);
+  const share = weightsBytes(arch, dtype) / n;
+  const pad = mxfp4Pad(arch, batch?.mxfp4, n);
+  return pad === 1 ? share : share + (expertWeightBytes(arch, dtype) / n) * (pad - 1);
 }
 
 /** The speculative and lookup-table parameters, where they are a part of the total. */
@@ -833,7 +884,9 @@ function layoutFixedGiB(b: Basis, l: Shape): number {
   const stage = stageShare(b, l.pp);
   const experts = l.ep ? b.expertBytes : 0;
   const expertShare = l.ep ? Math.ceil(b.experts / (l.tp * l.dp)) / b.experts : 1 / l.tp;
-  const weights = ((b.weights - experts) / l.tp + experts * expertShare) * stage;
+  // MXFP4 experts padded to the card's kernel tile: whole experts under EP, else each GPU's slice of them.
+  const pad = (mxfp4Pad(b.arch, b.batch.mxfp4, l.ep ? 1 : l.tp) - 1) * b.expertBytes * (l.ep ? expertShare : 1 / l.tp);
+  const weights = ((b.weights - experts) / l.tp + experts * expertShare + pad) * stage;
   const comm = l.tp === 1 && (l.ep || l.pp > 1) ? COMM_GIB : 0;
   return weights / BYTES_PER_GIB + b.overhead(l.tp) + comm;
 }

@@ -283,6 +283,9 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   if (unmodelled.length) arch.unmodelled = unmodelled;
   const refused = vllmRefuses(cfg);
   if (refused) arch.notInVllm = refused;
+  // MXFP4 (gpt-oss) quantizes the routed experts only; vLLM pads them to its kernel's tile (calc.ts, mxfp4Pad).
+  const q = cfg?.quantization_config ?? c.quantization_config;
+  if (arch.numExperts && String(q?.quant_method ?? "").toLowerCase() === "mxfp4") arch.mxfp4 = true;
   // Sliding windows and hybrid layers cache less than every layer at full context.
   const plan = compressed ? undefined : layerPlan(c);
   if (plan) {

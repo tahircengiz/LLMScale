@@ -186,6 +186,8 @@ export const KNOWN_MODELS: KnownModel[] = [
     numLayers: 24, hiddenSize: 2880, intermediateSize: 2880,
     numAttentionHeads: 64, numKeyValueHeads: 8, headDim: 64, vocabSize: 201088, maxContext: 131072,
     numExperts: 32, expertsPerToken: 4, slidingLayers: 12, slidingWindow: 128,
+    // MXFP4 experts (19.11B parameters at 17/32 byte with their scales), the rest BF16.
+    mxfp4: true, shipped: { dtype: "int4", bytes: 13761264768 },
   },
   {
     // "117B parameters with 5.1B active parameters" — model card.
@@ -194,6 +196,8 @@ export const KNOWN_MODELS: KnownModel[] = [
     numLayers: 36, hiddenSize: 2880, intermediateSize: 2880,
     numAttentionHeads: 64, numKeyValueHeads: 8, headDim: 64, vocabSize: 201088, maxContext: 131072,
     numExperts: 128, expertsPerToken: 4, slidingLayers: 18, slidingWindow: 128,
+    // MXFP4 experts (114.66B parameters at 17/32 byte), attention, router and embeddings BF16.
+    mxfp4: true, shipped: { dtype: "int4", bytes: 65248815744 },
   },
   {
     // Multi-head latent attention: kvLoraRank + qkRopeHeadDim switch the KV

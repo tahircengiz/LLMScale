@@ -21,7 +21,7 @@
 //
 // React-free: scripts/test-vllmlog.ts runs it against logs from real runs.
 
-import { BYTES_PER_GIB, kvReservedPerSeq, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
+import { BYTES_PER_GIB, kvReservedPerSeq, weightsOnGpu, type Dtype, type ModelArch } from "./calc.ts";
 import { overheadPerGpu, VLLM_UTIL, vllmBatch, type BatchShape } from "./overhead.ts";
 
 export interface VllmLog {
@@ -142,10 +142,12 @@ export function compareLog(
     seqs: log.maxNumSeqs ?? card.seqs,
     graphCap: log.graphCap ?? card.graphCap,
     ...(card.sparseMla ? { sparseMla: card.sparseMla } : {}),
+    ...(card.mxfp4 ? { mxfp4: card.mxfp4 } : {}),
   };
   const kvDtype: Dtype = /fp8/.test(log.kvCacheDtype ?? "") ? "fp8" : "fp16";
   const rows: LogRow[] = [];
-  const weights = weightsBytes(m.arch, m.weightDtype) / BYTES_PER_GIB / tp;
+  // "Model loading took" is one rank's share as loaded: MXFP4 experts padded on this card.
+  const weights = weightsOnGpu(m.arch, m.weightDtype, tp, batch) / BYTES_PER_GIB;
   if (log.weightsGiB !== undefined) rows.push({ key: "weights", vllm: log.weightsGiB, ours: weights, unit: "GiB" });
   const overhead = overheadPerGpu(m.arch, batch, tp).totalGiB;
   const spent = overheadFromLog(log, m.cardGiB);
