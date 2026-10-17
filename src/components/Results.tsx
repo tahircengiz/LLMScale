@@ -65,6 +65,7 @@ export function Results({ result, cardName }: { result: CalcResult; cardName?: s
           tokens: formatInt(result.batch.tokens),
           seqs: formatInt(result.batch.seqs),
         })}
+        {result.gpus > 1 && <> {t("results.overheadNote.multi")}</>}
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
