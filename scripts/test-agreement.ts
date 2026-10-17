@@ -10,8 +10,9 @@
 // stages. Here, for five models on H100, H200 and RTX PRO 6000:
 //   - one GPU: the page warns exactly when the calculator says it does not fit,
 //     and names the calculator's count and layout;
-//   - 2, 4 and 8 GPUs: the page sets up the calculator's ×N layout, with pipeline
-//     stages only when no layout without them holds a request;
+//   - 2, 4 and 8 GPUs: the page (balanced) sets up the calculator's ×N layout, with
+//     pipeline stages only when no layout without them holds a request (throughput
+//     and memory rank by requests instead: test-vllm);
 //   - the calculator's link (its count and layout) opens a page that fits;
 //   - the planner tries only the calculator's layouts, finds the same memory fit
 //     for each, reaches the calculator's count for a light load, and its link opens

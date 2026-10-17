@@ -173,10 +173,17 @@ export function recommend(i: VllmInput): VllmRec {
   // holds a request at --max-model-len, pipeline stages only when nothing else
   // does, unless a link asked for another of them. Tensor parallelism alone had
   // the page contradict the calculator in half the audit's cases.
+  // Throughput and memory ask for the most sequences, not the fastest one: for
+  // them the layouts that hold a request rank by the requests they hold, still
+  // without pipeline stages while any other holds one; their speed is shown, not
+  // ranked by. Ranked by speed, V4 on 4× H200 at 256k ran TP 4 and capped
+  // --max-num-seqs at 15 where DP 4 · EP holds 52, its recipe's layout for load.
   const n = i.mig ? 1 : Math.max(1, Math.floor(i.gpuCount));
   if (i.mig) warnings.push({ key: "vllm.w.mig" });
+  const forMany = i.priority === "throughput" || i.priority === "memory";
   const speed = layoutSpeed(one, i.device);
-  const layouts = n > 1 ? layoutsOn(one, usableGiB, n, speed) : [];
+  const rankBy = forMany ? undefined : speed;
+  const layouts = n > 1 ? layoutsOn(one, usableGiB, n, rankBy).map((f) => (forMany && speed ? { ...f, stepMs: speed(f.layout) } : f)) : [];
   const picked = (i.layout && layouts.find((f) => sameLayout(f.layout, i.layout!))) || layouts[0];
   const layout = picked?.layout ?? null;
   if (layout) {
@@ -294,7 +301,7 @@ export function recommend(i: VllmInput): VllmRec {
   // count is the calculator's (layoutFor): the fewest of these GPUs, laid out.
   const needGiB = picked ? picked.layout.perGpuGiB : calculate({ ...one, gpus: 1 }).perGpuGiB;
   if (needGiB > usableGiB) {
-    const enough = layoutFor(one, usableGiB, undefined, speed);
+    const enough = layoutFor(one, usableGiB, undefined, rankBy);
     const vars = { need: needGiB.toFixed(1), have: usableGiB.toFixed(1), ctx: i.maxModelLen.toLocaleString("en-US") };
     warnings.push(
       enough

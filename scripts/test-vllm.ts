@@ -123,7 +123,7 @@ console.log("\n--- layouts: the calculator's (A3) ---");
   const pp4 = four.layouts.find((f) => f.layout.pp === 4)!;
   check("…faster than four pipeline stages, which hold more requests", four.layouts[0].stepMs! < pp4.stepMs! && pp4.maxUsers > four.layouts[0].maxUsers,
     `${layoutLabel(four.layout!)} ${four.layouts[0].maxUsers} requests ${four.layouts[0].stepMs?.toFixed(1)} ms, PP 4 ${pp4.maxUsers} requests ${pp4.stepMs?.toFixed(1)} ms`);
-  check("…and says that the recipe adds expert parallelism to it for the same memory", four.flags.find((f) => f.flag === "--tensor-parallel-size")?.reasonKey === "vllm.r.tpMoe");
+  check("…and says that the recipe adds expert parallelism to it for about the same memory", four.flags.find((f) => f.flag === "--tensor-parallel-size")?.reasonKey === "vllm.r.tpMoe");
   check("a dense model's tensor parallelism has the plain reason", tp.flags.find((f) => f.flag === "--tensor-parallel-size")?.reasonKey === "vllm.r.tp");
   // TP+EP takes about TP's memory only while the experts split evenly: Mixtral's 8
   // over TP 16 would leave half the GPUs without one.
@@ -131,6 +131,18 @@ console.log("\n--- layouts: the calculator's (A3) ---");
   const tpReason = (n: number) =>
     recommend(base({ hfId: mix.hfId, arch: mix, gpuCount: n, layout: { tp: n, pp: 1, dp: 1, ep: false } })).flags.find((f) => f.flag === "--tensor-parallel-size")?.reasonKey;
   check("Mixtral on TP 8: the TP+EP note; on TP 16, more GPUs than experts, the plain reason", tpReason(8) === "vllm.r.tpMoe" && tpReason(16) === "vllm.r.tp", `${tpReason(8)}, ${tpReason(16)}`);
+  // Throughput and memory ask for many sequences: the layouts that hold a request
+  // rank by the requests they hold, still without pipeline stages, so V4 runs its
+  // recipe's DP+EP instead of TP 4 capped at 15 sequences; the speed is still shown.
+  for (const priority of ["throughput", "memory"] as const) {
+    const many = recommend(v4in({ gpuCount: 4, priority }));
+    const most = Math.max(...many.layouts.filter((f) => f.fits && f.layout.pp === 1).map((f) => f.maxUsers));
+    check(`${priority}: the most requests without pipeline stages (DP 4 · EP)`, many.layout?.pp === 1 && many.layout.dp === 4 && many.layout.ep && many.layouts[0].maxUsers === most && many.layouts.every((f) => f.stepMs !== undefined),
+      `${layoutLabel(many.layout!)} ${many.layouts[0].maxUsers} requests`);
+  }
+  const thrSeqs = seqsOf(recommend(v4in({ gpuCount: 4, priority: "throughput" })).command);
+  check("…throughput's --max-num-seqs is a DP rank's share of them, not TP 4's 15", thrSeqs * 4 > 15, `${thrSeqs} per rank`);
+  check("latency keeps the fastest (TP 4)", parallel(recommend(v4in({ gpuCount: 4, priority: "latency" })).command) === "--tensor-parallel-size 4");
   // Without a device's speed the layouts that hold a request rank by memory alone,
   // still without pipeline stages while any other holds it.
   const blind = recommend(v4in({ gpuCount: 4, device: undefined }));
