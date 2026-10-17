@@ -109,6 +109,25 @@ const GRAPH_BASE_GIB = 0.07;
 const GRAPH_AT_512_GIB = 0.18;
 const GRAPH_BYTES_PER_LAYER_HIDDEN = 2048;
 
+/** Bytes the vision encoder's profiling pass adds per patch per unit of its width.
+ *  vLLM 0.31.0 runs the encoder on as many of the largest items as its encoder
+ *  budget holds before it profiles the language model (gpu_model_runner.py,
+ *  profile_run; encoder_budget.py), and sizes the KV cache after both. Fitted to two
+ *  startups on the RTX 4070 Ti against the same model with --skip-mm-profiling
+ *  (scripts/fixtures/vllm/): Qwen2.5-VL-3B, one 65,536-patch video, 1.97 GiB more;
+ *  Gemma 3 4B, eight 4,096-patch images, 0.70 GiB more. 23 bytes lands within 0.2
+ *  GiB of both. */
+const VISION_BYTES = 23;
+
+/** What the encoder's profiling pass adds on one GPU, in bytes. The budget is the
+ *  larger of max_num_batched_tokens and one item, filled with whole items. */
+function visionPeak(arch: ModelArch, batch: BatchShape, n: number): number {
+  const v = arch.vision;
+  if (!v || !(v.tokens > 0) || !(v.patches > 0) || !(v.hidden > 0)) return 0;
+  const items = Math.max(1, Math.floor(Math.max(batch.tokens, v.tokens) / v.tokens));
+  return (VISION_BYTES * items * v.patches * v.hidden) / n;
+}
+
 /** Width of the feed-forward work one token does: the dense block, or the experts
  *  it is routed to. */
 function ffnWidth(arch: ModelArch): number {
@@ -129,10 +148,11 @@ export function overheadPerGpu(arch: ModelArch, batch: BatchShape = SMALL_CARD_B
   const runtime = RUNTIME_GIB + (SAMPLER_BYTES * batch.seqs * vocab) / GiB + (n > 1 ? COMM_GIB : 0);
   // The profiling pass peaks in the larger of two places, not both: the
   // feed-forward block, which grows with the batched tokens, or the output layer,
-  // a vocabulary × hidden matrix in 16-bit. Both split across the group.
+  // a vocabulary × hidden matrix in 16-bit. Both split across the group. A
+  // multimodal model's encoder is profiled too, and adds its own peak (C4).
   const forward = (FORWARD_BYTES * batch.tokens * ffnWidth(arch)) / n;
   const head = (2 * vocab * arch.hiddenSize) / n;
-  const activation = Math.max(forward, head) / GiB;
+  const activation = (Math.max(forward, head) + visionPeak(arch, batch, n)) / GiB;
   const capture = Math.min(2 * batch.seqs, batch.graphCap ?? 512) / 512;
   const graphs =
     GRAPH_BASE_GIB + capture * (GRAPH_AT_512_GIB + (GRAPH_BYTES_PER_LAYER_HIDDEN * arch.numLayers * arch.hiddenSize) / GiB);

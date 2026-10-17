@@ -132,6 +132,8 @@ export function encodeState(s: AppState): string {
     }
     // MXFP4 experts: the rest of the model stays 16-bit, and vLLM pads them per card.
     if (a.mxfp4) p.set("mx", "1");
+    // The vision encoder's profiling peak is part of a multimodal model's overhead.
+    if (a.vision) p.set("vi", `${a.vision.patches}.${a.vision.tokens}.${a.vision.hidden}`);
   }
   p.set("wd", s.weightDtype);
   p.set("kd", s.kvDtype);
@@ -166,6 +168,13 @@ function crossOf(v: string | null): ModelArch["crossAttn"] {
   const n = (v ?? "").split(".").map(Number);
   if (n.length !== 2 || !n.every((x) => Number.isInteger(x) && x > 0)) return undefined;
   return { layers: n[0], tokens: n[1] };
+}
+
+/** "patches.tokens.hidden", as encodeState writes it. */
+function visionOf(v: string | null): ModelArch["vision"] {
+  const n = (v ?? "").split(".").map(Number);
+  if (n.length !== 3 || !n.every((x) => Number.isInteger(x) && x > 0)) return undefined;
+  return { patches: n[0], tokens: n[1], hidden: n[2] };
 }
 
 /** "kvHeads.headDim", as encodeState writes it. */
@@ -268,6 +277,7 @@ export function decodeState(search: string): Partial<AppState> {
       numExperts: pos(p.get("ne")),
       expertsPerToken: pos(p.get("ek")),
       mxfp4: p.get("mx") === "1" ? true : undefined,
+      vision: visionOf(p.get("vi")),
     } as ModelArch;
     const sd = dtype(p.get("sd"));
     const sb = pos(p.get("sb"));

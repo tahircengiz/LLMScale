@@ -129,6 +129,10 @@ export interface ModelArch {
    *  4-bit, attention, router and embeddings stay 16-bit, and vLLM pads the expert
    *  matrices to its kernel's tile on each card (mxfp4Pad). */
   mxfp4?: boolean;
+  /** The vision encoder of a multimodal model, as vLLM profiles it: the patches of
+   *  one image (or video) of the largest size it accepts, the language-model tokens
+   *  they become, and the encoder's width (overhead.ts, visionPeak). */
+  vision?: { patches: number; tokens: number; hidden: number };
 }
 
 /** Does this architecture cache a compressed latent instead of K and V tensors? */

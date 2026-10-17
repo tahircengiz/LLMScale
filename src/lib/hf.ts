@@ -283,6 +283,9 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
   if (unmodelled.length) arch.unmodelled = unmodelled;
   const refused = vllmRefuses(cfg);
   if (refused) arch.notInVllm = refused;
+  // The vision encoder vLLM profiles before the language model (overhead.ts).
+  const vision = visionEncoder(cfg);
+  if (vision) arch.vision = vision;
   // MXFP4 (gpt-oss) quantizes the routed experts only; vLLM pads them to its kernel's tile (calc.ts, mxfp4Pad).
   const q = cfg?.quantization_config ?? c.quantization_config;
   if (arch.numExperts && String(q?.quant_method ?? "").toLowerCase() === "mxfp4") arch.mxfp4 = true;
@@ -295,6 +298,29 @@ export function archFromConfig(cfg: any, numParams: number): ModelArch | null {
     if (plan.globalAttn) arch.globalAttn = plan.globalAttn;
   }
   return arch;
+}
+
+/** A multimodal model's vision encoder as vLLM profiles it: the patches of the
+ *  largest image it takes, the tokens they become, and its width. Qwen-VL reads any
+ *  resolution; vLLM's default ceiling is 16,384 tokens of 2×2-merged patches
+ *  (max_pixels 12,845,056 at patch 14, 16,777,216 at 16). Gemma 4 pools 3×3 patches
+ *  into each of its soft tokens; SigLIP, CLIP and Pixtral towers see a fixed size. */
+export function visionEncoder(cfg: any): ModelArch["vision"] | undefined {
+  const vc = cfg?.vision_config;
+  if (!vc || typeof vc !== "object") return undefined;
+  const hidden = vc.hidden_size ?? vc.embed_dim ?? vc.width;
+  if (!(hidden > 0)) return undefined;
+  const merge = vc.spatial_merge_size ?? cfg.spatial_merge_size;
+  if (vc.temporal_patch_size && merge > 0) return { patches: 16384 * merge * merge, tokens: 16384, hidden };
+  const soft = cfg.vision_soft_tokens_per_image ?? vc.default_output_length;
+  if (soft > 0 && vc.pooling_kernel_size > 0) return { patches: soft * vc.pooling_kernel_size ** 2, tokens: soft, hidden };
+  const size = Array.isArray(vc.image_size) ? vc.image_size[0] : vc.image_size;
+  const patch = vc.patch_size;
+  if (!(size > 0) || !(patch > 0)) return undefined;
+  const patches = Math.floor(size / patch) ** 2;
+  const shuffle = vc.pixel_shuffle_ratio;
+  const tokens = cfg.mm_tokens_per_image ?? (merge > 0 ? patches / (merge * merge) : shuffle > 0 ? patches * shuffle * shuffle : patches);
+  return tokens > 0 ? { patches, tokens: Math.max(1, Math.round(tokens)), hidden } : undefined;
 }
 
 /** The parameter counts read from a config beyond the total: the ACTIVE ones a
