@@ -768,7 +768,15 @@ export function expertWeightBytes(arch: ModelArch, dtype: Dtype): number {
   // MXFP4 experts are the checkpoint's only 4-bit tensors, so by bytes they are a
   // smaller share than by count: 93% of gpt-oss-120b's, not 99%.
   if (arch.mxfp4 && dtype === "int4") return Math.min(weightsBytes(arch, dtype), (params * QUANT_BITS.int4!) / 8);
-  return weightsBytes(arch, dtype) * (params / (arch.numParams - specOf(arch)));
+  // A quantized checkpoint keeps its embedding and output head in 16-bit, so the
+  // experts get the quantized layers' bytes per parameter, not the average: for
+  // Qwen3-30B-A3B at 4.5 bits the average left the shared layers a quarter of
+  // what they read.
+  const all = weightsBytes(arch, dtype);
+  const loaded = arch.numParams - specOf(arch);
+  const tables = QUANT_BITS[dtype] && arch.vocabSize && arch.hiddenSize ? arch.vocabSize * arch.hiddenSize * (arch.tieEmbeddings ? 1 : 2) : 0;
+  const perParam = tables > 0 && tables < loaded - params && 2 * tables < all ? (all - 2 * tables) / (loaded - tables) : all / loaded;
+  return Math.min(all, params * perParam);
 }
 
 /** Parameters in the routed experts: what a token skips, scaled up by E/(E − k).

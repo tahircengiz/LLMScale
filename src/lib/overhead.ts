@@ -152,7 +152,12 @@ export function overheadPerGpu(arch: ModelArch, batch: BatchShape = SMALL_CARD_B
   // multimodal model's encoder is profiled too, and adds its own peak (C4).
   const forward = (FORWARD_BYTES * batch.tokens * ffnWidth(arch)) / n;
   const head = (2 * vocab * arch.hiddenSize) / n;
-  const activation = (Math.max(forward, head) + visionPeak(arch, batch, n)) / GiB;
+  // A MoE layer's fused kernels also hold, for every token and expert it is routed
+  // to, the gate-up output, its activation and the down output before the sum, in
+  // 16-bit (fused_moe): measured as 0.1 to 0.9 GiB more on four MoE startups.
+  const k = arch.numExperts && arch.expertsPerToken && arch.moeIntermediateSize ? arch.expertsPerToken : 0;
+  const routed = k ? 2 * batch.tokens * k * ((3 * arch.moeIntermediateSize!) / n + arch.hiddenSize) : 0;
+  const activation = (Math.max(forward, head) + routed + visionPeak(arch, batch, n)) / GiB;
   const capture = Math.min(2 * batch.seqs, batch.graphCap ?? 512) / 512;
   const graphs =
     GRAPH_BASE_GIB + capture * (GRAPH_AT_512_GIB + (GRAPH_BYTES_PER_LAYER_HIDDEN * arch.numLayers * arch.hiddenSize) / GiB);

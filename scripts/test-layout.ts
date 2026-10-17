@@ -47,9 +47,10 @@ const two = layoutsOn({ arch: v4, weightDtype: "fp8", kvDtype: "fp8", contextLen
 check("…as TP 2 or two pipeline stages, both of which fit", two.filter((f) => f.fits).some((f) => f.layout.tp === 2) && two.filter((f) => f.fits).some((f) => f.layout.pp === 2));
 check("8 users: three, as three pipeline stages", at(8).gpus === 3 && at(8).layout?.pp === 3, JSON.stringify(at(8).layout));
 check("16 users: not fewer than 8 take", at(16).gpus >= at(8).gpus, `${at(8).gpus} → ${at(16).gpus}`);
-// Three: vLLM leaves the 0731 checkpoint's DSpark draft layers (mtp.*) unloaded,
-// 10 GiB of its files (audit C6); with them it took four.
-check("…three", at(16).gpus === 3, JSON.stringify(at(16).layout));
+// Four: vLLM leaves the 0731 checkpoint's DSpark draft layers (mtp.*) unloaded,
+// 10 GiB of its files (audit C6), but its fused MoE kernels hold ~0.9 GiB a card at
+// 8,192 batched tokens (overhead.ts), so three cards hold 15 requests, not 16.
+check("…four", at(16).gpus === 4, JSON.stringify(at(16).layout));
 check("32 users: five", at(32).gpus === 5, JSON.stringify(at(32).layout));
 
 console.log("\n--- Llama 3.1 8B on H200s at 128k tokens ---");
@@ -84,7 +85,7 @@ check("three plain replicas cannot each hold the weights", three.some((f) => !f.
 // vLLM's budget is 0.92 of the 94.97 GiB the card reports, 87.4 GiB a card.
 const most = three[0].maxUsers;
 const over = on(pro, most + 1)[0];
-check("one request more than three RTX PRO 6000s hold does not fit", most >= 16 && !over.fits && over.maxUsers === most, `${most} requests`);
+check("one request more than three RTX PRO 6000s hold does not fit", most >= 15 && !over.fits && over.maxUsers === most, `${most} requests`);
 check("…which still hold a shorter context for all of them", over.maxContext > 0 && over.maxContext < 262144, `${over.maxContext} tokens`);
 const h = on(h200, 16)[0];
 check("three H200s hold 16", h.fits && h.maxUsers >= 16, `${h.maxUsers} requests, ${h.layout.perGpuGiB.toFixed(1)} GiB a GPU`);
