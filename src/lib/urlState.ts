@@ -79,7 +79,9 @@ export function encodeState(s: AppState): string {
     // people typed by hand.
     if (s.arch.kvLoraRank) p.set("kl", String(s.arch.kvLoraRank));
     // GLM-5.3-Flash's positional part is 0, which is still MLA (calc.ts usesMla).
-    if (s.arch.kvLoraRank && typeof s.arch.qkRopeHeadDim === "number") p.set("qr", String(s.arch.qkRopeHeadDim));
+    // DeepSeek V4's compressed entry holds it too (calc.ts v4Bytes): left out, a
+    // reload took 64, right for V4-Flash and V4-Pro only.
+    if ((s.arch.kvLoraRank || s.arch.compressedAttn) && typeof s.arch.qkRopeHeadDim === "number") p.set("qr", String(s.arch.qkRopeHeadDim));
     // Without it a MoE model decodes back as dense on every reload and shared link,
     // and its decode estimate reads every expert instead of the routed few.
     if (s.arch.activeParams) p.set("ap", String(Math.round(s.arch.activeParams)));
