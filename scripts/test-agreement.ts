@@ -3,14 +3,15 @@
 //
 // The three answer different questions — what fits, how to start it, how many GPUs
 // a load takes — but they lay GPUs out with one search (calc.ts, layoutsOn and
-// layoutFor). The vLLM page used to set up tensor parallelism only and the planner
-// to try tensor-parallel replicas only, so the page contradicted the calculator in
-// about half the audit's cases (DeepSeek V4 on 4× H200 got TP 4) and the planner
-// could not reach a count the calculator gave with pipeline stages. Here, for five
-// models on H100, H200 and RTX PRO 6000:
+// layoutFor), ranked with one device's speed (perf.ts, layoutSpeed). The vLLM page
+// used to set up tensor parallelism only and the planner to try tensor-parallel
+// replicas only, so the page contradicted the calculator in about half the audit's
+// cases and the planner could not reach a count the calculator gave with pipeline
+// stages. Here, for five models on H100, H200 and RTX PRO 6000:
 //   - one GPU: the page warns exactly when the calculator says it does not fit,
 //     and names the calculator's count and layout;
-//   - 2, 4 and 8 GPUs: the page sets up the calculator's ×N layout;
+//   - 2, 4 and 8 GPUs: the page sets up the calculator's ×N layout, with pipeline
+//     stages only when no layout without them holds a request;
 //   - the calculator's link (its count and layout) opens a page that fits;
 //   - the planner tries only the calculator's layouts, finds the same memory fit
 //     for each, reaches the calculator's count for a light load, and its link opens
@@ -18,9 +19,10 @@
 import { readFileSync } from "node:fs";
 import { calculate, layoutFor, layoutsOn, type Dtype, type ModelArch } from "../src/lib/calc.ts";
 import { archFromConfig } from "../src/lib/hf.ts";
-import { batchFor, GPUS, usableGiB } from "../src/lib/gpus.ts";
+import { batchFor, GPUS, stepDevice, usableGiB } from "../src/lib/gpus.ts";
 import { findKnownByHfId } from "../src/lib/models.ts";
 import { layoutFlags, layoutKey, layoutLabel, parseLayoutKey, sameLayout, type LayoutShape } from "../src/lib/parallel.ts";
+import { layoutSpeed } from "../src/lib/perf.ts";
 import { planOptions } from "../src/lib/planner.ts";
 import { recommend, type VllmRec } from "../src/lib/vllm.ts";
 
@@ -68,7 +70,7 @@ for (const m of MODELS) {
       const page = (gpuCount: number, layout?: LayoutShape) =>
         recommend({
           hfId: m.hfId, arch: m.arch, priority: "balanced", task: "chat", weightDtype: m.weightDtype,
-          gpuVramGiB: g.visibleGiB ?? g.vramGiB, gpuName: g.name, gpuCount, maxModelLen: ctx, layout,
+          gpuVramGiB: g.visibleGiB ?? g.vramGiB, gpuName: g.name, gpuCount, maxModelLen: ctx, layout, device: stepDevice(g),
         });
       const one = page(1);
       // The calculator set to the cache precision the page sets: fp8 for V4 (its
@@ -78,8 +80,9 @@ for (const m of MODELS) {
       // The calculator's GPU fit for one request at --max-model-len (GpuFit.tsx).
       const input = { arch: m.arch, weightDtype: m.weightDtype, kvDtype, contextLength: ctx, concurrency: 1, batch: batchFor(g) };
       const usable = usableGiB(g);
+      const speed = layoutSpeed(input, stepDevice(g));
       const fitsOne = calculate(input).totalGiB <= usable;
-      const fewest = fitsOne ? null : layoutFor(input, usable);
+      const fewest = fitsOne ? null : layoutFor(input, usable, undefined, speed);
       const count = fitsOne ? 1 : fewest?.gpus ?? null;
 
       // One GPU: the same verdict, and the calculator's count and layout.
@@ -89,11 +92,13 @@ for (const m of MODELS) {
 
       // Several GPUs: the calculator's ×N view.
       for (const n of COUNTS) {
-        const calc = layoutsOn(input, usable, n)[0];
+        const all = layoutsOn(input, usable, n, speed);
+        const calc = all[0];
         const r = page(n);
+        check(`${tag}, ${n} GPUs: pipeline stages only when no layout without them holds a request`, calc.layout.pp === 1 || !all.some((f) => f.fits && f.layout.pp === 1), layoutLabel(calc.layout));
         check(`${tag}, ${n} GPUs: the page sets up the calculator's layout`, !!r.layout && sameLayout(r.layout, calc.layout) && parallelOf(r) === layoutFlags(calc.layout), `${parallelOf(r)} vs ${layoutFlags(calc.layout)}`);
         check(`${tag}, ${n} GPUs: the page warns exactly when that layout does not fit`, !fitWarn(r) === calc.fits);
-        if (n === 4) examples.push(`${tag}, 4 GPUs: ${label(r.layout)} (${parallelOf(r) || "no flags"}) · ${calc.maxUsers} requests fit`);
+        if (n === 4) examples.push(`${tag}, 4 GPUs: ${label(r.layout)} (${parallelOf(r) || "no flags"}) · ${calc.maxUsers} requests fit · ${calc.stepMs?.toFixed(1)} ms a token`);
       }
 
       // The calculator's link: its count, with its layout.

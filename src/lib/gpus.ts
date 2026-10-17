@@ -244,6 +244,17 @@ export function computeEfficiency(g: Gpu): number {
   return g.category === "consumer" && g.vendor === "NVIDIA" ? CONSUMER_COMPUTE_EFFICIENCY : COMPUTE_EFFICIENCY;
 }
 
+/** The device as the speed estimates read it (perf.ts, StepDevice). A MIG slice gets roughly
+ *  its `scale` of the memory system and of the SMs. */
+export function stepDevice(g: Gpu, scale = 1) {
+  return {
+    bandwidthGBs: (g.bandwidthGBs ?? 0) * scale,
+    tflops: g.tflops ? { bf16: g.tflops.bf16 * scale, fp8: g.tflops.fp8 && g.tflops.fp8 * scale, fp4: g.tflops.fp4 && g.tflops.fp4 * scale } : undefined,
+    computeEfficiency: computeEfficiency(g),
+    layerMs: g.layerMs,
+  };
+}
+
 /** The batch `vllm serve` profiles with on this device by default (overhead.ts). */
 export function batchFor(g: Gpu, migId?: string): BatchShape {
   const slice = migId ? migMem(g.id, migId) : null;

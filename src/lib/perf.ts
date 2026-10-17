@@ -13,7 +13,7 @@
 // prefillTime and decodeStep below take whichever bound is slower. The vendors'
 // dense figures are peaks; the efficiencies are stated where they are applied.
 
-import { DTYPE_BYTES, expertWeightBytes, kvBytesReadPerStep, QUANT_BITS, resolveHeadDim, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
+import { DTYPE_BYTES, expertWeightBytes, kvBytesReadPerStep, QUANT_BITS, resolveHeadDim, weightsBytes, type CalcInput, type Dtype, type LayoutSpeed, type ModelArch } from "./calc.ts";
 import type { LayoutShape } from "./parallel.ts";
 
 /**
@@ -354,6 +354,27 @@ export function layoutStep(
   if (!p) return null;
   const stepMs = p.stepMs * pace + (l.pp - 1) * ALLREDUCE_MS;
   return { batch, stepMs, perUser: 1000 / stepMs, total: (1000 / stepMs) * batch, bound: p.bound };
+}
+
+/** A device as the speed estimates read it (gpus.ts, stepDevice). */
+export interface StepDevice {
+  tflops?: Tflops;
+  bandwidthGBs: number;
+  computeEfficiency?: number;
+  layerMs?: number;
+}
+
+/** What calc.ts ranks the layouts that hold a load by (layoutsOn, layoutFor): the
+ *  time per output token each request sees, layoutStep at its replica's share of
+ *  them. Undefined for a device with no published bandwidth: the ranking then goes
+ *  by memory alone. */
+export function layoutSpeed(
+  input: Pick<CalcInput, "arch" | "weightDtype" | "kvDtype" | "contextLength">,
+  device: StepDevice | undefined,
+): LayoutSpeed | undefined {
+  if (!device || !(device.bandwidthGBs > 0)) return undefined;
+  const i = { arch: input.arch, weightDtype: input.weightDtype, kvDtype: input.kvDtype, contextLength: input.contextLength };
+  return (l) => layoutStep(i, l.usersPerReplica, device, l)?.stepMs ?? Infinity;
 }
 
 /** Decode speed from one sequence up to `maxBatch`, doubling: the curve a

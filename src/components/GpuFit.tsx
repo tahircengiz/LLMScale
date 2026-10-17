@@ -2,11 +2,11 @@ import { FEATURED_GPU_IDS, gpuPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "./StaticPageLink";
 import { useEffect, useState } from "react";
 import { calculate, layoutFor, layoutsOn, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type Layout, type ModelArch, type TypicalLoad } from "../lib/calc";
-import { computeEfficiency, batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
+import { batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, stepDevice, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
-import { BANDWIDTH_EFFICIENCY, decodeStep, LAYER_MS } from "../lib/perf";
+import { BANDWIDTH_EFFICIENCY, decodeStep, LAYER_MS, layoutSpeed } from "../lib/perf";
 import { SpeedPanel } from "./SpeedPanel";
 import { useLang } from "../lib/i18n";
 import { layoutFlags, layoutKey, layoutLabel } from "../lib/parallel";
@@ -96,8 +96,9 @@ export function GpuFit({
     // or for a MoE its experts spread over every card. Never a plain memory ratio:
     // a cache held whole on every card does not shrink as cards are added.
     // vLLM splits no model across MIG slices, and a unified-memory machine takes
-    // no second unit: neither gets a layout.
-    const layout = fits || g.unified || mig ? null : layoutFor(input, usable);
+    // no second unit: neither gets a layout. Of the layouts on that many cards, the
+    // fastest that holds the requests (calc.ts, layoutsOn).
+    const layout = fits || g.unified || mig ? null : layoutFor(input, usable, undefined, layoutSpeed(input, stepDevice(g)));
     return { usable, need, pct: need / usable, fits, layout, needed: fits ? 1 : layout?.gpus ?? null };
   }
   function usage(g: Gpu, mig = "") {
@@ -130,11 +131,13 @@ export function GpuFit({
   const selBatch = batchFor(selected, migId);
   const maxUsers = maxConcurrency({ ...base, contextLength, batch: selBatch }, effUsable);
   const maxCtx = maxContextLength({ ...base, concurrency, batch: selBatch }, effUsable);
-  // Several of the card: every way vLLM can run it on exactly that many, the one
-  // that holds the most requests first. One card, a MIG slice or a unified-memory
+  // Several of the card: every way vLLM can run it on exactly that many, the
+  // fastest that holds the requests first, pipeline stages only when nothing else
+  // holds them (calc.ts, layoutsOn). One card, a MIG slice or a unified-memory
   // machine keeps the single-card view.
   const count = !selected.unified && !migId ? Math.max(1, gpuCount) : 1;
-  const multi = count > 1 ? layoutsOn({ ...base, contextLength, concurrency, batch: selBatch }, effUsable, count) : null;
+  const multiIn = { ...base, contextLength, concurrency, batch: selBatch };
+  const multi = count > 1 ? layoutsOn(multiIn, effUsable, count, layoutSpeed(multiIn, stepDevice(selected))) : null;
   const best = multi?.[0] ?? null;
   const typical = load && !multi ? typicalConcurrency({ ...base, contextLength, batch: selBatch }, effUsable, load) : null;
   // A MIG slice gets roughly its share of the memory system, so scale the
@@ -161,15 +164,9 @@ export function GpuFit({
 
   // A MIG slice gets roughly its share of the memory system and of the SMs.
   const bwScale = migSlice ? migSlice / selected.vramGiB : 1;
-  const deviceOf = (g: Gpu, scale = 1) => ({
-    bandwidthGBs: (g.bandwidthGBs ?? 0) * scale,
-    tflops: g.tflops ? { bf16: g.tflops.bf16 * scale, fp8: g.tflops.fp8 && g.tflops.fp8 * scale, fp4: g.tflops.fp4 && g.tflops.fp4 * scale } : undefined,
-    computeEfficiency: computeEfficiency(g),
-    layerMs: g.layerMs,
-  });
   const decodeIn = { arch, weightDtype, kvDtype, contextLength };
-  const speedOf = (g: Gpu) => (g.bandwidthGBs ? decodeStep(decodeIn, concurrency, deviceOf(g)) : null);
-  const selDevice = deviceOf(selected, bwScale);
+  const speedOf = (g: Gpu) => (g.bandwidthGBs ? decodeStep(decodeIn, concurrency, stepDevice(g)) : null);
+  const selDevice = stepDevice(selected, bwScale);
   const speed = !multi && selUsage.fits && selected.bandwidthGBs ? decodeStep(decodeIn, concurrency, selDevice) : null;
   // What the panel shows: one card's figures, or the best layout's on all of them.
   const shown = best
@@ -537,8 +534,8 @@ export function GpuFit({
             </div>
           ))}
 
-        {/* Several of the card: the layout that holds the most requests, how it is
-            set up, and every other way to run it on that many. */}
+        {/* Several of the card: the fastest layout that holds the requests, how it
+            is set up, and every other way to run it on that many. */}
         {multi && best && (
           <div className="mt-3 rounded-xl bg-ink-800/60 p-3">
             <div className="mb-1.5 text-[11.5px] font-semibold text-white">
@@ -561,10 +558,12 @@ export function GpuFit({
             {multi.length > 1 && (
               <div className="mt-3 overflow-x-auto">
                 <div className="mb-1 text-[11px] font-medium text-slate-300">{t("gpu.altTitle", { n: count })}</div>
+                {best.stepMs !== undefined && <p className="mb-1 text-[11px] leading-relaxed text-slate-500">{t("gpu.altHow")}</p>}
                 <table className="w-full text-[11px] tabular-nums">
                   <thead className="text-slate-500">
                     <tr>
                       <th scope="col" className="py-1 pr-2 text-left font-medium">{t("gpu.alt.layout")}</th>
+                      {best.stepMs !== undefined && <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.speed")}</th>}
                       <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.perGpu")}</th>
                       <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.users", { x: ctxLabel(contextLength) })}</th>
                       <th scope="col" className="py-1 text-right font-medium">{t("gpu.alt.ctx", { n: formatInt(concurrency) })}</th>
@@ -573,7 +572,10 @@ export function GpuFit({
                   <tbody>
                     {multi.map((f, i) => (
                       <tr key={layoutLabel(f.layout)} className={i === 0 ? "font-semibold text-white" : f.fits ? "text-slate-300" : "text-slate-500"}>
-                        <td className="py-0.5 pr-2">{layoutLabel(f.layout)}</td>
+                        <td className="whitespace-nowrap py-0.5 pr-2">{layoutLabel(f.layout)}</td>
+                        {best.stepMs !== undefined && (
+                          <td className="py-0.5 pr-2 text-right">{f.stepMs && Number.isFinite(f.stepMs) ? formatInt(Math.round(1000 / f.stepMs)) : "—"}</td>
+                        )}
                         <td className="py-0.5 pr-2 text-right">{formatGiB(f.layout.perGpuGiB)}</td>
                         <td className="py-0.5 pr-2 text-right">{formatInt(f.maxUsers)}</td>
                         <td className="py-0.5 text-right">{formatInt(f.maxContext)}</td>

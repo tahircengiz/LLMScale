@@ -925,10 +925,10 @@ function layoutPerGpu(b: Basis, l: Shape, users: number): number {
  * once the KV heads run out (one MLA latent or one KV head is held whole on every
  * GPU); pipeline stages and replicas can. It searches what layoutsOn sizes: up to
  * MAX_PP stages, experts split evenly or not. Adding requests or context never
- * lowers the count. Of the layouts on that many GPUs it returns the one layoutsOn puts first,
- * the one that holds the most requests. null when none up to `limit` GPUs does.
+ * lowers the count. Of the layouts on that many GPUs it returns the one layoutsOn
+ * puts first with the same `speed`. null when none up to `limit` GPUs does.
  */
-export function layoutFor(input: CalcInput, usableGiB: number, limit = 1024): Layout | null {
+export function layoutFor(input: CalcInput, usableGiB: number, limit = 1024, speed?: LayoutSpeed): Layout | null {
   const b = layoutBasis(input);
   const { arch } = input;
   const heads = arch.numAttentionHeads;
@@ -967,7 +967,7 @@ export function layoutFor(input: CalcInput, usableGiB: number, limit = 1024): La
   // Of the layouts on that many GPUs, the one the count's own sizing puts first,
   // so the fewest GPUs and those GPUs given as the count agree on how to run it.
   if (!best) return null;
-  return layoutsOn(input, usableGiB, best.gpus).find((f) => f.fits)?.layout ?? best;
+  return layoutsOn(input, usableGiB, best.gpus, speed).find((f) => f.fits)?.layout ?? best;
 }
 
 /**
@@ -1003,16 +1003,40 @@ export interface LayoutFit {
   fits: boolean;
   maxUsers: number;
   maxContext: number;
+  /** Milliseconds per output token each request sees (LayoutSpeed), when ranked by speed. */
+  stepMs?: number;
 }
+
+/** Milliseconds per output token on a layout at its share of the requests
+ *  (perf.ts, layoutSpeed): what layoutsOn ranks the layouts that hold a load by. */
+export type LayoutSpeed = (l: Layout) => number;
+
+/** Layouts within this share of the fastest count as equally fast. The multi-GPU
+ *  costs behind the figure — a pipeline handover, an expert dispatch — are
+ *  estimates (perf.ts, ALLREDUCE_MS), while what a GPU holds is counted, so a few
+ *  per cent of speed is not worth giving up requests for. */
+const SPEED_BAND = 0.1;
 
 /**
  * Every way vLLM can run the deployment on exactly `gpus` GPUs of `usableGiB`
  * each — tensor parallel where the heads allow, up to MAX_PP pipeline stages,
  * replicas, and for a MoE expert parallelism, the experts split evenly or not —
- * the best first: the most requests at this context, then fewer pipeline stages,
- * then fewer replicas. The same rules layoutFor searches.
+ * the best first:
+ *   1. those that hold the requests at this context;
+ *   2. of those, the ones without pipeline stages, when any holds them: vLLM's
+ *      recipes run one node with tensor, data and expert parallelism and keep
+ *      pipeline stages for several nodes (DeepSeek-V3, DeepSeek-V4-Flash,
+ *      gpt-oss-120b, Llama 3.3 70B);
+ *   3. of those, the ones within SPEED_BAND of the fastest (`speed`);
+ *   4. then the most requests, the faster, fewer pipeline stages, fewer replicas.
+ * When none holds the requests, the most requests first. Ranked by memory alone
+ * the first held the most requests, which put one request of DeepSeek-V4-Flash
+ * on 4× H200 at 256k on four pipeline stages (57 requests, 6.5 ms a token) where
+ * its recipe runs tensor parallel (TP 4: 15 requests, 4.9 ms). Without `speed`
+ * (a device with no published bandwidth) every layout counts as equally fast.
+ * The same rules layoutFor searches.
  */
-export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number): LayoutFit[] {
+export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number, speed?: LayoutSpeed): LayoutFit[] {
   const b = layoutBasis(input);
   const { arch, kvDtype } = input;
   const heads = arch.numAttentionHeads;
@@ -1032,14 +1056,29 @@ export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number): La
         const maxUsers = room > 0 && per > 0 ? Math.floor(room / per) * dp : 0;
         // The longest context each replica's share of the requests fits in.
         const perSeq = room > 0 ? (room * BYTES_PER_GIB) / stageShare(b, pp) / Math.ceil(users / dp) : 0;
+        const layout: Layout = { gpus, ...shape, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(b, shape, users) };
         out.push({
-          layout: { gpus, ...shape, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(b, shape, users) },
-          fits: layoutPerGpu(b, shape, users) <= usableGiB,
+          layout,
+          fits: layout.perGpuGiB <= usableGiB,
           maxUsers,
           maxContext: contextWithin(arch, kvDtype, b.batch, perSeq, tp),
+          ...(speed ? { stepMs: speed(layout) } : {}),
         });
       }
     }
   }
-  return out.sort((x, y) => y.maxUsers - x.maxUsers || x.layout.pp - y.layout.pp || x.layout.dp - y.layout.dp);
+  // 0: holds the requests without pipeline stages, 1: with them, 2: does not hold them.
+  const tier = (f: LayoutFit) => (!f.fits ? 2 : f.layout.pp > 1 ? 1 : 0);
+  const ms = (f: LayoutFit) => f.stepMs ?? 0;
+  const fastest = [0, 1].map((t) => Math.min(...out.filter((f) => tier(f) === t).map(ms)));
+  const slow = (f: LayoutFit) => (tier(f) < 2 && ms(f) > fastest[tier(f)] * (1 + SPEED_BAND) ? 1 : 0);
+  return out.sort(
+    (x, y) =>
+      tier(x) - tier(y) ||
+      slow(x) - slow(y) ||
+      y.maxUsers - x.maxUsers ||
+      ms(x) - ms(y) ||
+      x.layout.pp - y.layout.pp ||
+      x.layout.dp - y.layout.dp,
+  );
 }

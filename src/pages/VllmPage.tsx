@@ -6,7 +6,7 @@ import { buildBrief, type Parsers } from "../lib/serving";
 import { findKnownByHfId } from "../lib/models";
 import { extractCaps } from "../lib/fit";
 import { recommend, servingDtype, PRIORITIES, VLLM_TASKS, type Priority, type VllmTask } from "../lib/vllm";
-import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor, runsVllm } from "../lib/gpus";
+import { GPUS, GPU_CATEGORIES, migMem, migProfilesFor, runsVllm, stepDevice } from "../lib/gpus";
 import { useLang } from "../lib/i18n";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Card, Field, SectionTitle, Segmented } from "../components/ui";
@@ -123,8 +123,9 @@ export function VllmPage() {
       parsers: parsers?.id === hfId ? parsers.p : undefined,
       priority, task, gpuVramGiB: effVram, gpuName: gpu.name, gpuCount: effCount, maxModelLen: maxLen, mig: !!migId,
       layout: parseLayoutKey(lay) ?? undefined,
+      device: stepDevice(gpu),
     });
-  }, [hfId, arch, meta, parsers, priority, task, effVram, gpu.name, effCount, migId, maxLen, lay]);
+  }, [hfId, arch, meta, parsers, priority, task, effVram, gpu, effCount, migId, maxLen, lay]);
 
   async function copyText(text: string, which: string) {
     try {
@@ -247,7 +248,7 @@ export function VllmPage() {
               />
             </div>
             {/* Several GPUs: every way vLLM can run the model on them, as the
-                calculator sizes them; the first holds the most requests. */}
+                calculator sizes and ranks them; the first is the fastest that holds a request. */}
             {rec && rec.layouts.length > 1 && (
               <Field label={t("vllm.layout")} info={t("vllm.layoutInfo")}>
                 <Select
@@ -256,9 +257,11 @@ export function VllmPage() {
                   options={rec.layouts.map((f) => ({
                     value: layoutKey(f.layout),
                     label: layoutLabel(f.layout),
-                    hint: f.fits
-                      ? t("vllm.layoutOpt", { u: formatInt(f.maxUsers), g: formatGiB(f.layout.perGpuGiB) })
-                      : t("vllm.layoutNoFit"),
+                    hint: !f.fits
+                      ? t("vllm.layoutNoFit")
+                      : f.stepMs && Number.isFinite(f.stepMs)
+                        ? t("vllm.layoutOptSpeed", { s: formatInt(Math.round(1000 / f.stepMs)), u: formatInt(f.maxUsers), g: formatGiB(f.layout.perGpuGiB) })
+                        : t("vllm.layoutOpt", { u: formatInt(f.maxUsers), g: formatGiB(f.layout.perGpuGiB) }),
                   }))}
                   onChange={setLay}
                 />

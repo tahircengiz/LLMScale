@@ -13,8 +13,10 @@
 import { readFileSync } from "node:fs";
 import { calculate, expertWeightBytes, layoutFor, layoutsOn, weightsBytes, type Dtype, type ModelArch } from "../src/lib/calc.ts";
 import { archFromConfig } from "../src/lib/hf.ts";
-import { batchFor, GPUS, usableGiB, type Gpu } from "../src/lib/gpus.ts";
-import { KNOWN_MODELS } from "../src/lib/models.ts";
+import { batchFor, GPUS, stepDevice, usableGiB, type Gpu } from "../src/lib/gpus.ts";
+import { findKnownByHfId, KNOWN_MODELS } from "../src/lib/models.ts";
+import { layoutLabel } from "../src/lib/parallel.ts";
+import { layoutSpeed } from "../src/lib/perf.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -30,11 +32,12 @@ v4.activeParams = 27_356_354_494;
 const gpu = (id: string) => GPUS.find((g) => g.id === id)!;
 const pro = gpu("rtxpro6000-96");
 
-/** What the GPU fit shows: 1 when one card holds it, else the layout's count. */
+/** What the GPU fit shows: 1 when one card holds it, else the layout's count,
+ *  laid out as the card's speed ranks the layouts (GpuFit.tsx). */
 function needed(arch: ModelArch, wd: Dtype, kd: Dtype, ctx: number, users: number, g: Gpu) {
   const input = { arch, weightDtype: wd, kvDtype: kd, contextLength: ctx, concurrency: users, batch: batchFor(g) };
   if (calculate(input).totalGiB <= usableGiB(g)) return { gpus: 1, layout: null };
-  const layout = layoutFor(input, usableGiB(g));
+  const layout = layoutFor(input, usableGiB(g), undefined, layoutSpeed(input, stepDevice(g)));
   return { gpus: layout?.gpus ?? Infinity, layout };
 }
 
@@ -45,7 +48,9 @@ check("1 user: two cards", at(1).gpus === 2, JSON.stringify(at(1).layout));
 // pipeline stages half of it each; at one request either holds the same.
 const two = layoutsOn({ arch: v4, weightDtype: "fp8", kvDtype: "fp8", contextLength: 262144, concurrency: 1, batch: batchFor(pro) }, usableGiB(pro), 2);
 check("…as TP 2 or two pipeline stages, both of which fit", two.filter((f) => f.fits).some((f) => f.layout.tp === 2) && two.filter((f) => f.fits).some((f) => f.layout.pp === 2));
-check("8 users: three, as three pipeline stages", at(8).gpus === 3 && at(8).layout?.pp === 3, JSON.stringify(at(8).layout));
+// Three pipeline stages hold the most, but three expert-parallel ranks hold 8 too
+// and need no stages (calc.ts, layoutsOn): the layout V4's recipe runs for load.
+check("8 users: three, as three expert-parallel ranks", at(8).gpus === 3 && at(8).layout?.pp === 1 && at(8).layout?.dp === 3 && !!at(8).layout?.ep, JSON.stringify(at(8).layout));
 check("16 users: not fewer than 8 take", at(16).gpus >= at(8).gpus, `${at(8).gpus} → ${at(16).gpus}`);
 // Four: vLLM leaves the 0731 checkpoint's DSpark draft layers (mtp.*) unloaded,
 // 10 GiB of its files (audit C6), but its fused MoE kernels hold ~0.9 GiB a card at
@@ -79,11 +84,13 @@ const on = (g: Gpu, users: number) =>
 const three = on(pro, 1);
 // 64 heads do not split three ways, so three GPUs are three stages or three replicas.
 check("no tensor parallelism of three", three.every((f) => f.layout.tp === 1));
-check("three pipeline stages hold the most requests", three[0].layout.pp === 3 && three[0].fits, `${three[0].maxUsers} requests`);
+const roomiest = three.reduce((a, f) => (f.maxUsers > a.maxUsers ? f : a));
+check("three pipeline stages hold the most requests", roomiest.layout.pp === 3 && roomiest.fits, `${roomiest.maxUsers} requests`);
+check("…but the first holds the request without them", three[0].fits && three[0].layout.pp === 1, layoutLabel(three[0].layout));
 check("expert parallelism over three, with 256 experts split unevenly", three.some((f) => f.layout.ep && f.layout.dp === 3 && f.fits));
 check("three plain replicas cannot each hold the weights", three.some((f) => !f.layout.ep && f.layout.dp === 3 && !f.fits));
 // vLLM's budget is 0.92 of the 94.97 GiB the card reports, 87.4 GiB a card.
-const most = three[0].maxUsers;
+const most = roomiest.maxUsers;
 const over = on(pro, most + 1)[0];
 check("one request more than three RTX PRO 6000s hold does not fit", most >= 15 && !over.fits && over.maxUsers === most, `${most} requests`);
 check("…which still hold a shorter context for all of them", over.maxContext > 0 && over.maxContext < 262144, `${over.maxContext} tokens`);
@@ -91,9 +98,48 @@ const h = on(h200, 16)[0];
 check("three H200s hold 16", h.fits && h.maxUsers >= 16, `${h.maxUsers} requests, ${h.layout.perGpuGiB.toFixed(1)} GiB a GPU`);
 check("the context is capped at the model's", three[0].maxContext <= 1_048_576);
 for (const u of [8, 16, 32]) {
-  const first = layoutsOn({ arch: v4, weightDtype: "fp8", kvDtype: "fp8", contextLength: 262144, concurrency: u, batch: batchFor(pro) }, usableGiB(pro), at(u).gpus)[0];
+  const input = { arch: v4, weightDtype: "fp8" as const, kvDtype: "fp8" as const, contextLength: 262144, concurrency: u, batch: batchFor(pro) };
+  const first = layoutsOn(input, usableGiB(pro), at(u).gpus, layoutSpeed(input, stepDevice(pro)))[0];
   check(`${u} users: the fewest GPUs, given as the count, run it the same way`, first.fits && JSON.stringify(first.layout) === JSON.stringify(at(u).layout), `${at(u).gpus} GPUs, ${JSON.stringify(first.layout)}`);
 }
+
+console.log("\n--- which layout comes first: the fastest that holds the load, no pipeline stages unless needed ---");
+// vLLM's recipes run one node with tensor, data and expert parallelism and keep
+// pipeline stages for several (vllm-project/recipes: DeepSeek-V3, DeepSeek-V4-Flash,
+// gpt-oss-120b, Llama-3.3-70B-Instruct). Ranked by the requests a layout holds,
+// the calculator put DeepSeek on pipeline stages wherever they held more cache.
+const ranked = (arch: ModelArch, wd: Dtype, kd: Dtype, ctx: number, users: number, id: string, n: number, fast = true) => {
+  const g = gpu(id);
+  const input = { arch, weightDtype: wd, kvDtype: kd, contextLength: ctx, concurrency: users, batch: batchFor(g) };
+  return layoutsOn(input, usableGiB(g), n, fast ? layoutSpeed(input, stepDevice(g)) : undefined);
+};
+const lbl = (fits: ReturnType<typeof ranked>) => `${layoutLabel(fits[0].layout)} (${fits[0].maxUsers} requests, ${fits[0].stepMs?.toFixed(1)} ms)`;
+const v3 = findKnownByHfId("deepseek-ai/DeepSeek-V3")! as ModelArch;
+const oss = findKnownByHfId("openai/gpt-oss-120b")! as ModelArch;
+const l70 = findKnownByHfId("meta-llama/Llama-3.3-70B-Instruct")! as ModelArch;
+const v4h200 = ranked(v4, "fp8", "fp8", 262144, 1, "h200-141", 4);
+check("V4 at 256k, one request, 4× H200: TP 4, not four pipeline stages", v4h200[0].layout.tp === 4 && v4h200[0].layout.pp === 1, lbl(v4h200));
+const v4pp = v4h200.find((f) => f.layout.pp === 4)!;
+check("…which hold four times the requests but are slower", v4pp.maxUsers > 3 * v4h200[0].maxUsers && v4pp.stepMs! > v4h200[0].stepMs!, `PP 4: ${v4pp.maxUsers} requests, ${v4pp.stepMs?.toFixed(1)} ms`);
+const v4load = ranked(v4, "fp8", "fp8", 262144, 16, "h200-141", 4);
+check("…16 requests: four expert-parallel ranks, its recipe's layout for load", v4load[0].layout.dp === 4 && v4load[0].layout.ep, lbl(v4load));
+const v4h100 = ranked(v4, "fp8", "fp8", 262144, 16, "h100-80", 4);
+check("V4, 16 requests on 4× H100: pipeline stages, the only layout that holds them", v4h100[0].fits && v4h100[0].layout.pp > 1 && !v4h100.some((f) => f.fits && f.layout.pp === 1), lbl(v4h100));
+const v4none = ranked(v4, "fp8", "fp8", 262144, 64, "h100-80", 4);
+check("…64 requests, which no layout holds: the one that holds the most", !v4none[0].fits && v4none.every((f) => f.maxUsers <= v4none[0].maxUsers), lbl(v4none));
+const v3one = ranked(v3, "fp8", "fp16", 32768, 1, "h200-141", 8);
+check("DeepSeek V3 at 32k, one request, 8× H200: TP 8 (its recipe for low load), not PP 8", v3one[0].layout.tp === 8, lbl(v3one));
+const v3load = ranked(v3, "fp8", "fp16", 32768, 64, "h200-141", 8);
+check("…64 requests: DP 8 · EP (its recipe for high load)", v3load[0].layout.dp === 8 && v3load[0].layout.ep, lbl(v3load));
+const v3fastest = v3load.filter((f) => f.fits).reduce((a, f) => (f.stepMs! < a.stepMs! ? f : a));
+check("…within a tenth of the fastest, it holds the most requests", v3load[0].stepMs! <= v3fastest.stepMs! * 1.1 && v3load[0].maxUsers >= v3fastest.maxUsers, `fastest ${layoutLabel(v3fastest.layout)} ${v3fastest.maxUsers} requests, ${v3fastest.stepMs?.toFixed(1)} ms`);
+const ossH100 = ranked(oss, "int4", "fp16", 32768, 1, "h100-80", 4);
+check("gpt-oss-120b at 32k on 4× H100: TP 4, as its recipe runs it, not TP 2 · PP 2", ossH100[0].layout.tp === 4 && ossH100[0].layout.pp === 1, lbl(ossH100));
+const l70h100 = ranked(l70, "bf16", "fp16", 32768, 1, "h100-80", 8);
+check("Llama 3.3 70B at 32k on 8× H100: TP 8, as before", l70h100[0].layout.tp === 8, lbl(l70h100));
+const blind = ranked(v4, "fp8", "fp8", 262144, 1, "h200-141", 4, false);
+check("without a speed: the most requests of those without pipeline stages, and no speed figure", blind[0].layout.pp === 1 && blind[0].layout.dp === 4 && blind[0].layout.ep && blind.every((f) => f.stepMs === undefined), layoutLabel(blind[0].layout));
+check("the order lists every layout that holds the load before any that does not", v4h200.every((f, i) => f.fits || v4h200.slice(i).every((x) => !x.fits)));
 
 console.log("\n--- never fewer GPUs for more requests or a longer context ---");
 const models: [string, ModelArch, Dtype][] = [...KNOWN_MODELS.map((m) => [m.id, m as ModelArch, "bf16" as Dtype] as [string, ModelArch, Dtype]), ["deepseek-v4-flash", v4, "fp8"]];

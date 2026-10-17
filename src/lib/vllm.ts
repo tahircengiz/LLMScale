@@ -2,9 +2,10 @@
 // Rules are grounded in the current vLLM V1 docs (engine args, optimization,
 // tool calling, quantized KV cache). Reason/warning strings are i18n keys.
 
-import { calculate, layoutFor, layoutsOn, maxConcurrency, usesCompressedAttn, type Layout, type LayoutFit } from "./calc.ts";
+import { calculate, expertWeightBytes, layoutFor, layoutsOn, maxConcurrency, usesCompressedAttn, type Layout, type LayoutFit } from "./calc.ts";
 import { VLLM_UTIL, vllmBatch, type BatchShape } from "./overhead.ts";
 import { layoutArgs, layoutKey, layoutLabel, sameLayout, tpValid, type LayoutShape } from "./parallel.ts";
+import { layoutSpeed, type StepDevice } from "./perf.ts";
 import type { Parsers } from "./serving.ts";
 import type { Dtype, ModelArch } from "./calc";
 
@@ -31,6 +32,9 @@ export interface VllmInput {
   /** One of the layouts on `gpuCount` GPUs (VllmRec.layouts), as a link from the
    *  calculator or the planner names it; any other falls back to the first. */
   layout?: LayoutShape;
+  /** The device's speed (gpus.ts, stepDevice): the layouts that hold a request are
+   *  ranked by it, as the calculator ranks them. Without it, by memory alone. */
+  device?: StepDevice;
   /** Config-detected weight precision (e.g. MXFP4 for gpt-oss) — overrides the
    * name-based quant guess for the VRAM-fit sanity check so natively-quantized
    * models aren't sized as bf16. */
@@ -165,13 +169,14 @@ export function recommend(i: VllmInput): VllmRec {
   // --- parallelism ---
   // The calculator's layout (calc.ts, layoutsOn): of every way vLLM can run the
   // model on these GPUs — tensor parallel where the heads allow, pipeline stages,
-  // replicas, and for a MoE its experts spread over the GPUs — the one that holds
-  // the most requests at --max-model-len, unless a link asked for another of them.
-  // Tensor parallelism alone had the page contradict the calculator in half the
-  // audit's cases: DeepSeek V4 on 4× H200 got TP 4 where the calculator runs DP 4.
+  // replicas, and for a MoE its experts spread over the GPUs — the fastest that
+  // holds a request at --max-model-len, pipeline stages only when nothing else
+  // does, unless a link asked for another of them. Tensor parallelism alone had
+  // the page contradict the calculator in half the audit's cases.
   const n = i.mig ? 1 : Math.max(1, Math.floor(i.gpuCount));
   if (i.mig) warnings.push({ key: "vllm.w.mig" });
-  const layouts = n > 1 ? layoutsOn(one, usableGiB, n) : [];
+  const speed = layoutSpeed(one, i.device);
+  const layouts = n > 1 ? layoutsOn(one, usableGiB, n, speed) : [];
   const picked = (i.layout && layouts.find((f) => sameLayout(f.layout, i.layout!))) || layouts[0];
   const layout = picked?.layout ?? null;
   if (layout) {
@@ -180,8 +185,12 @@ export function recommend(i: VllmInput): VllmRec {
     // vLLM refuses a TP size that does not divide the heads, so the command never
     // carries one; the warning says why the GPUs are split another way.
     if (!tpValid(n, heads, kv) && layout.tp < n) warnings.push({ key: "vllm.w.tp", vars: { n, h: heads, layout: layoutLabel(layout) } });
+    // A MoE on tensor parallelism without replicas: vLLM's DeepSeek recipes add
+    // expert parallelism to it (TP+EP), which takes the same memory here, so it is
+    // not a layout of its own; the reason says so. With replicas, DP+EP is one.
+    const tpOnlyMoe = !layout.ep && layout.dp === 1 && expertWeightBytes(i.arch, wDtype) > 0;
     const why: Record<string, Pick<VllmFlag, "reasonKey" | "reasonVars">> = {
-      "--tensor-parallel-size": { reasonKey: "vllm.r.tp", reasonVars: { n: layout.tp } },
+      "--tensor-parallel-size": { reasonKey: tpOnlyMoe ? "vllm.r.tpMoe" : "vllm.r.tp", reasonVars: { n: layout.tp } },
       "--pipeline-parallel-size": { reasonKey: "vllm.r.pp", reasonVars: { L: i.arch.numLayers, pp: layout.pp, k: Math.ceil(i.arch.numLayers / layout.pp) } },
       "--data-parallel-size": { reasonKey: layout.ep ? "vllm.r.dpEp" : "vllm.r.dp", reasonVars: { dp: layout.dp } },
       "--enable-expert-parallel": { reasonKey: "vllm.r.ep", reasonVars: { e: i.arch.numExperts ?? 0, n: layout.tp * layout.dp } },
@@ -283,7 +292,7 @@ export function recommend(i: VllmInput): VllmRec {
   // count is the calculator's (layoutFor): the fewest of these GPUs, laid out.
   const needGiB = picked ? picked.layout.perGpuGiB : calculate({ ...one, gpus: 1 }).perGpuGiB;
   if (needGiB > usableGiB) {
-    const enough = layoutFor(one, usableGiB);
+    const enough = layoutFor(one, usableGiB, undefined, speed);
     const vars = { need: needGiB.toFixed(1), have: usableGiB.toFixed(1), ctx: i.maxModelLen.toLocaleString("en-US") };
     warnings.push(
       enough

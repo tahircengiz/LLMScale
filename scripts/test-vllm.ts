@@ -3,9 +3,10 @@ import { readFileSync } from "node:fs";
 import { recommend, toolParser, detectQuant, type VllmInput } from "../src/lib/vllm.ts";
 import { layoutFor, layoutsOn, type ModelArch } from "../src/lib/calc.ts";
 import { archFromConfig } from "../src/lib/hf.ts";
-import { GPUS, batchFor } from "../src/lib/gpus.ts";
+import { GPUS, batchFor, stepDevice } from "../src/lib/gpus.ts";
 import { findKnownByHfId } from "../src/lib/models.ts";
 import { layoutFlags, layoutKey, layoutLabel, parseLayoutKey, sameLayout } from "../src/lib/parallel.ts";
+import { layoutSpeed } from "../src/lib/perf.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -97,7 +98,8 @@ check("MIG → mig warning", mig.warnings.some((w) => w.key === "vllm.w.mig"));
 console.log("\n--- layouts: the calculator's (A3) ---");
 {
   const gpu = (id: string) => GPUS.find((g) => g.id === id)!;
-  const on = (id: string) => ({ gpuVramGiB: gpu(id).visibleGiB ?? gpu(id).vramGiB, gpuName: gpu(id).name });
+  // As the vLLM page passes a card: its memory, its name and its speed.
+  const on = (id: string) => ({ gpuVramGiB: gpu(id).visibleGiB ?? gpu(id).vramGiB, gpuName: gpu(id).name, device: stepDevice(gpu(id)) });
   const cfg = JSON.parse(readFileSync(new URL("./fixtures/configs/deepseek-ai_DeepSeek-V4-Flash-0731.json", import.meta.url), "utf8"));
   const v4 = archFromConfig(cfg, 304.18e9)!;
   v4.shipped = { dtype: "fp8", bytes: 166_886_535_336 };
@@ -106,14 +108,26 @@ console.log("\n--- layouts: the calculator's (A3) ---");
     base({ hfId: "deepseek-ai/DeepSeek-V4-Flash", arch: v4, modelType: "deepseek_v4", weightDtype: "fp8", maxModelLen: 262144, ...on("h200-141"), ...over });
   const parallel = (cmd: string) => cmd.split(" \\\n").map((l) => l.trim()).filter((l) => /^--(tensor|pipeline|data)-parallel-size|^--enable-expert-parallel/.test(l)).join(" ");
 
-  // The audit's case: V4 on 4× H200 got --tensor-parallel-size 4. TP holds V4's one
-  // cached vector whole on every GPU, so it holds the fewest requests of the
-  // layouts on four; the calculator's ×4 view runs the one that holds the most.
+  // The audit's case: V4 on 4× H200 got --tensor-parallel-size 4 whatever the GPUs
+  // held. The page sets up the calculator's layout: of those that hold a request at
+  // 256k, the fastest without pipeline stages (calc.ts, layoutsOn). That is TP 4,
+  // the tensor-parallel half of its recipe's TP+EP (vllm-project/recipes,
+  // DeepSeek-V4-Flash.yaml, default_strategy single_node_tep). Ranked by memory
+  // alone it was four pipeline stages: four times the requests, a third slower.
   const four = recommend(v4in({ gpuCount: 4 }));
-  const calc = layoutsOn({ arch: v4, weightDtype: "fp8", kvDtype: "fp8", contextLength: 262144, concurrency: 1, batch: batchFor(gpu("h200-141")) }, (gpu("h200-141").visibleGiB ?? 0) * 0.92, 4)[0].layout;
-  check("V4 on 4× H200: the calculator's layout, not TP 4", parallel(four.command) === layoutFlags(calc) && !(calc.tp === 4 && calc.dp === 1), `${parallel(four.command)} vs ${layoutFlags(calc)}`);
-  const tp4 = four.layouts.find((f) => f.layout.tp === 4)!;
-  check("…which holds more requests at 256k than TP 4", four.layouts[0].maxUsers > tp4.maxUsers, `${layoutLabel(four.layout!)} ${four.layouts[0].maxUsers} vs TP 4 ${tp4.maxUsers}`);
+  const v4one = { arch: v4, weightDtype: "fp8" as const, kvDtype: "fp8" as const, contextLength: 262144, concurrency: 1, batch: batchFor(gpu("h200-141")) };
+  const calc = layoutsOn(v4one, (gpu("h200-141").visibleGiB ?? 0) * 0.92, 4, layoutSpeed(v4one, stepDevice(gpu("h200-141"))))[0].layout;
+  check("V4 on 4× H200: the calculator's layout", parallel(four.command) === layoutFlags(calc), `${parallel(four.command)} vs ${layoutFlags(calc)}`);
+  check("…tensor parallel over four, as its recipe runs it", parallel(four.command) === "--tensor-parallel-size 4", parallel(four.command));
+  const pp4 = four.layouts.find((f) => f.layout.pp === 4)!;
+  check("…faster than four pipeline stages, which hold more requests", four.layouts[0].stepMs! < pp4.stepMs! && pp4.maxUsers > four.layouts[0].maxUsers,
+    `${layoutLabel(four.layout!)} ${four.layouts[0].maxUsers} requests ${four.layouts[0].stepMs?.toFixed(1)} ms, PP 4 ${pp4.maxUsers} requests ${pp4.stepMs?.toFixed(1)} ms`);
+  check("…and says that the recipe adds expert parallelism to it for the same memory", four.flags.find((f) => f.flag === "--tensor-parallel-size")?.reasonKey === "vllm.r.tpMoe");
+  check("a dense model's tensor parallelism has the plain reason", tp.flags.find((f) => f.flag === "--tensor-parallel-size")?.reasonKey === "vllm.r.tp");
+  // Without a device's speed the layouts that hold a request rank by memory alone,
+  // still without pipeline stages while any other holds it.
+  const blind = recommend(v4in({ gpuCount: 4, device: undefined }));
+  check("no speed: the most requests without pipeline stages (DP 4 · EP)", blind.layout?.pp === 1 && blind.layout.dp === 4 && blind.layout.ep, layoutLabel(blind.layout!));
   // vLLM's V4 recipe (vllm-project/recipes, DeepSeek-V4-Flash.yaml, base_args).
   check("V4 → --kv-cache-dtype fp8 and --block-size 256", has(four.command, "--kv-cache-dtype fp8") && has(four.command, "--block-size 256"));
   check("V4 at max accuracy keeps fp8: vLLM refuses 16-bit on fp8_ds_mla", has(recommend(v4in({ gpuCount: 4, priority: "accuracy" })).command, "--kv-cache-dtype fp8"));
@@ -121,8 +135,8 @@ console.log("\n--- layouts: the calculator's (A3) ---");
   check("a model without V4's caches gets no --block-size", !has(tp.command, "--block-size") && !has(qtp.command, "--block-size"));
 
   // A layout a link names is the one set up; one the GPUs cannot make falls back.
-  const asked = recommend(v4in({ gpuCount: 4, layout: { tp: 4, pp: 1, dp: 1, ep: false } }));
-  check("a layout the link names is set up", parallel(asked.command) === "--tensor-parallel-size 4", parallel(asked.command));
+  const asked = recommend(v4in({ gpuCount: 4, layout: { tp: 1, pp: 4, dp: 1, ep: false } }));
+  check("a layout the link names is set up", parallel(asked.command) === "--pipeline-parallel-size 4", parallel(asked.command));
   const wrong = recommend(v4in({ gpuCount: 4, layout: { tp: 8, pp: 1, dp: 1, ep: false } }));
   check("…one that is not on these GPUs falls back to the first", parallel(wrong.command) === parallel(four.command));
   check("layout keys round-trip", layoutKey(parseLayoutKey("tp2.pp3.dp1")!) === "tp2.pp3.dp1" && parseLayoutKey("tp1.pp1.dp4.ep")!.ep && parseLayoutKey("tp0.pp1.dp1") === null && parseLayoutKey("x") === null);
@@ -137,7 +151,8 @@ console.log("\n--- layouts: the calculator's (A3) ---");
   // Too big for one GPU: the warning gives the calculator's count and layout.
   const l70 = findKnownByHfId("meta-llama/Llama-3.3-70B-Instruct")!;
   const one = recommend(base({ hfId: l70.hfId, arch: l70, maxModelLen: 32768, ...on("h100-80") }));
-  const need = layoutFor({ arch: l70, weightDtype: "bf16", kvDtype: "fp16", contextLength: 32768, concurrency: 1, batch: batchFor(gpu("h100-80")) }, (gpu("h100-80").visibleGiB ?? 0) * 0.92)!;
+  const l70one = { arch: l70, weightDtype: "bf16" as const, kvDtype: "fp16" as const, contextLength: 32768, concurrency: 1, batch: batchFor(gpu("h100-80")) };
+  const need = layoutFor(l70one, (gpu("h100-80").visibleGiB ?? 0) * 0.92, undefined, layoutSpeed(l70one, stepDevice(gpu("h100-80"))))!;
   const fit = one.warnings.find((w) => w.key === "vllm.w.fit");
   check("70B on one H100: the fit warning gives the calculator's count", fit?.vars?.gpus === need.gpus && fit.vars.layout === layoutLabel(need), JSON.stringify(fit?.vars));
   const there = recommend(base({ hfId: l70.hfId, arch: l70, maxModelLen: 32768, ...on("h100-80"), gpuCount: need.gpus, layout: parseLayoutKey(String(fit?.vars?.lay))! }));
