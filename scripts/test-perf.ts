@@ -1,7 +1,7 @@
 // Unit test for the decode-speed estimate. Run: node scripts/test-perf.ts
 import { readFileSync } from "node:fs";
 import { archFromConfig } from "../src/lib/hf.ts";
-import { estimateDecode, BANDWIDTH_EFFICIENCY, COMPUTE_EFFICIENCY, CONSUMER_COMPUTE_EFFICIENCY, computeTflops, decodeCurve, decodeStep, prefillFlops, prefillTime } from "../src/lib/perf.ts";
+import { estimateDecode, BANDWIDTH_EFFICIENCY, COMPUTE_EFFICIENCY, CONSUMER_COMPUTE_EFFICIENCY, computeTflops, decodeCurve, decodeStep, prefillFlops, prefillTime, REQUEST_MS, stepFloorMs } from "../src/lib/perf.ts";
 import type { ModelArch } from "../src/lib/calc.ts";
 
 let fails = 0;
@@ -66,7 +66,10 @@ const H100 = { tflops: { bf16: 989, fp8: 1979 }, bandwidthGBs: 3350 };
   check("a 16-token prompt is one read of the weights", tiny.bound === "memory", `${(tiny.seconds * 1000).toFixed(1)} ms`);
   check("FP8 weights run on FP8 tensor cores", computeTflops(H100.tflops, "fp8") === 1979 && computeTflops(H100.tflops, "int4") === 989);
   check("…and halve the compute-bound prefill", prefillTime(llama8b, "fp8", 8192, H100).seconds < prefillTime(llama8b, "bf16", 8192, H100).seconds * 0.6);
-  check("two GPUs halve it", Math.abs(prefillTime(llama8b, "bf16", 8192, H100, 2).seconds * 2 / prefillTime(llama8b, "bf16", 8192, H100).seconds - 1) < 1e-9);
+  // Each pass and each request also cost a fixed time, which more GPUs do not split.
+  const pass = (g: number) => prefillTime(llama8b, "bf16", 8192, H100, g).seconds - (stepFloorMs(llama8b, g) + REQUEST_MS) / 1000;
+  check("two GPUs halve the pass", Math.abs((pass(2) * 2) / pass(1) - 1) < 1e-9);
+  check("…but not the fixed cost, which grows with the all-reduces", stepFloorMs(llama8b, 2) > stepFloorMs(llama8b, 1));
   check("efficiency is a documented fraction", COMPUTE_EFFICIENCY > 0.2 && COMPUTE_EFFICIENCY <= 1);
 }
 
@@ -75,7 +78,8 @@ console.log("\n--- decode against compute (E3) ---");
   const base = { arch: llama8b, weightDtype: "bf16" as const, kvDtype: "fp16" as const, contextLength: 2048 };
   const one = decodeStep(base, 1, H100)!;
   check("one sequence is bandwidth-bound", one.bound === "memory");
-  check("…and matches the bandwidth estimate", Math.abs(one.stepMs - estimateDecode({ ...base, concurrency: 1, bandwidthGBs: 3350 })!.stepMs) < 1e-9);
+  check("…and is the bandwidth estimate plus the step's fixed cost",
+    Math.abs(one.stepMs - estimateDecode({ ...base, concurrency: 1, bandwidthGBs: 3350 })!.stepMs - stepFloorMs(llama8b)) < 1e-9);
   // At 2k tokens each, 512 sequences read 137 GB of KV a step: attention keeps
   // decode on bandwidth. With short sequences the matrix multiplies take over.
   const big = decodeStep(base, 512, H100)!;
@@ -105,16 +109,18 @@ console.log("\n--- against vLLM on an RTX 4070 Ti ---");
     check(`Qwen3-4B, ${p}-token prompt: within 12% of vLLM`, Math.abs(ours / theirs - 1) <= 0.12, `${(ours * 1000).toFixed(0)} vs ${(theirs * 1000).toFixed(0)} ms`);
   }
   const rate = prefillFlops(q4, 2048) / r4.prefill[2048] / 1e12;
-  check("…which runs at 90–100% of the card's rated BF16 peak", rate / cal.device.tflops.bf16 > 0.9 && rate / cal.device.tflops.bf16 <= 1.05, `${rate.toFixed(1)} of ${cal.device.tflops.bf16} TFLOPS`);
+  // Without the embedding lookup and with the output head for the last token only.
+  check("…which runs at 85–100% of the card's rated BF16 peak", rate / cal.device.tflops.bf16 > 0.85 && rate / cal.device.tflops.bf16 <= 1.05, `${rate.toFixed(1)} of ${cal.device.tflops.bf16} TFLOPS`);
   for (const b of [1, 2, 4, 8, 16, 32]) {
     // Each sequence holds 128 to 256 tokens over the 128 steps: 192 on average.
     const ours = decodeStep({ arch: q4, weightDtype: "bf16", kvDtype: "fp16", contextLength: 192 }, b, dev)!.stepMs;
     const theirs = r4.decode[b].stepMs;
     check(`Qwen3-4B decode, ${b} sequences: within 8% of vLLM`, Math.abs(ours / theirs - 1) <= 0.08, `${ours.toFixed(1)} vs ${theirs.toFixed(1)} ms`);
   }
-  // A 0.6B model's step is short enough for vLLM's ~1 ms of scheduling and
-  // sampling to show; the estimate leaves it out and runs up to a fifth fast.
-  const q06 = archFromConfig(repo("Qwen_Qwen3-0.6B").config, repo("Qwen_Qwen3-0.6B").numParams)!;
+  // A 0.6B model's step is short enough for its fixed cost to be half of it
+  // (perf.ts, LAYER_MS). The Hub's count, 751.6M, includes a stored copy of the tied
+  // output head that vLLM does not load; the model it runs has 596.0M.
+  const q06 = archFromConfig(repo("Qwen_Qwen3-0.6B").config, 596049920)!;
   const r06 = cal.runs.find((r: { model: string }) => r.model === "Qwen/Qwen3-0.6B");
   for (const b of [1, 16, 128, 256]) {
     const ours = decodeStep({ arch: q06, weightDtype: "bf16", kvDtype: "fp16", contextLength: 192 }, b, dev)!.stepMs;

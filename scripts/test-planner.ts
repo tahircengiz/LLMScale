@@ -24,11 +24,12 @@ const best = (m: ModelSetup, w: Workload, g = H100) => planOptions(m, w, g).opti
 
 console.log("--- a small model ---");
 {
-  const p = best(m8, chat);
-  // A 2k prompt is ~57 ms of prefill; at ~10 req/s that is 60% of the GPU's time,
-  // and decode, stretched by it, reaches the 50 ms per token target.
-  check("Llama 3.1 8B, 10 req/s on H100s: one GPU", p.tp === 1 && p.replicas === 1, `${p.replicas}× TP${p.tp}, ${p.replicaRps.toFixed(1)} req/s each`);
-  check("…and 15 req/s two", best(m8, { ...chat, rps: 15 }).gpus === 2);
+  const p = best(m8, { ...chat, rps: 9 });
+  // A 2k prompt is ~57 ms of prefill, plus each pass's and request's fixed cost
+  // (perf.ts); at ~10 req/s that is most of the GPU's time, and decode, stretched
+  // by it, reaches the 50 ms per token target just under 10 req/s.
+  check("Llama 3.1 8B, 9 req/s on H100s: one GPU", p.tp === 1 && p.replicas === 1, `${p.replicas}× TP${p.tp}, ${p.replicaRps.toFixed(1)} req/s each`);
+  check("…10 and 15 req/s two", best(m8, chat).gpus === 2 && best(m8, { ...chat, rps: 15 }).gpus === 2);
   check("…held back by time per token", p.limit === "tpot", p.limit);
   check("…within both targets at its share", p.tpotMs <= 50 && p.ttftS <= 1, `${p.tpotMs.toFixed(1)} ms, ${p.ttftS.toFixed(2)} s`);
   const busy = best(m8, { ...chat, rps: 200 });
@@ -51,10 +52,11 @@ console.log("--- a model that does not fit one card ---");
 
 console.log("--- targets it cannot meet ---");
 {
-  // Eight GPUs read a 2k prompt in ~9 ms and decode a token in under 1 ms.
-  check("a 10 ms first token takes eight GPUs", best(m8, { ...chat, ttftS: 0.01 }).tp === 8);
-  const r = planOptions(m8, { ...chat, ttftS: 0.005 }, H100);
-  check("5 ms is out of reach on any split", r.options.length === 0 && r.infeasible.every((x) => x.reason === "ttft"));
+  // Eight GPUs read a 2k prompt in ~9 ms, on top of ~9 ms a request costs anyway:
+  // its handling, every layer's kernels and the all-reduces between the GPUs.
+  check("a 20 ms first token takes eight GPUs", best(m8, { ...chat, ttftS: 0.02 })?.tp === 8);
+  const r = planOptions(m8, { ...chat, ttftS: 0.01 }, H100);
+  check("10 ms is out of reach on any split", r.options.length === 0 && r.infeasible.every((x) => x.reason === "ttft"));
   const slow = planOptions(m8, { ...chat, tpotMs: 0.5 }, H100);
   check("so is 0.5 ms per token", slow.options.length === 0 && slow.infeasible.some((x) => x.reason === "tpot"));
   const noSpec: Gpu = { ...H100, tflops: undefined };

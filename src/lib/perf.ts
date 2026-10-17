@@ -13,14 +13,43 @@
 // prefillTime and decodeStep below take whichever bound is slower. The vendors'
 // dense figures are peaks; the efficiencies are stated where they are applied.
 
-import { kvBytesReadPerStep, resolveHeadDim, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
+import { DTYPE_BYTES, expertWeightBytes, kvBytesReadPerStep, QUANT_BITS, resolveHeadDim, weightsBytes, type Dtype, type ModelArch } from "./calc.ts";
 
 /**
- * Share of peak bandwidth a good decode kernel actually reaches. Vendors quote
- * theoretical peak; real kernels land in the high seventies to mid eighties, so
- * this stays deliberately conservative.
+ * Share of peak bandwidth the weight reads of a decode step reach. Fitted with the
+ * step's fixed cost (LAYER_MS) to vLLM 0.31.0 on an RTX 4070 Ti (scripts/fixtures/
+ * vllm/calib-rtx4070ti-2026-10-16.json): dense models from 0.6B to 7B, BF16 and AWQ,
+ * and MoE models of 1B and 3B, from 1 to 64 sequences, land within 10% of the
+ * measured step (most within 4%; the fit is flat from 0.88 to 0.98, the midpoint
+ * kept). The same constants put Llama 3.1 8B on one H100, H200 or L40S within 12%
+ * of NVIDIA's published batch-1 figures (docs/audit-2026-10-15/hiz-kaynaklari.md).
  */
-export const BANDWIDTH_EFFICIENCY = 0.8;
+export const BANDWIDTH_EFFICIENCY = 0.92;
+/** Attention's reads of the KV cache, a block at a time, reach less than the
+ *  weights' long streams: fitted to how each step grew with the batch on the same
+ *  card (up to 64 sequences of 128 to 256 tokens). */
+export const KV_EFFICIENCY = 0.75;
+/** What a step costs beyond its reads, per layer: the kernels between the reads,
+ *  replayed from a CUDA graph. Fitted with BANDWIDTH_EFFICIENCY on the RTX 4070 Ti.
+ *  A MoE layer needs nothing more: routed experts cost what they read, and once
+ *  their bytes are counted right (calc.ts, MXFP4) gpt-oss-20b and -120b land within
+ *  14% of published single-GPU speeds with no MoE factor. */
+export const LAYER_MS = 0.065;
+/** Integer-quantized experts (AWQ, GPTQ) run through vLLM's Marlin MoE kernel, which
+ *  costs more per MoE layer than its reads: Qwen1.5-MoE-A2.7B GPTQ on the RTX 4070
+ *  Ti took 1.7 to 2.0 ms more per step than the same reads in BF16 would, from 1 to
+ *  16 sequences, 0.08 ms for each of its 24 layers. MXFP4 and BF16 experts showed
+ *  no such cost. */
+export const QUANT_MOE_LAYER_MS = 0.08;
+/** Tensor parallelism adds two all-reduces per layer to every step: fitted to
+ *  published batch-1 figures for Llama 70B and 405B on 2, 4 and 8 H100s and MI300Xs
+ *  (docs/audit-2026-10-15/hiz-kaynaklari.md, N7, N8, A1-A3), all within 14%. */
+export const ALLREDUCE_MS = 0.014;
+/** A request's fixed cost before its first token, beyond the prefill pass: taking
+ *  the request, scheduling it, sampling and sending the token back. Fitted to
+ *  `vllm serve` on the RTX 4070 Ti (6.5 ms) and NVIDIA's short-prompt Llama 3.1 8B
+ *  figures on an H100 (5.5 ms); a host CPU sets most of it. */
+export const REQUEST_MS = 6;
 
 export interface DecodeInput {
   arch: ModelArch;
@@ -71,28 +100,48 @@ export function paramsReadPerStep(arch: ModelArch, n: number): number {
   return Math.min(total, shared + experts * touched);
 }
 
+/** Bytes of weights `n` tokens in one forward pass read: every layer's shared
+ *  weights and the output head, and of the routed experts those the tokens touch.
+ *  Not the input embedding of an untied model, nor a lookup table: a token reads
+ *  one row of each (moe.ts). By bytes, not parameters, since a quantized checkpoint
+ *  keeps its embedding and head in 16-bit and an MXFP4 one its attention too: read
+ *  by parameter share, gpt-oss-20b's step came out half of what it reads. */
+export function weightBytesRead(arch: ModelArch, weightDtype: Dtype, n: number): number {
+  const all = weightsBytes(arch, weightDtype);
+  const wide = QUANT_BITS[weightDtype] ? 2 : DTYPE_BYTES[weightDtype];
+  const table = !arch.tieEmbeddings && arch.vocabSize && arch.hiddenSize ? arch.vocabSize * arch.hiddenSize * wide : 0;
+  const spec = arch.specParams && arch.specParams < arch.numParams ? arch.specParams : 0;
+  const lookup = arch.lookupParams && arch.lookupParams < arch.numParams - spec ? arch.lookupParams * wide : 0;
+  const unread = table + lookup < all ? table + lookup : 0;
+  const experts = Math.min(expertWeightBytes(arch, weightDtype), all - unread);
+  const E = arch.numExperts ?? 0;
+  const k = arch.expertsPerToken ?? 0;
+  if (experts > 0 && E > k && k > 0) return all - unread - experts * Math.pow(1 - k / E, Math.max(1, n));
+  // A MoE known only by its active count reads that share, whatever the batch.
+  return (all - unread) * Math.min(1, paramsReadPerStep(arch, n) / Math.max(1, arch.numParams - spec - (lookup ? arch.lookupParams! : 0)));
+}
+
 /**
- * A first-order decode estimate. Returns null when the device has no published
- * bandwidth, so callers can simply omit the figure rather than invent one.
+ * The read side of a decode step: its bytes at the bandwidth they reach. Returns
+ * null when the device has no published bandwidth, so callers can simply omit the
+ * figure rather than invent one. Without the step's fixed cost (decodeStep adds it).
  */
 export function estimateDecode(i: DecodeInput): DecodeEstimate | null {
   if (!i.bandwidthGBs || i.bandwidthGBs <= 0) return null;
 
   // A Mixture-of-Experts model keeps every expert resident but routes each token
   // through only a few, so the read per step follows the experts the batch
-  // touches, not the total — the active count for one sequence, nearly all of
+  // touches, not the total — the active ones for one sequence, nearly all of
   // them for a large batch.
-  const loaded = i.arch.numParams - (i.arch.specParams && i.arch.specParams < i.arch.numParams ? i.arch.specParams : 0);
-  const readShare = loaded > 0 ? paramsReadPerStep(i.arch, i.concurrency) / loaded : 1;
-  const weightBytes = weightsBytes(i.arch, i.weightDtype) * readShare;
+  const weightBytes = weightBytesRead(i.arch, i.weightDtype, i.concurrency);
 
   // Attention reads the cache for every sequence in the batch on every step: all of
   // it, or for a sparse model the indexer keys and the entries they pick.
   const kvBytes = kvBytesReadPerStep(i.arch, i.kvDtype, i.contextLength) * i.concurrency;
 
   const bytesPerStep = weightBytes + kvBytes;
-  const effectiveBps = i.bandwidthGBs * 1e9 * BANDWIDTH_EFFICIENCY;
-  const stepMs = (bytesPerStep / effectiveBps) * 1000;
+  const bps = i.bandwidthGBs * 1e9;
+  const stepMs = (weightBytes / (bps * BANDWIDTH_EFFICIENCY) + kvBytes / (bps * KV_EFFICIENCY)) * 1000;
 
   return {
     bytesPerStep,
@@ -101,6 +150,15 @@ export function estimateDecode(i: DecodeInput): DecodeEstimate | null {
     total: (1000 / stepMs) * i.concurrency,
     kvShare: kvBytes / bytesPerStep,
   };
+}
+
+/** A step's fixed cost on `gpus` GPUs of a tensor-parallel group: every layer's
+ *  kernels, the Marlin MoE kernel's own cost for integer-quantized experts, and the
+ *  group's two all-reduces per layer. */
+export function stepFloorMs(arch: ModelArch, gpus = 1, weightDtype?: Dtype): number {
+  const layers = Math.max(1, arch.numLayers);
+  const marlin = weightDtype === "int4" && arch.numExperts && arch.expertsPerToken && !arch.mxfp4 ? QUANT_MOE_LAYER_MS : 0;
+  return layers * (LAYER_MS + marlin + (gpus > 1 ? 2 * ALLREDUCE_MS : 0));
 }
 
 /** Share of the vendor's dense tensor peak a serving engine's matrix multiplies
@@ -140,7 +198,11 @@ function attnWidth(arch: ModelArch): number {
  * a sliding layer caps at its window.
  */
 export function prefillFlops(arch: ModelArch, tokens: number): number {
-  const active = arch.activeParams ?? arch.numParams;
+  // The embedding is looked up, and the output head runs for the last token only.
+  const head = arch.vocabSize && arch.hiddenSize ? arch.vocabSize * arch.hiddenSize : 0;
+  const tables = head * (arch.tieEmbeddings ? 1 : 2);
+  const all = arch.activeParams ?? arch.numParams;
+  const active = tables < all ? all - tables : all;
   const attn = arch.attnLayers ?? arch.numLayers;
   const sliding = arch.slidingWindow ? Math.min(arch.slidingLayers ?? 0, attn) : 0;
   const full = attn - sliding;
@@ -149,7 +211,7 @@ export function prefillFlops(arch: ModelArch, tokens: number): number {
   const fullAttn = 2 * d * tokens * tokens * full;
   const W = Math.min(arch.slidingWindow ?? 0, tokens);
   const slideAttn = sliding ? 4 * d * sliding * (W * tokens - (W * W) / 2) : 0;
-  return 2 * active * tokens + fullAttn + slideAttn;
+  return 2 * active * tokens + (tables < all ? 2 * head : 0) + fullAttn + slideAttn;
 }
 
 export interface PrefillEstimate {
@@ -161,7 +223,10 @@ export interface PrefillEstimate {
 
 /** Time to first token for one request alone on `gpus` GPUs: the prompt's FLOPs
  *  at the device's share of peak (COMPUTE_EFFICIENCY unless it says otherwise),
- *  or one read of the weights, whichever is slower. Queueing is not in it. */
+ *  or one read of the weights the prompt touches, whichever is slower, plus the
+ *  pass's fixed cost and the request's (REQUEST_MS). Without the last two a short
+ *  prompt came out four times too fast: Qwen3-0.6B read 512 tokens in 11 ms where
+ *  vLLM answers in 16. Queueing is not in it. */
 export function prefillTime(
   arch: ModelArch,
   weightDtype: Dtype,
@@ -171,8 +236,9 @@ export function prefillTime(
 ): PrefillEstimate {
   const eff = device.computeEfficiency ?? COMPUTE_EFFICIENCY;
   const compute = prefillFlops(arch, tokens) / (computeTflops(device.tflops, weightDtype) * 1e12 * eff * gpus);
-  const memory = weightsBytes(arch, weightDtype) / (device.bandwidthGBs * 1e9 * BANDWIDTH_EFFICIENCY * gpus);
-  return compute >= memory ? { seconds: compute, bound: "compute" } : { seconds: memory, bound: "memory" };
+  const memory = weightBytesRead(arch, weightDtype, tokens) / (device.bandwidthGBs * 1e9 * BANDWIDTH_EFFICIENCY * gpus);
+  const fixed = (stepFloorMs(arch, gpus, weightDtype) + REQUEST_MS) / 1000;
+  return compute >= memory ? { seconds: compute + fixed, bound: "compute" } : { seconds: memory + fixed, bound: "memory" };
 }
 
 export interface DecodePoint {
@@ -187,9 +253,10 @@ export interface DecodePoint {
 /**
  * One decode step for `batch` sequences at `contextLength`: the bytes it reads
  * (estimateDecode) against the FLOPs it does (two per active parameter per
- * sequence, plus attention over each sequence's context), whichever is slower.
- * Bandwidth bounds small batches; past the crossover the step grows with the batch
- * and total throughput levels off.
+ * sequence, plus attention over each sequence's context), whichever is slower,
+ * plus the step's fixed cost (stepFloorMs). Bandwidth bounds small batches; past
+ * the crossover the step grows with the batch and total throughput levels off.
+ * Without the fixed cost a small or MoE model came out up to twice too fast.
  */
 export function decodeStep(
   i: Omit<DecodeInput, "concurrency" | "bandwidthGBs">,
@@ -202,7 +269,10 @@ export function decodeStep(
   let stepMs = mem.stepMs;
   let bound: DecodePoint["bound"] = "memory";
   if (device.tflops) {
-    const active = i.arch.activeParams ?? i.arch.numParams;
+    // Every token runs the output head; the input embedding is a lookup.
+    const all = i.arch.activeParams ?? i.arch.numParams;
+    const table = !i.arch.tieEmbeddings && i.arch.vocabSize && i.arch.hiddenSize ? i.arch.vocabSize * i.arch.hiddenSize : 0;
+    const active = table < all ? all - table : all;
     const attn = i.arch.attnLayers ?? i.arch.numLayers;
     const sliding = i.arch.slidingWindow ? Math.min(i.arch.slidingLayers ?? 0, attn) : 0;
     // Each new token attends over its context; a sliding layer over its window. A
@@ -213,6 +283,7 @@ export function decodeStep(
     const computeMs = (flops / (computeTflops(device.tflops, i.weightDtype) * 1e12 * (device.computeEfficiency ?? COMPUTE_EFFICIENCY) * gpus)) * 1000;
     if (computeMs > stepMs) [stepMs, bound] = [computeMs, "compute"];
   }
+  stepMs += stepFloorMs(i.arch, gpus, i.weightDtype);
   return { batch, stepMs, perUser: 1000 / stepMs, total: (1000 / stepMs) * batch, bound };
 }
 
