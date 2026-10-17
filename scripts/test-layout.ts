@@ -131,8 +131,12 @@ const v3one = ranked(v3, "fp8", "fp16", 32768, 1, "h200-141", 8);
 check("DeepSeek V3 at 32k, one request, 8× H200: TP 8 (its recipe for low load), not PP 8", v3one[0].layout.tp === 8, lbl(v3one));
 const v3load = ranked(v3, "fp8", "fp16", 32768, 64, "h200-141", 8);
 check("…64 requests: DP 8 · EP (its recipe for high load)", v3load[0].layout.dp === 8 && v3load[0].layout.ep, lbl(v3load));
-const v3fastest = v3load.filter((f) => f.fits).reduce((a, f) => (f.stepMs! < a.stepMs! ? f : a));
-check("…within a tenth of the fastest, it holds the most requests", v3load[0].stepMs! <= v3fastest.stepMs! * 1.1 && v3load[0].maxUsers >= v3fastest.maxUsers, `fastest ${layoutLabel(v3fastest.layout)} ${v3fastest.maxUsers} requests, ${v3fastest.stepMs?.toFixed(1)} ms`);
+// The band is drawn in the first's tier (holds the load, no pipeline stages).
+const v3tier = v3load.filter((f) => f.fits && f.layout.pp === 1);
+const v3fastest = v3tier.reduce((a, f) => (f.stepMs! < a.stepMs! ? f : a));
+const v3band = v3tier.filter((f) => f.stepMs! <= v3fastest.stepMs! * 1.1);
+check("…not the fastest, which is within a tenth and holds fewer", v3fastest !== v3load[0] && v3load[0].stepMs! <= v3fastest.stepMs! * 1.1 && v3load[0].maxUsers > v3fastest.maxUsers, `fastest ${layoutLabel(v3fastest.layout)} ${v3fastest.maxUsers} requests, ${v3fastest.stepMs?.toFixed(1)} ms`);
+check("…the most requests of every layout within that tenth", v3band.every((f) => f.maxUsers <= v3load[0].maxUsers), v3band.map((f) => `${layoutLabel(f.layout)} ${f.maxUsers}`).join(", "));
 const ossH100 = ranked(oss, "int4", "fp16", 32768, 1, "h100-80", 4);
 check("gpt-oss-120b at 32k on 4× H100: TP 4, as its recipe runs it, not TP 2 · PP 2", ossH100[0].layout.tp === 4 && ossH100[0].layout.pp === 1, lbl(ossH100));
 const l70h100 = ranked(l70, "bf16", "fp16", 32768, 1, "h100-80", 8);

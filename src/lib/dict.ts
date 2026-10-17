@@ -683,7 +683,7 @@ const en: Dict = {
 
   "vllm.r.maxlen": "Caps the context window — frees KV cache vs the model's full max.",
   "vllm.r.tp": "Splits every layer across {n} GPUs (tensor parallelism).",
-  "vllm.r.tpMoe": "Splits every layer across {n} GPUs (tensor parallelism). Adding --enable-expert-parallel keeps the routed experts whole, a share of them on each GPU, instead of slicing every one (TP+EP, what vLLM's DeepSeek recipes run); it takes the same memory, so the calculator does not list it as another layout.",
+  "vllm.r.tpMoe": "Splits every layer across {n} GPUs (tensor parallelism). Adding --enable-expert-parallel keeps the routed experts whole, a share of them on each GPU, instead of slicing every one (TP+EP, what vLLM's DeepSeek recipes run); it takes about the same memory, so the calculator does not list it as another layout.",
   "vllm.r.pp": "Splits the {L} layers into {pp} stages of up to {k}, each on its own GPUs (pipeline parallelism).",
   "vllm.r.dp": "Runs {dp} copies of the model, each serving its share of the requests (data parallelism); --max-num-seqs counts per copy.",
   "vllm.r.dpEp": "Runs attention on {dp} data-parallel ranks, each with its own requests; --max-num-seqs counts per rank.",
@@ -1994,7 +1994,7 @@ const tr: Dict = {
 
   "vllm.r.maxlen": "Context penceresini sınırlar — modelin tam maksimumuna göre KV cache'i serbest bırakır.",
   "vllm.r.tp": "Her katmanı {n} GPU'ya böler (tensor paralelliği).",
-  "vllm.r.tpMoe": "Her katmanı {n} GPU'ya böler (tensor paralelliği). --enable-expert-parallel eklenirse yönlendirilmiş uzmanlar dilimlenmez, bütün hâlde GPU'lara paylaştırılır (TP+EP; vLLM'in DeepSeek tariflerinin çalıştırdığı düzen); bellek aynı kalır, bu yüzden hesaplayıcı onu ayrı bir düzen olarak saymaz.",
+  "vllm.r.tpMoe": "Her katmanı {n} GPU'ya böler (tensor paralelliği). --enable-expert-parallel eklenirse yönlendirilmiş uzmanlar dilimlenmez, bütün hâlde GPU'lara paylaştırılır (TP+EP; vLLM'in DeepSeek tariflerinin çalıştırdığı düzen); bellek hemen hemen aynı kalır, bu yüzden hesaplayıcı onu ayrı bir düzen olarak saymaz.",
   "vllm.r.pp": "{L} katmanı en çok {k} katmanlık {pp} aşamaya böler; her aşama kendi GPU'larında (pipeline paralelliği).",
   "vllm.r.dp": "Modelin {dp} kopyasını çalıştırır; her biri isteklerin kendi payını karşılar (veri paralelliği). --max-num-seqs kopya başına sayılır.",
   "vllm.r.dpEp": "Attention'ı {dp} veri-paralel sırada çalıştırır, her biri kendi istekleriyle; --max-num-seqs sıra başına sayılır.",

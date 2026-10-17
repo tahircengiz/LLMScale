@@ -558,7 +558,8 @@ export function GpuFit({
             {multi.length > 1 && (
               <div className="mt-3 overflow-x-auto">
                 <div className="mb-1 text-[11px] font-medium text-slate-300">{t("gpu.altTitle", { n: count })}</div>
-                {best.stepMs !== undefined && <p className="mb-1 text-[11px] leading-relaxed text-slate-500">{t("gpu.altHow")}</p>}
+                {/* The rule only picked the first when it holds the load; otherwise it is the one that holds the most. */}
+                {best.stepMs !== undefined && best.fits && <p className="mb-1 text-[11px] leading-relaxed text-slate-500">{t("gpu.altHow")}</p>}
                 <table className="w-full text-[11px] tabular-nums">
                   <thead className="text-slate-500">
                     <tr>
@@ -574,7 +575,7 @@ export function GpuFit({
                       <tr key={layoutLabel(f.layout)} className={i === 0 ? "font-semibold text-white" : f.fits ? "text-slate-300" : "text-slate-500"}>
                         <td className="whitespace-nowrap py-0.5 pr-2">{layoutLabel(f.layout)}</td>
                         {best.stepMs !== undefined && (
-                          <td className="py-0.5 pr-2 text-right">{f.stepMs && Number.isFinite(f.stepMs) ? formatInt(Math.round(1000 / f.stepMs)) : "—"}</td>
+                          <td className="py-0.5 pr-2 text-right">{f.fits && f.stepMs && Number.isFinite(f.stepMs) ? formatInt(Math.round(1000 / f.stepMs)) : "—"}</td>
                         )}
                         <td className="py-0.5 pr-2 text-right">{formatGiB(f.layout.perGpuGiB)}</td>
                         <td className="py-0.5 pr-2 text-right">{formatInt(f.maxUsers)}</td>

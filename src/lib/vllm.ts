@@ -186,9 +186,11 @@ export function recommend(i: VllmInput): VllmRec {
     // carries one; the warning says why the GPUs are split another way.
     if (!tpValid(n, heads, kv) && layout.tp < n) warnings.push({ key: "vllm.w.tp", vars: { n, h: heads, layout: layoutLabel(layout) } });
     // A MoE on tensor parallelism without replicas: vLLM's DeepSeek recipes add
-    // expert parallelism to it (TP+EP), which takes the same memory here, so it is
-    // not a layout of its own; the reason says so. With replicas, DP+EP is one.
-    const tpOnlyMoe = !layout.ep && layout.dp === 1 && expertWeightBytes(i.arch, wDtype) > 0;
+    // expert parallelism to it (TP+EP), which takes about the same memory here when
+    // the experts split evenly, so it is not a layout of its own; the reason says
+    // so. With replicas, DP+EP is one; with more GPUs than experts, some would hold none.
+    const tpOnlyMoe =
+      !layout.ep && layout.dp === 1 && expertWeightBytes(i.arch, wDtype) > 0 && (i.arch.numExperts ?? 0) % layout.tp === 0;
     const why: Record<string, Pick<VllmFlag, "reasonKey" | "reasonVars">> = {
       "--tensor-parallel-size": { reasonKey: tpOnlyMoe ? "vllm.r.tpMoe" : "vllm.r.tp", reasonVars: { n: layout.tp } },
       "--pipeline-parallel-size": { reasonKey: "vllm.r.pp", reasonVars: { L: i.arch.numLayers, pp: layout.pp, k: Math.ceil(i.arch.numLayers / layout.pp) } },

@@ -86,9 +86,10 @@ check("structured → structured-outputs xgrammar", has(q.command, "--structured
 // vLLM refuses a TP size that does not divide the attention heads (vllm/config/model.py).
 const qtp = recommend(base({ hfId: "Qwen/Qwen2.5-7B-Instruct", arch: qwen7b, gpuCount: 8 }));
 check("TP 8 on 28 heads → warns, names the layout it runs instead", qtp.warnings.some((w) => w.key === "vllm.w.tp" && w.vars?.layout === layoutLabel(qtp.layout!)), JSON.stringify(qtp.warnings));
-// The calculator's ×8 view: TP 4 is the widest split the heads allow, and two
-// pipeline stages hold more requests than two replicas of it.
+// The calculator's ×8 view: TP 4 is the widest split the heads allow, and a 7B
+// model fits each group, so two replicas of it, not two pipeline stages.
 check("…and the command carries 4, which vLLM accepts, with every GPU used", has(qtp.command, "--tensor-parallel-size 4") && !has(qtp.command, "--tensor-parallel-size 8") && qtp.layout?.gpus === 8, layoutLabel(qtp.layout!));
+check("…as two replicas, without pipeline stages", qtp.layout?.dp === 2 && qtp.layout.pp === 1, layoutLabel(qtp.layout!));
 check("TP 8 on 64 heads → no warning", !tp.warnings.some((w) => w.key === "vllm.w.tp"));
 
 const mig = recommend(base({ gpuCount: 4, mig: true, gpuVramGiB: 40 }));
@@ -124,6 +125,12 @@ console.log("\n--- layouts: the calculator's (A3) ---");
     `${layoutLabel(four.layout!)} ${four.layouts[0].maxUsers} requests ${four.layouts[0].stepMs?.toFixed(1)} ms, PP 4 ${pp4.maxUsers} requests ${pp4.stepMs?.toFixed(1)} ms`);
   check("…and says that the recipe adds expert parallelism to it for the same memory", four.flags.find((f) => f.flag === "--tensor-parallel-size")?.reasonKey === "vllm.r.tpMoe");
   check("a dense model's tensor parallelism has the plain reason", tp.flags.find((f) => f.flag === "--tensor-parallel-size")?.reasonKey === "vllm.r.tp");
+  // TP+EP takes about TP's memory only while the experts split evenly: Mixtral's 8
+  // over TP 16 would leave half the GPUs without one.
+  const mix = findKnownByHfId("mistralai/Mixtral-8x7B-Instruct-v0.1")!;
+  const tpReason = (n: number) =>
+    recommend(base({ hfId: mix.hfId, arch: mix, gpuCount: n, layout: { tp: n, pp: 1, dp: 1, ep: false } })).flags.find((f) => f.flag === "--tensor-parallel-size")?.reasonKey;
+  check("Mixtral on TP 8: the TP+EP note; on TP 16, more GPUs than experts, the plain reason", tpReason(8) === "vllm.r.tpMoe" && tpReason(16) === "vllm.r.tp", `${tpReason(8)}, ${tpReason(16)}`);
   // Without a device's speed the layouts that hold a request rank by memory alone,
   // still without pipeline stages while any other holds it.
   const blind = recommend(v4in({ gpuCount: 4, device: undefined }));
