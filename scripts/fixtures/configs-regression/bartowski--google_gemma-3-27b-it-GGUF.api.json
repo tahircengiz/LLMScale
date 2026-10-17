@@ -1,0 +1,156 @@
+{
+ "id": "bartowski/google_gemma-3-27b-it-GGUF",
+ "gated": false,
+ "pipeline_tag": "image-text-to-text",
+ "tags": [
+  "gguf",
+  "image-text-to-text",
+  "base_model:google/gemma-3-27b-it",
+  "base_model:quantized:google/gemma-3-27b-it",
+  "license:gemma",
+  "endpoints_compatible",
+  "region:us",
+  "imatrix",
+  "conversational"
+ ],
+ "cardData": {
+  "base_model": "google/gemma-3-27b-it"
+ },
+ "gguf": {
+  "total": 27009002240
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 3767
+  },
+  {
+   "rfilename": "README.md",
+   "size": 15200
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-IQ2_M.gguf",
+   "size": 9492834944
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-IQ2_S.gguf",
+   "size": 8782170752
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-IQ2_XS.gguf",
+   "size": 8438665856
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-IQ3_M.gguf",
+   "size": 12546790016
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-IQ3_XS.gguf",
+   "size": 11561949824
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-IQ3_XXS.gguf",
+   "size": 10716240512
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-IQ4_NL.gguf",
+   "size": 15567112832
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-IQ4_XS.gguf",
+   "size": 14767164032
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q2_K.gguf",
+   "size": 10503436928
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q2_K_L.gguf",
+   "size": 10844748416
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q3_K_L.gguf",
+   "size": 14543178368
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q3_K_M.gguf",
+   "size": 13437356672
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q3_K_S.gguf",
+   "size": 12167330432
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q3_K_XL.gguf",
+   "size": 14884489856
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q4_0.gguf",
+   "size": 15617690240
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q4_1.gguf",
+   "size": 17167010432
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q4_K_L.gguf",
+   "size": 16887716480
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q4_K_M.gguf",
+   "size": 16546404992
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q4_K_S.gguf",
+   "size": 15673772672
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q5_K_L.gguf",
+   "size": 19612703360
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q5_K_M.gguf",
+   "size": 19271391872
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q5_K_S.gguf",
+   "size": 18766908032
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q6_K.gguf",
+   "size": 22166690432
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q6_K_L.gguf",
+   "size": 22508001920
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-Q8_0.gguf",
+   "size": 28707605120
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-bf16/google_gemma-3-27b-it-bf16-00001-of-00002.gguf",
+   "size": 39987970624
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it-bf16/google_gemma-3-27b-it-bf16-00002-of-00002.gguf",
+   "size": 14039304192
+  },
+  {
+   "rfilename": "google_gemma-3-27b-it.imatrix",
+   "size": 13029464
+  },
+  {
+   "rfilename": "mmproj-google_gemma-3-27b-it-bf16.gguf",
+   "size": 857739168
+  },
+  {
+   "rfilename": "mmproj-google_gemma-3-27b-it-f16.gguf",
+   "size": 857739168
+  },
+  {
+   "rfilename": "mmproj-google_gemma-3-27b-it-f32.gguf",
+   "size": 1692266400
+  }
+ ]
+}

@@ -1,0 +1,538 @@
+{
+ "id": "unsloth/DeepSeek-V3-0324-GGUF",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "gguf",
+  "deepseek_v3",
+  "text-generation",
+  "deepseek",
+  "unsloth",
+  "custom_code",
+  "en",
+  "arxiv:2412.19437",
+  "base_model:deepseek-ai/DeepSeek-V3-0324",
+  "base_model:quantized:deepseek-ai/DeepSeek-V3-0324",
+  "license:mit",
+  "endpoints_compatible",
+  "fp8",
+  "region:us",
+  "conversational"
+ ],
+ "config": {
+  "model_type": "deepseek_v3"
+ },
+ "cardData": {
+  "base_model": "deepseek-ai/DeepSeek-V3-0324"
+ },
+ "gguf": {
+  "total": 671026419200
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 13348
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00001-of-00030.gguf",
+   "size": 43879928448
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00002-of-00030.gguf",
+   "size": 46036553952
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00003-of-00030.gguf",
+   "size": 46036553952
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00004-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00005-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00006-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00007-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00008-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00009-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00010-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00011-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00012-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00013-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00014-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00015-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00016-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00017-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00018-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00019-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00020-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00021-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00022-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00023-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00024-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00025-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00026-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00027-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00028-of-00030.gguf",
+   "size": 46036553984
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00029-of-00030.gguf",
+   "size": 47889912128
+  },
+  {
+   "rfilename": "BF16/DeepSeek-V3-0324-BF16-00030-of-00030.gguf",
+   "size": 7516250400
+  },
+  {
+   "rfilename": "Q2_K/DeepSeek-V3-0324-Q2_K-00001-of-00005.gguf",
+   "size": 49369575488
+  },
+  {
+   "rfilename": "Q2_K/DeepSeek-V3-0324-Q2_K-00002-of-00005.gguf",
+   "size": 48511628064
+  },
+  {
+   "rfilename": "Q2_K/DeepSeek-V3-0324-Q2_K-00003-of-00005.gguf",
+   "size": 48821440768
+  },
+  {
+   "rfilename": "Q2_K/DeepSeek-V3-0324-Q2_K-00004-of-00005.gguf",
+   "size": 48887431840
+  },
+  {
+   "rfilename": "Q2_K/DeepSeek-V3-0324-Q2_K-00005-of-00005.gguf",
+   "size": 48438268160
+  },
+  {
+   "rfilename": "Q3_K_M/DeepSeek-V3-0324-Q3_K_M-00001-of-00007.gguf",
+   "size": 49654170720
+  },
+  {
+   "rfilename": "Q3_K_M/DeepSeek-V3-0324-Q3_K_M-00002-of-00007.gguf",
+   "size": 49210367200
+  },
+  {
+   "rfilename": "Q3_K_M/DeepSeek-V3-0324-Q3_K_M-00003-of-00007.gguf",
+   "size": 49210367200
+  },
+  {
+   "rfilename": "Q3_K_M/DeepSeek-V3-0324-Q3_K_M-00004-of-00007.gguf",
+   "size": 49210367200
+  },
+  {
+   "rfilename": "Q3_K_M/DeepSeek-V3-0324-Q3_K_M-00005-of-00007.gguf",
+   "size": 49210367200
+  },
+  {
+   "rfilename": "Q3_K_M/DeepSeek-V3-0324-Q3_K_M-00006-of-00007.gguf",
+   "size": 49210367200
+  },
+  {
+   "rfilename": "Q3_K_M/DeepSeek-V3-0324-Q3_K_M-00007-of-00007.gguf",
+   "size": 23492389408
+  },
+  {
+   "rfilename": "Q4_K_M/DeepSeek-V3-0324-Q4_K_M-00001-of-00009.gguf",
+   "size": 48339780320
+  },
+  {
+   "rfilename": "Q4_K_M/DeepSeek-V3-0324-Q4_K_M-00002-of-00009.gguf",
+   "size": 49429396320
+  },
+  {
+   "rfilename": "Q4_K_M/DeepSeek-V3-0324-Q4_K_M-00003-of-00009.gguf",
+   "size": 49527312640
+  },
+  {
+   "rfilename": "Q4_K_M/DeepSeek-V3-0324-Q4_K_M-00004-of-00009.gguf",
+   "size": 48272509536
+  },
+  {
+   "rfilename": "Q4_K_M/DeepSeek-V3-0324-Q4_K_M-00005-of-00009.gguf",
+   "size": 49422027488
+  },
+  {
+   "rfilename": "Q4_K_M/DeepSeek-V3-0324-Q4_K_M-00006-of-00009.gguf",
+   "size": 48272509536
+  },
+  {
+   "rfilename": "Q4_K_M/DeepSeek-V3-0324-Q4_K_M-00007-of-00009.gguf",
+   "size": 49429396320
+  },
+  {
+   "rfilename": "Q4_K_M/DeepSeek-V3-0324-Q4_K_M-00008-of-00009.gguf",
+   "size": 46938773696
+  },
+  {
+   "rfilename": "Q4_K_M/DeepSeek-V3-0324-Q4_K_M-00009-of-00009.gguf",
+   "size": 14798482144
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00001-of-00010.gguf",
+   "size": 49573632960
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00002-of-00010.gguf",
+   "size": 48506507776
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00003-of-00010.gguf",
+   "size": 48506507808
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00004-of-00010.gguf",
+   "size": 48506507808
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00005-of-00010.gguf",
+   "size": 48506507808
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00006-of-00010.gguf",
+   "size": 48506507808
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00007-of-00010.gguf",
+   "size": 48506507808
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00008-of-00010.gguf",
+   "size": 48506507808
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00009-of-00010.gguf",
+   "size": 49999602080
+  },
+  {
+   "rfilename": "Q5_K_M/DeepSeek-V3-0324-Q5_K_M-00010-of-00010.gguf",
+   "size": 36277768864
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00001-of-00012.gguf",
+   "size": 47094115200
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00002-of-00012.gguf",
+   "size": 47227297696
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00003-of-00012.gguf",
+   "size": 47227297760
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00004-of-00012.gguf",
+   "size": 47227297760
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00005-of-00012.gguf",
+   "size": 47227297760
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00006-of-00012.gguf",
+   "size": 47227297760
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00007-of-00012.gguf",
+   "size": 47227297760
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00008-of-00012.gguf",
+   "size": 47227297760
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00009-of-00012.gguf",
+   "size": 47227297760
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00010-of-00012.gguf",
+   "size": 47227297760
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00011-of-00012.gguf",
+   "size": 47227297760
+  },
+  {
+   "rfilename": "Q6_K/DeepSeek-V3-0324-Q6_K-00012-of-00012.gguf",
+   "size": 31431234528
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00001-of-00015.gguf",
+   "size": 47784555232
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00002-of-00015.gguf",
+   "size": 48927727968
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00003-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00004-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00005-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00006-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00007-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00008-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00009-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00010-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00011-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00012-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00013-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00014-of-00015.gguf",
+   "size": 48927728000
+  },
+  {
+   "rfilename": "Q8_0/DeepSeek-V3-0324-Q8_0-00015-of-00015.gguf",
+   "size": 29441495520
+  },
+  {
+   "rfilename": "README.md",
+   "size": 17040
+  },
+  {
+   "rfilename": "UD-IQ1_M/DeepSeek-V3-0324-UD-IQ1_M-00001-of-00004.gguf",
+   "size": 49478640128
+  },
+  {
+   "rfilename": "UD-IQ1_M/DeepSeek-V3-0324-UD-IQ1_M-00002-of-00004.gguf",
+   "size": 49511837184
+  },
+  {
+   "rfilename": "UD-IQ1_M/DeepSeek-V3-0324-UD-IQ1_M-00003-of-00004.gguf",
+   "size": 49356290240
+  },
+  {
+   "rfilename": "UD-IQ1_M/DeepSeek-V3-0324-UD-IQ1_M-00004-of-00004.gguf",
+   "size": 48109316576
+  },
+  {
+   "rfilename": "UD-IQ1_S/DeepSeek-V3-0324-UD-IQ1_S-00001-of-00004.gguf",
+   "size": 48618624960
+  },
+  {
+   "rfilename": "UD-IQ1_S/DeepSeek-V3-0324-UD-IQ1_S-00002-of-00004.gguf",
+   "size": 48496275072
+  },
+  {
+   "rfilename": "UD-IQ1_S/DeepSeek-V3-0324-UD-IQ1_S-00003-of-00004.gguf",
+   "size": 48496275072
+  },
+  {
+   "rfilename": "UD-IQ1_S/DeepSeek-V3-0324-UD-IQ1_S-00004-of-00004.gguf",
+   "size": 40627584480
+  },
+  {
+   "rfilename": "UD-IQ2_XXS/DeepSeek-V3-0324-UD-IQ2_XXS-00001-of-00005.gguf",
+   "size": 48432051424
+  },
+  {
+   "rfilename": "UD-IQ2_XXS/DeepSeek-V3-0324-UD-IQ2_XXS-00002-of-00005.gguf",
+   "size": 49763861120
+  },
+  {
+   "rfilename": "UD-IQ2_XXS/DeepSeek-V3-0324-UD-IQ2_XXS-00003-of-00005.gguf",
+   "size": 49123357440
+  },
+  {
+   "rfilename": "UD-IQ2_XXS/DeepSeek-V3-0324-UD-IQ2_XXS-00004-of-00005.gguf",
+   "size": 49226663584
+  },
+  {
+   "rfilename": "UD-IQ2_XXS/DeepSeek-V3-0324-UD-IQ2_XXS-00005-of-00005.gguf",
+   "size": 22106407424
+  },
+  {
+   "rfilename": "UD-Q2_K_XL/DeepSeek-V3-0324-UD-Q2_K_XL-00001-of-00006.gguf",
+   "size": 49004772768
+  },
+  {
+   "rfilename": "UD-Q2_K_XL/DeepSeek-V3-0324-UD-Q2_K_XL-00002-of-00006.gguf",
+   "size": 49379854080
+  },
+  {
+   "rfilename": "UD-Q2_K_XL/DeepSeek-V3-0324-UD-Q2_K_XL-00003-of-00006.gguf",
+   "size": 49483160224
+  },
+  {
+   "rfilename": "UD-Q2_K_XL/DeepSeek-V3-0324-UD-Q2_K_XL-00004-of-00006.gguf",
+   "size": 49105062688
+  },
+  {
+   "rfilename": "UD-Q2_K_XL/DeepSeek-V3-0324-UD-Q2_K_XL-00005-of-00006.gguf",
+   "size": 49379854080
+  },
+  {
+   "rfilename": "UD-Q2_K_XL/DeepSeek-V3-0324-UD-Q2_K_XL-00006-of-00006.gguf",
+   "size": 1241383168
+  },
+  {
+   "rfilename": "UD-Q3_K_XL/DeepSeek-V3-0324-UD-Q3_K_XL-00001-of-00007.gguf",
+   "size": 48547650400
+  },
+  {
+   "rfilename": "UD-Q3_K_XL/DeepSeek-V3-0324-UD-Q3_K_XL-00002-of-00007.gguf",
+   "size": 49411303648
+  },
+  {
+   "rfilename": "UD-Q3_K_XL/DeepSeek-V3-0324-UD-Q3_K_XL-00003-of-00007.gguf",
+   "size": 49411303648
+  },
+  {
+   "rfilename": "UD-Q3_K_XL/DeepSeek-V3-0324-UD-Q3_K_XL-00004-of-00007.gguf",
+   "size": 49411303648
+  },
+  {
+   "rfilename": "UD-Q3_K_XL/DeepSeek-V3-0324-UD-Q3_K_XL-00005-of-00007.gguf",
+   "size": 49411303648
+  },
+  {
+   "rfilename": "UD-Q3_K_XL/DeepSeek-V3-0324-UD-Q3_K_XL-00006-of-00007.gguf",
+   "size": 49411303648
+  },
+  {
+   "rfilename": "UD-Q3_K_XL/DeepSeek-V3-0324-UD-Q3_K_XL-00007-of-00007.gguf",
+   "size": 25214077728
+  },
+  {
+   "rfilename": "UD-Q4_K_XL/DeepSeek-V3-0324-UD-Q4_K_XL-00001-of-00009.gguf",
+   "size": 48401247968
+  },
+  {
+   "rfilename": "UD-Q4_K_XL/DeepSeek-V3-0324-UD-Q4_K_XL-00002-of-00009.gguf",
+   "size": 49486048608
+  },
+  {
+   "rfilename": "UD-Q4_K_XL/DeepSeek-V3-0324-UD-Q4_K_XL-00003-of-00009.gguf",
+   "size": 49589354752
+  },
+  {
+   "rfilename": "UD-Q4_K_XL/DeepSeek-V3-0324-UD-Q4_K_XL-00004-of-00009.gguf",
+   "size": 48325377120
+  },
+  {
+   "rfilename": "UD-Q4_K_XL/DeepSeek-V3-0324-UD-Q4_K_XL-00005-of-00009.gguf",
+   "size": 49482464480
+  },
+  {
+   "rfilename": "UD-Q4_K_XL/DeepSeek-V3-0324-UD-Q4_K_XL-00006-of-00009.gguf",
+   "size": 48325377120
+  },
+  {
+   "rfilename": "UD-Q4_K_XL/DeepSeek-V3-0324-UD-Q4_K_XL-00007-of-00009.gguf",
+   "size": 49486048608
+  },
+  {
+   "rfilename": "UD-Q4_K_XL/DeepSeek-V3-0324-UD-Q4_K_XL-00008-of-00009.gguf",
+   "size": 46976502464
+  },
+  {
+   "rfilename": "UD-Q4_K_XL/DeepSeek-V3-0324-UD-Q4_K_XL-00009-of-00009.gguf",
+   "size": 14803871968
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1729
+  }
+ ]
+}

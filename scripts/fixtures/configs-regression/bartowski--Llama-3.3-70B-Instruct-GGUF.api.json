@@ -1,0 +1,200 @@
+{
+ "id": "bartowski/Llama-3.3-70B-Instruct-GGUF",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "gguf",
+  "facebook",
+  "meta",
+  "llama",
+  "llama-3",
+  "text-generation",
+  "en",
+  "fr",
+  "it",
+  "pt",
+  "hi",
+  "es",
+  "th",
+  "de",
+  "base_model:meta-llama/Llama-3.3-70B-Instruct",
+  "base_model:quantized:meta-llama/Llama-3.3-70B-Instruct",
+  "license:llama3.3",
+  "endpoints_compatible",
+  "region:us",
+  "imatrix",
+  "conversational"
+ ],
+ "cardData": {
+  "base_model": "meta-llama/Llama-3.3-70B-Instruct"
+ },
+ "gguf": {
+  "total": 70553706560
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 4875
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ1_M.gguf",
+   "size": 16751201248
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ2_M.gguf",
+   "size": 24119299040
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ2_S.gguf",
+   "size": 22242348000
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ2_XS.gguf",
+   "size": 21142113248
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ2_XXS.gguf",
+   "size": 19097390048
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ3_M.gguf",
+   "size": 31937039328
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ3_XS.gguf",
+   "size": 29307735008
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ3_XXS.gguf",
+   "size": 27469499360
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ4_NL.gguf",
+   "size": 40053623776
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-IQ4_XS.gguf",
+   "size": 37902666720
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q2_K.gguf",
+   "size": 26375113696
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q2_K_L.gguf",
+   "size": 27401161696
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q3_K_L.gguf",
+   "size": 37140597728
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q3_K_M.gguf",
+   "size": 34267499488
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q3_K_S.gguf",
+   "size": 30912056288
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q3_K_XL.gguf",
+   "size": 38059936736
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q4_0.gguf",
+   "size": 40116538336
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q4_0_4_4.gguf",
+   "size": 39969737696
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q4_0_4_8.gguf",
+   "size": 39969737696
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q4_0_8_8.gguf",
+   "size": 39969737696
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q4_K_L.gguf",
+   "size": 43300195296
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q4_K_M.gguf",
+   "size": 42520398816
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q4_K_S.gguf",
+   "size": 40347225056
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q5_K_L/Llama-3.3-70B-Instruct-Q5_K_L-00001-of-00002.gguf",
+   "size": 39853877184
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q5_K_L/Llama-3.3-70B-Instruct-Q5_K_L-00002-of-00002.gguf",
+   "size": 10744407264
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q5_K_M/Llama-3.3-70B-Instruct-Q5_K_M-00001-of-00002.gguf",
+   "size": 39987554880
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q5_K_M/Llama-3.3-70B-Instruct-Q5_K_M-00002-of-00002.gguf",
+   "size": 9962267232
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q5_K_S.gguf",
+   "size": 48657452000
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q6_K/Llama-3.3-70B-Instruct-Q6_K-00001-of-00002.gguf",
+   "size": 39953848064
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q6_K/Llama-3.3-70B-Instruct-Q6_K-00002-of-00002.gguf",
+   "size": 17934300608
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q6_K_L/Llama-3.3-70B-Instruct-Q6_K_L-00001-of-00002.gguf",
+   "size": 39953519936
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q6_K_L/Llama-3.3-70B-Instruct-Q6_K_L-00002-of-00002.gguf",
+   "size": 18443548512
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q8_0/Llama-3.3-70B-Instruct-Q8_0-00001-of-00002.gguf",
+   "size": 39927004064
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-Q8_0/Llama-3.3-70B-Instruct-Q8_0-00002-of-00002.gguf",
+   "size": 35048050944
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-f16/Llama-3.3-70B-Instruct-f16-00001-of-00004.gguf",
+   "size": 39678971904
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-f16/Llama-3.3-70B-Instruct-f16-00002-of-00004.gguf",
+   "size": 39981658560
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-f16/Llama-3.3-70B-Instruct-f16-00003-of-00004.gguf",
+   "size": 39981625728
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct-f16/Llama-3.3-70B-Instruct-f16-00004-of-00004.gguf",
+   "size": 21475662432
+  },
+  {
+   "rfilename": "Llama-3.3-70B-Instruct.imatrix",
+   "size": 24922298
+  },
+  {
+   "rfilename": "README.md",
+   "size": 31128
+  }
+ ]
+}

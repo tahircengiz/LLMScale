@@ -1,0 +1,88 @@
+{
+ "id": "mlx-community/Qwen3-30B-A3B-4bit",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "mlx",
+  "safetensors",
+  "qwen3_moe",
+  "text-generation",
+  "conversational",
+  "base_model:Qwen/Qwen3-30B-A3B",
+  "base_model:quantized:Qwen/Qwen3-30B-A3B",
+  "license:apache-2.0",
+  "4-bit",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "qwen3_moe"
+ },
+ "cardData": {
+  "base_model": "Qwen/Qwen3-30B-A3B"
+ },
+ "safetensors": {
+  "parameters": {
+   "U32": 30531911680,
+   "BF16": 210944
+  },
+  "total": 30532122624
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1570
+  },
+  {
+   "rfilename": "README.md",
+   "size": 897
+  },
+  {
+   "rfilename": "added_tokens.json",
+   "size": 707
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1190
+  },
+  {
+   "rfilename": "merges.txt",
+   "size": 1671853
+  },
+  {
+   "rfilename": "model-00001-of-00004.safetensors",
+   "size": 5319507366
+  },
+  {
+   "rfilename": "model-00002-of-00004.safetensors",
+   "size": 5364678660
+  },
+  {
+   "rfilename": "model-00003-of-00004.safetensors",
+   "size": 5274790383
+  },
+  {
+   "rfilename": "model-00004-of-00004.safetensors",
+   "size": 1215804259
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 119557
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 613
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 11422654
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 9706
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 2776833
+  }
+ ]
+}

@@ -1,0 +1,63 @@
+{
+ "id": "bigcode/gpt_bigcode-santacoder",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "pytorch",
+  "safetensors",
+  "gpt_bigcode",
+  "text-generation",
+  "code",
+  "dataset:bigcode/the-stack",
+  "license:openrail",
+  "model-index",
+  "text-generation-inference",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "gpt_bigcode"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "F16": 1124886528
+  },
+  "total": 1124886528
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1477
+  },
+  {
+   "rfilename": "README.md",
+   "size": 6808
+  },
+  {
+   "rfilename": "config.json",
+   "size": 812
+  },
+  {
+   "rfilename": "model.safetensors",
+   "size": 2249803464
+  },
+  {
+   "rfilename": "pytorch_model.bin",
+   "size": 2249864093
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 138
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 2081116
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 159
+  }
+ ]
+}

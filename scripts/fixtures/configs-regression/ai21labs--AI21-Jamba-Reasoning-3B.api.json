@@ -1,0 +1,80 @@
+{
+ "id": "ai21labs/AI21-Jamba-Reasoning-3B",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "jamba",
+  "text-generation",
+  "conversational",
+  "arxiv:2507.02782",
+  "license:apache-2.0",
+  "endpoints_compatible",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "jamba"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 3197109632
+  },
+  "total": 3197109632
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1758
+  },
+  {
+   "rfilename": "README.md",
+   "size": 7194
+  },
+  {
+   "rfilename": "assets/Benchmark Performance - Jamba Reasoning 3B.png",
+   "size": 76397
+  },
+  {
+   "rfilename": "assets/Intelligence vs Speed Jamba Reasoning 3B.png",
+   "size": 181414
+  },
+  {
+   "rfilename": "assets/Speed vs Context Length.png",
+   "size": 146230
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1020
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 155
+  },
+  {
+   "rfilename": "model-00001-of-00002.safetensors",
+   "size": 4975539312
+  },
+  {
+   "rfilename": "model-00002-of-00002.safetensors",
+   "size": 1418731960
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 37422
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 895
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 8285713
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 11112
+  }
+ ]
+}

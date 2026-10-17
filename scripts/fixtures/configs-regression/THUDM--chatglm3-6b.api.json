@@ -1,0 +1,140 @@
+{
+ "id": "zai-org/chatglm3-6b",
+ "gated": false,
+ "tags": [
+  "transformers",
+  "pytorch",
+  "safetensors",
+  "chatglm",
+  "glm",
+  "thudm",
+  "custom_code",
+  "zh",
+  "en",
+  "arxiv:2103.10360",
+  "arxiv:2210.02414",
+  "arxiv:2406.12793",
+  "endpoints_compatible",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "chatglm"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "F16": 6243584032
+  },
+  "total": 6243584032
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "MODEL_LICENSE",
+   "size": 5178
+  },
+  {
+   "rfilename": "README.md",
+   "size": 8571
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1317
+  },
+  {
+   "rfilename": "configuration_chatglm.py",
+   "size": 2332
+  },
+  {
+   "rfilename": "model-00001-of-00007.safetensors",
+   "size": 1827774160
+  },
+  {
+   "rfilename": "model-00002-of-00007.safetensors",
+   "size": 1968291888
+  },
+  {
+   "rfilename": "model-00003-of-00007.safetensors",
+   "size": 1927406936
+  },
+  {
+   "rfilename": "model-00004-of-00007.safetensors",
+   "size": 1815217640
+  },
+  {
+   "rfilename": "model-00005-of-00007.safetensors",
+   "size": 1968291920
+  },
+  {
+   "rfilename": "model-00006-of-00007.safetensors",
+   "size": 1927406960
+  },
+  {
+   "rfilename": "model-00007-of-00007.safetensors",
+   "size": 1052805400
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 21249
+  },
+  {
+   "rfilename": "modeling_chatglm.py",
+   "size": 56521
+  },
+  {
+   "rfilename": "pytorch_model-00001-of-00007.bin",
+   "size": 1827781090
+  },
+  {
+   "rfilename": "pytorch_model-00002-of-00007.bin",
+   "size": 1968299480
+  },
+  {
+   "rfilename": "pytorch_model-00003-of-00007.bin",
+   "size": 1927415036
+  },
+  {
+   "rfilename": "pytorch_model-00004-of-00007.bin",
+   "size": 1815225998
+  },
+  {
+   "rfilename": "pytorch_model-00005-of-00007.bin",
+   "size": 1968299544
+  },
+  {
+   "rfilename": "pytorch_model-00006-of-00007.bin",
+   "size": 1927415036
+  },
+  {
+   "rfilename": "pytorch_model-00007-of-00007.bin",
+   "size": 1052808542
+  },
+  {
+   "rfilename": "pytorch_model.bin.index.json",
+   "size": 20437
+  },
+  {
+   "rfilename": "quantization.py",
+   "size": 14687
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 3
+  },
+  {
+   "rfilename": "tokenization_chatglm.py",
+   "size": 13096
+  },
+  {
+   "rfilename": "tokenizer.model",
+   "size": 1018370
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 1395
+  }
+ ]
+}

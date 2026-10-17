@@ -1,0 +1,110 @@
+{
+ "id": "Qwen/Qwen2.5-Omni-7B",
+ "gated": false,
+ "pipeline_tag": "any-to-any",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "qwen2_5_omni",
+  "multimodal",
+  "any-to-any",
+  "en",
+  "arxiv:2503.20215",
+  "license:other",
+  "endpoints_compatible",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "qwen2_5_omni"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "F32": 449051296,
+   "BF16": 10283174144
+  },
+  "total": 10732225440
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1570
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 11343
+  },
+  {
+   "rfilename": "README.md",
+   "size": 36838
+  },
+  {
+   "rfilename": "added_tokens.json",
+   "size": 579
+  },
+  {
+   "rfilename": "chat_template.json",
+   "size": 1313
+  },
+  {
+   "rfilename": "config.json",
+   "size": 13186
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 74
+  },
+  {
+   "rfilename": "merges.txt",
+   "size": 1671853
+  },
+  {
+   "rfilename": "model-00001-of-00005.safetensors",
+   "size": 4985055504
+  },
+  {
+   "rfilename": "model-00002-of-00005.safetensors",
+   "size": 4991496800
+  },
+  {
+   "rfilename": "model-00003-of-00005.safetensors",
+   "size": 4991496904
+  },
+  {
+   "rfilename": "model-00004-of-00005.safetensors",
+   "size": 4969489824
+  },
+  {
+   "rfilename": "model-00005-of-00005.safetensors",
+   "size": 2425322160
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 233160
+  },
+  {
+   "rfilename": "preprocessor_config.json",
+   "size": 667
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 832
+  },
+  {
+   "rfilename": "spk_dict.pt",
+   "size": 259544
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 11421870
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 6469
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 2776833
+  }
+ ]
+}

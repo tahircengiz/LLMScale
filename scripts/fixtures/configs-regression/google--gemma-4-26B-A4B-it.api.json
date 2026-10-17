@@ -1,0 +1,85 @@
+{
+ "id": "google/gemma-4-26B-A4B-it",
+ "gated": false,
+ "pipeline_tag": "image-text-to-text",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "gemma4",
+  "image-text-to-text",
+  "conversational",
+  "arxiv:2607.02770",
+  "base_model:google/gemma-4-26B-A4B",
+  "base_model:finetune:google/gemma-4-26B-A4B",
+  "license:apache-2.0",
+  "eval-results",
+  "endpoints_compatible",
+  "deploy:sagemaker",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "gemma4"
+ },
+ "cardData": {
+  "base_model": [
+   "google/gemma-4-26B-A4B"
+  ]
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 25805936206
+  },
+  "total": 25805936206
+ },
+ "siblings": [
+  {
+   "rfilename": ".eval_results/mmmu_pro.yaml",
+   "size": 186
+  },
+  {
+   "rfilename": ".gitattributes",
+   "size": 1708
+  },
+  {
+   "rfilename": "README.md",
+   "size": 27979
+  },
+  {
+   "rfilename": "chat_template.jinja",
+   "size": 18683
+  },
+  {
+   "rfilename": "config.json",
+   "size": 3815
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 208
+  },
+  {
+   "rfilename": "model-00001-of-00002.safetensors",
+   "size": 49907246508
+  },
+  {
+   "rfilename": "model-00002-of-00002.safetensors",
+   "size": 1704763408
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 103196
+  },
+  {
+   "rfilename": "processor_config.json",
+   "size": 1689
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 32169626
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 3082
+  }
+ ]
+}

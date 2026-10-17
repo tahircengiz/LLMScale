@@ -1,0 +1,101 @@
+{
+ "id": "Qwen/Qwen3.5-9B",
+ "gated": false,
+ "pipeline_tag": "image-text-to-text",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "qwen3_5",
+  "image-text-to-text",
+  "conversational",
+  "base_model:Qwen/Qwen3.5-9B-Base",
+  "base_model:finetune:Qwen/Qwen3.5-9B-Base",
+  "license:apache-2.0",
+  "eval-results",
+  "endpoints_compatible",
+  "deploy:sagemaker",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "qwen3_5"
+ },
+ "cardData": {
+  "base_model": [
+   "Qwen/Qwen3.5-9B-Base"
+  ]
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 9653100528,
+   "F32": 3840
+  },
+  "total": 9653104368
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1570
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 11544
+  },
+  {
+   "rfilename": "README.md",
+   "size": 77643
+  },
+  {
+   "rfilename": "chat_template.jinja",
+   "size": 7756
+  },
+  {
+   "rfilename": "config.json",
+   "size": 3126
+  },
+  {
+   "rfilename": "merges.txt",
+   "size": 3353259
+  },
+  {
+   "rfilename": "model.safetensors-00001-of-00004.safetensors",
+   "size": 5276436216
+  },
+  {
+   "rfilename": "model.safetensors-00002-of-00004.safetensors",
+   "size": 5335161512
+  },
+  {
+   "rfilename": "model.safetensors-00003-of-00004.safetensors",
+   "size": 5368717440
+  },
+  {
+   "rfilename": "model.safetensors-00004-of-00004.safetensors",
+   "size": 3325995712
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 79657
+  },
+  {
+   "rfilename": "preprocessor_config.json",
+   "size": 390
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 12807982
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 16710
+  },
+  {
+   "rfilename": "video_preprocessor_config.json",
+   "size": 385
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 6722759
+  }
+ ]
+}

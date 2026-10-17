@@ -1,0 +1,3752 @@
+{
+ "meta-llama/Llama-3.1-8B-Instruct": {
+  "arch": {
+   "displayName": "Llama 3.1 8B Instruct",
+   "family": "Llama",
+   "gated": true,
+   "headDim": 128,
+   "hfId": "meta-llama/Llama-3.1-8B-Instruct",
+   "hiddenSize": 4096,
+   "id": "llama-3.1-8b",
+   "intermediateSize": 14336,
+   "maxContext": 131072,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 32,
+   "numParams": 8030261248,
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 131072,
+   "fp8": 65536
+  },
+  "kvReserved": {
+   "bf16@131072": 17179869184,
+   "bf16@32768": 4294967296,
+   "bf16@32768,tp2": 2147483648,
+   "bf16@4096": 536870912,
+   "fp8@32768": 2147483648
+  },
+  "resolution": {
+   "gated": true,
+   "modelType": "llama",
+   "numParams": 8030261248,
+   "source": "bundled",
+   "warningKey": "gatedBundled",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 16060522496,
+   "fp8": 9080934400,
+   "int4": 5809252480
+  }
+ },
+ "meta-llama/Llama-3.3-70B-Instruct": {
+  "arch": {
+   "displayName": "Llama 3.3 70B Instruct",
+   "family": "Llama",
+   "gated": true,
+   "headDim": 128,
+   "hfId": "meta-llama/Llama-3.3-70B-Instruct",
+   "hiddenSize": 8192,
+   "id": "llama-3.3-70b",
+   "intermediateSize": 28672,
+   "maxContext": 131072,
+   "numAttentionHeads": 64,
+   "numKeyValueHeads": 8,
+   "numLayers": 80,
+   "numParams": 70553706496,
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 327680,
+   "fp8": 163840
+  },
+  "kvReserved": {
+   "bf16@131072": 42949672960,
+   "bf16@32768": 10737418240,
+   "bf16@32768,tp2": 5368709120,
+   "bf16@4096": 1342177280,
+   "fp8@32768": 5368709120
+  },
+  "resolution": {
+   "gated": true,
+   "modelType": "llama",
+   "numParams": 70553706496,
+   "source": "bundled",
+   "warningKey": "gatedBundled",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 141107412992,
+   "fp8": 72655052800,
+   "int4": 40568008960
+  }
+ },
+ "meta-llama/Llama-4-Scout-17B-16E-Instruct": {
+  "arch": {
+   "activeParams": 17000000000,
+   "displayName": "Llama 4 Scout 17B-16E Instruct",
+   "expertsPerToken": 1,
+   "family": "Llama",
+   "gated": true,
+   "headDim": 128,
+   "hfId": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+   "hiddenSize": 5120,
+   "id": "llama-4-scout",
+   "intermediateSize": 8192,
+   "isMoE": true,
+   "maxContext": 10485760,
+   "moeIntermediateSize": 8192,
+   "numAttentionHeads": 40,
+   "numExperts": 16,
+   "numKeyValueHeads": 8,
+   "numLayers": 48,
+   "numParams": 108641793536,
+   "vision": {
+    "hidden": 1408,
+    "patches": 576,
+    "tokens": 144
+   },
+   "vocabSize": 202048
+  },
+  "expertWeightsBf16": 195502492876.8,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 196608,
+   "fp8": 98304
+  },
+  "kvReserved": {
+   "bf16@131072": 25769803776,
+   "bf16@32768": 6442450944,
+   "bf16@32768,tp2": 3221225472,
+   "bf16@4096": 805306368,
+   "fp8@32768": 3221225472
+  },
+  "resolution": {
+   "gated": true,
+   "isMoE": true,
+   "modelType": "llama4",
+   "numParams": 108641793536,
+   "source": "bundled",
+   "warningKey": "gatedBundled",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 217283587072,
+   "fp8": 110710765056,
+   "int4": 60754754736
+  }
+ },
+ "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8": {
+  "arch": {
+   "activeParams": 8187002988,
+   "expertsPerToken": 1,
+   "headDim": 128,
+   "hiddenSize": 5120,
+   "intermediateSize": 8192,
+   "maxContext": 1048576,
+   "numAttentionHeads": 40,
+   "numExperts": 128,
+   "numKeyValueHeads": 8,
+   "numLayers": 48,
+   "numParams": 401649841664,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1408,
+    "patches": 576,
+    "tokens": 144
+   },
+   "vocabSize": 202048
+  },
+  "expertWeightsBf16": 793121942528,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 196608,
+   "fp8": 98304
+  },
+  "kvReserved": {
+   "bf16@131072": 25769803776,
+   "bf16@32768": 6442450944,
+   "bf16@32768,tp2": 3221225472,
+   "bf16@4096": 805306368,
+   "fp8@32768": 3221225472
+  },
+  "resolution": {
+   "gated": true,
+   "isMoE": true,
+   "mirror": "unsloth/Llama-4-Maverick-17B-128E-Instruct-FP8",
+   "modelType": "llama4_text",
+   "numParams": 401649841664,
+   "source": "base",
+   "warningKey": "archFromMirror",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 803299683328,
+   "fp8": 403718813184,
+   "int4": 216415280304
+  }
+ },
+ "meta-llama/Llama-3.2-11B-Vision-Instruct": {
+  "arch": {
+   "attnLayers": 32,
+   "crossAttn": {
+    "layers": 8,
+    "tokens": 6404
+   },
+   "hiddenSize": 4096,
+   "intermediateSize": 14336,
+   "maxContext": 131072,
+   "notInVllm": {
+    "arch": "MllamaForConditionalGeneration",
+    "until": "0.10.2"
+   },
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 40,
+   "numParams": 10670220835,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1280,
+    "patches": 1600,
+    "tokens": 1600
+   },
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 131072,
+   "fp8": 65536
+  },
+  "kvReserved": {
+   "bf16@131072": 17390108672,
+   "bf16@32768": 4505206784,
+   "bf16@32768,tp2": 2252603392,
+   "bf16@4096": 747110400,
+   "fp8@32768": 2252603392
+  },
+  "resolution": {
+   "gated": true,
+   "isMoE": false,
+   "mirror": "unsloth/Llama-3.2-11B-Vision-Instruct",
+   "modelType": "mllama_text_model",
+   "numParams": 10670220835,
+   "source": "base",
+   "warningKey": "archFromMirror",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 21340441670,
+   "fp8": 11720893987,
+   "int4": 7211731010.59375
+  }
+ },
+ "Qwen/Qwen2.5-7B-Instruct": {
+  "arch": {
+   "hiddenSize": 3584,
+   "intermediateSize": 18944,
+   "maxContext": 32768,
+   "numAttentionHeads": 28,
+   "numKeyValueHeads": 4,
+   "numLayers": 28,
+   "numParams": 7615616512,
+   "tieEmbeddings": false,
+   "vocabSize": 152064
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 57344,
+   "fp8": 28672
+  },
+  "kvReserved": {
+   "bf16@131072": 7516192768,
+   "bf16@32768": 1879048192,
+   "bf16@32768,tp2": 939524096,
+   "bf16@4096": 234881024,
+   "fp8@32768": 939524096
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen2",
+   "numParams": 7615616512,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 15231233024,
+   "fp8": 8705611264,
+   "int4": 5646726064
+  }
+ },
+ "Qwen/Qwen2.5-7B-Instruct-1M": {
+  "arch": {
+   "hiddenSize": 3584,
+   "intermediateSize": 18944,
+   "maxContext": 1010000,
+   "numAttentionHeads": 28,
+   "numKeyValueHeads": 4,
+   "numLayers": 28,
+   "numParams": 7615616512,
+   "tieEmbeddings": false,
+   "vocabSize": 152064
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 57344,
+   "fp8": 28672
+  },
+  "kvReserved": {
+   "bf16@131072": 7516192768,
+   "bf16@32768": 1879048192,
+   "bf16@32768,tp2": 939524096,
+   "bf16@4096": 234881024,
+   "fp8@32768": 939524096
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen2",
+   "numParams": 7615616512,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 15231233024,
+   "fp8": 8705611264,
+   "int4": 5646726064
+  }
+ },
+ "Qwen/Qwen2.5-VL-3B-Instruct": {
+  "arch": {
+   "hiddenSize": 2048,
+   "intermediateSize": 11008,
+   "maxContext": 128000,
+   "numAttentionHeads": 16,
+   "numKeyValueHeads": 2,
+   "numLayers": 36,
+   "numParams": 3754622976,
+   "tieEmbeddings": true,
+   "vision": {
+    "hidden": 1280,
+    "patches": 65536,
+    "tokens": 16384
+   },
+   "vocabSize": 151936
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 36864,
+   "fp8": 18432
+  },
+  "kvReserved": {
+   "bf16@131072": 4831838208,
+   "bf16@32768": 1207959552,
+   "bf16@32768,tp2": 603979776,
+   "bf16@4096": 150994944,
+   "fp8@32768": 603979776
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen2_5_vl",
+   "numParams": 3754622976,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 7509245952,
+   "fp8": 4065787904,
+   "int4": 2451666944
+  }
+ },
+ "Qwen/Qwen2.5-VL-7B-Instruct": {
+  "arch": {
+   "hiddenSize": 3584,
+   "intermediateSize": 18944,
+   "maxContext": 128000,
+   "numAttentionHeads": 28,
+   "numKeyValueHeads": 4,
+   "numLayers": 28,
+   "numParams": 8292166656,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1280,
+    "patches": 65536,
+    "tokens": 16384
+   },
+   "vocabSize": 152064
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 57344,
+   "fp8": 28672
+  },
+  "kvReserved": {
+   "bf16@131072": 7516192768,
+   "bf16@32768": 1879048192,
+   "bf16@32768,tp2": 939524096,
+   "bf16@4096": 234881024,
+   "fp8@32768": 939524096
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen2_5_vl",
+   "numParams": 8292166656,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 16584333312,
+   "fp8": 9382161408,
+   "int4": 6006143328
+  }
+ },
+ "Qwen/Qwen2.5-Omni-7B": {
+  "arch": {
+   "hiddenSize": 3584,
+   "intermediateSize": 18944,
+   "maxContext": 32768,
+   "numAttentionHeads": 28,
+   "numKeyValueHeads": 4,
+   "numLayers": 28,
+   "numParams": 10732225440,
+   "tieEmbeddings": false,
+   "vocabSize": 152064
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 57344,
+   "fp8": 28672
+  },
+  "kvReserved": {
+   "bf16@131072": 7516192768,
+   "bf16@32768": 1879048192,
+   "bf16@32768,tp2": 939524096,
+   "bf16@4096": 234881024,
+   "fp8@32768": 939524096
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen2_5_omni_text",
+   "numParams": 10732225440,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 21464450880,
+   "fp8": 11822220192,
+   "int4": 7302424557
+  }
+ },
+ "Qwen/Qwen3-0.6B": {
+  "arch": {
+   "headDim": 128,
+   "hiddenSize": 1024,
+   "intermediateSize": 3072,
+   "maxContext": 40960,
+   "numAttentionHeads": 16,
+   "numKeyValueHeads": 8,
+   "numLayers": 28,
+   "numParams": 596049920,
+   "tieEmbeddings": true,
+   "vocabSize": 151936
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 114688,
+   "fp8": 57344
+  },
+  "kvReserved": {
+   "bf16@131072": 15032385536,
+   "bf16@32768": 3758096384,
+   "bf16@32768,tp2": 1879048192,
+   "bf16@4096": 469762048,
+   "fp8@32768": 1879048192
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen3",
+   "numParams": 596049920,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 1192099840,
+   "fp8": 751632384,
+   "int4": 545163264
+  }
+ },
+ "Qwen/Qwen3-8B": {
+  "arch": {
+   "headDim": 128,
+   "hiddenSize": 4096,
+   "intermediateSize": 12288,
+   "maxContext": 40960,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 36,
+   "numParams": 8190735360,
+   "tieEmbeddings": false,
+   "vocabSize": 151936
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 147456,
+   "fp8": 73728
+  },
+  "kvReserved": {
+   "bf16@131072": 19327352832,
+   "bf16@32768": 4831838208,
+   "bf16@32768,tp2": 2415919104,
+   "bf16@4096": 603979776,
+   "fp8@32768": 2415919104
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen3",
+   "numParams": 8190735360,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 16381470720,
+   "fp8": 9435395072,
+   "int4": 6179422112
+  }
+ },
+ "Qwen/Qwen3-30B-A3B": {
+  "arch": {
+   "activeParams": 3300000000,
+   "expertsPerToken": 8,
+   "headDim": 128,
+   "hiddenSize": 2048,
+   "intermediateSize": 6144,
+   "maxContext": 40960,
+   "moeIntermediateSize": 768,
+   "numAttentionHeads": 32,
+   "numExperts": 128,
+   "numKeyValueHeads": 4,
+   "numLayers": 48,
+   "numParams": 30532122624,
+   "tieEmbeddings": false,
+   "vocabSize": 151936
+  },
+  "expertWeightsBf16": 58095194931.2,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 98304,
+   "fp8": 49152
+  },
+  "kvReserved": {
+   "bf16@131072": 12884901888,
+   "bf16@32768": 3221225472,
+   "bf16@32768,tp2": 1610612736,
+   "bf16@4096": 402653184,
+   "fp8@32768": 1610612736
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "qwen3_moe",
+   "numParams": 30532122624,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 61064245248,
+   "fp8": 31154452480,
+   "int4": 17134237120
+  }
+ },
+ "Qwen/Qwen3-Next-80B-A3B-Instruct": {
+  "arch": {
+   "activeParams": 5525400832,
+   "attnLayers": 12,
+   "expertsPerToken": 10,
+   "headDim": 256,
+   "hiddenSize": 2048,
+   "intermediateSize": 5120,
+   "maxContext": 262144,
+   "moeIntermediateSize": 512,
+   "numAttentionHeads": 16,
+   "numExperts": 512,
+   "numKeyValueHeads": 2,
+   "numLayers": 48,
+   "numParams": 81324862720,
+   "stateBytesPerSeq": 39518208,
+   "stateLayers": 36,
+   "tieEmbeddings": false,
+   "vocabSize": 151936
+  },
+  "expertWeightsBf16": 154618822656,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 24576,
+   "fp8": 12288
+  },
+  "kvReserved": {
+   "bf16@131072": 3302227968,
+   "bf16@32768": 895746048,
+   "bf16@32768,tp2": 447873024,
+   "bf16@4096": 187170816,
+   "fp8@32768": 487391232
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "qwen3_next",
+   "numParams": 81324862720,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 162649725440,
+   "fp8": 81947192576,
+   "int4": 44117880296
+  }
+ },
+ "Qwen/Qwen3-VL-30B-A3B-Instruct": {
+  "arch": {
+   "activeParams": 3891664112,
+   "expertsPerToken": 8,
+   "headDim": 128,
+   "hiddenSize": 2048,
+   "intermediateSize": 6144,
+   "maxContext": 262144,
+   "moeIntermediateSize": 768,
+   "numAttentionHeads": 32,
+   "numExperts": 128,
+   "numKeyValueHeads": 4,
+   "numLayers": 48,
+   "numParams": 31070754032,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1152,
+    "patches": 65536,
+    "tokens": 16384
+   },
+   "vocabSize": 151936
+  },
+  "expertWeightsBf16": 57982058496,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 98304,
+   "fp8": 49152
+  },
+  "kvReserved": {
+   "bf16@131072": 12884901888,
+   "bf16@32768": 3221225472,
+   "bf16@32768,tp2": 1610612736,
+   "bf16@4096": 402653184,
+   "fp8@32768": 1610612736
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "qwen3_vl_moe_text",
+   "numParams": 31070754032,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 62141508064,
+   "fp8": 31693083888,
+   "int4": 17420385055.5
+  }
+ },
+ "Qwen/Qwen3-Omni-30B-A3B-Instruct": {
+  "arch": {
+   "activeParams": 8080728625,
+   "expertsPerToken": 8,
+   "headDim": 128,
+   "hiddenSize": 2048,
+   "intermediateSize": 768,
+   "maxContext": 65536,
+   "moeIntermediateSize": 768,
+   "numAttentionHeads": 32,
+   "numExperts": 128,
+   "numKeyValueHeads": 4,
+   "numLayers": 48,
+   "numParams": 35259818545,
+   "tieEmbeddings": false,
+   "vocabSize": 152064
+  },
+  "expertWeightsBf16": 57982058496,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 98304,
+   "fp8": 49152
+  },
+  "kvReserved": {
+   "bf16@131072": 12884901888,
+   "bf16@32768": 3221225472,
+   "bf16@32768,tp2": 1610612736,
+   "bf16@4096": 402653184,
+   "fp8@32768": 1610612736
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "qwen3_omni_moe_text",
+   "numParams": 35259818545,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 70519637090,
+   "fp8": 35882672689,
+   "int4": 19646595626.03125
+  }
+ },
+ "Qwen/Qwen3.5-9B": {
+  "arch": {
+   "activeParams": 9422229612.60606,
+   "attnLayers": 8,
+   "headDim": 256,
+   "hiddenSize": 4096,
+   "intermediateSize": 12288,
+   "maxContext": 262144,
+   "numAttentionHeads": 16,
+   "numKeyValueHeads": 4,
+   "numLayers": 32,
+   "numParams": 9653104368,
+   "specParams": 230874755.3939394,
+   "stateBytesPerSeq": 51511296,
+   "stateLayers": 24,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1152,
+    "patches": 65536,
+    "tokens": 16384
+   },
+   "vocabSize": 248320
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 32768,
+   "fp8": 16384
+  },
+  "kvReserved": {
+   "bf16@131072": 4411883520,
+   "bf16@32768": 1193803776,
+   "bf16@32768,tp2": 596901888,
+   "bf16@4096": 242221056,
+   "fp8@32768": 657457152
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen3_5_text",
+   "numParams": 9653104368,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 18844459225.21212,
+   "fp8": 11456467052.60606,
+   "int4": 7993345721.69697
+  }
+ },
+ "Qwen/Qwen3.6-35B-A3B": {
+  "arch": {
+   "activeParams": 3894134993.1707306,
+   "attnLayers": 10,
+   "expertsPerToken": 8,
+   "headDim": 256,
+   "hiddenSize": 2048,
+   "maxContext": 262144,
+   "moeIntermediateSize": 512,
+   "numAttentionHeads": 16,
+   "numExperts": 256,
+   "numKeyValueHeads": 2,
+   "numLayers": 40,
+   "numParams": 35951822704,
+   "specParams": 852065950.8292683,
+   "stateBytesPerSeq": 64389120,
+   "stateLayers": 30,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1152,
+    "patches": 65536,
+    "tokens": 16384
+   },
+   "vocabSize": 248320
+  },
+  "expertWeightsBf16": 64424509440,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 20480,
+   "fp8": 10240
+  },
+  "kvReserved": {
+   "bf16@131072": 2833121280,
+   "bf16@32768": 821821440,
+   "bf16@32768,tp2": 410910720,
+   "bf16@4096": 216268800,
+   "fp8@32768": 472186880
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "qwen3_5_moe_text",
+   "numParams": 35951822704,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 70199513506.34146,
+   "fp8": 36116875473.17073,
+   "int4": 20140638895.121952
+  }
+ },
+ "Qwen/Qwen3.8-Flash-Next": {
+  "arch": {
+   "activeParams": 7760698114.938782,
+   "attnLayers": 12,
+   "expertsPerToken": 10,
+   "headDim": 256,
+   "hiddenSize": 2560,
+   "lookupParams": 51200000000,
+   "maxContext": 262144,
+   "moeIntermediateSize": 640,
+   "numAttentionHeads": 24,
+   "numExperts": 512,
+   "numKeyValueHeads": 2,
+   "numLayers": 48,
+   "numParams": 179999981459,
+   "specParams": 2602624144.0612245,
+   "stateBytesPerSeq": 115458048,
+   "stateLayers": 36,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1152,
+    "patches": 65536,
+    "tokens": 16384
+   },
+   "vocabSize": 248320
+  },
+  "expertWeightsBf16": 241591910400,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 24576,
+   "fp8": 12288
+  },
+  "kvReserved": {
+   "bf16@131072": 3468165120,
+   "bf16@32768": 1040449536,
+   "bf16@32768,tp2": 520224768,
+   "bf16@4096": 346816512,
+   "fp8@32768": 655097856
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "qwen4_exp_text",
+   "numParams": 179999981459,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 354794714629.87756,
+   "fp8": 178668755714.93878,
+   "int4": 96109712473.56123
+  }
+ },
+ "google/gemma-2-9b-it": {
+  "arch": {
+   "displayName": "Gemma 2 9B IT",
+   "family": "Gemma",
+   "gated": true,
+   "headDim": 256,
+   "hfId": "google/gemma-2-9b-it",
+   "hiddenSize": 3584,
+   "id": "gemma-2-9b",
+   "intermediateSize": 14336,
+   "maxContext": 8192,
+   "numAttentionHeads": 16,
+   "numKeyValueHeads": 8,
+   "numLayers": 42,
+   "numParams": 9241705984,
+   "slidingLayers": 21,
+   "slidingWindow": 4096,
+   "tieEmbeddings": true,
+   "vocabSize": 256000
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 344064,
+   "fp8": 172032
+  },
+  "kvReserved": {
+   "bf16@131072": 23960616960,
+   "bf16@32768": 7049183232,
+   "bf16@32768,tp2": 3524591616,
+   "bf16@4096": 1412038656,
+   "fp8@32768": 3524591616
+  },
+  "resolution": {
+   "gated": true,
+   "modelType": "gemma2",
+   "numParams": 9241705984,
+   "source": "bundled",
+   "warningKey": "gatedBundled",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 18483411968,
+   "fp8": 10159209984,
+   "int4": 6257240304
+  }
+ },
+ "google/gemma-3-1b-it": {
+  "arch": {
+   "displayName": "Gemma 3 1B IT",
+   "family": "Gemma",
+   "gated": true,
+   "headDim": 256,
+   "hfId": "google/gemma-3-1b-it",
+   "hiddenSize": 1152,
+   "id": "gemma-3-1b",
+   "intermediateSize": 6912,
+   "maxContext": 32768,
+   "numAttentionHeads": 4,
+   "numKeyValueHeads": 1,
+   "numLayers": 26,
+   "numParams": 999885952,
+   "slidingLayers": 22,
+   "slidingWindow": 512,
+   "tieEmbeddings": true,
+   "vocabSize": 262144
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 26624,
+   "fp8": 13312
+  },
+  "kvReserved": {
+   "bf16@131072": 650510336,
+   "bf16@32768": 247857152,
+   "bf16@32768,tp2": 247857152,
+   "bf16@4096": 117833728,
+   "fp8@32768": 123928576
+  },
+  "resolution": {
+   "gated": true,
+   "modelType": "gemma3_text",
+   "numParams": 999885952,
+   "source": "bundled",
+   "warningKey": "gatedBundled",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 1999771904,
+   "fp8": 1301875840,
+   "int4": 974737060
+  }
+ },
+ "google/gemma-3-27b-it": {
+  "arch": {
+   "displayName": "Gemma 3 27B IT",
+   "family": "Gemma",
+   "gated": true,
+   "headDim": 128,
+   "hfId": "google/gemma-3-27b-it",
+   "hiddenSize": 5376,
+   "id": "gemma-3-27b",
+   "intermediateSize": 21504,
+   "maxContext": 131072,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 16,
+   "numLayers": 62,
+   "numParams": 27432406640,
+   "slidingLayers": 52,
+   "slidingWindow": 1024,
+   "tieEmbeddings": true,
+   "vision": {
+    "hidden": 1152,
+    "patches": 4096,
+    "tokens": 256
+   },
+   "vocabSize": 262208
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 507904,
+   "fp8": 253952
+  },
+  "kvReserved": {
+   "bf16@131072": 13261864960,
+   "bf16@32768": 5208801280,
+   "bf16@32768,tp2": 2604400640,
+   "bf16@4096": 2356674560,
+   "fp8@32768": 2604400640
+  },
+  "resolution": {
+   "gated": true,
+   "modelType": "gemma3",
+   "numParams": 27432406640,
+   "source": "bundled",
+   "warningKey": "gatedBundled",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 54864813280,
+   "fp8": 28842036848,
+   "int4": 16643860395.5
+  }
+ },
+ "google/gemma-3n-E4B-it": {
+  "arch": {
+   "activeParams": 5501167952,
+   "attnLayers": 20,
+   "headDim": 256,
+   "hiddenSize": 2048,
+   "intermediateSize": 16384,
+   "lookupParams": 2348810240,
+   "maxContext": 32768,
+   "numAttentionHeads": 8,
+   "numKeyValueHeads": 2,
+   "numLayers": 35,
+   "numParams": 7849978192,
+   "slidingLayers": 16,
+   "slidingWindow": 512,
+   "tieEmbeddings": false,
+   "vocabSize": 262400
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 40960,
+   "fp8": 20480
+  },
+  "kvReserved": {
+   "bf16@131072": 1225261056,
+   "bf16@32768": 419954688,
+   "bf16@32768,tp2": 209977344,
+   "bf16@4096": 168296448,
+   "fp8@32768": 209977344
+  },
+  "resolution": {
+   "gated": true,
+   "isMoE": false,
+   "mirror": "unsloth/gemma-3n-E4B-it",
+   "modelType": "gemma3n_text",
+   "numParams": 7849978192,
+   "source": "base",
+   "warningKey": "archFromMirror",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 15699956384,
+   "fp8": 8924768592,
+   "int4": 5748899314.5
+  }
+ },
+ "unsloth/gemma-3n-E4B-it": {
+  "arch": {
+   "activeParams": 6038563152,
+   "attnLayers": 20,
+   "headDim": 256,
+   "hiddenSize": 2048,
+   "intermediateSize": 16384,
+   "lookupParams": 2348810240,
+   "maxContext": 32768,
+   "numAttentionHeads": 8,
+   "numKeyValueHeads": 2,
+   "numLayers": 35,
+   "numParams": 8387373392,
+   "slidingLayers": 16,
+   "slidingWindow": 512,
+   "tieEmbeddings": false,
+   "vocabSize": 262400
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 40960,
+   "fp8": 20480
+  },
+  "kvReserved": {
+   "bf16@131072": 1225261056,
+   "bf16@32768": 419954688,
+   "bf16@32768,tp2": 209977344,
+   "bf16@4096": 168296448,
+   "fp8@32768": 209977344
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "gemma3n_text",
+   "numParams": 8387373392,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 16774746784,
+   "fp8": 9462163792,
+   "int4": 6034390514.5
+  }
+ },
+ "google/gemma-4-31B-it": {
+  "arch": {
+   "globalAttn": {
+    "headDim": 512,
+    "kvHeads": 4
+   },
+   "headDim": 256,
+   "hiddenSize": 5376,
+   "intermediateSize": 21504,
+   "maxContext": 262144,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 16,
+   "numLayers": 60,
+   "numParams": 31273088876,
+   "slidingLayers": 50,
+   "slidingWindow": 1024,
+   "tieEmbeddings": true,
+   "vision": {
+    "hidden": 1152,
+    "patches": 2520,
+    "tokens": 280
+   },
+   "vocabSize": 262144
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 901120,
+   "fp8": 450560
+  },
+  "kvReserved": {
+   "bf16@131072": 14944829440,
+   "bf16@32768": 6891765760,
+   "bf16@32768,tp2": 3445882880,
+   "bf16@4096": 3704094720,
+   "fp8@32768": 3445882880
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "gemma4_text",
+   "numParams": 31273088876,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 62546177752,
+   "fp8": 32682375020,
+   "int4": 18683717489.375
+  }
+ },
+ "google/gemma-4-26B-A4B-it": {
+  "arch": {
+   "activeParams": 4395325006,
+   "expertsPerToken": 8,
+   "globalAttn": {
+    "headDim": 512,
+    "kvHeads": 2
+   },
+   "headDim": 256,
+   "hiddenSize": 2816,
+   "intermediateSize": 2112,
+   "maxContext": 262144,
+   "moeIntermediateSize": 704,
+   "numAttentionHeads": 16,
+   "numExperts": 128,
+   "numKeyValueHeads": 8,
+   "numLayers": 30,
+   "numParams": 25805936206,
+   "slidingLayers": 25,
+   "slidingWindow": 1024,
+   "tieEmbeddings": true,
+   "vision": {
+    "hidden": 1152,
+    "patches": 2520,
+    "tokens": 280
+   },
+   "vocabSize": 262144
+  },
+  "expertWeightsBf16": 45675970560,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 225280,
+   "fp8": 112640
+  },
+  "kvReserved": {
+   "bf16@131072": 3736207360,
+   "bf16@32768": 1722941440,
+   "bf16@32768,tp2": 861470720,
+   "bf16@4096": 926023680,
+   "fp8@32768": 861470720
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "gemma4_text",
+   "numParams": 25805936206,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 51611872412,
+   "fp8": 26544133710,
+   "int4": 14793631193.4375
+  }
+ },
+ "mistralai/Mistral-7B-v0.1": {
+  "arch": {
+   "hiddenSize": 4096,
+   "intermediateSize": 14336,
+   "maxContext": 32768,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 32,
+   "numParams": 7241732096,
+   "slidingLayers": 32,
+   "slidingWindow": 4096,
+   "tieEmbeddings": false,
+   "vocabSize": 32000
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 131072,
+   "fp8": 65536
+  },
+  "kvReserved": {
+   "bf16@131072": 1075838976,
+   "bf16@32768": 1075838976,
+   "bf16@32768,tp2": 537919488,
+   "bf16@4096": 538968064,
+   "fp8@32768": 537919488
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "mistral",
+   "numParams": 7241732096,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 14483464192,
+   "fp8": 7503876096,
+   "int4": 4232194176
+  }
+ },
+ "mistralai/Mixtral-8x7B-Instruct-v0.1": {
+  "arch": {
+   "activeParams": 12900000000,
+   "expertsPerToken": 2,
+   "hiddenSize": 4096,
+   "intermediateSize": 14336,
+   "maxContext": 32768,
+   "numAttentionHeads": 32,
+   "numExperts": 8,
+   "numKeyValueHeads": 8,
+   "numLayers": 32,
+   "numParams": 46702792704,
+   "tieEmbeddings": false,
+   "vocabSize": 32000
+  },
+  "expertWeightsBf16": 90140780544,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 131072,
+   "fp8": 65536
+  },
+  "kvReserved": {
+   "bf16@131072": 17179869184,
+   "bf16@32768": 4294967296,
+   "bf16@32768,tp2": 2147483648,
+   "bf16@4096": 536870912,
+   "fp8@32768": 2147483648
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "mixtral",
+   "numParams": 46702792704,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 93405585408,
+   "fp8": 46964936704,
+   "int4": 25195882624
+  }
+ },
+ "mistralai/Mistral-Small-3.1-24B-Instruct-2503": {
+  "arch": {
+   "headDim": 128,
+   "hiddenSize": 5120,
+   "intermediateSize": 32768,
+   "maxContext": 131072,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 40,
+   "numParams": 24011361280,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1024,
+    "patches": 12100,
+    "tokens": 3025
+   },
+   "vocabSize": 131072
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 163840,
+   "fp8": 81920
+  },
+  "kvReserved": {
+   "bf16@131072": 21474836480,
+   "bf16@32768": 5368709120,
+   "bf16@32768,tp2": 2684354560,
+   "bf16@4096": 671088640,
+   "fp8@32768": 2684354560
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "mistral",
+   "numParams": 24011361280,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 48022722560,
+   "fp8": 25353538560,
+   "int4": 14727358560
+  }
+ },
+ "microsoft/Phi-3-small-8k-instruct": {
+  "arch": {
+   "hiddenSize": 4096,
+   "maxContext": 8192,
+   "notInVllm": {
+    "arch": "Phi3SmallForCausalLM",
+    "until": "0.9.2"
+   },
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 32,
+   "numParams": 7392274432,
+   "tieEmbeddings": false,
+   "vocabSize": 100352
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 131072,
+   "fp8": 65536
+  },
+  "kvReserved": {
+   "bf16@131072": 17179869184,
+   "bf16@32768": 4294967296,
+   "bf16@32768,tp2": 2147483648,
+   "bf16@4096": 536870912,
+   "fp8@32768": 2147483648
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "phi3small",
+   "numParams": 7392274432,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 14784548864,
+   "fp8": 8214358016,
+   "int4": 5134581056
+  }
+ },
+ "microsoft/Phi-4-mini-flash-reasoning": {
+  "arch": {
+   "hiddenSize": 2560,
+   "intermediateSize": 10240,
+   "maxContext": 262144,
+   "notInVllm": {
+    "arch": "Phi4FlashForCausalLM",
+    "until": "0.10.2"
+   },
+   "numAttentionHeads": 40,
+   "numKeyValueHeads": 20,
+   "numLayers": 32,
+   "numParams": 3852562944,
+   "slidingLayers": 32,
+   "slidingWindow": 512,
+   "tieEmbeddings": true,
+   "vocabSize": 200064
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 163840,
+   "fp8": 81920
+  },
+  "kvReserved": {
+   "bf16@131072": 757596160,
+   "bf16@32768": 757596160,
+   "bf16@32768,tp2": 378798080,
+   "bf16@4096": 673710080,
+   "fp8@32768": 378798080
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "phi4flash",
+   "numParams": 3852562944,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 7705125888,
+   "fp8": 4364726784,
+   "int4": 2798914704
+  }
+ },
+ "deepseek-ai/DeepSeek-V2-Lite-Chat": {
+  "arch": {
+   "activeParams": 2661150208,
+   "expertsPerToken": 6,
+   "hiddenSize": 2048,
+   "intermediateSize": 10944,
+   "kvLoraRank": 512,
+   "maxContext": 163840,
+   "moeIntermediateSize": 1408,
+   "numAttentionHeads": 16,
+   "numExperts": 64,
+   "numKeyValueHeads": 16,
+   "numLayers": 27,
+   "numParams": 15706484224,
+   "qkRopeHeadDim": 64,
+   "tieEmbeddings": false,
+   "vocabSize": 102400
+  },
+  "expertWeightsBf16": 28789702656,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 31104,
+   "fp8": 15552
+  },
+  "kvReserved": {
+   "bf16@131072": 4076863488,
+   "bf16@32768": 1019215872,
+   "bf16@32768,tp2": 1019215872,
+   "bf16@4096": 127401984,
+   "fp8@32768": 509607936
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "deepseek_v2",
+   "numParams": 15706484224,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 31412968448,
+   "fp8": 16125914624,
+   "int4": 8960108144
+  }
+ },
+ "deepseek-ai/DeepSeek-V3": {
+  "arch": {
+   "activeParams": 37000000000,
+   "expertsPerToken": 8,
+   "hiddenSize": 7168,
+   "intermediateSize": 18432,
+   "kvLoraRank": 512,
+   "maxContext": 163840,
+   "moeIntermediateSize": 2048,
+   "numAttentionHeads": 128,
+   "numExperts": 256,
+   "numKeyValueHeads": 128,
+   "numLayers": 61,
+   "numParams": 684531386000,
+   "qkRopeHeadDim": 64,
+   "shipped": {
+    "bytes": 688586727753,
+    "dtype": "fp8"
+   },
+   "specParams": 11010935934.193548,
+   "tieEmbeddings": false,
+   "vocabSize": 129280
+  },
+  "expertWeightsBf16": 1314106735619.7292,
+  "headDim": 56,
+  "kvPerToken": {
+   "bf16": 70272,
+   "fp8": 35136
+  },
+  "kvReserved": {
+   "bf16@131072": 9210691584,
+   "bf16@32768": 2302672896,
+   "bf16@32768,tp2": 2302672896,
+   "bf16@4096": 287834112,
+   "fp8@32768": 1151336448
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "deepseek_v3",
+   "numParams": 684531386000,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 1347040900131.6128,
+   "fp8": 677510560173.9954,
+   "int4": 360529858777.45966
+  }
+ },
+ "deepseek-ai/DeepSeek-V3.2": {
+  "arch": {
+   "activeParams": 40856982713.8064,
+   "expertsPerToken": 8,
+   "hiddenSize": 7168,
+   "intermediateSize": 18432,
+   "kvLoraRank": 512,
+   "maxContext": 163840,
+   "moeIntermediateSize": 2048,
+   "numAttentionHeads": 128,
+   "numExperts": 256,
+   "numKeyValueHeads": 128,
+   "numLayers": 61,
+   "numParams": 685355329792,
+   "qkRopeHeadDim": 64,
+   "shipped": {
+    "bytes": 689483049129,
+    "dtype": "fp8"
+   },
+   "sparseAttn": {
+    "indexDim": 128,
+    "indexLayers": 61,
+    "topk": 2048
+   },
+   "specParams": 11024225350.193548,
+   "tieEmbeddings": false,
+   "vocabSize": 129280
+  },
+  "expertWeightsBf16": 1307817541632,
+  "headDim": 56,
+  "kvPerToken": {
+   "bf16": 78324,
+   "fp8": 48068
+  },
+  "kvReserved": {
+   "bf16@131072": 10266083328,
+   "bf16@32768": 2566520832,
+   "bf16@32768,tp2": 2566520832,
+   "bf16@4096": 320815104,
+   "fp8@32768": 1575092224,
+   "fp8@32768,sm100": 1415184384
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "deepseek_v32",
+   "numParams": 685355329792,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 1348662208883.6128,
+   "fp8": 678392427697.5688,
+   "int4": 360960518914.70966
+  }
+ },
+ "deepseek-ai/DeepSeek-V4-Flash": {
+  "arch": {
+   "activeParams": 13823700341.954529,
+   "compressedAttn": {
+    "csa": 21,
+    "hca": 20,
+    "indexDim": 128,
+    "topk": 512,
+    "window": 128
+   },
+   "expertsPerToken": 6,
+   "headDim": 512,
+   "hiddenSize": 4096,
+   "maxContext": 1048576,
+   "moeIntermediateSize": 2048,
+   "numAttentionHeads": 64,
+   "numExperts": 256,
+   "numKeyValueHeads": 1,
+   "numLayers": 43,
+   "numParams": 290944616402,
+   "qkRopeHeadDim": 64,
+   "shipped": {
+    "bytes": 159617149040,
+    "dtype": "fp8"
+   },
+   "specParams": 6588308060.045455,
+   "tieEmbeddings": false,
+   "vocabSize": 129280
+  },
+  "expertWeightsBf16": 554050781184,
+  "headDim": 512,
+  "kvPerToken": {
+   "bf16": 6229,
+   "fp8": 3850.25
+  },
+  "kvReserved": {
+   "bf16@131072": 2238078976,
+   "bf16@32768": 1623678976,
+   "bf16@32768,tp2": 1623678976,
+   "bf16@4096": 1426636800,
+   "fp8@32768": 1477940544
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "deepseek_v4",
+   "numParams": 290944616402,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 568712616683.909,
+   "fp8": 156002691544.4583,
+   "int4": 152619785766.66333
+  }
+ },
+ "deepseek-ai/DeepSeek-V4-Pro": {
+  "arch": {
+   "activeParams": 49863710260.22583,
+   "compressedAttn": {
+    "csa": 30,
+    "hca": 31,
+    "indexDim": 128,
+    "topk": 1024,
+    "window": 128
+   },
+   "expertsPerToken": 6,
+   "headDim": 512,
+   "hiddenSize": 7168,
+   "maxContext": 1048576,
+   "moeIntermediateSize": 3072,
+   "numAttentionHeads": 128,
+   "numExperts": 384,
+   "numKeyValueHeads": 1,
+   "numLayers": 61,
+   "numParams": 1598839674782,
+   "qkRopeHeadDim": 64,
+   "shipped": {
+    "bytes": 864721029744,
+    "dtype": "fp8"
+   },
+   "specParams": 25757843817.774193,
+   "tieEmbeddings": false,
+   "vocabSize": 129280
+  },
+  "expertWeightsBf16": 3094792372224,
+  "headDim": 512,
+  "kvPerToken": {
+   "bf16": 8918,
+   "fp8": 5511.4375
+  },
+  "kvReserved": {
+   "bf16@131072": 3240017920,
+   "bf16@32768": 2360393728,
+   "bf16@32768,tp2": 2360393728,
+   "bf16@4096": 2077130752,
+   "fp8@32768": 2152985472
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "deepseek_v4",
+   "numParams": 1598839674782,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 3146163661928.4517,
+   "fp8": 850790083707.6954,
+   "int4": 838421842379.745
+  }
+ },
+ "deepseek-ai/deepseek-vl2-small": {
+  "arch": {
+   "activeParams": 3103015488,
+   "expertsPerToken": 6,
+   "hiddenSize": 2048,
+   "intermediateSize": 10944,
+   "kvLoraRank": 512,
+   "maxContext": 4096,
+   "moeIntermediateSize": 1408,
+   "numAttentionHeads": 16,
+   "numExperts": 64,
+   "numKeyValueHeads": 16,
+   "numLayers": 27,
+   "numParams": 16148349504,
+   "qkRopeHeadDim": 64,
+   "tieEmbeddings": false,
+   "vocabSize": 102400
+  },
+  "expertWeightsBf16": 28789702656,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 31104,
+   "fp8": 15552
+  },
+  "kvReserved": {
+   "bf16@131072": 4076863488,
+   "bf16@32768": 1019215872,
+   "bf16@32768,tp2": 1019215872,
+   "bf16@4096": 127401984,
+   "fp8@32768": 509607936
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "deepseek_v2",
+   "numParams": 16148349504,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 32296699008,
+   "fp8": 16567779904,
+   "int4": 9194849074
+  }
+ },
+ "moonshotai/Kimi-K2-Instruct": {
+  "arch": {
+   "activeParams": 32861504344,
+   "expertsPerToken": 8,
+   "hiddenSize": 7168,
+   "intermediateSize": 18432,
+   "kvLoraRank": 512,
+   "maxContext": 131072,
+   "moeIntermediateSize": 2048,
+   "numAttentionHeads": 64,
+   "numExperts": 384,
+   "numKeyValueHeads": 64,
+   "numLayers": 61,
+   "numParams": 1026408235864,
+   "qkRopeHeadDim": 64,
+   "shipped": {
+    "bytes": 1029190981272,
+    "dtype": "fp8"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 163840
+  },
+  "expertWeightsBf16": 2029372047360,
+  "headDim": 112,
+  "kvPerToken": {
+   "bf16": 70272,
+   "fp8": 35136
+  },
+  "kvReserved": {
+   "bf16@131072": 9210691584,
+   "bf16@32768": 2302672896,
+   "bf16@32768,tp2": 2302672896,
+   "bf16@4096": 287834112,
+   "fp8@32768": 1151336448
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "kimi_k2",
+   "numParams": 1026408235864,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 2052816471728,
+   "fp8": 1029190981272,
+   "int4": 548729190342.75
+  }
+ },
+ "moonshotai/Kimi-Linear-48B-A3B-Instruct": {
+  "arch": {
+   "activeParams": 3484459904,
+   "attnLayers": 7,
+   "expertsPerToken": 8,
+   "headDim": 72,
+   "hiddenSize": 2304,
+   "intermediateSize": 9216,
+   "kvLoraRank": 512,
+   "maxContext": 1048576,
+   "moeIntermediateSize": 1024,
+   "numAttentionHeads": 32,
+   "numExperts": 256,
+   "numKeyValueHeads": 32,
+   "numLayers": 27,
+   "numParams": 49122681728,
+   "qkRopeHeadDim": 64,
+   "stateBytesPerSeq": 43417600,
+   "stateLayers": 20,
+   "tieEmbeddings": false,
+   "vocabSize": 163840
+  },
+  "expertWeightsBf16": 94220845056,
+  "headDim": 72,
+  "kvPerToken": {
+   "bf16": 8064,
+   "fp8": 4032
+  },
+  "kvReserved": {
+   "bf16@131072": 1161216000,
+   "bf16@32768": 371589120,
+   "bf16@32768,tp2": 313786368,
+   "bf16@4096": 139345920,
+   "fp8@32768": 232243200
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "kimi_linear",
+   "numParams": 49122681728,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 98245363456,
+   "fp8": 49877656448,
+   "int4": 27205293788
+  }
+ },
+ "RadixArk/Kimi-K3-DSpark": {
+  "arch": {
+   "headDim": 64,
+   "hiddenSize": 7168,
+   "intermediateSize": 14336,
+   "maxContext": 1048576,
+   "numAttentionHeads": 64,
+   "numKeyValueHeads": 16,
+   "numLayers": 5,
+   "numParams": 2249289601,
+   "tieEmbeddings": false,
+   "vocabSize": 163840
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 20480,
+   "fp8": 10240
+  },
+  "kvReserved": {
+   "bf16@131072": 2684354560,
+   "bf16@32768": 671088640,
+   "bf16@32768,tp2": 335544320,
+   "bf16@4096": 83886080,
+   "fp8@32768": 335544320
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen3",
+   "numParams": 2249289601,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 4498579202,
+   "fp8": 2249289601,
+   "int4": 1124644800.5
+  }
+ },
+ "zai-org/GLM-4.5-Air": {
+  "arch": {
+   "activeParams": 14716717894.808517,
+   "expertsPerToken": 8,
+   "headDim": 128,
+   "hiddenSize": 4096,
+   "intermediateSize": 10944,
+   "maxContext": 131072,
+   "moeIntermediateSize": 1408,
+   "numAttentionHeads": 96,
+   "numExperts": 128,
+   "numKeyValueHeads": 8,
+   "numLayers": 46,
+   "numParams": 110468824832,
+   "specParams": 2323985337.191489,
+   "tieEmbeddings": false,
+   "vocabSize": 151552
+  },
+  "expertWeightsBf16": 199313326080,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 188416,
+   "fp8": 94208
+  },
+  "kvReserved": {
+   "bf16@131072": 24696061952,
+   "bf16@32768": 6174015488,
+   "bf16@32768,tp2": 3087007744,
+   "bf16@4096": 771751936,
+   "fp8@32768": 3087007744
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "glm4_moe",
+   "numParams": 110468824832,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 216289678989.61703,
+   "fp8": 109386353478.80852,
+   "int4": 59275419645.61703
+  }
+ },
+ "zai-org/GLM-5": {
+  "arch": {
+   "activeParams": 42219156071.69617,
+   "expertsPerToken": 8,
+   "headDim": 64,
+   "hiddenSize": 6144,
+   "intermediateSize": 12288,
+   "kvLoraRank": 512,
+   "maxContext": 202752,
+   "moeIntermediateSize": 2048,
+   "numAttentionHeads": 64,
+   "numExperts": 256,
+   "numKeyValueHeads": 64,
+   "numLayers": 78,
+   "numParams": 753864139008,
+   "qkRopeHeadDim": 64,
+   "sparseAttn": {
+    "indexDim": 128,
+    "indexLayers": 78,
+    "topk": 2048
+   },
+   "specParams": 9518493336.303797,
+   "tieEmbeddings": false,
+   "vocabSize": 154880
+  },
+  "expertWeightsBf16": 1449551462400,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 100152,
+   "fp8": 61464
+  },
+  "kvReserved": {
+   "bf16@131072": 13127122944,
+   "bf16@32768": 3281780736,
+   "bf16@32768,tp2": 3281780736,
+   "bf16@4096": 410222592,
+   "fp8@32768": 2014052352,
+   "fp8@32768,sm100": 1809580032
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "glm_moe_dsa",
+   "numParams": 753864139008,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 1488691291343.3923,
+   "fp8": 746248811111.6962,
+   "int4": 398228898503.08856
+  }
+ },
+ "zai-org/GLM-5.3-Flash": {
+  "arch": {
+   "activeParams": 18415239966.739136,
+   "attnLayers": 11,
+   "expertsPerToken": 8,
+   "headDim": 0,
+   "hiddenSize": 4096,
+   "intermediateSize": 12288,
+   "kvLoraRank": 512,
+   "maxContext": 1048576,
+   "moeIntermediateSize": 2048,
+   "numAttentionHeads": 64,
+   "numExperts": 288,
+   "numKeyValueHeads": 64,
+   "numLayers": 45,
+   "numParams": 321323031390,
+   "qkRopeHeadDim": 0,
+   "shipped": {
+    "bytes": 328337455672,
+    "dtype": "fp8"
+   },
+   "sparseAttn": {
+    "indexDim": 128,
+    "indexLayers": 11,
+    "kpool": 4,
+    "topk": 2048
+   },
+   "specParams": 6957701183.26087,
+   "stateBytesPerSeq": 147619840,
+   "stateLayers": 34,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1024,
+    "patches": 65536,
+    "tokens": 16384
+   },
+   "vocabSize": 154880
+  },
+  "expertWeightsBf16": 608811614208,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 11627,
+   "fp8": 6171
+  },
+  "kvReserved": {
+   "bf16@131072": 2024028160,
+   "bf16@32768": 860211968,
+   "bf16@32768,tp2": 632508800,
+   "bf16@4096": 506007040,
+   "fp8@32768": 667455360,
+   "fp8@32768,sm100": 668370560
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "glm5_next_text",
+   "numParams": 321323031390,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 628730660413.4783,
+   "fp8": 321227869116.8265,
+   "int4": 168870097832.33017
+  }
+ },
+ "THUDM/chatglm3-6b": {
+  "arch": {
+   "hiddenSize": 4096,
+   "maxContext": 8192,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 2,
+   "numLayers": 28,
+   "numParams": 6243584032,
+   "tieEmbeddings": false
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 28672,
+   "fp8": 14336
+  },
+  "kvReserved": {
+   "bf16@131072": 3758096384,
+   "bf16@32768": 939524096,
+   "bf16@32768,tp2": 469762048,
+   "bf16@4096": 117440512,
+   "fp8@32768": 469762048
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "chatglm",
+   "numParams": 6243584032,
+   "source": "config",
+   "weightDtype": "fp16"
+  },
+  "weights": {
+   "bf16": 12487168064,
+   "fp16": 12487168064,
+   "fp8": 6243584032,
+   "int4": 3121792016
+  }
+ },
+ "openai/gpt-oss-20b": {
+  "arch": {
+   "activeParams": 3600000000,
+   "expertsPerToken": 4,
+   "headDim": 64,
+   "hiddenSize": 2880,
+   "intermediateSize": 2880,
+   "maxContext": 131072,
+   "mxfp4": true,
+   "numAttentionHeads": 64,
+   "numExperts": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 24,
+   "numParams": 20914757184,
+   "shipped": {
+    "bytes": 13761316904,
+    "dtype": "int4"
+   },
+   "slidingLayers": 12,
+   "slidingWindow": 128,
+   "tieEmbeddings": false,
+   "vocabSize": 201088
+  },
+  "expertWeightsBf16": 39576587849.14286,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 49152,
+   "fp8": 24576
+  },
+  "kvReserved": {
+   "bf16@131072": 3325427712,
+   "bf16@32768": 909508608,
+   "bf16@32768,tp2": 454754304,
+   "bf16@4096": 201719808,
+   "fp8@32768": 454754304
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "gpt_oss",
+   "numParams": 20914757184,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 41829514368,
+   "fp8": 22073024064,
+   "int4": 13761316904
+  }
+ },
+ "openai/gpt-oss-120b": {
+  "arch": {
+   "activeParams": 5100000000,
+   "expertsPerToken": 4,
+   "headDim": 64,
+   "hiddenSize": 2880,
+   "intermediateSize": 2880,
+   "maxContext": 131072,
+   "mxfp4": true,
+   "numAttentionHeads": 64,
+   "numExperts": 128,
+   "numKeyValueHeads": 8,
+   "numLayers": 36,
+   "numParams": 116829156672,
+   "shipped": {
+    "bytes": 65248893184,
+    "dtype": "int4"
+   },
+   "slidingLayers": 18,
+   "slidingWindow": 128,
+   "tieEmbeddings": false,
+   "vocabSize": 201088
+  },
+  "expertWeightsBf16": 230666646032.51614,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 73728,
+   "fp8": 36864
+  },
+  "kvReserved": {
+   "bf16@131072": 4988141568,
+   "bf16@32768": 1364262912,
+   "bf16@32768,tp2": 682131456,
+   "bf16@4096": 302579712,
+   "fp8@32768": 682131456
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "gpt_oss",
+   "numParams": 116829156672,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 233658313344,
+   "fp8": 117987423552,
+   "int4": 65248893184
+  }
+ },
+ "MiniMaxAI/MiniMax-M2": {
+  "arch": {
+   "activeParams": 11030553088,
+   "expertsPerToken": 8,
+   "headDim": 128,
+   "hiddenSize": 3072,
+   "intermediateSize": 1536,
+   "maxContext": 196608,
+   "numAttentionHeads": 48,
+   "numExperts": 256,
+   "numKeyValueHeads": 8,
+   "numLayers": 62,
+   "numParams": 228689764864,
+   "shipped": {
+    "bytes": 230134264792,
+    "dtype": "fp8"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 200064
+  },
+  "expertWeightsBf16": 449360953344,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 253952,
+   "fp8": 126976
+  },
+  "kvReserved": {
+   "bf16@131072": 33285996544,
+   "bf16@32768": 8321499136,
+   "bf16@32768,tp2": 4160749568,
+   "bf16@4096": 1040187392,
+   "fp8@32768": 4160749568
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "minimax_m2",
+   "numParams": 228689764864,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 457379529728,
+   "fp8": 230134264792,
+   "int4": 123296815120
+  }
+ },
+ "MiniMaxAI/MiniMax-Text-01": {
+  "arch": {
+   "activeParams": 48403306496,
+   "attnLayers": 10,
+   "expertsPerToken": 2,
+   "headDim": 128,
+   "hiddenSize": 6144,
+   "intermediateSize": 9216,
+   "maxContext": 10240000,
+   "notInVllm": {
+    "arch": "MiniMaxText01ForCausalLM",
+    "until": "0.23.0"
+   },
+   "numAttentionHeads": 64,
+   "numExperts": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 80,
+   "numParams": 456089655296,
+   "stateBytesPerSeq": 146800640,
+   "stateLayers": 70,
+   "tieEmbeddings": false,
+   "vocabSize": 200064
+  },
+  "expertWeightsBf16": 869730877440,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 40960,
+   "fp8": 20480
+  },
+  "kvReserved": {
+   "bf16@131072": 5662310400,
+   "bf16@32768": 1635778560,
+   "bf16@32768,tp2": 817889280,
+   "bf16@4096": 461373440,
+   "fp8@32768": 964689920
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "minimax_text_01",
+   "numParams": 456089655296,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 912179310592,
+   "fp8": 458548041728,
+   "int4": 245908384448
+  }
+ },
+ "ibm-granite/granite-4.0-h-small": {
+  "arch": {
+   "activeParams": 8803121664,
+   "attnLayers": 4,
+   "expertsPerToken": 10,
+   "hiddenSize": 4096,
+   "intermediateSize": 768,
+   "maxContext": 131072,
+   "numAttentionHeads": 32,
+   "numExperts": 72,
+   "numKeyValueHeads": 8,
+   "numLayers": 40,
+   "numParams": 32207337984,
+   "stateBytesPerSeq": 77322240,
+   "stateLayers": 36,
+   "tieEmbeddings": true,
+   "vocabSize": 100352
+  },
+  "expertWeightsBf16": 54358179840,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 16384,
+   "fp8": 8192
+  },
+  "kvReserved": {
+   "bf16@131072": 2309750784,
+   "bf16@32768": 700710912,
+   "bf16@32768,tp2": 350355456,
+   "bf16@4096": 224919552,
+   "fp8@32768": 432537600
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "granitemoehybrid",
+   "numParams": 32207337984,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 64414675968,
+   "fp8": 32618379776,
+   "int4": 17713865936
+  }
+ },
+ "nvidia/NVIDIA-Nemotron-Nano-9B-v2": {
+  "arch": {
+   "attnLayers": 4,
+   "headDim": 128,
+   "hiddenSize": 4480,
+   "intermediateSize": 15680,
+   "maxContext": 131072,
+   "numAttentionHeads": 40,
+   "numKeyValueHeads": 8,
+   "numLayers": 56,
+   "numParams": 8888227328,
+   "stateBytesPerSeq": 143548416,
+   "stateLayers": 27,
+   "tieEmbeddings": false,
+   "vocabSize": 131072
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 16384,
+   "fp8": 8192
+  },
+  "kvReserved": {
+   "bf16@131072": 2450522112,
+   "bf16@32768": 838336512,
+   "bf16@32768,tp2": 419168256,
+   "bf16@4096": 386924544,
+   "fp8@32768": 576847872
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "nemotron_h",
+   "numParams": 8888227328,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 17776454656,
+   "fp8": 10062632448,
+   "int4": 6446778288
+  }
+ },
+ "nvidia/Nemotron-H-8B-Base-8K": {
+  "arch": {
+   "attnLayers": 4,
+   "hiddenSize": 4096,
+   "intermediateSize": 21504,
+   "maxContext": 8192,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 52,
+   "numParams": 8100852736,
+   "stateBytesPerSeq": 102137856,
+   "stateLayers": 24,
+   "tieEmbeddings": false,
+   "vocabSize": 131072
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 16384,
+   "fp8": 8192
+  },
+  "kvReserved": {
+   "bf16@131072": 2368471040,
+   "bf16@32768": 749731840,
+   "bf16@32768,tp2": 374865920,
+   "bf16@4096": 272629760,
+   "fp8@32768": 477102080
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "nemotron_h",
+   "numParams": 8100852736,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 16201705472,
+   "fp8": 9174594560,
+   "int4": 5880636320
+  }
+ },
+ "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16": {
+  "arch": {
+   "activeParams": 3311410437,
+   "attnLayers": 6,
+   "expertsPerToken": 6,
+   "headDim": 128,
+   "hiddenSize": 2688,
+   "intermediateSize": 1856,
+   "maxContext": 262144,
+   "moeIntermediateSize": 1856,
+   "numAttentionHeads": 32,
+   "numExperts": 128,
+   "numKeyValueHeads": 2,
+   "numLayers": 52,
+   "numParams": 31577937344,
+   "stateBytesPerSeq": 49082368,
+   "stateLayers": 23,
+   "tieEmbeddings": false,
+   "vocabSize": 131072
+  },
+  "expertWeightsBf16": 59313367936,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 6144,
+   "fp8": 3072
+  },
+  "kvReserved": {
+   "bf16@131072": 914325504,
+   "bf16@32768": 309067776,
+   "bf16@32768,tp2": 154533888,
+   "bf16@4096": 128778240,
+   "fp8@32768": 205258752
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "nemotron_h",
+   "numParams": 31577937344,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 63155874688,
+   "fp8": 32282580416,
+   "int4": 17810723726
+  }
+ },
+ "nvidia/Llama-3_3-Nemotron-Super-49B-v1_5": {
+  "arch": {
+   "attnLayers": 49,
+   "hiddenSize": 8192,
+   "intermediateSize": 28672,
+   "maxContext": 131072,
+   "numAttentionHeads": 64,
+   "numKeyValueHeads": 8,
+   "numLayers": 80,
+   "numParams": 49867145216,
+   "tieEmbeddings": false,
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 200704,
+   "fp8": 100352
+  },
+  "kvReserved": {
+   "bf16@131072": 26306674688,
+   "bf16@32768": 6576668672,
+   "bf16@32768,tp2": 3288334336,
+   "bf16@4096": 822083584,
+   "fp8@32768": 3288334336
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "nemotron-nas",
+   "numParams": 49867145216,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 99734290432,
+   "fp8": 51968491520,
+   "int4": 29578273280
+  }
+ },
+ "nvidia/Llama-3_1-Nemotron-51B-Instruct": {
+  "arch": {
+   "attnLayers": 46.375,
+   "hiddenSize": 8192,
+   "intermediateSize": 28672,
+   "maxContext": 131072,
+   "notInVllm": {
+    "arch": "DeciLMForCausalLM",
+    "linear": true
+   },
+   "numAttentionHeads": 64,
+   "numKeyValueHeads": 8,
+   "numLayers": 80,
+   "numParams": 51501015040,
+   "tieEmbeddings": false,
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 189952,
+   "fp8": 94976
+  },
+  "kvReserved": {
+   "bf16@131072": 24897388544,
+   "bf16@32768": 6224347136,
+   "bf16@32768,tp2": 3112173568,
+   "bf16@4096": 778043392,
+   "fp8@32768": 3112173568
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "nemotron-nas",
+   "numParams": 51501015040,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 103002030080,
+   "fp8": 53602361344,
+   "int4": 30446266624
+  }
+ },
+ "tiiuae/Falcon-H1-7B-Instruct": {
+  "arch": {
+   "headDim": 128,
+   "hiddenSize": 3072,
+   "intermediateSize": 12288,
+   "maxContext": 262144,
+   "numAttentionHeads": 12,
+   "numKeyValueHeads": 2,
+   "numLayers": 44,
+   "numParams": 7585654880,
+   "stateBytesPerSeq": 70152192,
+   "stateLayers": 44,
+   "tieEmbeddings": false,
+   "vocabSize": 130049
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 45056,
+   "fp8": 22528
+  },
+  "kvReserved": {
+   "bf16@131072": 6075711488,
+   "bf16@32768": 1624899584,
+   "bf16@32768,tp2": 812449792,
+   "bf16@4096": 353239040,
+   "fp8@32768": 913735680
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "falcon_h1",
+   "numParams": 7585654880,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 15171309760,
+   "fp8": 8384675936,
+   "int4": 5203441331
+  }
+ },
+ "ai21labs/AI21-Jamba-Mini-1.7": {
+  "resolution": {
+   "gated": true,
+   "modelType": "jamba",
+   "numParams": 51570323328,
+   "source": "partial",
+   "warningKey": "gatedUnknown",
+   "weightDtype": "bf16"
+  }
+ },
+ "ai21labs/AI21-Jamba-Reasoning-3B": {
+  "arch": {
+   "attnLayers": 2,
+   "hiddenSize": 2560,
+   "intermediateSize": 8192,
+   "maxContext": 262144,
+   "numAttentionHeads": 20,
+   "numKeyValueHeads": 1,
+   "numLayers": 28,
+   "numParams": 3197109632,
+   "stateBytesPerSeq": 5058560,
+   "stateLayers": 26,
+   "tieEmbeddings": true,
+   "vocabSize": 65536
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 1024,
+   "fp8": 512
+  },
+  "kvReserved": {
+   "bf16@131072": 144703488,
+   "bf16@32768": 44040192,
+   "bf16@32768,tp2": 44040192,
+   "bf16@4096": 14548992,
+   "fp8@32768": 27131904
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "jamba",
+   "numParams": 3197109632,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 6394219264,
+   "fp8": 3364881792,
+   "int4": 1944879852
+  }
+ },
+ "LiquidAI/LFM2-1.2B": {
+  "arch": {
+   "attnLayers": 6,
+   "hiddenSize": 2048,
+   "maxContext": 128000,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 16,
+   "numParams": 1170340608,
+   "tieEmbeddings": false,
+   "vocabSize": 65536
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 12288,
+   "fp8": 6144
+  },
+  "kvReserved": {
+   "bf16@131072": 1610612736,
+   "bf16@32768": 402653184,
+   "bf16@32768,tp2": 201326592,
+   "bf16@4096": 50331648,
+   "fp8@32768": 201326592
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "lfm2",
+   "numParams": 1170340608,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 2340681216,
+   "fp8": 1438776064,
+   "int4": 1016008024
+  }
+ },
+ "tiiuae/falcon-7b-instruct": {
+  "arch": {
+   "hiddenSize": 4544,
+   "numAttentionHeads": 71,
+   "numKeyValueHeads": 1,
+   "numLayers": 32,
+   "numParams": 7217189760,
+   "tieEmbeddings": true,
+   "vocabSize": 65024
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 8192,
+   "fp8": 4096
+  },
+  "kvReserved": {
+   "bf16@131072": 1073741824,
+   "bf16@32768": 268435456,
+   "bf16@32768,tp2": 268435456,
+   "bf16@4096": 33554432,
+   "fp8@32768": 134217728
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "falcon",
+   "numParams": 7217189760,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 14434379520,
+   "fp8": 7512658816,
+   "int4": 4268102236
+  }
+ },
+ "tiiuae/falcon-40b-instruct": {
+  "arch": {
+   "hiddenSize": 8192,
+   "numAttentionHeads": 128,
+   "numKeyValueHeads": 8,
+   "numLayers": 60,
+   "numParams": 40000000000,
+   "tieEmbeddings": true,
+   "vocabSize": 65024
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 122880,
+   "fp8": 61440
+  },
+  "kvReserved": {
+   "bf16@131072": 16106127360,
+   "bf16@32768": 4026531840,
+   "bf16@32768,tp2": 2013265920,
+   "bf16@4096": 503316480,
+   "fp8@32768": 2013265920
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "falcon",
+   "numParams": 40000000000,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 80000000000,
+   "fp8": 40532676608,
+   "int4": 22032368768
+  }
+ },
+ "bigcode/gpt_bigcode-santacoder": {
+  "arch": {
+   "hiddenSize": 2048,
+   "intermediateSize": 8192,
+   "maxContext": 2048,
+   "numAttentionHeads": 16,
+   "numKeyValueHeads": 1,
+   "numLayers": 24,
+   "numParams": 1124886528,
+   "tieEmbeddings": false,
+   "vocabSize": 49280
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 12288,
+   "fp8": 6144
+  },
+  "kvReserved": {
+   "bf16@131072": 1610612736,
+   "bf16@32768": 402653184,
+   "bf16@32768,tp2": 402653184,
+   "bf16@4096": 50331648,
+   "fp8@32768": 201326592
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "gpt_bigcode",
+   "numParams": 1124886528,
+   "source": "config",
+   "weightDtype": "fp16"
+  },
+  "weights": {
+   "bf16": 2249773056,
+   "fp16": 2249773056,
+   "fp8": 1326737408,
+   "int4": 894064448
+  }
+ },
+ "openai-community/gpt2": {
+  "arch": {
+   "hiddenSize": 768,
+   "maxContext": 1024,
+   "numAttentionHeads": 12,
+   "numKeyValueHeads": 12,
+   "numLayers": 12,
+   "numParams": 137022720,
+   "tieEmbeddings": true,
+   "vocabSize": 50257
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 36864,
+   "fp8": 18432
+  },
+  "kvReserved": {
+   "bf16@131072": 4831838208,
+   "bf16@32768": 1207959552,
+   "bf16@32768,tp2": 603979776,
+   "bf16@4096": 150994944,
+   "fp8@32768": 603979776
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "gpt2",
+   "numParams": 137022720,
+   "source": "config"
+  },
+  "weights": {
+   "bf16": 274045440,
+   "fp8": 175620096,
+   "int4": 129483216
+  }
+ },
+ "facebook/opt-125m": {
+  "arch": {
+   "hiddenSize": 768,
+   "intermediateSize": 3072,
+   "maxContext": 2048,
+   "numAttentionHeads": 12,
+   "numKeyValueHeads": 12,
+   "numLayers": 12,
+   "numParams": 125000000,
+   "tieEmbeddings": false,
+   "vocabSize": 50272
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 36864,
+   "fp8": 18432
+  },
+  "kvReserved": {
+   "bf16@131072": 4831838208,
+   "bf16@32768": 1207959552,
+   "bf16@32768,tp2": 603979776,
+   "bf16@4096": 150994944,
+   "fp8@32768": 603979776
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "opt",
+   "numParams": 125000000,
+   "source": "config",
+   "weightDtype": "fp16"
+  },
+  "weights": {
+   "bf16": 250000000,
+   "fp16": 250000000,
+   "fp8": 202217792,
+   "int4": 179819882
+  }
+ },
+ "bigscience/bloomz-560m": {
+  "arch": {
+   "hiddenSize": 1024,
+   "maxContext": 2048,
+   "numAttentionHeads": 16,
+   "numKeyValueHeads": 16,
+   "numLayers": 24,
+   "numParams": 559214592,
+   "tieEmbeddings": false,
+   "vocabSize": 250880
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 98304,
+   "fp8": 49152
+  },
+  "kvReserved": {
+   "bf16@131072": 12884901888,
+   "bf16@32768": 3221225472,
+   "bf16@32768,tp2": 1610612736,
+   "bf16@4096": 402653184,
+   "fp8@32768": 1610612736
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "bloom",
+   "numParams": 559214592,
+   "source": "config",
+   "weightDtype": "fp16"
+  },
+  "weights": {
+   "bf16": 1118429184,
+   "fp16": 1118429184,
+   "fp8": 1073016832,
+   "int4": 1051729792
+  }
+ },
+ "XiaomiMiMo/MiMo-V2-Flash": {
+  "arch": {
+   "activeParams": 16452473856,
+   "attnLayers": 43.5,
+   "expertsPerToken": 8,
+   "headDim": 192,
+   "hiddenSize": 4096,
+   "intermediateSize": 16384,
+   "maxContext": 262144,
+   "moeIntermediateSize": 2048,
+   "numAttentionHeads": 64,
+   "numExperts": 256,
+   "numKeyValueHeads": 8,
+   "numLayers": 48,
+   "numParams": 309785318400,
+   "shipped": {
+    "bytes": 313060774832,
+    "dtype": "fp8"
+   },
+   "slidingLayers": 43.5,
+   "slidingWindow": 128,
+   "tieEmbeddings": false,
+   "vHeadDim": 128,
+   "vocabSize": 152576
+  },
+  "expertWeightsBf16": 605590388736,
+  "headDim": 192,
+  "kvPerToken": {
+   "bf16": 222720,
+   "fp8": 111360
+  },
+  "kvReserved": {
+   "bf16@131072": 944332800,
+   "bf16@32768": 944332800,
+   "bf16@32768,tp2": 472166400,
+   "bf16@4096": 915824640,
+   "fp8@32768": 472166400
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "mimo_v2_flash",
+   "numParams": 309785318400,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 619570636800,
+   "fp8": 313060774832,
+   "int4": 166409244832
+  }
+ },
+ "stepfun-ai/Step-3.5-Flash": {
+  "arch": {
+   "activeParams": 9523732133.666666,
+   "expertsPerToken": 8,
+   "headDim": 128,
+   "hiddenSize": 4096,
+   "intermediateSize": 11264,
+   "maxContext": 262144,
+   "moeIntermediateSize": 1280,
+   "numAttentionHeads": 64,
+   "numExperts": 288,
+   "numKeyValueHeads": 8,
+   "numLayers": 45,
+   "numParams": 199384301376,
+   "slidingLayers": 33,
+   "slidingWindow": 512,
+   "specParams": 12395524084,
+   "tieEmbeddings": false,
+   "vocabSize": 128896
+  },
+  "expertWeightsBf16": 365070950040,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 184320,
+   "fp8": 92160
+  },
+  "kvReserved": {
+   "bf16@131072": 7124287488,
+   "bf16@32768": 2292449280,
+   "bf16@32768,tp2": 1146224640,
+   "bf16@4096": 807665664,
+   "fp8@32768": 1146224640
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "step3p5",
+   "numParams": 199384301376,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 373977554584,
+   "fp8": 188044693324,
+   "int4": 100888664608.375
+  }
+ },
+ "baidu/ERNIE-4.5-21B-A3B-PT": {
+  "arch": {
+   "activeParams": 3352160448,
+   "expertsPerToken": 6,
+   "hiddenSize": 2560,
+   "intermediateSize": 12288,
+   "maxContext": 131072,
+   "moeIntermediateSize": 1536,
+   "numAttentionHeads": 20,
+   "numExperts": 64,
+   "numKeyValueHeads": 4,
+   "numLayers": 28,
+   "numParams": 21948655808,
+   "specParams": 123207680,
+   "tieEmbeddings": true,
+   "vocabSize": 103424
+  },
+  "expertWeightsBf16": 40768634880,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 57344,
+   "fp8": 28672
+  },
+  "kvReserved": {
+   "bf16@131072": 7516192768,
+   "bf16@32768": 1879048192,
+   "bf16@32768,tp2": 939524096,
+   "bf16@4096": 234881024,
+   "fp8@32768": 939524096
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "ernie4_5_moe",
+   "numParams": 21948655808,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 43650896256,
+   "fp8": 22090213568,
+   "int4": 11983643558
+  }
+ },
+ "CohereLabs/c4ai-command-a-03-2025": {
+  "arch": {
+   "headDim": 128,
+   "hiddenSize": 12288,
+   "intermediateSize": 36864,
+   "maxContext": 262144,
+   "numAttentionHeads": 96,
+   "numKeyValueHeads": 8,
+   "numLayers": 64,
+   "numParams": 111057580032,
+   "slidingLayers": 48,
+   "slidingWindow": 4096,
+   "tieEmbeddings": false,
+   "vocabSize": 256000
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 262144,
+   "fp8": 131072
+  },
+  "kvReserved": {
+   "bf16@131072": 10203693056,
+   "bf16@32768": 3761242112,
+   "bf16@32768,tp2": 1880621056,
+   "bf16@4096": 1076887552,
+   "fp8@32768": 1880621056
+  },
+  "resolution": {
+   "gated": true,
+   "isMoE": false,
+   "mirror": "unsloth/c4ai-command-a-03-2025",
+   "modelType": "cohere2",
+   "numParams": 111057580032,
+   "source": "base",
+   "warningKey": "archFromMirror",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 222115160064,
+   "fp8": 117349036032,
+   "int4": 68239915392
+  }
+ },
+ "llava-hf/llava-1.5-7b-hf": {
+  "arch": {
+   "hiddenSize": 4096,
+   "intermediateSize": 11008,
+   "maxContext": 4096,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 32,
+   "numLayers": 32,
+   "numParams": 7063427072,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1024,
+    "patches": 576,
+    "tokens": 576
+   },
+   "vocabSize": 32064
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 524288,
+   "fp8": 262144
+  },
+  "kvReserved": {
+   "bf16@131072": 68719476736,
+   "bf16@32768": 17179869184,
+   "bf16@32768,tp2": 8589934592,
+   "bf16@4096": 2147483648,
+   "fp8@32768": 8589934592
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "llama",
+   "numParams": 7063427072,
+   "source": "config",
+   "weightDtype": "fp16"
+  },
+  "weights": {
+   "bf16": 14126854144,
+   "fp16": 14126854144,
+   "fp8": 7326095360,
+   "int4": 4138239680
+  }
+ },
+ "Qwen/Qwen2.5-7B-Instruct-AWQ": {
+  "arch": {
+   "hiddenSize": 3584,
+   "intermediateSize": 18944,
+   "maxContext": 32768,
+   "numAttentionHeads": 28,
+   "numKeyValueHeads": 4,
+   "numLayers": 28,
+   "numParams": 7615616512,
+   "shipped": {
+    "bytes": 5570829760,
+    "dtype": "int4"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 152064
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 57344,
+   "fp8": 28672
+  },
+  "kvReserved": {
+   "bf16@131072": 7516192768,
+   "bf16@32768": 1879048192,
+   "bf16@32768,tp2": 939524096,
+   "bf16@4096": 234881024,
+   "fp8@32768": 939524096
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen2",
+   "numParams": 7615616512,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 15231233024,
+   "fp8": 8705611264,
+   "int4": 5570829760
+  }
+ },
+ "cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit": {
+  "arch": {
+   "activeParams": 3353032704,
+   "expertsPerToken": 8,
+   "headDim": 128,
+   "hiddenSize": 2048,
+   "intermediateSize": 5472,
+   "maxContext": 262144,
+   "moeIntermediateSize": 768,
+   "numAttentionHeads": 32,
+   "numExperts": 128,
+   "numKeyValueHeads": 4,
+   "numLayers": 48,
+   "numParams": 30532122624,
+   "shipped": {
+    "bytes": 18094507352,
+    "dtype": "int4"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 151936
+  },
+  "expertWeightsBf16": 57982058496,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 98304,
+   "fp8": 49152
+  },
+  "kvReserved": {
+   "bf16@131072": 12884901888,
+   "bf16@32768": 3221225472,
+   "bf16@32768,tp2": 1610612736,
+   "bf16@4096": 402653184,
+   "fp8@32768": 1610612736
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "qwen3_moe",
+   "numParams": 30532122624,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 61064245248,
+   "fp8": 31154452480,
+   "int4": 18094507352
+  }
+ },
+ "Qwen/Qwen3-8B-FP8": {
+  "arch": {
+   "headDim": 128,
+   "hiddenSize": 4096,
+   "intermediateSize": 12288,
+   "maxContext": 40960,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 36,
+   "numParams": 8191159296,
+   "shipped": {
+    "bytes": 9436628784,
+    "dtype": "fp8"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 151936
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 147456,
+   "fp8": 73728
+  },
+  "kvReserved": {
+   "bf16@131072": 19327352832,
+   "bf16@32768": 4831838208,
+   "bf16@32768,tp2": 2415919104,
+   "bf16@4096": 603979776,
+   "fp8@32768": 2415919104
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen3",
+   "numParams": 8191159296,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 16382318592,
+   "fp8": 9436628784,
+   "int4": 6179647328
+  }
+ },
+ "RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8": {
+  "arch": {
+   "hiddenSize": 4096,
+   "intermediateSize": 14336,
+   "maxContext": 131072,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 32,
+   "numParams": 8030261248,
+   "shipped": {
+    "bytes": 9081287016,
+    "dtype": "fp8"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 131072,
+   "fp8": 65536
+  },
+  "kvReserved": {
+   "bf16@131072": 17179869184,
+   "bf16@32768": 4294967296,
+   "bf16@32768,tp2": 2147483648,
+   "bf16@4096": 536870912,
+   "fp8@32768": 2147483648
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "llama",
+   "numParams": 8030261248,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 16060522496,
+   "fp8": 9081287016,
+   "int4": 5809252480
+  }
+ },
+ "RedHatAI/Llama-3.3-70B-Instruct-quantized.w4a16": {
+  "arch": {
+   "headDim": 128,
+   "hiddenSize": 8192,
+   "intermediateSize": 28672,
+   "maxContext": 131072,
+   "numAttentionHeads": 64,
+   "numKeyValueHeads": 8,
+   "numLayers": 80,
+   "numParams": 70553706496,
+   "shipped": {
+    "bytes": 39525587080,
+    "dtype": "int4"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 327680,
+   "fp8": 163840
+  },
+  "kvReserved": {
+   "bf16@131072": 42949672960,
+   "bf16@32768": 10737418240,
+   "bf16@32768,tp2": 5368709120,
+   "bf16@4096": 1342177280,
+   "fp8@32768": 5368709120
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "llama",
+   "numParams": 70553706496,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 141107412992,
+   "fp8": 72655052800,
+   "int4": 39525587080
+  }
+ },
+ "nvidia/Llama-3.3-70B-Instruct-FP4": {
+  "arch": {
+   "headDim": 128,
+   "hiddenSize": 8192,
+   "intermediateSize": 28672,
+   "maxContext": 131072,
+   "numAttentionHeads": 64,
+   "numKeyValueHeads": 8,
+   "numLayers": 80,
+   "numParams": 70553706496,
+   "shipped": {
+    "bytes": 42709324392,
+    "dtype": "int4"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 327680,
+   "fp8": 163840
+  },
+  "kvReserved": {
+   "bf16@131072": 42949672960,
+   "bf16@32768": 10737418240,
+   "bf16@32768,tp2": 5368709120,
+   "bf16@4096": 1342177280,
+   "fp8@32768": 5368709120
+  },
+  "resolution": {
+   "gated": false,
+   "kvDtype": "fp8",
+   "modelType": "llama",
+   "numParams": 70553706496,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 141107412992,
+   "fp8": 72655052800,
+   "int4": 42709324392
+  }
+ },
+ "nvidia/Qwen3.6-35B-A3B-NVFP4": {
+  "arch": {
+   "activeParams": 3894134993.1707306,
+   "attnLayers": 10,
+   "expertsPerToken": 8,
+   "headDim": 256,
+   "hiddenSize": 2048,
+   "maxContext": 262144,
+   "moeIntermediateSize": 512,
+   "numAttentionHeads": 16,
+   "numExperts": 256,
+   "numKeyValueHeads": 2,
+   "numLayers": 40,
+   "numParams": 35951822704,
+   "shipped": {
+    "bytes": 23424338320,
+    "dtype": "int4"
+   },
+   "specParams": 852065950.8292683,
+   "stateBytesPerSeq": 64389120,
+   "stateLayers": 30,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1152,
+    "patches": 65536,
+    "tokens": 16384
+   },
+   "vocabSize": 248320
+  },
+  "expertWeightsBf16": 64424509440,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 20480,
+   "fp8": 10240
+  },
+  "kvReserved": {
+   "bf16@131072": 2833121280,
+   "bf16@32768": 821821440,
+   "bf16@32768,tp2": 410910720,
+   "bf16@4096": 216268800,
+   "fp8@32768": 472186880
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "kvDtype": "fp8",
+   "modelType": "qwen3_5_moe_text",
+   "numParams": 35951822704,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 70199513506.34146,
+   "fp8": 36116875473.17073,
+   "int4": 22869176450.530815
+  }
+ },
+ "nvidia/DeepSeek-R1-0528-FP4": {
+  "arch": {
+   "activeParams": 40046328337.8064,
+   "expertsPerToken": 8,
+   "hiddenSize": 7168,
+   "intermediateSize": 18432,
+   "kvLoraRank": 512,
+   "maxContext": 163840,
+   "moeIntermediateSize": 2048,
+   "numAttentionHeads": 128,
+   "numExperts": 256,
+   "numKeyValueHeads": 128,
+   "numLayers": 61,
+   "numParams": 684531386000,
+   "qkRopeHeadDim": 64,
+   "shipped": {
+    "bytes": 423626409168,
+    "dtype": "int4"
+   },
+   "specParams": 11010935934.193548,
+   "tieEmbeddings": false,
+   "vocabSize": 129280
+  },
+  "expertWeightsBf16": 1307817541632,
+  "headDim": 56,
+  "kvPerToken": {
+   "bf16": 70272,
+   "fp8": 35136
+  },
+  "kvReserved": {
+   "bf16@131072": 9210691584,
+   "bf16@32768": 2302672896,
+   "bf16@32768,tp2": 2302672896,
+   "bf16@4096": 287834112,
+   "fp8@32768": 1151336448
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "kvDtype": "fp8",
+   "modelType": "deepseek_v3",
+   "numParams": 684531386000,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 1347040900131.6128,
+   "fp8": 675373808145.8064,
+   "int4": 416812224534.8628
+  }
+ },
+ "unsloth/Llama-3.3-70B-Instruct-bnb-4bit": {
+  "arch": {
+   "headDim": 128,
+   "hiddenSize": 8192,
+   "intermediateSize": 28672,
+   "maxContext": 131072,
+   "numAttentionHeads": 64,
+   "numKeyValueHeads": 8,
+   "numLayers": 80,
+   "numParams": 70553706496,
+   "shipped": {
+    "bytes": 39518238055,
+    "dtype": "int4"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 327680,
+   "fp8": 163840
+  },
+  "kvReserved": {
+   "bf16@131072": 42949672960,
+   "bf16@32768": 10737418240,
+   "bf16@32768,tp2": 5368709120,
+   "bf16@4096": 1342177280,
+   "fp8@32768": 5368709120
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "llama",
+   "numParams": 70553706496,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 141107412992,
+   "fp8": 72655052800,
+   "int4": 39518238055
+  }
+ },
+ "mlx-community/Qwen3-30B-A3B-4bit": {
+  "arch": {
+   "activeParams": 3353032704,
+   "expertsPerToken": 8,
+   "headDim": 128,
+   "hiddenSize": 2048,
+   "intermediateSize": 6144,
+   "maxContext": 40960,
+   "moeIntermediateSize": 768,
+   "numAttentionHeads": 32,
+   "numExperts": 128,
+   "numKeyValueHeads": 4,
+   "numLayers": 48,
+   "numParams": 30532122624,
+   "shipped": {
+    "bytes": 17174780668,
+    "dtype": "int4"
+   },
+   "tieEmbeddings": false,
+   "vocabSize": 151936
+  },
+  "expertWeightsBf16": 57982058496,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 98304,
+   "fp8": 49152
+  },
+  "kvReserved": {
+   "bf16@131072": 12884901888,
+   "bf16@32768": 3221225472,
+   "bf16@32768,tp2": 1610612736,
+   "bf16@4096": 402653184,
+   "fp8@32768": 1610612736
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "qwen3_moe",
+   "numParams": 30532122624,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 61064245248,
+   "fp8": 31154452480,
+   "int4": 17174780668
+  }
+ },
+ "unsloth/gpt-oss-20b-GGUF": {
+  "arch": {
+   "activeParams": 4193246784,
+   "expertsPerToken": 4,
+   "headDim": 64,
+   "hiddenSize": 2880,
+   "intermediateSize": 2880,
+   "maxContext": 131072,
+   "numAttentionHeads": 64,
+   "numExperts": 32,
+   "numKeyValueHeads": 8,
+   "numLayers": 24,
+   "numParams": 20914757184,
+   "slidingLayers": 12,
+   "slidingWindow": 128,
+   "tieEmbeddings": false,
+   "vocabSize": 201088
+  },
+  "expertWeightsBf16": 38220595200,
+  "headDim": 64,
+  "kvPerToken": {
+   "bf16": 49152,
+   "fp8": 24576
+  },
+  "kvReserved": {
+   "bf16@131072": 3325427712,
+   "bf16@32768": 909508608,
+   "bf16@32768,tp2": 454754304,
+   "bf16@4096": 201719808,
+   "fp8@32768": 454754304
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "gpt_oss",
+   "numParams": 20914757184,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 41829514368,
+   "fp8": 22073024064,
+   "int4": 12812169234
+  }
+ },
+ "unsloth/DeepSeek-V3-0324-GGUF": {
+  "arch": {
+   "activeParams": 26759183582.967773,
+   "expertsPerToken": 8,
+   "hiddenSize": 7168,
+   "intermediateSize": 18432,
+   "kvLoraRank": 512,
+   "maxContext": 163840,
+   "moeIntermediateSize": 2048,
+   "numAttentionHeads": 128,
+   "numExperts": 256,
+   "numKeyValueHeads": 128,
+   "numLayers": 61,
+   "numParams": 671026419200,
+   "qkRopeHeadDim": 64,
+   "specParams": 10793113889.032259,
+   "tieEmbeddings": false,
+   "vocabSize": 129280
+  },
+  "expertWeightsBf16": 1307817541632,
+  "headDim": 56,
+  "kvPerToken": {
+   "bf16": 70272,
+   "fp8": 35136
+  },
+  "kvReserved": {
+   "bf16@131072": 9210691584,
+   "bf16@32768": 2302672896,
+   "bf16@32768,tp2": 2302672896,
+   "bf16@4096": 287834112,
+   "fp8@32768": 1151336448
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "deepseek_v3",
+   "numParams": 671026419200,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 1320466610621.9355,
+   "fp8": 662086663390.9678,
+   "int4": 353471063126.45166
+  }
+ },
+ "bartowski/Llama-3.3-70B-Instruct-GGUF": {
+  "arch": {
+   "displayName": "Llama 3.3 70B Instruct",
+   "family": "Llama",
+   "gated": true,
+   "headDim": 128,
+   "hfId": "meta-llama/Llama-3.3-70B-Instruct",
+   "hiddenSize": 8192,
+   "id": "llama-3.3-70b",
+   "intermediateSize": 28672,
+   "maxContext": 131072,
+   "numAttentionHeads": 64,
+   "numKeyValueHeads": 8,
+   "numLayers": 80,
+   "numParams": 70553706560,
+   "vocabSize": 128256
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 327680,
+   "fp8": 163840
+  },
+  "kvReserved": {
+   "bf16@131072": 42949672960,
+   "bf16@32768": 10737418240,
+   "bf16@32768,tp2": 5368709120,
+   "bf16@4096": 1342177280,
+   "fp8@32768": 5368709120
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "llama",
+   "numParams": 70553706560,
+   "source": "bundled",
+   "warningKey": "archFromBase",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 141107413120,
+   "fp8": 72655052864,
+   "int4": 40568008994
+  }
+ },
+ "bartowski/google_gemma-3-27b-it-GGUF": {
+  "arch": {
+   "displayName": "Gemma 3 27B IT",
+   "family": "Gemma",
+   "gated": true,
+   "headDim": 128,
+   "hfId": "google/gemma-3-27b-it",
+   "hiddenSize": 5376,
+   "id": "gemma-3-27b",
+   "intermediateSize": 21504,
+   "maxContext": 131072,
+   "numAttentionHeads": 32,
+   "numKeyValueHeads": 16,
+   "numLayers": 62,
+   "numParams": 27009002240,
+   "slidingLayers": 52,
+   "slidingWindow": 1024,
+   "tieEmbeddings": true,
+   "vision": {
+    "hidden": 1152,
+    "patches": 4096,
+    "tokens": 256
+   },
+   "vocabSize": 262208
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 128,
+  "kvPerToken": {
+   "bf16": 507904,
+   "fp8": 253952
+  },
+  "kvReserved": {
+   "bf16@131072": 13261864960,
+   "bf16@32768": 5208801280,
+   "bf16@32768,tp2": 2604400640,
+   "bf16@4096": 2356674560,
+   "fp8@32768": 2604400640
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "gemma",
+   "numParams": 27009002240,
+   "source": "bundled",
+   "warningKey": "archFromBase",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 54018004480,
+   "fp8": 28418632448,
+   "int4": 16418926808
+  }
+ }
+}

@@ -1,0 +1,88 @@
+{
+ "id": "RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "llama",
+  "text-generation",
+  "fp8",
+  "vllm",
+  "conversational",
+  "en",
+  "de",
+  "fr",
+  "it",
+  "pt",
+  "hi",
+  "es",
+  "th",
+  "base_model:meta-llama/Llama-3.1-8B-Instruct",
+  "base_model:quantized:meta-llama/Llama-3.1-8B-Instruct",
+  "license:llama3.1",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "compressed-tensors",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "llama"
+ },
+ "cardData": {
+  "base_model": "meta-llama/Meta-Llama-3.1-8B-Instruct"
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 1050939392,
+   "F8_E4M3": 6979321856
+  },
+  "total": 8030261248
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "README.md",
+   "size": 9543
+  },
+  {
+   "rfilename": "config.json",
+   "size": 2036
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 184
+  },
+  {
+   "rfilename": "model-00001-of-00002.safetensors",
+   "size": 4997857264
+  },
+  {
+   "rfilename": "model-00002-of-00002.safetensors",
+   "size": 4083429752
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 62753
+  },
+  {
+   "rfilename": "recipe.yaml",
+   "size": 364
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 325
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 9085657
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 55380
+  }
+ ]
+}

@@ -1,0 +1,120 @@
+{
+ "id": "unsloth/gpt-oss-20b-GGUF",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "gguf",
+  "gpt_oss",
+  "text-generation",
+  "openai",
+  "unsloth",
+  "base_model:openai/gpt-oss-20b",
+  "base_model:quantized:openai/gpt-oss-20b",
+  "license:apache-2.0",
+  "endpoints_compatible",
+  "region:us",
+  "conversational"
+ ],
+ "config": {
+  "model_type": "gpt_oss"
+ },
+ "cardData": {
+  "base_model": [
+   "openai/gpt-oss-20b"
+  ]
+ },
+ "gguf": {
+  "total": 20914757184
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 2760
+  },
+  {
+   "rfilename": "README.md",
+   "size": 8836
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1643
+  },
+  {
+   "rfilename": "gpt-oss-20b-F16.gguf",
+   "size": 13792639168
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q2_K.gguf",
+   "size": 11468317888
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q2_K_L.gguf",
+   "size": 11757884608
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q3_K_M.gguf",
+   "size": 11506103488
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q3_K_S.gguf",
+   "size": 11463894208
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q4_0.gguf",
+   "size": 11501495488
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q4_1.gguf",
+   "size": 11577504448
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q4_K_M.gguf",
+   "size": 11624759488
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q4_K_S.gguf",
+   "size": 11618492608
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q5_K_M.gguf",
+   "size": 11717357248
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q5_K_S.gguf",
+   "size": 11711827648
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q6_K.gguf",
+   "size": 12041000128
+  },
+  {
+   "rfilename": "gpt-oss-20b-Q8_0.gguf",
+   "size": 12109567168
+  },
+  {
+   "rfilename": "gpt-oss-20b-UD-Q4_K_XL.gguf",
+   "size": 11872347328
+  },
+  {
+   "rfilename": "gpt-oss-20b-UD-Q6_K_XL.gguf",
+   "size": 12041000128
+  },
+  {
+   "rfilename": "gpt-oss-20b-UD-Q8_K_XL.gguf",
+   "size": 13195442368
+  },
+  {
+   "rfilename": "notebook.ipynb",
+   "size": 79586
+  },
+  {
+   "rfilename": "params",
+   "size": 149
+  },
+  {
+   "rfilename": "template",
+   "size": 7355
+  }
+ ]
+}

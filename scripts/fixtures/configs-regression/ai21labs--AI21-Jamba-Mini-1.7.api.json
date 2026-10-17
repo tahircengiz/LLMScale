@@ -1,0 +1,146 @@
+{
+ "id": "ai21labs/AI21-Jamba-Mini-1.7",
+ "gated": "auto",
+ "tags": [
+  "safetensors",
+  "jamba",
+  "license:other",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "jamba"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 51570323328
+  },
+  "total": 51570323328
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "LICENSE.txt",
+   "size": 11348
+  },
+  {
+   "rfilename": "README.md",
+   "size": 7209
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1010
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 126
+  },
+  {
+   "rfilename": "model-00001-of-00021.safetensors",
+   "size": 4951237152
+  },
+  {
+   "rfilename": "model-00002-of-00021.safetensors",
+   "size": 4884145352
+  },
+  {
+   "rfilename": "model-00003-of-00021.safetensors",
+   "size": 4992294984
+  },
+  {
+   "rfilename": "model-00004-of-00021.safetensors",
+   "size": 4958591424
+  },
+  {
+   "rfilename": "model-00005-of-00021.safetensors",
+   "size": 4975501696
+  },
+  {
+   "rfilename": "model-00006-of-00021.safetensors",
+   "size": 4884145344
+  },
+  {
+   "rfilename": "model-00007-of-00021.safetensors",
+   "size": 4884145368
+  },
+  {
+   "rfilename": "model-00008-of-00021.safetensors",
+   "size": 4992295040
+  },
+  {
+   "rfilename": "model-00009-of-00021.safetensors",
+   "size": 4932507176
+  },
+  {
+   "rfilename": "model-00010-of-00021.safetensors",
+   "size": 4884145400
+  },
+  {
+   "rfilename": "model-00011-of-00021.safetensors",
+   "size": 4884145424
+  },
+  {
+   "rfilename": "model-00012-of-00021.safetensors",
+   "size": 4884145416
+  },
+  {
+   "rfilename": "model-00013-of-00021.safetensors",
+   "size": 4932507176
+  },
+  {
+   "rfilename": "model-00014-of-00021.safetensors",
+   "size": 4992295016
+  },
+  {
+   "rfilename": "model-00015-of-00021.safetensors",
+   "size": 4884145416
+  },
+  {
+   "rfilename": "model-00016-of-00021.safetensors",
+   "size": 4884145416
+  },
+  {
+   "rfilename": "model-00017-of-00021.safetensors",
+   "size": 4908260720
+  },
+  {
+   "rfilename": "model-00018-of-00021.safetensors",
+   "size": 4908391864
+  },
+  {
+   "rfilename": "model-00019-of-00021.safetensors",
+   "size": 4992295032
+  },
+  {
+   "rfilename": "model-00020-of-00021.safetensors",
+   "size": 4884145424
+  },
+  {
+   "rfilename": "model-00021-of-00021.safetensors",
+   "size": 4647318576
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 109353
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 2506
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 4245042
+  },
+  {
+   "rfilename": "tokenizer.model",
+   "size": 1124714
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 14431
+  }
+ ]
+}

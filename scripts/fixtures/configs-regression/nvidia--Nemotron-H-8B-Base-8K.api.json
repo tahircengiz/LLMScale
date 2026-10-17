@@ -1,0 +1,133 @@
+{
+ "id": "nvidia/Nemotron-H-8B-Base-8K",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "nvidia",
+  "pytorch",
+  "nemotron-h",
+  "text-generation",
+  "conversational",
+  "en",
+  "de",
+  "es",
+  "fr",
+  "it",
+  "ko",
+  "pt",
+  "ru",
+  "jp",
+  "zh",
+  "arxiv:2504.03624",
+  "license:other",
+  "endpoints_compatible",
+  "region:us"
+ ],
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 8100852736
+  },
+  "total": 8100852736
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1753
+  },
+  {
+   "rfilename": "README.md",
+   "size": 10052
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1504
+  },
+  {
+   "rfilename": "configuration_nemotron_h.py",
+   "size": 12119
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 143
+  },
+  {
+   "rfilename": "model-00001-of-00004.safetensors",
+   "size": 4982754168
+  },
+  {
+   "rfilename": "model-00002-of-00004.safetensors",
+   "size": 4916952064
+  },
+  {
+   "rfilename": "model-00003-of-00004.safetensors",
+   "size": 4875961752
+  },
+  {
+   "rfilename": "model-00004-of-00004.safetensors",
+   "size": 1426072008
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 24496
+  },
+  {
+   "rfilename": "modeling_nemotron_h.py",
+   "size": 78257
+  },
+  {
+   "rfilename": "nemo/context/io.json",
+   "size": 23526
+  },
+  {
+   "rfilename": "nemo/context/model.yaml",
+   "size": 8139
+  },
+  {
+   "rfilename": "nemo/context/nemo_tokenizer/special_tokens_map.json",
+   "size": 414
+  },
+  {
+   "rfilename": "nemo/context/nemo_tokenizer/tokenizer.json",
+   "size": 17078330
+  },
+  {
+   "rfilename": "nemo/context/nemo_tokenizer/tokenizer_config.json",
+   "size": 177623
+  },
+  {
+   "rfilename": "nemo/weights/.metadata",
+   "size": 227698
+  },
+  {
+   "rfilename": "nemo/weights/__0_0.distcp",
+   "size": 8101267213
+  },
+  {
+   "rfilename": "nemo/weights/__0_1.distcp",
+   "size": 8101271028
+  },
+  {
+   "rfilename": "nemo/weights/common.pt",
+   "size": 3099
+  },
+  {
+   "rfilename": "nemo/weights/metadata.json",
+   "size": 119
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 414
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 17078330
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 177596
+  }
+ ]
+}

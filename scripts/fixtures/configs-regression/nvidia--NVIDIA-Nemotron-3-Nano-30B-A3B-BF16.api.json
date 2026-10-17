@@ -1,0 +1,198 @@
+{
+ "id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "nemotron_h",
+  "text-generation",
+  "nvidia",
+  "pytorch",
+  "conversational",
+  "custom_code",
+  "en",
+  "es",
+  "fr",
+  "de",
+  "ja",
+  "it",
+  "dataset:nvidia/Nemotron-Pretraining-Code-v1",
+  "dataset:nvidia/Nemotron-CC-v2",
+  "dataset:nvidia/Nemotron-Pretraining-SFT-v1",
+  "dataset:nvidia/Nemotron-CC-Math-v1",
+  "dataset:nvidia/Nemotron-Pretraining-Code-v2",
+  "dataset:nvidia/Nemotron-Pretraining-Specialized-v1",
+  "dataset:nvidia/Nemotron-CC-v2.1",
+  "dataset:nvidia/Nemotron-CC-Code-v1",
+  "dataset:nvidia/Nemotron-Pretraining-Dataset-sample",
+  "dataset:nvidia/Nemotron-Competitive-Programming-v1",
+  "dataset:nvidia/Nemotron-Math-v2",
+  "dataset:nvidia/Nemotron-Agentic-v1",
+  "dataset:nvidia/Nemotron-Math-Proofs-v1",
+  "dataset:nvidia/Nemotron-Instruction-Following-Chat-v1",
+  "dataset:nvidia/Nemotron-Science-v1",
+  "dataset:nvidia/Nemotron-3-Nano-RL-Training-Blend",
+  "arxiv:2512.20848",
+  "arxiv:2512.20856",
+  "license:other",
+  "eval-results",
+  "endpoints_compatible",
+  "deploy:sagemaker",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "nemotron_h"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "F32": 5888,
+   "BF16": 31577934400
+  },
+  "total": 31577937344
+ },
+ "siblings": [
+  {
+   "rfilename": ".eval_results/gpqa.yaml",
+   "size": 153
+  },
+  {
+   "rfilename": ".eval_results/hle.yaml",
+   "size": 148
+  },
+  {
+   "rfilename": ".eval_results/mmlu-pro.yaml",
+   "size": 158
+  },
+  {
+   "rfilename": ".gitattributes",
+   "size": 1625
+  },
+  {
+   "rfilename": "README.md",
+   "size": 73449
+  },
+  {
+   "rfilename": "accuracy_chart.png",
+   "size": 191028
+  },
+  {
+   "rfilename": "bias.md",
+   "size": 2276
+  },
+  {
+   "rfilename": "chat_template.jinja",
+   "size": 10504
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1817
+  },
+  {
+   "rfilename": "configuration_nemotron_h.py",
+   "size": 12893
+  },
+  {
+   "rfilename": "explainability.md",
+   "size": 3003
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 197
+  },
+  {
+   "rfilename": "model-00001-of-00013.safetensors",
+   "size": 4991205008
+  },
+  {
+   "rfilename": "model-00002-of-00013.safetensors",
+   "size": 4992601472
+  },
+  {
+   "rfilename": "model-00003-of-00013.safetensors",
+   "size": 4992601824
+  },
+  {
+   "rfilename": "model-00004-of-00013.safetensors",
+   "size": 4995693256
+  },
+  {
+   "rfilename": "model-00005-of-00013.safetensors",
+   "size": 4980545984
+  },
+  {
+   "rfilename": "model-00006-of-00013.safetensors",
+   "size": 4999410040
+  },
+  {
+   "rfilename": "model-00007-of-00013.safetensors",
+   "size": 4992601952
+  },
+  {
+   "rfilename": "model-00008-of-00013.safetensors",
+   "size": 4992601976
+  },
+  {
+   "rfilename": "model-00009-of-00013.safetensors",
+   "size": 4995693256
+  },
+  {
+   "rfilename": "model-00010-of-00013.safetensors",
+   "size": 4992601976
+  },
+  {
+   "rfilename": "model-00011-of-00013.safetensors",
+   "size": 4995693256
+  },
+  {
+   "rfilename": "model-00012-of-00013.safetensors",
+   "size": 4995693272
+  },
+  {
+   "rfilename": "model-00013-of-00013.safetensors",
+   "size": 3239751000
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 613296
+  },
+  {
+   "rfilename": "modeling_nemotron_h.py",
+   "size": 83779
+  },
+  {
+   "rfilename": "nano_v3_reasoning_parser.py",
+   "size": 798
+  },
+  {
+   "rfilename": "nemo-evaluator-launcher-configs/local_nvidia_nemotron_3_nano_30b_a3b.yaml",
+   "size": 4242
+  },
+  {
+   "rfilename": "notebook.ipynb",
+   "size": 3206
+  },
+  {
+   "rfilename": "privacy.md",
+   "size": 2296
+  },
+  {
+   "rfilename": "safety.md",
+   "size": 2094
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 420
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 17077485
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 188049
+  }
+ ]
+}

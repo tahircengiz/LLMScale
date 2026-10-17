@@ -1,0 +1,104 @@
+{
+ "id": "tiiuae/Falcon-H1-7B-Instruct",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "falcon_h1",
+  "text-generation",
+  "falcon-h1",
+  "conversational",
+  "ar",
+  "cs",
+  "de",
+  "en",
+  "es",
+  "fr",
+  "hi",
+  "it",
+  "ja",
+  "ko",
+  "nl",
+  "pl",
+  "pt",
+  "ro",
+  "ru",
+  "sv",
+  "ur",
+  "zh",
+  "arxiv:2507.22448",
+  "base_model:tiiuae/Falcon-H1-7B-Base",
+  "base_model:finetune:tiiuae/Falcon-H1-7B-Base",
+  "license:other",
+  "endpoints_compatible",
+  "deploy:sagemaker",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "falcon_h1"
+ },
+ "cardData": {
+  "base_model": "tiiuae/Falcon-H1-7B-Base"
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 7585654880
+  },
+  "total": 7585654880
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1570
+  },
+  {
+   "rfilename": "README.md",
+   "size": 5688
+  },
+  {
+   "rfilename": "chat_template.jinja",
+   "size": 1151
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1639
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 145
+  },
+  {
+   "rfilename": "model-00001-of-00004.safetensors",
+   "size": 4960322992
+  },
+  {
+   "rfilename": "model-00002-of-00004.safetensors",
+   "size": 4935762112
+  },
+  {
+   "rfilename": "model-00003-of-00004.safetensors",
+   "size": 4476288016
+  },
+  {
+   "rfilename": "model-00004-of-00004.safetensors",
+   "size": 799021184
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 60253
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 18981
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 10534488
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 202416
+  }
+ ]
+}

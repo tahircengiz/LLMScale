@@ -1,0 +1,113 @@
+{
+ "id": "google/gemma-2-9b-it",
+ "gated": "manual",
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "gemma2",
+  "text-generation",
+  "conversational",
+  "arxiv:2009.03300",
+  "arxiv:1905.07830",
+  "arxiv:1911.11641",
+  "arxiv:1904.09728",
+  "arxiv:1905.10044",
+  "arxiv:1907.10641",
+  "arxiv:1811.00937",
+  "arxiv:1809.02789",
+  "arxiv:1911.01547",
+  "arxiv:1705.03551",
+  "arxiv:2107.03374",
+  "arxiv:2108.07732",
+  "arxiv:2110.14168",
+  "arxiv:2009.11462",
+  "arxiv:2101.11718",
+  "arxiv:2110.08193",
+  "arxiv:1804.09301",
+  "arxiv:2109.07958",
+  "arxiv:1804.06876",
+  "arxiv:2103.03874",
+  "arxiv:2304.06364",
+  "arxiv:2206.04615",
+  "arxiv:2203.09509",
+  "base_model:google/gemma-2-9b",
+  "base_model:finetune:google/gemma-2-9b",
+  "license:gemma",
+  "eval-results",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "deploy:sagemaker",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "gemma2"
+ },
+ "cardData": {
+  "base_model": "google/gemma-2-9b"
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 9241705984
+  },
+  "total": 9241705984
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1661
+  },
+  {
+   "rfilename": "README.md",
+   "size": 25789
+  },
+  {
+   "rfilename": "config.json",
+   "size": 857
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 173
+  },
+  {
+   "rfilename": "model-00001-of-00004.safetensors",
+   "size": 4903351912
+  },
+  {
+   "rfilename": "model-00002-of-00004.safetensors",
+   "size": 4947570872
+  },
+  {
+   "rfilename": "model-00003-of-00004.safetensors",
+   "size": 4962221464
+  },
+  {
+   "rfilename": "model-00004-of-00004.safetensors",
+   "size": 3670322200
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 39072
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 636
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 17525357
+  },
+  {
+   "rfilename": "tokenizer.model",
+   "size": 4241003
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 46996
+  },
+  {
+   "rfilename": "transformers/transformers-4.42.0.dev0-py3-none-any.whl",
+   "size": 9205686
+  }
+ ]
+}

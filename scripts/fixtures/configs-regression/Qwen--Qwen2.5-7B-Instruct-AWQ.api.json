@@ -1,0 +1,87 @@
+{
+ "id": "Qwen/Qwen2.5-7B-Instruct-AWQ",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "qwen2",
+  "text-generation",
+  "chat",
+  "conversational",
+  "en",
+  "arxiv:2309.00071",
+  "arxiv:2407.10671",
+  "base_model:Qwen/Qwen2.5-7B-Instruct",
+  "base_model:quantized:Qwen/Qwen2.5-7B-Instruct",
+  "license:apache-2.0",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "4-bit",
+  "awq",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "qwen2"
+ },
+ "cardData": {
+  "base_model": "Qwen/Qwen2.5-7B-Instruct"
+ },
+ "safetensors": {
+  "parameters": {
+   "I32": 6525288448,
+   "F16": 1090328064
+  },
+  "total": 7615616512
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1518
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 11343
+  },
+  {
+   "rfilename": "README.md",
+   "size": 6368
+  },
+  {
+   "rfilename": "config.json",
+   "size": 841
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 243
+  },
+  {
+   "rfilename": "merges.txt",
+   "size": 1671839
+  },
+  {
+   "rfilename": "model-00001-of-00002.safetensors",
+   "size": 3996422976
+  },
+  {
+   "rfilename": "model-00002-of-00002.safetensors",
+   "size": 1574406784
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 62662
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 7031645
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 7305
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 2776833
+  }
+ ]
+}

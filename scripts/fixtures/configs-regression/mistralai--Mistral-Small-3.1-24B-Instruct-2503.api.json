@@ -1,0 +1,156 @@
+{
+ "id": "mistralai/Mistral-Small-3.1-24B-Instruct-2503",
+ "gated": false,
+ "tags": [
+  "vllm",
+  "safetensors",
+  "mistral3",
+  "mistral-common",
+  "en",
+  "fr",
+  "de",
+  "es",
+  "pt",
+  "it",
+  "ja",
+  "ko",
+  "ru",
+  "zh",
+  "ar",
+  "fa",
+  "id",
+  "ms",
+  "ne",
+  "pl",
+  "ro",
+  "sr",
+  "sv",
+  "tr",
+  "uk",
+  "vi",
+  "hi",
+  "bn",
+  "base_model:mistralai/Mistral-Small-3.1-24B-Base-2503",
+  "base_model:finetune:mistralai/Mistral-Small-3.1-24B-Base-2503",
+  "license:apache-2.0",
+  "eval-results",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "mistral3"
+ },
+ "cardData": {
+  "base_model": [
+   "mistralai/Mistral-Small-3.1-24B-Base-2503"
+  ]
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 24011361280
+  },
+  "total": 24011361280
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1618
+  },
+  {
+   "rfilename": "README.md",
+   "size": 19022
+  },
+  {
+   "rfilename": "SYSTEM_PROMPT.txt",
+   "size": 1494
+  },
+  {
+   "rfilename": "chat_template.json",
+   "size": 2772
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1177
+  },
+  {
+   "rfilename": "consolidated.safetensors",
+   "size": 48022792280
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 116
+  },
+  {
+   "rfilename": "model-00001-of-00010.safetensors",
+   "size": 4883550696
+  },
+  {
+   "rfilename": "model-00002-of-00010.safetensors",
+   "size": 4781593336
+  },
+  {
+   "rfilename": "model-00003-of-00010.safetensors",
+   "size": 4886472224
+  },
+  {
+   "rfilename": "model-00004-of-00010.safetensors",
+   "size": 4781593376
+  },
+  {
+   "rfilename": "model-00005-of-00010.safetensors",
+   "size": 4781593368
+  },
+  {
+   "rfilename": "model-00006-of-00010.safetensors",
+   "size": 4886472248
+  },
+  {
+   "rfilename": "model-00007-of-00010.safetensors",
+   "size": 4781593376
+  },
+  {
+   "rfilename": "model-00008-of-00010.safetensors",
+   "size": 4781593368
+  },
+  {
+   "rfilename": "model-00009-of-00010.safetensors",
+   "size": 4886472248
+  },
+  {
+   "rfilename": "model-00010-of-00010.safetensors",
+   "size": 4571866320
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 57907
+  },
+  {
+   "rfilename": "params.json",
+   "size": 807
+  },
+  {
+   "rfilename": "preprocessor_config.json",
+   "size": 634
+  },
+  {
+   "rfilename": "processor_config.json",
+   "size": 189
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 21449
+  },
+  {
+   "rfilename": "tekken.json",
+   "size": 14801330
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 17078037
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 198120
+  }
+ ]
+}

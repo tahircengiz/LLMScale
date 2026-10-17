@@ -1,0 +1,122 @@
+{
+ "id": "microsoft/Phi-3-small-8k-instruct",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "phi3small",
+  "text-generation",
+  "nlp",
+  "code",
+  "conversational",
+  "custom_code",
+  "multilingual",
+  "license:mit",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "phi3small"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 7392274432
+  },
+  "total": 7392274432
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "CODE_OF_CONDUCT.md",
+   "size": 444
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 1141
+  },
+  {
+   "rfilename": "README.md",
+   "size": 19458
+  },
+  {
+   "rfilename": "SECURITY.md",
+   "size": 2656
+  },
+  {
+   "rfilename": "SUPPORT.md",
+   "size": 1244
+  },
+  {
+   "rfilename": "cl100k_base.tiktoken",
+   "size": 1681126
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1571
+  },
+  {
+   "rfilename": "configuration_phi3_small.py",
+   "size": 12310
+  },
+  {
+   "rfilename": "data_summary_card.md",
+   "size": 4619
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 143
+  },
+  {
+   "rfilename": "model-00001-of-00004.safetensors",
+   "size": 4832943104
+  },
+  {
+   "rfilename": "model-00002-of-00004.safetensors",
+   "size": 4799608224
+  },
+  {
+   "rfilename": "model-00003-of-00004.safetensors",
+   "size": 4799608240
+  },
+  {
+   "rfilename": "model-00004-of-00004.safetensors",
+   "size": 352437304
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 34941
+  },
+  {
+   "rfilename": "modeling_phi3_small.py",
+   "size": 48015
+  },
+  {
+   "rfilename": "positional_embedding.py",
+   "size": 11739
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 99
+  },
+  {
+   "rfilename": "tokenization_phi3_small.py",
+   "size": 12886
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 637
+  },
+  {
+   "rfilename": "triton_blocksparse_attention_layer.py",
+   "size": 7203
+  },
+  {
+   "rfilename": "triton_flash_blocksparse_attn.py",
+   "size": 82482
+  }
+ ]
+}

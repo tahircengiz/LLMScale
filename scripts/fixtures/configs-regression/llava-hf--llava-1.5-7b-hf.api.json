@@ -1,0 +1,98 @@
+{
+ "id": "llava-hf/llava-1.5-7b-hf",
+ "gated": false,
+ "pipeline_tag": "image-text-to-text",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "llava",
+  "image-text-to-text",
+  "vision",
+  "conversational",
+  "en",
+  "dataset:liuhaotian/LLaVA-Instruct-150K",
+  "license:llama2",
+  "endpoints_compatible",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "llava"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "F16": 7063427072
+  },
+  "total": 7063427072
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "README.md",
+   "size": 5639
+  },
+  {
+   "rfilename": "added_tokens.json",
+   "size": 41
+  },
+  {
+   "rfilename": "chat_template.jinja",
+   "size": 674
+  },
+  {
+   "rfilename": "chat_template.json",
+   "size": 701
+  },
+  {
+   "rfilename": "config.json",
+   "size": 950
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 141
+  },
+  {
+   "rfilename": "model-00001-of-00003.safetensors",
+   "size": 4992930200
+  },
+  {
+   "rfilename": "model-00002-of-00003.safetensors",
+   "size": 4957878440
+  },
+  {
+   "rfilename": "model-00003-of-00003.safetensors",
+   "size": 4176137408
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 70128
+  },
+  {
+   "rfilename": "preprocessor_config.json",
+   "size": 505
+  },
+  {
+   "rfilename": "processor_config.json",
+   "size": 173
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 552
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 3619380
+  },
+  {
+   "rfilename": "tokenizer.model",
+   "size": 499723
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 1451
+  }
+ ]
+}

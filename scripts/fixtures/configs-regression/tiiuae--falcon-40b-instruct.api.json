@@ -1,0 +1,113 @@
+{
+ "id": "tiiuae/falcon-40b-instruct",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "pytorch",
+  "falcon",
+  "text-generation",
+  "custom_code",
+  "en",
+  "dataset:tiiuae/falcon-refinedweb",
+  "arxiv:2205.14135",
+  "arxiv:1911.02150",
+  "arxiv:2005.14165",
+  "arxiv:2104.09864",
+  "arxiv:2306.01116",
+  "arxiv:2304.01196",
+  "license:apache-2.0",
+  "eval-results",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "deploy:sagemaker",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "falcon"
+ },
+ "cardData": {},
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1477
+  },
+  {
+   "rfilename": "README.md",
+   "size": 8807
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1046
+  },
+  {
+   "rfilename": "configuration_falcon.py",
+   "size": 7163
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 117
+  },
+  {
+   "rfilename": "handler.py",
+   "size": 1154
+  },
+  {
+   "rfilename": "modeling_falcon.py",
+   "size": 56920
+  },
+  {
+   "rfilename": "pytorch_model-00001-of-00009.bin",
+   "size": 9504770141
+  },
+  {
+   "rfilename": "pytorch_model-00002-of-00009.bin",
+   "size": 9513159151
+  },
+  {
+   "rfilename": "pytorch_model-00003-of-00009.bin",
+   "size": 9513159151
+  },
+  {
+   "rfilename": "pytorch_model-00004-of-00009.bin",
+   "size": 9513159151
+  },
+  {
+   "rfilename": "pytorch_model-00005-of-00009.bin",
+   "size": 9513159151
+  },
+  {
+   "rfilename": "pytorch_model-00006-of-00009.bin",
+   "size": 9513159151
+  },
+  {
+   "rfilename": "pytorch_model-00007-of-00009.bin",
+   "size": 9513159151
+  },
+  {
+   "rfilename": "pytorch_model-00008-of-00009.bin",
+   "size": 9513159151
+  },
+  {
+   "rfilename": "pytorch_model-00009-of-00009.bin",
+   "size": 7575220277
+  },
+  {
+   "rfilename": "pytorch_model.bin.index.json",
+   "size": 39264
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 281
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 2734130
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 287
+  }
+ ]
+}

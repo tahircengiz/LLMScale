@@ -1,0 +1,74 @@
+{
+ "id": "facebook/opt-125m",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "pytorch",
+  "tf",
+  "jax",
+  "opt",
+  "text-generation",
+  "en",
+  "arxiv:2205.01068",
+  "arxiv:2005.14165",
+  "license:other",
+  "text-generation-inference",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "opt"
+ },
+ "cardData": {},
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1173
+  },
+  {
+   "rfilename": "LICENSE.md",
+   "size": 11117
+  },
+  {
+   "rfilename": "README.md",
+   "size": 7099
+  },
+  {
+   "rfilename": "config.json",
+   "size": 651
+  },
+  {
+   "rfilename": "flax_model.msgpack",
+   "size": 250485441
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 137
+  },
+  {
+   "rfilename": "merges.txt",
+   "size": 456318
+  },
+  {
+   "rfilename": "pytorch_model.bin",
+   "size": 250540281
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 441
+  },
+  {
+   "rfilename": "tf_model.h5",
+   "size": 250709016
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 685
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 898822
+  }
+ ]
+}

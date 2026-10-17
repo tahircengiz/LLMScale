@@ -1,0 +1,121 @@
+{
+ "id": "microsoft/Phi-4-mini-flash-reasoning",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "phi4flash",
+  "text-generation",
+  "nlp",
+  "math",
+  "code",
+  "conversational",
+  "custom_code",
+  "en",
+  "arxiv:2507.06607",
+  "license:mit",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "phi4flash"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "F32": 741376,
+   "BF16": 3851821568
+  },
+  "total": 3852562944
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1923
+  },
+  {
+   "rfilename": "CODE_OF_CONDUCT.md",
+   "size": 443
+  },
+  {
+   "rfilename": "Decoder_Hybrid_Decoder_Architecture_for_Efficient_Reasoning_with_Long_Generation.pdf",
+   "size": 5662637
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 1084
+  },
+  {
+   "rfilename": "NOTICE.md",
+   "size": 1772
+  },
+  {
+   "rfilename": "README.md",
+   "size": 21756
+  },
+  {
+   "rfilename": "SECURITY.md",
+   "size": 2655
+  },
+  {
+   "rfilename": "added_tokens.json",
+   "size": 249
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1031
+  },
+  {
+   "rfilename": "configuration_phi4flash.py",
+   "size": 7567
+  },
+  {
+   "rfilename": "data_summary_card.md",
+   "size": 4320
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 189
+  },
+  {
+   "rfilename": "lat.png",
+   "size": 115279
+  },
+  {
+   "rfilename": "model-00001-of-00002.safetensors",
+   "size": 4953749104
+  },
+  {
+   "rfilename": "model-00002-of-00002.safetensors",
+   "size": 2752907752
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 35332
+  },
+  {
+   "rfilename": "modeling_phi4flash.py",
+   "size": 92833
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 587
+  },
+  {
+   "rfilename": "thr_lat.png",
+   "size": 126234
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 9731550
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 2931
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 3910048
+  }
+ ]
+}

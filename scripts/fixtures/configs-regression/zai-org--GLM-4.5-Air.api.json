@@ -1,0 +1,253 @@
+{
+ "id": "zai-org/GLM-4.5-Air",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "glm4_moe",
+  "text-generation",
+  "conversational",
+  "en",
+  "zh",
+  "arxiv:2508.06471",
+  "license:mit",
+  "eval-results",
+  "endpoints_compatible",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "glm4_moe"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 110468818944,
+   "F32": 5888
+  },
+  "total": 110468824832
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1570
+  },
+  {
+   "rfilename": "README.md",
+   "size": 3001
+  },
+  {
+   "rfilename": "chat_template.jinja",
+   "size": 3242
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1008
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 155
+  },
+  {
+   "rfilename": "model-00001-of-00047.safetensors",
+   "size": 2970138176
+  },
+  {
+   "rfilename": "model-00002-of-00047.safetensors",
+   "size": 4683035216
+  },
+  {
+   "rfilename": "model-00003-of-00047.safetensors",
+   "size": 4683035216
+  },
+  {
+   "rfilename": "model-00004-of-00047.safetensors",
+   "size": 4683035216
+  },
+  {
+   "rfilename": "model-00005-of-00047.safetensors",
+   "size": 4683035216
+  },
+  {
+   "rfilename": "model-00006-of-00047.safetensors",
+   "size": 4683035216
+  },
+  {
+   "rfilename": "model-00007-of-00047.safetensors",
+   "size": 4683035216
+  },
+  {
+   "rfilename": "model-00008-of-00047.safetensors",
+   "size": 4683035216
+  },
+  {
+   "rfilename": "model-00009-of-00047.safetensors",
+   "size": 4683035216
+  },
+  {
+   "rfilename": "model-00010-of-00047.safetensors",
+   "size": 4683035216
+  },
+  {
+   "rfilename": "model-00011-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00012-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00013-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00014-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00015-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00016-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00017-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00018-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00019-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00020-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00021-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00022-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00023-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00024-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00025-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00026-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00027-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00028-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00029-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00030-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00031-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00032-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00033-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00034-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00035-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00036-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00037-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00038-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00039-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00040-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00041-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00042-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00043-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00044-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00045-of-00047.safetensors",
+   "size": 4683035616
+  },
+  {
+   "rfilename": "model-00046-of-00047.safetensors",
+   "size": 7166072280
+  },
+  {
+   "rfilename": "model-00047-of-00047.safetensors",
+   "size": 4750169496
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 1651359
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 19970699
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 7307
+  }
+ ]
+}

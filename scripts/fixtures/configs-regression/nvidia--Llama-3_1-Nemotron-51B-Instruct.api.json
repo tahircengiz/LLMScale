@@ -1,0 +1,207 @@
+{
+ "id": "nvidia/Llama-3_1-Nemotron-51B-Instruct",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "nemotron-nas",
+  "text-generation",
+  "nvidia",
+  "llama-3",
+  "pytorch",
+  "conversational",
+  "custom_code",
+  "en",
+  "arxiv:2306.05685",
+  "arxiv:2009.03300",
+  "arxiv:2110.14168",
+  "arxiv:2404.05993",
+  "license:other",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "nemotron-nas"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 51501015040
+  },
+  "total": 51501015040
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "NOTICE",
+   "size": 571
+  },
+  {
+   "rfilename": "README.md",
+   "size": 7506
+  },
+  {
+   "rfilename": "__init__.py",
+   "size": 0
+  },
+  {
+   "rfilename": "config.json",
+   "size": 20748
+  },
+  {
+   "rfilename": "configuration_decilm.py",
+   "size": 3974
+  },
+  {
+   "rfilename": "model-00001-of-00022.safetensors",
+   "size": 4987128904
+  },
+  {
+   "rfilename": "model-00002-of-00022.safetensors",
+   "size": 4873899312
+  },
+  {
+   "rfilename": "model-00003-of-00022.safetensors",
+   "size": 4899116128
+  },
+  {
+   "rfilename": "model-00004-of-00022.safetensors",
+   "size": 4567782440
+  },
+  {
+   "rfilename": "model-00005-of-00022.safetensors",
+   "size": 4999695232
+  },
+  {
+   "rfilename": "model-00006-of-00022.safetensors",
+   "size": 4966157072
+  },
+  {
+   "rfilename": "model-00007-of-00022.safetensors",
+   "size": 4664150920
+  },
+  {
+   "rfilename": "model-00008-of-00022.safetensors",
+   "size": 4664167416
+  },
+  {
+   "rfilename": "model-00009-of-00022.safetensors",
+   "size": 4664167416
+  },
+  {
+   "rfilename": "model-00010-of-00022.safetensors",
+   "size": 4999695232
+  },
+  {
+   "rfilename": "model-00011-of-00022.safetensors",
+   "size": 4966157072
+  },
+  {
+   "rfilename": "model-00012-of-00022.safetensors",
+   "size": 4664150920
+  },
+  {
+   "rfilename": "model-00013-of-00022.safetensors",
+   "size": 4664167416
+  },
+  {
+   "rfilename": "model-00014-of-00022.safetensors",
+   "size": 4731276160
+  },
+  {
+   "rfilename": "model-00015-of-00022.safetensors",
+   "size": 4899114336
+  },
+  {
+   "rfilename": "model-00016-of-00022.safetensors",
+   "size": 4983018288
+  },
+  {
+   "rfilename": "model-00017-of-00022.safetensors",
+   "size": 4899198680
+  },
+  {
+   "rfilename": "model-00018-of-00022.safetensors",
+   "size": 4647456992
+  },
+  {
+   "rfilename": "model-00019-of-00022.safetensors",
+   "size": 4664167416
+  },
+  {
+   "rfilename": "model-00020-of-00022.safetensors",
+   "size": 4664167416
+  },
+  {
+   "rfilename": "model-00021-of-00022.safetensors",
+   "size": 4831922696
+  },
+  {
+   "rfilename": "model-00022-of-00022.safetensors",
+   "size": 2101346432
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 51910
+  },
+  {
+   "rfilename": "modeling_decilm.py",
+   "size": 80405
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 296
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 9085630
+  },
+  {
+   "rfilename": "tokenizer_chat_template.jinja",
+   "size": 685
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 55351
+  },
+  {
+   "rfilename": "transformers_4_44_2__activations.py",
+   "size": 8189
+  },
+  {
+   "rfilename": "transformers_4_44_2__cache_utils.py",
+   "size": 14818
+  },
+  {
+   "rfilename": "transformers_4_44_2__configuration_llama.py",
+   "size": 11066
+  },
+  {
+   "rfilename": "transformers_4_44_2__modeling_attn_mask_utils.py",
+   "size": 21330
+  },
+  {
+   "rfilename": "transformers_4_44_2__modeling_flash_attention_utils_backward_compat.py",
+   "size": 15751
+  },
+  {
+   "rfilename": "transformers_4_44_2__modeling_outputs.py",
+   "size": 112579
+  },
+  {
+   "rfilename": "transformers_4_44_2__modeling_rope_utils.py",
+   "size": 28067
+  },
+  {
+   "rfilename": "transformers_4_44_2__pytorch_utils.py",
+   "size": 666
+  },
+  {
+   "rfilename": "variable_cache.py",
+   "size": 4730
+  }
+ ]
+}

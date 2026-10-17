@@ -1,0 +1,90 @@
+{
+ "id": "deepseek-ai/DeepSeek-V2-Lite-Chat",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "deepseek_v2",
+  "text-generation",
+  "conversational",
+  "custom_code",
+  "arxiv:2405.04434",
+  "license:other",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "deepseek_v2"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 15706484224
+  },
+  "total": 15706484224
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 13759
+  },
+  {
+   "rfilename": "README.md",
+   "size": 15500
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1522
+  },
+  {
+   "rfilename": "configuration_deepseek.py",
+   "size": 10338
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 181
+  },
+  {
+   "rfilename": "model-00001-of-000004.safetensors",
+   "size": 8594887408
+  },
+  {
+   "rfilename": "model-00002-of-000004.safetensors",
+   "size": 8591757448
+  },
+  {
+   "rfilename": "model-00003-of-000004.safetensors",
+   "size": 8590718520
+  },
+  {
+   "rfilename": "model-00004-of-000004.safetensors",
+   "size": 5636263200
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 479924
+  },
+  {
+   "rfilename": "modeling_deepseek.py",
+   "size": 78672
+  },
+  {
+   "rfilename": "tokenization_deepseek_fast.py",
+   "size": 1368
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 4607451
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 1279
+  }
+ ]
+}

@@ -1,0 +1,660 @@
+{
+ "id": "XiaomiMiMo/MiMo-V2-Flash",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "mimo_v2_flash",
+  "text-generation",
+  "conversational",
+  "custom_code",
+  "license:mit",
+  "eval-results",
+  "endpoints_compatible",
+  "fp8",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "mimo_v2_flash"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "F32": 68012416,
+   "BF16": 3062303360,
+   "F8_E4M3": 306655002624
+  },
+  "total": 309785318400
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1570
+  },
+  {
+   "rfilename": "README.md",
+   "size": 21184
+  },
+  {
+   "rfilename": "added_tokens.json",
+   "size": 707
+  },
+  {
+   "rfilename": "config.json",
+   "size": 4484
+  },
+  {
+   "rfilename": "configuration_mimo_v2_flash.py",
+   "size": 3896
+  },
+  {
+   "rfilename": "merges.txt",
+   "size": 1671853
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 6870775
+  },
+  {
+   "rfilename": "model_0.safetensors",
+   "size": 324091032
+  },
+  {
+   "rfilename": "model_1.safetensors",
+   "size": 132154312
+  },
+  {
+   "rfilename": "model_10.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_10_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_10_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_11.safetensors",
+   "size": 126910184
+  },
+  {
+   "rfilename": "model_11_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_11_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_12.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_12_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_12_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_13.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_13_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_13_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_14.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_14_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_14_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_15.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_15_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_15_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_16.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_16_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_16_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_17.safetensors",
+   "size": 126910184
+  },
+  {
+   "rfilename": "model_17_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_17_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_18.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_18_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_18_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_19.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_19_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_19_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_1_linear_fc1.safetensors",
+   "size": 4296143120
+  },
+  {
+   "rfilename": "model_1_linear_fc2.safetensors",
+   "size": 2148071864
+  },
+  {
+   "rfilename": "model_2.safetensors",
+   "size": 132154312
+  },
+  {
+   "rfilename": "model_20.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_20_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_20_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_21.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_21_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_21_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_22.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_22_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_22_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_23.safetensors",
+   "size": 126910184
+  },
+  {
+   "rfilename": "model_23_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_23_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_24.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_24_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_24_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_25.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_25_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_25_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_26.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_26_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_26_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_27.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_27_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_27_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_28.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_28_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_28_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_29.safetensors",
+   "size": 126910184
+  },
+  {
+   "rfilename": "model_29_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_29_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_2_linear_fc1.safetensors",
+   "size": 4296143120
+  },
+  {
+   "rfilename": "model_2_linear_fc2.safetensors",
+   "size": 2148071864
+  },
+  {
+   "rfilename": "model_3.safetensors",
+   "size": 132154312
+  },
+  {
+   "rfilename": "model_30.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_30_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_30_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_31.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_31_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_31_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_32.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_32_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_32_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_33.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_33_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_33_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_34.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_34_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_34_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_35.safetensors",
+   "size": 126910184
+  },
+  {
+   "rfilename": "model_35_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_35_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_36.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_36_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_36_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_37.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_37_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_37_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_38.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_38_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_38_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_39.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_39_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_39_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_3_linear_fc1.safetensors",
+   "size": 4296143120
+  },
+  {
+   "rfilename": "model_3_linear_fc2.safetensors",
+   "size": 2148071864
+  },
+  {
+   "rfilename": "model_4.safetensors",
+   "size": 132154312
+  },
+  {
+   "rfilename": "model_40.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_40_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_40_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_41.safetensors",
+   "size": 126910184
+  },
+  {
+   "rfilename": "model_41_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_41_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_42.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_42_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_42_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_43.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_43_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_43_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_44.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_44_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_44_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_45.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_45_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_45_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_46.safetensors",
+   "size": 132154328
+  },
+  {
+   "rfilename": "model_46_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_46_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_47.safetensors",
+   "size": 126910184
+  },
+  {
+   "rfilename": "model_47_linear_fc1.safetensors",
+   "size": 4296144144
+  },
+  {
+   "rfilename": "model_47_linear_fc2.safetensors",
+   "size": 2148072376
+  },
+  {
+   "rfilename": "model_4_linear_fc1.safetensors",
+   "size": 4296143120
+  },
+  {
+   "rfilename": "model_4_linear_fc2.safetensors",
+   "size": 2148071864
+  },
+  {
+   "rfilename": "model_5.safetensors",
+   "size": 126910168
+  },
+  {
+   "rfilename": "model_5_linear_fc1.safetensors",
+   "size": 4296143120
+  },
+  {
+   "rfilename": "model_5_linear_fc2.safetensors",
+   "size": 2148071864
+  },
+  {
+   "rfilename": "model_6.safetensors",
+   "size": 132154312
+  },
+  {
+   "rfilename": "model_6_linear_fc1.safetensors",
+   "size": 4296143120
+  },
+  {
+   "rfilename": "model_6_linear_fc2.safetensors",
+   "size": 2148071864
+  },
+  {
+   "rfilename": "model_7.safetensors",
+   "size": 132154312
+  },
+  {
+   "rfilename": "model_7_linear_fc1.safetensors",
+   "size": 4296143120
+  },
+  {
+   "rfilename": "model_7_linear_fc2.safetensors",
+   "size": 2148071864
+  },
+  {
+   "rfilename": "model_8.safetensors",
+   "size": 132154312
+  },
+  {
+   "rfilename": "model_8_linear_fc1.safetensors",
+   "size": 4296143120
+  },
+  {
+   "rfilename": "model_8_linear_fc2.safetensors",
+   "size": 2148071864
+  },
+  {
+   "rfilename": "model_9.safetensors",
+   "size": 132154312
+  },
+  {
+   "rfilename": "model_9_linear_fc1.safetensors",
+   "size": 4296143120
+  },
+  {
+   "rfilename": "model_9_linear_fc2.safetensors",
+   "size": 2148071864
+  },
+  {
+   "rfilename": "model_embedding.safetensors",
+   "size": 1249902704
+  },
+  {
+   "rfilename": "model_final.safetensors",
+   "size": 1249910976
+  },
+  {
+   "rfilename": "model_mtp.safetensors",
+   "size": 1189407384
+  },
+  {
+   "rfilename": "modeling_mimo_v2_flash.py",
+   "size": 28368
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 613
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 11422654
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 12840
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 2776833
+  }
+ ]
+}

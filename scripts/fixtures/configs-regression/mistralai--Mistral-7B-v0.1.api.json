@@ -1,0 +1,88 @@
+{
+ "id": "mistralai/Mistral-7B-v0.1",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "pytorch",
+  "safetensors",
+  "mistral",
+  "text-generation",
+  "pretrained",
+  "mistral-common",
+  "en",
+  "arxiv:2310.06825",
+  "license:apache-2.0",
+  "eval-results",
+  "text-generation-inference",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "mistral"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 7241732096
+  },
+  "total": 7241732096
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "README.md",
+   "size": 1546
+  },
+  {
+   "rfilename": "config.json",
+   "size": 571
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 116
+  },
+  {
+   "rfilename": "model-00001-of-00002.safetensors",
+   "size": 9942981696
+  },
+  {
+   "rfilename": "model-00002-of-00002.safetensors",
+   "size": 4540516344
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 25125
+  },
+  {
+   "rfilename": "pytorch_model-00001-of-00002.bin",
+   "size": 9943028044
+  },
+  {
+   "rfilename": "pytorch_model-00002-of-00002.bin",
+   "size": 5064823659
+  },
+  {
+   "rfilename": "pytorch_model.bin.index.json",
+   "size": 23950
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 414
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 1795188
+  },
+  {
+   "rfilename": "tokenizer.model",
+   "size": 493443
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 996
+  }
+ ]
+}

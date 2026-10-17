@@ -1,0 +1,112 @@
+{
+ "id": "nvidia/Qwen3.6-35B-A3B-NVFP4",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "Model Optimizer",
+  "safetensors",
+  "qwen3_5_moe",
+  "nvidia",
+  "ModelOpt",
+  "Qwen3.6",
+  "quantized",
+  "FP4",
+  "fp4",
+  "text-generation",
+  "conversational",
+  "base_model:Qwen/Qwen3.6-35B-A3B",
+  "base_model:quantized:Qwen/Qwen3.6-35B-A3B",
+  "license:apache-2.0",
+  "8-bit",
+  "modelopt",
+  "deploy:azure",
+  "deploy:sagemaker",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "qwen3_5_moe"
+ },
+ "cardData": {
+  "base_model": [
+   "Qwen/Qwen3.6-35B-A3B"
+  ]
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 1825916784,
+   "F8_E4M3": 1279262720,
+   "U8": 16423321600
+  },
+  "total": 18683860336
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1635
+  },
+  {
+   "rfilename": ".quant_summary.txt",
+   "size": 4752286
+  },
+  {
+   "rfilename": "README.md",
+   "size": 9936
+  },
+  {
+   "rfilename": "chat_template.jinja",
+   "size": 7764
+  },
+  {
+   "rfilename": "config.json",
+   "size": 58110
+  },
+  {
+   "rfilename": "configuration.json",
+   "size": 58
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 202
+  },
+  {
+   "rfilename": "hf_quant_config.json",
+   "size": 35085
+  },
+  {
+   "rfilename": "model-00001-of-00003.safetensors",
+   "size": 10006877608
+  },
+  {
+   "rfilename": "model-00002-of-00003.safetensors",
+   "size": 10003595752
+  },
+  {
+   "rfilename": "model-00003-of-00003.safetensors",
+   "size": 3413864960
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 13726227
+  },
+  {
+   "rfilename": "preprocessor_config.json",
+   "size": 390
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 12807982
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 16718
+  },
+  {
+   "rfilename": "video_preprocessor_config.json",
+   "size": 385
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 6722759
+  }
+ ]
+}

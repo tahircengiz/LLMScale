@@ -1,0 +1,90 @@
+{
+ "id": "Qwen/Qwen2.5-VL-3B-Instruct",
+ "gated": false,
+ "pipeline_tag": "image-text-to-text",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "qwen2_5_vl",
+  "image-text-to-text",
+  "multimodal",
+  "conversational",
+  "en",
+  "arxiv:2309.00071",
+  "arxiv:2409.12191",
+  "arxiv:2308.12966",
+  "eval-results",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "qwen2_5_vl"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 3754622976
+  },
+  "total": 3754622976
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 7387
+  },
+  {
+   "rfilename": "README.md",
+   "size": 18276
+  },
+  {
+   "rfilename": "chat_template.json",
+   "size": 1050
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1373
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 216
+  },
+  {
+   "rfilename": "merges.txt",
+   "size": 1671839
+  },
+  {
+   "rfilename": "model-00001-of-00002.safetensors",
+   "size": 3982649232
+  },
+  {
+   "rfilename": "model-00002-of-00002.safetensors",
+   "size": 3526688744
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 65448
+  },
+  {
+   "rfilename": "preprocessor_config.json",
+   "size": 350
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 7031645
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 5702
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 2776833
+  }
+ ]
+}

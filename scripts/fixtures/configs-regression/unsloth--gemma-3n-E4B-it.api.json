@@ -1,0 +1,117 @@
+{
+ "id": "unsloth/gemma-3n-E4B-it",
+ "gated": false,
+ "pipeline_tag": "image-text-to-text",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "gemma3n",
+  "image-text-to-text",
+  "gemma3",
+  "unsloth",
+  "gemma",
+  "google",
+  "conversational",
+  "en",
+  "arxiv:1905.07830",
+  "arxiv:1905.10044",
+  "arxiv:1911.11641",
+  "arxiv:1904.09728",
+  "arxiv:1705.03551",
+  "arxiv:1911.01547",
+  "arxiv:1907.10641",
+  "arxiv:1903.00161",
+  "arxiv:2210.03057",
+  "arxiv:2502.12404",
+  "arxiv:2411.19799",
+  "arxiv:2009.03300",
+  "arxiv:2502.21228",
+  "arxiv:2311.12022",
+  "arxiv:2403.07974",
+  "arxiv:2108.07732",
+  "arxiv:2107.03374",
+  "base_model:google/gemma-3n-E4B-it",
+  "base_model:finetune:google/gemma-3n-E4B-it",
+  "license:gemma",
+  "endpoints_compatible",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "gemma3n"
+ },
+ "cardData": {
+  "base_model": "google/gemma-3n-E4B-it"
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 7849978192
+  },
+  "total": 8387373392
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1570
+  },
+  {
+   "rfilename": "README.md",
+   "size": 26720
+  },
+  {
+   "rfilename": "chat_template.jinja",
+   "size": 1626
+  },
+  {
+   "rfilename": "config.json",
+   "size": 4581
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 210
+  },
+  {
+   "rfilename": "model-00001-of-00004.safetensors",
+   "size": 3077103824
+  },
+  {
+   "rfilename": "model-00002-of-00004.safetensors",
+   "size": 4966792808
+  },
+  {
+   "rfilename": "model-00003-of-00004.safetensors",
+   "size": 4992870216
+  },
+  {
+   "rfilename": "model-00004-of-00004.safetensors",
+   "size": 2663414864
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 171459
+  },
+  {
+   "rfilename": "preprocessor_config.json",
+   "size": 1091
+  },
+  {
+   "rfilename": "processor_config.json",
+   "size": 98
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 777
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 33442553
+  },
+  {
+   "rfilename": "tokenizer.model",
+   "size": 4696020
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 1204020
+  }
+ ]
+}

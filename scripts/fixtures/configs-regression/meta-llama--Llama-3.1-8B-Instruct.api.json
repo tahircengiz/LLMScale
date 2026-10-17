@@ -1,0 +1,115 @@
+{
+ "id": "meta-llama/Llama-3.1-8B-Instruct",
+ "gated": "manual",
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "llama",
+  "text-generation",
+  "facebook",
+  "meta",
+  "pytorch",
+  "llama-3",
+  "conversational",
+  "en",
+  "de",
+  "fr",
+  "it",
+  "pt",
+  "hi",
+  "es",
+  "th",
+  "arxiv:2204.05149",
+  "base_model:meta-llama/Llama-3.1-8B",
+  "base_model:finetune:meta-llama/Llama-3.1-8B",
+  "license:llama3.1",
+  "eval-results",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "deploy:sagemaker",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "llama"
+ },
+ "cardData": {
+  "base_model": "meta-llama/Meta-Llama-3.1-8B"
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 8030261248
+  },
+  "total": 8030261248
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 7627
+  },
+  {
+   "rfilename": "README.md",
+   "size": 44044
+  },
+  {
+   "rfilename": "USE_POLICY.md",
+   "size": 4691
+  },
+  {
+   "rfilename": "config.json",
+   "size": 855
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 184
+  },
+  {
+   "rfilename": "model-00001-of-00004.safetensors",
+   "size": 4976698672
+  },
+  {
+   "rfilename": "model-00002-of-00004.safetensors",
+   "size": 4999802720
+  },
+  {
+   "rfilename": "model-00003-of-00004.safetensors",
+   "size": 4915916176
+  },
+  {
+   "rfilename": "model-00004-of-00004.safetensors",
+   "size": 1168138808
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 23950
+  },
+  {
+   "rfilename": "original/consolidated.00.pth",
+   "size": 16060617592
+  },
+  {
+   "rfilename": "original/params.json",
+   "size": 199
+  },
+  {
+   "rfilename": "original/tokenizer.model",
+   "size": 2183982
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 296
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 9085657
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 55351
+  }
+ ]
+}

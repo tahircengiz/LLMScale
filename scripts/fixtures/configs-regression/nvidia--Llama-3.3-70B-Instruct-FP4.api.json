@@ -1,0 +1,107 @@
+{
+ "id": "nvidia/Llama-3.3-70B-Instruct-NVFP4",
+ "gated": false,
+ "tags": [
+  "safetensors",
+  "llama",
+  "base_model:meta-llama/Llama-3.3-70B-Instruct",
+  "base_model:finetune:meta-llama/Llama-3.3-70B-Instruct",
+  "license:llama3.3",
+  "8-bit",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "llama"
+ },
+ "cardData": {
+  "base_model": [
+   "meta-llama/Llama-3.3-70B-Instruct"
+  ]
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 2102665376,
+   "F8_E4M3": 4278190080,
+   "U8": 34225520640
+  },
+  "total": 40606376096
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1618
+  },
+  {
+   "rfilename": "LICENSE.pdf",
+   "size": 151612
+  },
+  {
+   "rfilename": "README.md",
+   "size": 4882
+  },
+  {
+   "rfilename": "config.json",
+   "size": 940
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 184
+  },
+  {
+   "rfilename": "hf_quant_config.json",
+   "size": 269
+  },
+  {
+   "rfilename": "model-00001-of-00009.safetensors",
+   "size": 4989342736
+  },
+  {
+   "rfilename": "model-00002-of-00009.safetensors",
+   "size": 4898263386
+  },
+  {
+   "rfilename": "model-00003-of-00009.safetensors",
+   "size": 4945447880
+  },
+  {
+   "rfilename": "model-00004-of-00009.safetensors",
+   "size": 4945447872
+  },
+  {
+   "rfilename": "model-00005-of-00009.safetensors",
+   "size": 4992668346
+  },
+  {
+   "rfilename": "model-00006-of-00009.safetensors",
+   "size": 4983197070
+  },
+  {
+   "rfilename": "model-00007-of-00009.safetensors",
+   "size": 4945447872
+  },
+  {
+   "rfilename": "model-00008-of-00009.safetensors",
+   "size": 4992668346
+  },
+  {
+   "rfilename": "model-00009-of-00009.safetensors",
+   "size": 3016840884
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 220264
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 325
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 17209920
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 55425
+  }
+ ]
+}

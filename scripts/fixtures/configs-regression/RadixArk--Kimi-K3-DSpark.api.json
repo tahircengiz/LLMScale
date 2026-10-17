@@ -1,0 +1,61 @@
+{
+ "id": "RadixArk/Kimi-K3-DSpark",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "qwen3",
+  "feature-extraction",
+  "speculative-decoding",
+  "dspark",
+  "dflash",
+  "specforge",
+  "sglang",
+  "long-context",
+  "text-generation",
+  "custom_code",
+  "text-generation-inference",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "qwen3"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 2249289601
+  },
+  "total": 2249289601
+ },
+ "siblings": [
+  {
+   "rfilename": ".complete",
+   "size": 19
+  },
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "README.md",
+   "size": 3899
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1352
+  },
+  {
+   "rfilename": "dflash.py",
+   "size": 19080
+  },
+  {
+   "rfilename": "dspark.py",
+   "size": 6346
+  },
+  {
+   "rfilename": "model.safetensors",
+   "size": 4498585858
+  }
+ ]
+}

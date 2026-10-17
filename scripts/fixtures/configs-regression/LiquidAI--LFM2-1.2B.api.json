@@ -1,0 +1,79 @@
+{
+ "id": "LiquidAI/LFM2-1.2B",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "lfm2",
+  "text-generation",
+  "liquid",
+  "edge",
+  "conversational",
+  "en",
+  "ar",
+  "zh",
+  "fr",
+  "de",
+  "ja",
+  "ko",
+  "es",
+  "arxiv:2511.23404",
+  "license:other",
+  "endpoints_compatible",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "lfm2"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 1170340608
+  },
+  "total": 1170340608
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 10644
+  },
+  {
+   "rfilename": "README.md",
+   "size": 12912
+  },
+  {
+   "rfilename": "chat_template.jinja",
+   "size": 3099
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1000
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 137
+  },
+  {
+   "rfilename": "model.safetensors",
+   "size": 2340697936
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 434
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 4732426
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 91565
+  }
+ ]
+}

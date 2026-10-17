@@ -1,0 +1,141 @@
+{
+ "id": "nvidia/NVIDIA-Nemotron-Nano-9B-v2",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "nemotron_h",
+  "text-generation",
+  "nvidia",
+  "pytorch",
+  "conversational",
+  "custom_code",
+  "en",
+  "es",
+  "fr",
+  "de",
+  "it",
+  "ja",
+  "dataset:nvidia/Nemotron-Post-Training-Dataset-v1",
+  "dataset:nvidia/Nemotron-Post-Training-Dataset-v2",
+  "dataset:nvidia/Nemotron-Pretraining-Dataset-sample",
+  "dataset:nvidia/Nemotron-CC-v2",
+  "dataset:nvidia/Nemotron-CC-Math-v1",
+  "dataset:nvidia/Nemotron-Pretraining-SFT-v1",
+  "arxiv:2504.03624",
+  "arxiv:2508.14444",
+  "arxiv:2412.02595",
+  "base_model:nvidia/NVIDIA-Nemotron-Nano-12B-v2",
+  "base_model:finetune:nvidia/NVIDIA-Nemotron-Nano-12B-v2",
+  "license:other",
+  "endpoints_compatible",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "nemotron_h"
+ },
+ "cardData": {
+  "base_model": [
+   "nvidia/NVIDIA-Nemotron-Nano-12B-v2-Base",
+   "nvidia/NVIDIA-Nemotron-Nano-12B-v2"
+  ]
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 8888227328
+  },
+  "total": 8888227328
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1679
+  },
+  {
+   "rfilename": "README.md",
+   "size": 47338
+  },
+  {
+   "rfilename": "acc-vs-budget.png",
+   "size": 491034
+  },
+  {
+   "rfilename": "accuracy_chart.png",
+   "size": 169781
+  },
+  {
+   "rfilename": "bias.md",
+   "size": 2277
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1507
+  },
+  {
+   "rfilename": "configuration_nemotron_h.py",
+   "size": 12176
+  },
+  {
+   "rfilename": "explainability.md",
+   "size": 2635
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 158
+  },
+  {
+   "rfilename": "model-00001-of-00004.safetensors",
+   "size": 4924823528
+  },
+  {
+   "rfilename": "model-00002-of-00004.safetensors",
+   "size": 4937507160
+  },
+  {
+   "rfilename": "model-00003-of-00004.safetensors",
+   "size": 4871563216
+  },
+  {
+   "rfilename": "model-00004-of-00004.safetensors",
+   "size": 3042598608
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 26843
+  },
+  {
+   "rfilename": "modeling_nemotron_h.py",
+   "size": 79013
+  },
+  {
+   "rfilename": "nemotron_toolcall_parser_no_streaming.py",
+   "size": 3723
+  },
+  {
+   "rfilename": "nemotron_toolcall_parser_streaming.py",
+   "size": 21296
+  },
+  {
+   "rfilename": "privacy.md",
+   "size": 2297
+  },
+  {
+   "rfilename": "safety.md",
+   "size": 2300
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 422
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 17078330
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 181326
+  }
+ ]
+}

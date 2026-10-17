@@ -1,0 +1,117 @@
+{
+ "id": "tiiuae/falcon-7b-instruct",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "pytorch",
+  "coreml",
+  "safetensors",
+  "falcon",
+  "text-generation",
+  "conversational",
+  "custom_code",
+  "en",
+  "dataset:tiiuae/falcon-refinedweb",
+  "arxiv:2205.14135",
+  "arxiv:1911.02150",
+  "arxiv:2005.14165",
+  "arxiv:2104.09864",
+  "arxiv:2306.01116",
+  "license:apache-2.0",
+  "eval-results",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "deploy:sagemaker",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "falcon"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 7217189760
+  },
+  "total": 7217189760
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1477
+  },
+  {
+   "rfilename": "README.md",
+   "size": 9852
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1048
+  },
+  {
+   "rfilename": "configuration_falcon.py",
+   "size": 7163
+  },
+  {
+   "rfilename": "coreml/text-generation/falcon-7b-64-float32.mlpackage/Data/com.apple.CoreML/model.mlmodel",
+   "size": 396524
+  },
+  {
+   "rfilename": "coreml/text-generation/falcon-7b-64-float32.mlpackage/Data/com.apple.CoreML/weights/weight.bin",
+   "size": 27693883200
+  },
+  {
+   "rfilename": "coreml/text-generation/falcon-7b-64-float32.mlpackage/Manifest.json",
+   "size": 617
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 117
+  },
+  {
+   "rfilename": "handler.py",
+   "size": 1154
+  },
+  {
+   "rfilename": "model-00001-of-00002.safetensors",
+   "size": 9950994832
+  },
+  {
+   "rfilename": "model-00002-of-00002.safetensors",
+   "size": 4483408144
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 17719
+  },
+  {
+   "rfilename": "modeling_falcon.py",
+   "size": 56920
+  },
+  {
+   "rfilename": "pytorch_model-00001-of-00002.bin",
+   "size": 9951028193
+  },
+  {
+   "rfilename": "pytorch_model-00002-of-00002.bin",
+   "size": 4483421659
+  },
+  {
+   "rfilename": "pytorch_model.bin.index.json",
+   "size": 16924
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 281
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 2734130
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 1132
+  }
+ ]
+}

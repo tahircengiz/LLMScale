@@ -1,0 +1,287 @@
+{
+ "id": "CohereLabs/c4ai-command-a-03-2025",
+ "gated": "auto",
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "cohere2",
+  "text-generation",
+  "conversational",
+  "en",
+  "fr",
+  "de",
+  "es",
+  "it",
+  "pt",
+  "ja",
+  "ko",
+  "zh",
+  "ar",
+  "el",
+  "fa",
+  "pl",
+  "id",
+  "cs",
+  "he",
+  "hi",
+  "nl",
+  "ro",
+  "ru",
+  "tr",
+  "uk",
+  "vi",
+  "arxiv:2504.00698",
+  "license:cc-by-nc-4.0",
+  "eval-results",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "cohere2"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 111057580032
+  },
+  "total": 111057580032
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1570
+  },
+  {
+   "rfilename": "README.md",
+   "size": 18360
+  },
+  {
+   "rfilename": "config.json",
+   "size": 1001
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 178
+  },
+  {
+   "rfilename": "model-00001-of-00049.safetensors",
+   "size": 6291456144
+  },
+  {
+   "rfilename": "model-00002-of-00049.safetensors",
+   "size": 4932527624
+  },
+  {
+   "rfilename": "model-00003-of-00049.safetensors",
+   "size": 4278215728
+  },
+  {
+   "rfilename": "model-00004-of-00049.safetensors",
+   "size": 4932552312
+  },
+  {
+   "rfilename": "model-00005-of-00049.safetensors",
+   "size": 4278215728
+  },
+  {
+   "rfilename": "model-00006-of-00049.safetensors",
+   "size": 4278215728
+  },
+  {
+   "rfilename": "model-00007-of-00049.safetensors",
+   "size": 4932552312
+  },
+  {
+   "rfilename": "model-00008-of-00049.safetensors",
+   "size": 4278215728
+  },
+  {
+   "rfilename": "model-00009-of-00049.safetensors",
+   "size": 4278215744
+  },
+  {
+   "rfilename": "model-00010-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00011-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00012-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00013-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00014-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00015-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00016-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00017-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00018-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00019-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00020-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00021-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00022-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00023-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00024-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00025-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00026-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00027-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00028-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00029-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00030-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00031-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00032-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00033-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00034-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00035-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00036-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00037-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00038-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00039-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00040-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00041-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00042-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00043-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00044-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00045-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00046-of-00049.safetensors",
+   "size": 4932552328
+  },
+  {
+   "rfilename": "model-00047-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00048-of-00049.safetensors",
+   "size": 4278215736
+  },
+  {
+   "rfilename": "model-00049-of-00049.safetensors",
+   "size": 4278265088
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 41855
+  },
+  {
+   "rfilename": "signatures/c4ai-command-a-03-2025.sig",
+   "size": 25006
+  },
+  {
+   "rfilename": "signatures/verification-instructions.txt",
+   "size": 1425
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 664
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 19597349
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 48239
+  }
+ ]
+}

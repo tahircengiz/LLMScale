@@ -1,0 +1,76 @@
+{
+ "id": "deepseek-ai/deepseek-vl2-small",
+ "gated": false,
+ "pipeline_tag": "image-text-to-text",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "deepseek_vl_v2",
+  "image-text-to-text",
+  "conversational",
+  "arxiv:2412.10302",
+  "license:other",
+  "endpoints_compatible",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "deepseek_vl_v2"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "BF16": 16148349504
+  },
+  "total": 16148349504
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "README.md",
+   "size": 5791
+  },
+  {
+   "rfilename": "config.json",
+   "size": 2073
+  },
+  {
+   "rfilename": "model-00001-of-000004.safetensors",
+   "size": 8591541424
+  },
+  {
+   "rfilename": "model-00002-of-000004.safetensors",
+   "size": 8590731304
+  },
+  {
+   "rfilename": "model-00003-of-000004.safetensors",
+   "size": 8591771352
+  },
+  {
+   "rfilename": "model-00004-of-000004.safetensors",
+   "size": 6523397144
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 553329
+  },
+  {
+   "rfilename": "processor_config.json",
+   "size": 1226
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 799
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 4610029
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 3467
+  }
+ ]
+}

@@ -1,0 +1,135 @@
+{
+ "id": "bigscience/bloomz-560m",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "pytorch",
+  "tensorboard",
+  "safetensors",
+  "bloom",
+  "text-generation",
+  "ak",
+  "ar",
+  "as",
+  "bm",
+  "bn",
+  "ca",
+  "code",
+  "en",
+  "es",
+  "eu",
+  "fon",
+  "fr",
+  "gu",
+  "hi",
+  "id",
+  "ig",
+  "ki",
+  "kn",
+  "lg",
+  "ln",
+  "ml",
+  "mr",
+  "ne",
+  "nso",
+  "ny",
+  "or",
+  "pa",
+  "pt",
+  "rn",
+  "rw",
+  "sn",
+  "st",
+  "sw",
+  "ta",
+  "te",
+  "tn",
+  "ts",
+  "tum",
+  "tw",
+  "ur",
+  "vi",
+  "wo",
+  "xh",
+  "yo",
+  "zh",
+  "zu",
+  "dataset:bigscience/xP3",
+  "arxiv:2211.01786",
+  "license:bigscience-bloom-rail-1.0",
+  "model-index",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "bloom"
+ },
+ "cardData": {},
+ "safetensors": {
+  "parameters": {
+   "F16": 559214592
+  },
+  "total": 559214592
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1489
+  },
+  {
+   "rfilename": "README.md",
+   "size": 24585
+  },
+  {
+   "rfilename": "config.json",
+   "size": 715
+  },
+  {
+   "rfilename": "logs/logs/xp3capmixnewcodelonglossseq/main_log.txt",
+   "size": 7110865
+  },
+  {
+   "rfilename": "logs/tensorboard/xp3capmixnewcodelonglossseq/events.out.tfevents.1665051802.jean-zay-iam25.73114.0",
+   "size": 40
+  },
+  {
+   "rfilename": "logs/tensorboard/xp3capmixnewcodelonglossseq/events.out.tfevents.1665052484.jean-zay-iam17.3156474.0",
+   "size": 40
+  },
+  {
+   "rfilename": "logs/tensorboard/xp3capmixnewcodelonglossseq/events.out.tfevents.1665052656.jean-zay-iam17.3157134.0",
+   "size": 40
+  },
+  {
+   "rfilename": "logs/tensorboard/xp3capmixnewcodelonglossseq/events.out.tfevents.1665052772.jean-zay-iam17.3157698.0",
+   "size": 71111
+  },
+  {
+   "rfilename": "logs/tensorboard/xp3capmixnewcodelonglossseq/events.out.tfevents.1665052983.jean-zay-iam17.3161807.0",
+   "size": 17024535
+  },
+  {
+   "rfilename": "model.safetensors",
+   "size": 1118459450
+  },
+  {
+   "rfilename": "pytorch_model.bin",
+   "size": 1118530423
+  },
+  {
+   "rfilename": "special_tokens_map.json",
+   "size": 85
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 14500438
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 222
+  }
+ ]
+}
