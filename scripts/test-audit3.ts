@@ -71,6 +71,10 @@ console.log("--- E5: gpt-oss as vLLM loads it ---");
   check("B200: whole experts pad by 3072/2880 × 2944/2880", Math.abs(mxfp4Pad(o120, "trtllm", 1) - (3072 / 2880) * (2944 / 2880)) < 1e-12);
   check("…a TP2 slice by 3072/2880 × 1536/1440", Math.abs(mxfp4Pad(o120, "trtllm", 2) - (3072 / 2880) * (1536 / 1440)) < 1e-12);
   check("…and nothing pads a model without MXFP4", mxfp4Pad(known("llama-3.1-8b"), "trtllm", 2) === 1);
+  // Sized at BF16 or FP8, gpt-oss's weights are no longer MXFP4: nothing to pad
+  // (the phase-3b release review found 19 GiB added on an A100).
+  const a100 = vllmBatch(80, "A100 80GB");
+  check("…nor gpt-oss sized at BF16 or FP8", ["bf16", "fp8"].every((d) => weightsOnGpu(o120, d as Dtype, 1, a100) === weightsBytes(o120, d as Dtype)));
   const url = decodeState(encodeState({ hfId: "", arch: o120, weightDtype: "int4", kvDtype: "bf16", contextLength: 8192, concurrency: 1 } as any));
   check("the MXFP4 flag survives the URL", url.arch?.mxfp4 === true);
 }

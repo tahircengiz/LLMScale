@@ -813,11 +813,13 @@ export function mxfp4Pad(arch: ModelArch, kernel: BatchShape["mxfp4"], shards: n
 }
 
 /** One GPU's weights as vLLM holds them, in bytes: its 1/`shards` share, with MXFP4
- *  experts padded to the card's kernel tile (mxfp4Pad). */
+ *  experts padded to the card's kernel tile (mxfp4Pad). Only an MXFP4 checkpoint
+ *  served as such (the 4-bit bucket) pads: sized at BF16 or FP8, gpt-oss-120b had
+ *  come out 19 GiB larger on an A100. */
 export function weightsOnGpu(arch: ModelArch, dtype: Dtype, shards: number, batch?: BatchShape): number {
   const n = Math.max(1, shards);
   const share = weightsBytes(arch, dtype) / n;
-  const pad = mxfp4Pad(arch, batch?.mxfp4, n);
+  const pad = dtype === "int4" ? mxfp4Pad(arch, batch?.mxfp4, n) : 1;
   return pad === 1 ? share : share + (expertWeightBytes(arch, dtype) / n) * (pad - 1);
 }
 
@@ -868,6 +870,8 @@ function layoutBasis(input: Omit<CalcInput, "concurrency">) {
     experts: arch.numExperts ?? 0,
     weights: weightsBytes(arch, weightDtype),
     expertBytes: expertWeightBytes(arch, weightDtype),
+    /** Only MXFP4 weights served as such pad to the kernel's tile (weightsOnGpu). */
+    padsMxfp4: weightDtype === "int4",
     /** What one request's cache reserves on a GPU of a tensor-parallel group, cached. */
     perRequest(tp: number): number {
       if (!request.has(tp)) request.set(tp, kvReservedPerSeq(arch, kvDtype, contextLength, batch.tokens, tp, batch.sparseMla));
@@ -897,7 +901,7 @@ function layoutFixedGiB(b: Basis, l: Shape): number {
   const experts = l.ep ? b.expertBytes : 0;
   const expertShare = l.ep ? Math.ceil(b.experts / (l.tp * l.dp)) / b.experts : 1 / l.tp;
   // MXFP4 experts padded to the card's kernel tile: whole experts under EP, else each GPU's slice of them.
-  const pad = (mxfp4Pad(b.arch, b.batch.mxfp4, l.ep ? 1 : l.tp) - 1) * b.expertBytes * (l.ep ? expertShare : 1 / l.tp);
+  const pad = b.padsMxfp4 ? (mxfp4Pad(b.arch, b.batch.mxfp4, l.ep ? 1 : l.tp) - 1) * b.expertBytes * (l.ep ? expertShare : 1 / l.tp) : 0;
   const weights = ((b.weights - experts) / l.tp + experts * expertShare + pad) * stage;
   const comm = l.tp === 1 && (l.ep || l.pp > 1) ? COMM_GIB : 0;
   return weights / BYTES_PER_GIB + b.overhead(l.tp) + comm;
