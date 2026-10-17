@@ -51,7 +51,7 @@ export const KNOWN_MODELS: KnownModel[] = [
     id: "llama-4-scout", displayName: "Llama 4 Scout 17B-16E Instruct", family: "Llama", hfId: "meta-llama/Llama-4-Scout-17B-16E-Instruct",
     gated: true, isMoE: true, numParams: 108641793536, activeParams: 17e9, numLayers: 48, hiddenSize: 5120, intermediateSize: 8192,
     numAttentionHeads: 40, numKeyValueHeads: 8, headDim: 128, vocabSize: 202048, maxContext: 10485760,
-    numExperts: 16, expertsPerToken: 1, moeIntermediateSize: 8192,
+    numExperts: 16, expertsPerToken: 1, moeIntermediateSize: 8192, vision: { patches: 576, tokens: 144, hidden: 1408 },
   },
   {
     id: "llama-3.1-405b", displayName: "Llama 3.1 405B Instruct", family: "Llama", hfId: "meta-llama/Llama-3.1-405B-Instruct",
@@ -91,7 +91,8 @@ export const KNOWN_MODELS: KnownModel[] = [
   },
   // Added 2026-10-15 (audit B6): gated, so the app had sized them on a 32-layer
   // placeholder. Read from Unsloth's public copies of the configs; parameter
-  // counts are the Hub's for Google's repos (the vision tower included).
+  // counts are the Hub's for Google's repos (the vision tower included), and the
+  // vision encoder as visionEncoder (hf.ts) reads it there.
   {
     id: "gemma-3-1b", displayName: "Gemma 3 1B IT", family: "Gemma", hfId: "google/gemma-3-1b-it",
     gated: true, numParams: 999885952, numLayers: 26, hiddenSize: 1152, intermediateSize: 6912, numAttentionHeads: 4, numKeyValueHeads: 1, headDim: 256, vocabSize: 262144, maxContext: 32768,
@@ -100,17 +101,17 @@ export const KNOWN_MODELS: KnownModel[] = [
   {
     id: "gemma-3-4b", displayName: "Gemma 3 4B IT", family: "Gemma", hfId: "google/gemma-3-4b-it",
     gated: true, numParams: 4300079472, numLayers: 34, hiddenSize: 2560, intermediateSize: 10240, numAttentionHeads: 8, numKeyValueHeads: 4, headDim: 256, vocabSize: 262208, maxContext: 131072,
-    tieEmbeddings: true, slidingLayers: 29, slidingWindow: 1024,
+    tieEmbeddings: true, slidingLayers: 29, slidingWindow: 1024, vision: { patches: 4096, tokens: 256, hidden: 1152 },
   },
   {
     id: "gemma-3-12b", displayName: "Gemma 3 12B IT", family: "Gemma", hfId: "google/gemma-3-12b-it",
     gated: true, numParams: 12187325040, numLayers: 48, hiddenSize: 3840, intermediateSize: 15360, numAttentionHeads: 16, numKeyValueHeads: 8, headDim: 256, vocabSize: 262208, maxContext: 131072,
-    tieEmbeddings: true, slidingLayers: 40, slidingWindow: 1024,
+    tieEmbeddings: true, slidingLayers: 40, slidingWindow: 1024, vision: { patches: 4096, tokens: 256, hidden: 1152 },
   },
   {
     id: "gemma-3-27b", displayName: "Gemma 3 27B IT", family: "Gemma", hfId: "google/gemma-3-27b-it",
     gated: true, numParams: 27432406640, numLayers: 62, hiddenSize: 5376, intermediateSize: 21504, numAttentionHeads: 32, numKeyValueHeads: 16, headDim: 128, vocabSize: 262208, maxContext: 131072,
-    tieEmbeddings: true, slidingLayers: 52, slidingWindow: 1024,
+    tieEmbeddings: true, slidingLayers: 52, slidingWindow: 1024, vision: { patches: 4096, tokens: 256, hidden: 1152 },
   },
 
   // ---- Qwen (public — also useful as presets) ----

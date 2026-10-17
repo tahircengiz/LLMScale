@@ -16,7 +16,7 @@ import { calculate, typicalConcurrency, tokensInUse, type Dtype, type ModelArch,
 import { batchFor, computeEfficiency, usableGiB, type Gpu } from "./gpus.ts";
 import { VLLM_UTIL } from "./overhead.ts";
 import { tpValid } from "./parallel.ts";
-import { decodeStep, prefillTime } from "./perf.ts";
+import { decodeStep, prefillTime, REQUEST_MS, stepFloorMs } from "./perf.ts";
 
 export interface Workload {
   /** Requests arriving per second, across the whole deployment. */
@@ -70,11 +70,16 @@ interface Operating {
 }
 
 /** The plan at one replica's request rate `r`. */
-function operate(m: ModelSetup, w: Workload, device: Device, tp: number, prefillS: number, kvSeqs: number, inUse: number, r: number): Operating {
-  const f = r * prefillS;
+function operate(m: ModelSetup, w: Workload, device: Device, tp: number, prefillS: number, workS: number, kvSeqs: number, inUse: number, r: number): Operating {
+  // The GPU spends `workS` of each prompt's `prefillS`; the rest — the request's
+  // handling and each pass's kernel floor (perf.ts) — is latency every prompt sees,
+  // not time taken from the others: vLLM folds prompts into shared passes and
+  // handles requests beside the GPU's work. Counted as GPU time, it had capped a
+  // 0.6B embedding model at ~117 req/s on an H100.
+  const f = r * workS;
   if (f >= 1) return { ok: false, batch: Infinity, tpotMs: Infinity, ttftS: Infinity, fails: "prefill" };
   const stretch = 1 / (1 - f);
-  const ttftS = prefillS * stretch;
+  const ttftS = workS * stretch + (prefillS - workS);
   // An embedding model reads its input and answers with a vector: no decode, so
   // only the prompt side bounds it.
   if (w.outputTokens <= 0) {
@@ -131,8 +136,9 @@ export function planOptions(
     }
     const kvSeqs = typicalConcurrency(sizing, usable, load).users;
     // A cached prefix is not recomputed; the rest of the prompt is.
-    const prefillS = prefillTime(m.arch, m.weightDtype, Math.max(1, w.promptTokens - w.sharedPrefix), { tflops: g.tflops, bandwidthGBs: g.bandwidthGBs, computeEfficiency: device.computeEfficiency }, tp).seconds;
-    const at = (r: number) => operate(m, w, device, tp, prefillS, kvSeqs, inUse, r);
+    const prefillS = prefillTime(m.arch, m.weightDtype, Math.max(1, w.promptTokens - w.sharedPrefix), { tflops: g.tflops, bandwidthGBs: g.bandwidthGBs, computeEfficiency: device.computeEfficiency, layerMs: device.layerMs }, tp).seconds;
+    const workS = Math.max(1e-6, prefillS - (stepFloorMs(m.arch, tp, device.layerMs) + REQUEST_MS) / 1000);
+    const at = (r: number) => operate(m, w, device, tp, prefillS, workS, kvSeqs, inUse, r);
     const idle = at(1e-9);
     if (!idle.ok) {
       infeasible.push({ tp, reason: idle.fails === "ttft" ? "ttft" : "tpot" });
@@ -141,7 +147,7 @@ export function planOptions(
     // The highest rate that still meets every bound, by bisection: each bound only
     // tightens as the rate rises.
     let lo = 0;
-    let hi = 1 / prefillS;
+    let hi = 1 / workS;
     for (let k = 0; k < 50; k++) {
       const mid = (lo + hi) / 2;
       if (at(mid).ok) lo = mid;

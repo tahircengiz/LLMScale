@@ -24,12 +24,12 @@ const best = (m: ModelSetup, w: Workload, g = H100) => planOptions(m, w, g).opti
 
 console.log("--- a small model ---");
 {
-  const p = best(m8, { ...chat, rps: 9 });
-  // A 2k prompt is ~57 ms of prefill, plus each pass's and request's fixed cost
-  // (perf.ts); at ~10 req/s that is most of the GPU's time, and decode, stretched
-  // by it, reaches the 50 ms per token target just under 10 req/s.
-  check("Llama 3.1 8B, 9 req/s on H100s: one GPU", p.tp === 1 && p.replicas === 1, `${p.replicas}× TP${p.tp}, ${p.replicaRps.toFixed(1)} req/s each`);
-  check("…10 and 15 req/s two", best(m8, chat).gpus === 2 && best(m8, { ...chat, rps: 15 }).gpus === 2);
+  const p = best(m8, chat);
+  // A 2k prompt is ~57 ms of prefill; at ~10 req/s that is 60% of the GPU's time,
+  // and decode, stretched by it, reaches the 50 ms per token target. A request's
+  // fixed costs (perf.ts) add to its first token, not to the GPU's busy time.
+  check("Llama 3.1 8B, 10 req/s on H100s: one GPU", p.tp === 1 && p.replicas === 1, `${p.replicas}× TP${p.tp}, ${p.replicaRps.toFixed(1)} req/s each`);
+  check("…and 15 req/s two", best(m8, { ...chat, rps: 15 }).gpus === 2);
   check("…held back by time per token", p.limit === "tpot", p.limit);
   check("…within both targets at its share", p.tpotMs <= 50 && p.ttftS <= 1, `${p.tpotMs.toFixed(1)} ms, ${p.ttftS.toFixed(2)} s`);
   const busy = best(m8, { ...chat, rps: 200 });
@@ -48,6 +48,18 @@ console.log("--- a model that does not fit one card ---");
   check("…so every option splits it", r.options.length > 0 && r.options.every((o) => o.tp >= 2), r.options.map((o) => `${o.replicas}×TP${o.tp}`).join(", "));
   const fp8 = planOptions({ ...m70, weightDtype: "fp8" }, chat, H100).options[0];
   check("FP8 weights need no more GPUs than BF16", fp8.gpus <= r.options[0].gpus, `${fp8.gpus} vs ${r.options[0].gpus}`);
+}
+
+console.log("--- a request's fixed costs are latency, not GPU time ---");
+{
+  // An embedding-sized model reading 500-token prompts: the ~6 ms a request costs
+  // anyway lengthens each first token but is not time the GPU takes from the next
+  // prompt (the phase-3b release review found it capping one H100 at ~117 req/s).
+  const tiny: ModelSetup = { arch: findKnownByHfId("Qwen/Qwen2.5-0.5B-Instruct")!, weightDtype: "bf16", kvDtype: "fp16", maxModelLen: 8192 };
+  const embed: Workload = { rps: 300, promptTokens: 500, outputTokens: 0, sharedPrefix: 0, ttftS: 1, tpotMs: 50 };
+  const p = best(tiny, embed);
+  check("a 0.5B model reading 500-token prompts carries 300 req/s on one H100", p?.gpus === 1 && p.replicaRps > 300, `${p?.gpus} GPUs, ${p?.replicaRps.toFixed(0)} req/s`);
+  check("…its first token still carries the request's fixed cost", p.ttftS > 0.006, `${(p.ttftS * 1000).toFixed(1)} ms`);
 }
 
 console.log("--- targets it cannot meet ---");

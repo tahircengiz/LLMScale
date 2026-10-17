@@ -176,8 +176,10 @@ export function overheadPerGpu(arch: ModelArch, batch: BatchShape = SMALL_CARD_B
   // A MoE layer's fused kernels also hold, for every token and expert it is routed
   // to, the gate-up output, its activation and the down output before the sum, in
   // 16-bit (fused_moe): measured as 0.1 to 0.9 GiB more on four MoE startups.
-  const k = arch.numExperts && arch.expertsPerToken && arch.moeIntermediateSize ? arch.expertsPerToken : 0;
-  const routed = k ? 2 * batch.tokens * k * ((3 * arch.moeIntermediateSize!) / n + arch.hiddenSize) : 0;
+  // Mixtral and gpt-oss give the expert width as intermediate_size.
+  const expertWidth = arch.moeIntermediateSize ?? (arch.numExperts ? arch.intermediateSize : undefined);
+  const k = arch.numExperts && arch.expertsPerToken && expertWidth ? arch.expertsPerToken : 0;
+  const routed = k ? 2 * batch.tokens * k * ((3 * expertWidth!) / n + arch.hiddenSize) : 0;
   const vision = visionPeak(arch, batch, n) / GiB;
   const activation = (Math.max(forward, logits, table) + routed) / GiB + vision;
   const capture = Math.min(2 * batch.seqs, batch.graphCap ?? 512) / 512;

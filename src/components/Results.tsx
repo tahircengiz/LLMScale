@@ -12,7 +12,8 @@ const SEGMENTS = [
 ] as const;
 
 /** `cardName`: the device the overhead was sized for, when one is chosen. */
-export function Results({ result, cardName }: { result: CalcResult; cardName?: string }) {
+/** `moe`: the model routes to experts, the case the multi-GPU overhead note is about (E1). */
+export function Results({ result, cardName, moe = false }: { result: CalcResult; cardName?: string; moe?: boolean }) {
   const { t } = useLang();
   const parts = {
     weights: result.weightsGiB,
@@ -65,7 +66,7 @@ export function Results({ result, cardName }: { result: CalcResult; cardName?: s
           tokens: formatInt(result.batch.tokens),
           seqs: formatInt(result.batch.seqs),
         })}
-        {result.gpus > 1 && <> {t("results.overheadNote.multi")}</>}
+        {result.gpus > 1 && moe && <> {t("results.overheadNote.multi")}</>}
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">

@@ -102,10 +102,14 @@ export function paramsReadPerStep(arch: ModelArch, n: number): number {
  *  by parameter share, gpt-oss-20b's step came out half of what it reads. */
 export function weightBytesRead(arch: ModelArch, weightDtype: Dtype, n: number): number {
   const all = weightsBytes(arch, weightDtype);
-  const wide = QUANT_BITS[weightDtype] ? 2 : DTYPE_BYTES[weightDtype];
+  const bits = QUANT_BITS[weightDtype];
+  // The embedding stays 16-bit in a quantized checkpoint; a lookup table is counted
+  // at the quantized rate in weightsBytes, so it comes off at that rate too (read at
+  // 2 bytes, Qwen3.8-Flash-Next's INT4 n-gram table outweighed every weight it has).
+  const wide = bits ? 2 : DTYPE_BYTES[weightDtype];
   const table = !arch.tieEmbeddings && arch.vocabSize && arch.hiddenSize ? arch.vocabSize * arch.hiddenSize * wide : 0;
   const spec = arch.specParams && arch.specParams < arch.numParams ? arch.specParams : 0;
-  const lookup = arch.lookupParams && arch.lookupParams < arch.numParams - spec ? arch.lookupParams * wide : 0;
+  const lookup = arch.lookupParams && arch.lookupParams < arch.numParams - spec ? arch.lookupParams * (bits ? bits / 8 : DTYPE_BYTES[weightDtype]) : 0;
   const unread = table + lookup < all ? table + lookup : 0;
   const experts = Math.min(expertWeightBytes(arch, weightDtype), all - unread);
   const E = arch.numExperts ?? 0;

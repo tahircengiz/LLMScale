@@ -186,7 +186,7 @@ export function SizingPage() {
               <>
                 {/* A stand-in architecture: say so above its figures, not only beside the picker. */}
                 {state.arch?.placeholder && <p className="mb-3 text-xs font-medium text-warn">{t("results.placeholder")}</p>}
-                <Results result={result} cardName={GPUS.find((g) => g.id === state.gpuId)?.name} />
+                <Results result={result} cardName={GPUS.find((g) => g.id === state.gpuId)?.name} moe={!!state.arch?.numExperts} />
               </>
             ) : (
               <div className="py-10 text-center">

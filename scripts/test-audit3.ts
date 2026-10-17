@@ -11,7 +11,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { archFromConfig, resolveModel, storedTiedHead, visionEncoder } from "../src/lib/hf.ts";
 import { BYTES_PER_GIB, mxfp4Pad, weightsBytes, weightsOnGpu, type Dtype, type ModelArch } from "../src/lib/calc.ts";
-import { decodeStep, prefillTime, REQUEST_MS, stepFloorMs } from "../src/lib/perf.ts";
+import { decodeStep, prefillTime, REQUEST_MS, stepFloorMs, weightBytesRead } from "../src/lib/perf.ts";
 import { mxfp4Kernel, overheadPerGpu, vllmBatch } from "../src/lib/overhead.ts";
 import { KNOWN_MODELS } from "../src/lib/models.ts";
 import { computeEfficiency, GPUS } from "../src/lib/gpus.ts";
@@ -88,7 +88,7 @@ console.log("\n--- D1: decode on the RTX 4070 Ti, through vllm serve ---");
       const ours = decodeStep({ arch: a, weightDtype: r.weightDtype, kvDtype: "bf16", contextLength: CTX }, +b, dev)!.stepMs;
       const ratio = ours / ms;
       // A MoE's tokens share experts more than uniform routing assumes, so from 4 to
-      // 16 sequences the model reads more than vLLM does: allowed 20% slow there.
+      // 16 sequences the model reads more than vLLM does: allowed 25% slow there.
       const mid = r.kind === "moe" && +b >= 4 && +b <= 16;
       const ok = mid ? ratio >= 0.9 && ratio <= 1.25 : Math.abs(ratio - 1) <= 0.1;
       if (!mid) worst = Math.max(worst, Math.abs(ratio - 1));
@@ -234,7 +234,7 @@ console.log("\n--- Strix Halo (GTR9): vLLM ROCm, eager, measured 2026-10-17 ---"
   const overhead = overheadPerGpu(archOf(awq), vllmBatch(96, strix.name)).totalGiB;
   const st = awq.startup;
   const spent = st.requestedGiB - st.weightsGiB - st.kvGiB;
-  check("Qwen3-30B-A3B AWQ startup: overhead within 0.5 GiB (no graphs in eager mode)", Math.abs(overhead - spent) <= 0.5, `${overhead.toFixed(2)} vs ${spent.toFixed(2)} GiB`);
+  check("Qwen3-30B-A3B AWQ startup: overhead within 0.5 GiB (eager mode; the estimate still counts graphs)", Math.abs(overhead - spent) <= 0.5, `${overhead.toFixed(2)} vs ${spent.toFixed(2)} GiB`);
 }
 
 console.log("\n--- overhead.ts against the 2026-10-16 startups (scripts/fixtures/vllm/1016-*.txt) ---");
@@ -346,6 +346,31 @@ console.log("\n--- Tied heads a checkpoint stores twice ---");
   } finally {
     globalThis.fetch = real;
   }
+}
+
+console.log("\n--- release review: what the phase-3b review found ---");
+{
+  const cfgOf = (n: string) => JSON.parse(readFileSync(new URL(`./fixtures/configs-audit/${n}.json`, import.meta.url), "utf8"));
+  // A lookup table comes off what a step reads at the rate weightsBytes counted it:
+  // at 2 bytes, Qwen3.8-Flash-Next's INT4 n-gram table (51.2B) outweighed every
+  // weight it has, so a step read the whole table.
+  const q38 = archFromConfig(cfgOf("Qwen_Qwen3.8-Flash-Next"), 180e9)!;
+  const all = weightsBytes(q38, "int4");
+  const one = weightBytesRead(q38, "int4", 1);
+  check("Qwen3.8-Flash-Next INT4: one token reads under a fifth of its weights", one > 0 && one < 0.2 * all, `${(one / 1e9).toFixed(1)} of ${(all / 1e9).toFixed(1)} GB`);
+  const e4b = archFromConfig(cfgOf("google_gemma-4-E4B-it"), 8e9)!;
+  check("Gemma 4 E4B FP8: everything but its per-layer embeddings, at 1 byte each", weightBytesRead(e4b, "fp8", 1) === weightsBytes(e4b, "fp8") - e4b.lookupParams!,
+    `${(weightBytesRead(e4b, "fp8", 1) / 1e9).toFixed(2)} GB`);
+  // The bundled multimodal presets carry the encoder their configs give, so the
+  // static pages size Gemma 3 as the live page does.
+  const g27 = JSON.parse(readFileSync(new URL("./fixtures/configs/unsloth_gemma-3-27b-it.json", import.meta.url), "utf8"));
+  const preset = KNOWN_MODELS.find((m) => m.id === "gemma-3-27b")!;
+  check("Gemma 3 27B's preset has the encoder its config gives", JSON.stringify(preset.vision) === JSON.stringify(visionEncoder(g27)), JSON.stringify(preset.vision));
+  // Mixtral and gpt-oss name their expert width intermediate_size: the fused-MoE
+  // workspace counts for them too.
+  const mix = KNOWN_MODELS.find((m) => m.id === "mixtral-8x7b")!;
+  const plain = overheadPerGpu({ ...mix, numExperts: undefined }, vllmBatch(80, "H100 SXM 80GB"), 1).activationGiB;
+  check("Mixtral 8x7B's profile holds the fused-MoE workspace", overheadPerGpu(mix, vllmBatch(80, "H100 SXM 80GB"), 1).activationGiB > plain);
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);

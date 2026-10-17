@@ -6,7 +6,7 @@ import { computeEfficiency, batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesF
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
-import { BANDWIDTH_EFFICIENCY, decodeStep } from "../lib/perf";
+import { BANDWIDTH_EFFICIENCY, decodeStep, LAYER_MS } from "../lib/perf";
 import { SpeedPanel } from "./SpeedPanel";
 import { useLang } from "../lib/i18n";
 import { Badge, SectionTitle, Stat } from "./ui";
@@ -431,6 +431,8 @@ export function GpuFit({
             {t(selected.tflops ? "gpu.speedNote" : "gpu.speedNoteBw", {
               p: Math.round(BANDWIDTH_EFFICIENCY * 100),
               c: Math.round(selDevice.computeEfficiency * 100),
+              // The device's own measured per-layer cost where it has one (Strix Halo).
+              l: (selected.layerMs ?? LAYER_MS).toLocaleString(lang === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: 3 }),
             })}
           </p>
         )}

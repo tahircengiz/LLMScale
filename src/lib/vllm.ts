@@ -156,8 +156,9 @@ export function recommend(i: VllmInput): VllmRec {
     tokens: i.priority === "throughput" ? 8192 : i.priority === "latency" ? 2048 : card.tokens,
     seqs: preset ?? card.seqs,
     graphCap: card.graphCap,
-    // The card's sparse-MLA row, as the calculator has it (DSA models).
+    // The card's sparse-MLA row and MXFP4 kernel, as the calculator has them.
     ...(card.sparseMla ? { sparseMla: card.sparseMla } : {}),
+    ...(card.mxfp4 ? { mxfp4: card.mxfp4 } : {}),
   };
   const sizing = { arch: i.arch, weightDtype: wDtype, kvDtype, contextLength: i.maxModelLen, batch, gpus: tp };
   const usableGiB = i.gpuVramGiB * util;

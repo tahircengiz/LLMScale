@@ -137,8 +137,9 @@ const oss = KNOWN_MODELS.find((m) => m.id === "gpt-oss-120b")!;
 const fig = engineFigures(oss.displayName, oss.hfId, oss, oss.maxContext);
 // gpt-oss ships MXFP4 experts and keeps attention, router and embeddings in 16-bit
 // (its own files: 60.77 GiB), and its sliding layers cache only their 128-token
-// window (src/lib/calc.ts, layers.ts).
-check("figures match the feed's memory card", fig.includes("BF16: 219.9 GiB") && fig.includes("Apple M3 Ultra (512GB)") && fig.includes("INT4: 63.06 GiB") && fig.includes("A100 80GB"), fig.split("\n")[4]);
+// window (src/lib/calc.ts, layers.ts). The overhead holds the fused-MoE workspace
+// for its 4 routed experts a token (overhead.ts).
+check("figures match the feed's memory card", fig.includes("BF16: 220.1 GiB") && fig.includes("Apple M3 Ultra (512GB)") && fig.includes("INT4: 63.24 GiB") && fig.includes("A100 80GB"), fig.split("\n")[4]);
 check("…and name the context they assume", fig.includes("one user at 8192 tokens"));
 
 console.log("\n--- gather and build ---");
@@ -148,7 +149,7 @@ const g = await gather(cand, async (u) => {
   throw new Error("unexpected fetch " + u);
 });
 check("a model's text is its card, without front matter", g.text.startsWith("# gpt-oss-120b"));
-check("a bundled model is recognised and gets its figures", g.knownId === "gpt-oss-120b" && !!g.figures?.includes("219.9 GiB"));
+check("a bundled model is recognised and gets its figures", g.knownId === "gpt-oss-120b" && !!g.figures?.includes("220.1 GiB"));
 check("allowed links: the item and primary sources, not other hosts", g.allowed.includes("https://huggingface.co/openai/gpt-oss-120b") && g.allowed.includes("https://openai.com/index/introducing-gpt-oss") && !g.allowed.some((u) => u.includes("evil")));
 
 const out: WriterOutput = {
