@@ -117,11 +117,13 @@ export function PlanPage() {
     : null;
   /** The cheapest layouts; the rest differ only in cost. */
   const shownOptions = plan?.options.slice(0, MAX_ROWS) ?? [];
-  /** Why no smaller replica works: a row per size below the cheapest option's. */
+  /** Why no smaller replica works: a row per size below the cheapest option's that
+   *  no layout of serves. */
   const blocked = (() => {
+    const served = new Set(plan?.options.map((o) => o.size));
     const bySize = new Map<number, Set<Infeasible["reason"]>>();
     for (const x of plan?.infeasible ?? []) {
-      if (best && x.size >= best.size) continue;
+      if ((best && x.size >= best.size) || served.has(x.size)) continue;
       if (!bySize.has(x.size)) bySize.set(x.size, new Set());
       bySize.get(x.size)!.add(x.reason);
     }
