@@ -139,6 +139,8 @@ export function GpuFit({
   const multiIn = { ...base, contextLength, concurrency, batch: selBatch };
   const multi = count > 1 ? layoutsOn(multiIn, effUsable, count, layoutSpeed(multiIn, stepDevice(selected))) : null;
   const best = multi?.[0] ?? null;
+  /** Whether the first was picked by speed: it holds the load and the card has a speed. */
+  const ranked = !!best && best.fits && best.stepMs !== undefined;
   const typical = load && !multi ? typicalConcurrency({ ...base, contextLength, batch: selBatch }, effUsable, load) : null;
   // A MIG slice gets roughly its share of the memory system, so scale the
   // published bandwidth with it. Only estimate where the model actually fits —
@@ -558,13 +560,13 @@ export function GpuFit({
             {multi.length > 1 && (
               <div className="mt-3 overflow-x-auto">
                 <div className="mb-1 text-[11px] font-medium text-slate-300">{t("gpu.altTitle", { n: count })}</div>
-                {/* The rule only picked the first when it holds the load; otherwise it is the one that holds the most. */}
-                {best.stepMs !== undefined && best.fits && <p className="mb-1 text-[11px] leading-relaxed text-slate-500">{t("gpu.altHow")}</p>}
+                {/* The rule and the speeds hold only when the first holds the load; otherwise it is the one that holds the most. */}
+                {ranked && <p className="mb-1 text-[11px] leading-relaxed text-slate-500">{t("gpu.altHow")}</p>}
                 <table className="w-full text-[11px] tabular-nums">
                   <thead className="text-slate-500">
                     <tr>
                       <th scope="col" className="py-1 pr-2 text-left font-medium">{t("gpu.alt.layout")}</th>
-                      {best.stepMs !== undefined && <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.speed")}</th>}
+                      {ranked && <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.speed")}</th>}
                       <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.perGpu")}</th>
                       <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.users", { x: ctxLabel(contextLength) })}</th>
                       <th scope="col" className="py-1 text-right font-medium">{t("gpu.alt.ctx", { n: formatInt(concurrency) })}</th>
@@ -574,7 +576,7 @@ export function GpuFit({
                     {multi.map((f, i) => (
                       <tr key={layoutLabel(f.layout)} className={i === 0 ? "font-semibold text-white" : f.fits ? "text-slate-300" : "text-slate-500"}>
                         <td className="whitespace-nowrap py-0.5 pr-2">{layoutLabel(f.layout)}</td>
-                        {best.stepMs !== undefined && (
+                        {ranked && (
                           <td className="py-0.5 pr-2 text-right">{f.fits && f.stepMs && Number.isFinite(f.stepMs) ? formatInt(Math.round(1000 / f.stepMs)) : "—"}</td>
                         )}
                         <td className="py-0.5 pr-2 text-right">{formatGiB(f.layout.perGpuGiB)}</td>
