@@ -1,0 +1,44 @@
+{
+  "id": "2026-10-20-inclusionai-ling-3-1-flash-moe",
+  "published": "2026-10-20T05:42:40Z",
+  "category": "model",
+  "en": {
+    "title": "inclusionAI releases Ling-3.1-flash, a 560B hybrid-linear MoE with 25B active",
+    "body": "inclusionAI has released Ling-3.1-flash, a hybrid-linear MoE with 560B total and 25B active parameters and a stated 1M-token context. Its 72 layers split into 63 KDA and 9 Gated MLA layers, so only a small share of layers hold a conventional KV cache.\n\nLLMScale estimates for one user at 8K context: 537.3 GiB at FP8 (4× B200) and 287.8 GiB at INT4 (fits a 512GB M3 Ultra). The card's SGLang recipe uses 8× H200 or 4× GB300. vLLM needs a dedicated branch."
+  },
+  "tr": {
+    "title": "inclusionAI, 25B aktif parametreli 560B hybrid-linear MoE Ling-3.1-flash'ı yayınladı",
+    "body": "inclusionAI, toplam 560B ve token başına 25B aktif parametreye sahip, 1M token context desteği belirtilen hybrid-linear MoE modeli Ling-3.1-flash'ı yayınladı. 72 katmanın 63'ü KDA, 9'u Gated MLA. Bu yüzden klasik KV cache tutan katman sayısı az.\n\nLLMScale tahminleri, tek kullanıcı ve 8K context için: FP8'de 537,3 GiB (4× B200), INT4'te 287,8 GiB (512GB M3 Ultra'ya sığıyor). Model kartındaki SGLang tarifi 8× H200 ya da 4× GB300 kullanıyor. vLLM için ayrı bir branch gerekiyor."
+  },
+  "refs": [
+    {
+      "url": "https://huggingface.co/inclusionAI/Ling-3.1-flash",
+      "title": "inclusionAI/Ling-3.1-flash",
+      "source": "Hugging Face"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm.git",
+      "title": "vLLM",
+      "source": "GitHub"
+    }
+  ],
+  "tags": [
+    "moe",
+    "kv-cache",
+    "long-context",
+    "sglang"
+  ],
+  "hf": "inclusionAI/Ling-3.1-flash",
+  "arch": {
+    "numParams": 572120680768,
+    "numLayers": 72,
+    "hiddenSize": 4096,
+    "numAttentionHeads": 64,
+    "numKeyValueHeads": 64,
+    "headDim": 128,
+    "maxContext": 262144,
+    "activeParams": 25141496128,
+    "kvLoraRank": 512,
+    "qkRopeHeadDim": 64
+  }
+}
