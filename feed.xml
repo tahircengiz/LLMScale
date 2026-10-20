@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:38:45 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:39:10 GMT</lastBuildDate>
+<item>
+<title>NVIDIA releases Nemotron-Labs-Dory1.0-4B, a looped model with 256K context</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-nvidia-nemotron-dory-looped-4b.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-nvidia-nemotron-dory-looped-4b.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:39:10 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;NVIDIA released Nemotron-Labs-Dory1.0-4B, an open 4B looped model. A shared 20-layer block sits between 8-layer input and output blocks and runs repeatedly. It mixes sliding-window and full attention and supports up to 256K context.&lt;/p&gt;&lt;p&gt;Per-loop caching grows the KV cache with each loop; last-loop mode keeps it at one-loop size. LLMScale estimates 11.12 GiB in BF16 and 8.05 GiB in FP8 for one user at 8K context. vLLM support is still an open PR.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://github.com/vllm-project/vllm/pull/60149"&gt;GitHub&lt;/a&gt; · &lt;a href="https://github.com/ggml-org/llama.cpp/pull/30306"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>Unsloth opens GGUF repo for DeepSeek-V4.1-Flash-1017; quants not yet posted</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-unsloth-deepseek-v41-flash-1017-gguf.html</link>
