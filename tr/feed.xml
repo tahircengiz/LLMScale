@@ -6,7 +6,23 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:39:10 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:39:30 GMT</lastBuildDate>
+<item>
+<title>vLLM, 816B-A42B MoE ve 1M context'li Muse Spark Open'a ilk gün desteği verdi</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-vllm-day-zero-muse-spark-open.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-vllm-day-zero-muse-spark-open.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:39:30 GMT</pubDate>
+<category>Sürüm</category>
+<description>&lt;p&gt;vLLM, Meta'nın açık ağırlıklı MoE modeli Muse Spark Open'ı ilk günden destekliyor: toplam 816B, token başına 42B aktif parametre ve 1M token context. Ağırlıklar BF16 ve NVFP4 olarak, AMD'nin MXFP4 sürümüyle birlikte yayımlandı.&lt;/p&gt;&lt;p&gt;62 katmanın 46'sı 2048 token'lık sliding window kullandığından 1M token'da KV cache, tamamı full attention olan bir modelin dörtte birini biraz aşıyor. Örnek kurulum NVFP4'ü TP8 ve expert parallelism ile, speculative decoding için DSpark draft modeliyle sunuyor.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://vllm.ai/blog/2026-10-15-muse-spark-open"&gt;vLLM&lt;/a&gt; · &lt;a href="https://github.com/vllm-project/vllm/pull/61879"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
+<item>
+<title>NVIDIA, 256K context destekli döngülü 4B model Dory1.0-4B'yi yayımladı</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-dory-looped-4b-2.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-dory-looped-4b-2.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:39:30 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;NVIDIA, 4B parametreli döngülü (looped) dil modeli Dory1.0-4B'yi yayımladı: 20 katmanlık ortak bir blok, 8 giriş ve 8 çıkış katmanı arasında tekrarlanıyor. Sliding-window ve full attention katmanları dönüşümlü, context 256K token'a kadar. Döngü sayısı inference sırasında seçiliyor; SWE-bench Verified 1 döngüde 50,3, 4 döngüde 61,8.&lt;/p&gt;&lt;p&gt;Model kartına göre last-loop KV caching ile ek döngüler compute ekliyor ama KV cache büyütmüyor. LLMScale tahmini: 8K context'te tek kullanıcı için BF16'da 11,12 GiB, INT4'te 6,60 GiB.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://reddit.com/r/LocalLLaMA/comments/1x7w7dp/nvidianvidianemotronlabsdory104bbf16_hugging_face"&gt;Reddit r/LocalLLaMA&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>NVIDIA, 256K context'li looped model Nemotron-Labs-Dory1.0-4B'yi yayımladı</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-dory-looped-4b.html</link>

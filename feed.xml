@@ -6,7 +6,23 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:39:10 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:39:30 GMT</lastBuildDate>
+<item>
+<title>vLLM adds day-0 support for Muse Spark Open, an 816B-A42B MoE with 1M context</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-vllm-day-zero-muse-spark-open.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-vllm-day-zero-muse-spark-open.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:39:30 GMT</pubDate>
+<category>Release</category>
+<description>&lt;p&gt;vLLM has day-0 support for Meta's Muse Spark Open, an open-weight MoE with 816B total and 42B active parameters and a 1M-token context. Weights come in BF16 and NVFP4, plus MXFP4 from AMD.&lt;/p&gt;&lt;p&gt;46 of its 62 layers use a 2048-token sliding window, so KV cache at 1M tokens is just over a quarter of all-full attention. The example serves NVFP4 at TP8 with expert parallelism and a DSpark draft model for speculative decoding.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://vllm.ai/blog/2026-10-15-muse-spark-open"&gt;vLLM&lt;/a&gt; · &lt;a href="https://github.com/vllm-project/vllm/pull/61879"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
+<item>
+<title>NVIDIA releases Dory1.0-4B, a looped 4B model with 256K context</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-nvidia-nemotron-dory-looped-4b-2.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-nvidia-nemotron-dory-looped-4b-2.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:39:30 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;NVIDIA released Dory1.0-4B, a 4B looped language model: a shared 20-layer block repeats between 8 input and 8 output layers, with interleaved sliding-window and full attention and up to 256K context. Loop count is set at inference; SWE-bench Verified goes from 50.3 at 1 loop to 61.8 at 4.&lt;/p&gt;&lt;p&gt;Per the model card, last-loop KV caching means extra loops add compute but no KV cache over a non-looped model. LLMScale estimates 11.12 GiB in BF16 and 6.60 GiB in INT4 for one user at 8K context.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://reddit.com/r/LocalLLaMA/comments/1x7w7dp/nvidianvidianemotronlabsdory104bbf16_hugging_face"&gt;Reddit r/LocalLLaMA&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>NVIDIA releases Nemotron-Labs-Dory1.0-4B, a looped model with 256K context</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-nvidia-nemotron-dory-looped-4b.html</link>
