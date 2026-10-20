@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Tue, 13 Oct 2026 17:14:17 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:38:19 GMT</lastBuildDate>
+<item>
+<title>vLLM, GB300'de Kimi K3 decode hızını özel kernel'lerle 1,9 kata kadar artırdı</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-vllm-kimi-k3-gb300-decode.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-vllm-kimi-k3-gb300-decode.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:38:19 GMT</pubDate>
+<category>Araç</category>
+<description>&lt;p&gt;vLLM, Kimi K3 için NVIDIA GB300'e özel bir decode yolu ekledi. Ajan destekli CuTe DSL kernel'leri, tek NVLink alanındaki 8 ya da 16 GPU üzerinde attention, MoE ve iletişimi birleştiriyor. Katman başına decode süresi 130'dan 69 mikrosaniyeye iniyor.&lt;/p&gt;&lt;p&gt;Spekülasyon olmadan batch 1–64 aralığında throughput TP16'da 1,62–1,92 kat, TP8'de 1,31–1,58 kat artıyor. DSpark ile (sentetik AL=6) TP16'da batch 1, standart vLLM'deki 488'e karşı 842 token/s'ye ulaşıyor. Uzun context'te decode context parallelism KV cache'i GPU'lara bölüyor.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://vllm.ai/blog/2026-10-16-kimi-k3-megakernel"&gt;vLLM&lt;/a&gt; · &lt;a href="https://github.com/vllm-project/vllm/pull/61867"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>Intel, Crescent Island GPU'sunu D-Series olarak adlandırdı: 480 GB'a kadar LPDDR5X</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-13-intel-d-series-gpu-480gb-lpddr5x.html</link>

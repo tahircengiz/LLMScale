@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Tue, 13 Oct 2026 17:14:17 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:38:19 GMT</lastBuildDate>
+<item>
+<title>vLLM's specialized decode path speeds Kimi K3 up to 1.9x on NVIDIA GB300</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-vllm-kimi-k3-gb300-decode.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-vllm-kimi-k3-gb300-decode.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:38:19 GMT</pubDate>
+<category>Tooling</category>
+<description>&lt;p&gt;vLLM added a specialized Kimi K3 decode path for NVIDIA GB300. It uses agent-assisted CuTe DSL kernels that fuse attention, MoE and communication across 8 or 16 GPUs in one NVLink domain. Per-layer decode time falls from 130 to 69 microseconds.&lt;/p&gt;&lt;p&gt;Without speculation, throughput rises 1.62–1.92x on TP16 and 1.31–1.58x on TP8 at batch 1–64. With DSpark (synthetic AL=6), batch 1 on TP16 hits 842 tokens/s, against 488 on stock vLLM. For long contexts, decode context parallelism splits the KV cache across GPUs.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://vllm.ai/blog/2026-10-16-kimi-k3-megakernel"&gt;vLLM&lt;/a&gt; · &lt;a href="https://github.com/vllm-project/vllm/pull/61867"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>Intel names Crescent Island GPU D-Series, with up to 480 GB of LPDDR5X</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-13-intel-d-series-gpu-480gb-lpddr5x.html</link>
