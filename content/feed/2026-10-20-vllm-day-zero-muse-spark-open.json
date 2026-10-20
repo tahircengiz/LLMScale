@@ -1,0 +1,31 @@
+{
+  "id": "2026-10-20-vllm-day-zero-muse-spark-open",
+  "published": "2026-10-20T05:39:30Z",
+  "category": "release",
+  "en": {
+    "title": "vLLM adds day-0 support for Muse Spark Open, an 816B-A42B MoE with 1M context",
+    "body": "vLLM has day-0 support for Meta's Muse Spark Open, an open-weight MoE with 816B total and 42B active parameters and a 1M-token context. Weights come in BF16 and NVFP4, plus MXFP4 from AMD.\n\n46 of its 62 layers use a 2048-token sliding window, so KV cache at 1M tokens is just over a quarter of all-full attention. The example serves NVFP4 at TP8 with expert parallelism and a DSpark draft model for speculative decoding."
+  },
+  "tr": {
+    "title": "vLLM, 816B-A42B MoE ve 1M context'li Muse Spark Open'a ilk gün desteği verdi",
+    "body": "vLLM, Meta'nın açık ağırlıklı MoE modeli Muse Spark Open'ı ilk günden destekliyor: toplam 816B, token başına 42B aktif parametre ve 1M token context. Ağırlıklar BF16 ve NVFP4 olarak, AMD'nin MXFP4 sürümüyle birlikte yayımlandı.\n\n62 katmanın 46'sı 2048 token'lık sliding window kullandığından 1M token'da KV cache, tamamı full attention olan bir modelin dörtte birini biraz aşıyor. Örnek kurulum NVFP4'ü TP8 ve expert parallelism ile, speculative decoding için DSpark draft modeliyle sunuyor."
+  },
+  "refs": [
+    {
+      "url": "https://vllm.ai/blog/2026-10-15-muse-spark-open",
+      "title": "Day 0 support for Muse Spark Open on vLLM",
+      "source": "vLLM"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/61879",
+      "title": "vLLM PR #61879: Muse Spark Open support",
+      "source": "GitHub"
+    }
+  ],
+  "tags": [
+    "moe",
+    "kv-cache",
+    "vllm",
+    "speculative-decoding"
+  ]
+}

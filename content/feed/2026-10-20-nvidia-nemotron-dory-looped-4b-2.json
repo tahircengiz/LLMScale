@@ -1,0 +1,41 @@
+{
+  "id": "2026-10-20-nvidia-nemotron-dory-looped-4b-2",
+  "published": "2026-10-20T05:39:30Z",
+  "category": "model",
+  "en": {
+    "title": "NVIDIA releases Dory1.0-4B, a looped 4B model with 256K context",
+    "body": "NVIDIA released Dory1.0-4B, a 4B looped language model: a shared 20-layer block repeats between 8 input and 8 output layers, with interleaved sliding-window and full attention and up to 256K context. Loop count is set at inference; SWE-bench Verified goes from 50.3 at 1 loop to 61.8 at 4.\n\nPer the model card, last-loop KV caching means extra loops add compute but no KV cache over a non-looped model. LLMScale estimates 11.12 GiB in BF16 and 6.60 GiB in INT4 for one user at 8K context."
+  },
+  "tr": {
+    "title": "NVIDIA, 256K context destekli döngülü 4B model Dory1.0-4B'yi yayımladı",
+    "body": "NVIDIA, 4B parametreli döngülü (looped) dil modeli Dory1.0-4B'yi yayımladı: 20 katmanlık ortak bir blok, 8 giriş ve 8 çıkış katmanı arasında tekrarlanıyor. Sliding-window ve full attention katmanları dönüşümlü, context 256K token'a kadar. Döngü sayısı inference sırasında seçiliyor; SWE-bench Verified 1 döngüde 50,3, 4 döngüde 61,8.\n\nModel kartına göre last-loop KV caching ile ek döngüler compute ekliyor ama KV cache büyütmüyor. LLMScale tahmini: 8K context'te tek kullanıcı için BF16'da 11,12 GiB, INT4'te 6,60 GiB."
+  },
+  "refs": [
+    {
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "title": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "source": "Hugging Face"
+    },
+    {
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1x7w7dp/nvidianvidianemotronlabsdory104bbf16_hugging_face",
+      "title": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16 · Hugging Face",
+      "source": "Reddit r/LocalLLaMA"
+    }
+  ],
+  "tags": [
+    "looped-model",
+    "kv-cache",
+    "nvidia",
+    "long-context"
+  ],
+  "hf": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+  "arch": {
+    "numParams": 3975229440,
+    "numLayers": 72,
+    "hiddenSize": 2560,
+    "numAttentionHeads": 16,
+    "numKeyValueHeads": 4,
+    "headDim": 256,
+    "maxContext": 262144
+  }
+}
