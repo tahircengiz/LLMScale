@@ -1,0 +1,40 @@
+{
+  "id": "2026-10-20-amazon-alodlm-8b-looped-diffusion",
+  "published": "2026-10-20T05:38:45Z",
+  "category": "model",
+  "en": {
+    "title": "Amazon releases ALoDLM-8B, a looped diffusion language model built on Qwen3-8B",
+    "body": "Amazon has released ALoDLM-8B, a diffusion language model initialized from Qwen3-8B. It reuses shared transformer layers in a loop and gives unresolved tokens extra passes. A Reddit post claims about 3x Qwen3-8B's speed. The model card measures throughput single-stream on one B200, in a parallel-commit mode separate from its quality runs. The license is CC BY-NC 4.0.\n\nLLMScale estimates for one user at 8,192 tokens of context: 18.37 GiB in BF16, 11.90 GiB in FP8 and 8.87 GiB in INT4."
+  },
+  "tr": {
+    "title": "Amazon, Qwen3-8B tabanlı döngülü diffusion modeli ALoDLM-8B'yi yayımladı",
+    "body": "Amazon, Qwen3-8B'den başlatılan diffusion dil modeli ALoDLM-8B'yi yayımladı. Model ortak transformer katmanlarını döngü içinde yeniden kullanıyor ve henüz çözülmemiş token'lara ek geçiş veriyor. Reddit'teki paylaşım Qwen3-8B'ye göre yaklaşık 3 kat hız iddia ediyor. Model kartındaki ölçüm ise tek B200'de, tek akışta ve kalite testlerinden ayrı bir paralel commit modunda yapılmış. Lisans CC BY-NC 4.0.\n\nLLMScale tahmini, tek kullanıcı ve 8.192 token context için: BF16'da 18,37 GiB, FP8'de 11,90 GiB, INT4'te 8,87 GiB."
+  },
+  "refs": [
+    {
+      "url": "https://huggingface.co/amazon/ALoDLM-8B",
+      "title": "amazon/ALoDLM-8B",
+      "source": "Hugging Face"
+    },
+    {
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1x75bme/alodlm_8b_looped_diffusion_language_model_3x",
+      "title": "ALoDLM 8b looped diffusion language model: ~3x inference speed vs its base model qwen3-8b with better benchmark results",
+      "source": "Reddit r/LocalLLaMA"
+    }
+  ],
+  "tags": [
+    "diffusion-lm",
+    "adaptive-computation",
+    "inference-speed"
+  ],
+  "hf": "amazon/ALoDLM-8B",
+  "arch": {
+    "numParams": 8190735360,
+    "numLayers": 36,
+    "hiddenSize": 4096,
+    "numAttentionHeads": 32,
+    "numKeyValueHeads": 8,
+    "headDim": 128,
+    "maxContext": 40960
+  }
+}
