@@ -1,0 +1,31 @@
+{
+  "id": "2026-10-20-nvidia-nemotron-3-5-super-vl",
+  "published": "2026-10-20T05:39:42Z",
+  "category": "model",
+  "en": {
+    "title": "NVIDIA releases Nemotron 3.5 Super VL, a 120B-A12B multimodal MoE in NVFP4",
+    "body": "NVIDIA has released Nemotron 3.5 Super VL, an open multimodal MoE model with 120B parameters, 12B active per token. One model covers text, image, document and video input. The checkpoint uses NVFP4: 4-bit weights and activations on Blackwell, 4-bit weights with 16-bit activations on other GPUs.\n\nAll 120B weights must fit in memory even though only 12B run per token. NVIDIA says LiLiCorr speculative decoding speeds generation up to 2.3x on DGX Spark."
+  },
+  "tr": {
+    "title": "NVIDIA, 120B-A12B multimodal MoE modeli Nemotron 3.5 Super VL'i NVFP4 ile yayımladı",
+    "body": "NVIDIA, 120B parametreli ve token başına 12B parametre aktive eden açık multimodal MoE modeli Nemotron 3.5 Super VL'i yayımladı. Metin, görsel, doküman ve video tek modelde ele alınıyor. Checkpoint NVFP4: Blackwell'de 4 bit ağırlık ve aktivasyon, diğer GPU'larda 4 bit ağırlık ve 16 bit aktivasyon.\n\nToken başına yalnızca 12B çalışsa da 120B ağırlığın tamamı belleğe sığmalı. NVIDIA, LiLiCorr speculative decoding ile DGX Spark'ta token üretiminin 2,3 kata kadar hızlandığını söylüyor."
+  },
+  "refs": [
+    {
+      "url": "https://developer.nvidia.com/blog/nvidia-nemotron-3-5-super-vl-powers-specialized-agents-with-multimodal-reasoning",
+      "title": "NVIDIA Nemotron 3.5 Super VL Powers Specialized Agents with Multimodal Reasoning",
+      "source": "NVIDIA Developer Blog"
+    },
+    {
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4",
+      "title": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4",
+      "source": "Hugging Face"
+    }
+  ],
+  "tags": [
+    "moe",
+    "multimodal",
+    "quantization",
+    "nvfp4"
+  ]
+}
