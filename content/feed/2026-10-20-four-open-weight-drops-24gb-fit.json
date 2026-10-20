@@ -1,0 +1,26 @@
+{
+  "id": "2026-10-20-four-open-weight-drops-24gb-fit",
+  "published": "2026-10-20T05:38:34Z",
+  "category": "model",
+  "en": {
+    "title": "Four open-weight releases in 72 hours; only NVIDIA's Nemotron 3.5 Bolt fits 24GB",
+    "body": "A r/LocalLLaMA recap lists four open-weight releases in 72 hours: Meta's Muse Spark Open (816B total, 42B active), Reflection's Beam (501B, 23B active), DeepSeek V4.1 Flash 1017 (510GB repo) and NVIDIA's Nemotron 3.5 Bolt (74B, 9B active).\n\nOnly Bolt targets a 24GB GPU: quantization-aware training to 2 bit puts weights at 22GB plus a 1.7GB vision projector, leaving little room for KV cache. Beam's smallest official checkpoint is 294GB in NVFP4. Sizes are from the post, not LLMScale estimates."
+  },
+  "tr": {
+    "title": "72 saatte dört open-weight model; 24GB'a sığan tek model NVIDIA Nemotron 3.5 Bolt",
+    "body": "r/LocalLLaMA'daki bir özet, 72 saatte çıkan dört open-weight modeli sıralıyor: Meta Muse Spark Open (816B toplam, 42B aktif), Reflection Beam (501B, 23B aktif), DeepSeek V4.1 Flash 1017 (510GB repo) ve NVIDIA Nemotron 3.5 Bolt (74B, 9B aktif).\n\n24GB GPU'yu hedefleyen tek model Bolt: 2 bit'e kadar quantization-aware eğitimle ağırlıklar 22GB, üstüne 1,7GB vision projector geliyor; KV cache için pay çok az kalıyor. Beam'in en küçük resmi checkpoint'i NVFP4 ile 294GB. Boyutlar gönderiden alındı, LLMScale tahmini değil."
+  },
+  "refs": [
+    {
+      "url": "https://reddit.com/r/LocalLLaMA/comments/1x9d23j/72_hours_four_big_open_weights_drops_the_only_one",
+      "title": "72 hours, four big open weights drops. The only one that fits in 24GB came from NVIDIA, of all companies.",
+      "source": "Reddit r/LocalLLaMA"
+    }
+  ],
+  "tags": [
+    "open-weights",
+    "quantization",
+    "moe",
+    "local-inference"
+  ]
+}

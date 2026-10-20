@@ -1,0 +1,47 @@
+{
+  "id": "2026-10-20-kimi-k3-mi355x-vllm-throughput",
+  "published": "2026-10-20T05:38:34Z",
+  "category": "hardware",
+  "en": {
+    "title": "vLLM on eight MI355X GPUs tops HGX B300 per-GPU throughput on Kimi K3",
+    "body": "vLLM reports that an eight-GPU AMD Instinct MI355X system serving Kimi K3 reaches about 7,567 total tokens/s per GPU on the AgentX coding-agent benchmark. That is 24.4% more than NVIDIA HGX B300 (6,083) at 50 tokens/s/user P90. Both GPUs have 288 GB HBM3E.\n\nThe biggest gains came from cache handling. DCP8 splits the MLA KV history across GPUs, cutting a 142K-token conversation from about 1.96 GB to 245 MB per GPU. LLMScale estimates 1458.6 GiB at INT4 for one user at 8K context."
+  },
+  "tr": {
+    "title": "Kimi K3'te sekiz MI355X ile vLLM, GPU başına throughput'ta HGX B300'ü geçti",
+    "body": "vLLM'in verilerine göre Kimi K3'ü sunan sekiz GPU'lu AMD Instinct MI355X sistemi, AgentX benchmark'ında GPU başına yaklaşık 7.567 token/s üretiyor. Bu, 50 token/s/kullanıcı P90'da NVIDIA HGX B300'ün (6.083) %24,4 üzerinde. İki GPU'da da 288 GB HBM3E bulunuyor.\n\nKazancın büyük kısmı cache tarafından geliyor. DCP8, MLA KV geçmişini GPU'lara bölüyor ve 142 bin token'lık bir konuşmanın GPU başına yükünü 1,96 GB'tan 245 MB'a indiriyor. LLMScale'in tahminine göre INT4'te tek kullanıcı ve 8K context için 1458,6 GiB gerekiyor."
+  },
+  "refs": [
+    {
+      "url": "https://vllm.ai/blog/2026-10-16-kimi-k3-mi355x",
+      "title": "Scaling Kimi K3 on AMD Instinct MI355X: Matching NVIDIA HGX B300 Throughput per GPU on AgentX",
+      "source": "vLLM"
+    },
+    {
+      "url": "https://huggingface.co/moonshotai/Kimi-K3",
+      "title": "moonshotai/Kimi-K3",
+      "source": "Hugging Face"
+    },
+    {
+      "url": "https://vllm.ai/blog/2026-08-07-decode-context-parallelism",
+      "title": "Decode Context Parallelism",
+      "source": "vLLM"
+    }
+  ],
+  "tags": [
+    "moe",
+    "kv-cache",
+    "vllm",
+    "amd"
+  ],
+  "hf": "moonshotai/Kimi-K3",
+  "arch": {
+    "numParams": 2779931837184,
+    "numLayers": 93,
+    "hiddenSize": 7168,
+    "numAttentionHeads": 96,
+    "numKeyValueHeads": 96,
+    "maxContext": 1048576,
+    "kvLoraRank": 512,
+    "qkRopeHeadDim": 64
+  }
+}
