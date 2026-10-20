@@ -6,7 +6,23 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:38:19 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:38:34 GMT</lastBuildDate>
+<item>
+<title>Kimi K3'te sekiz MI355X ile vLLM, GPU başına throughput'ta HGX B300'ü geçti</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-kimi-k3-mi355x-vllm-throughput.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-kimi-k3-mi355x-vllm-throughput.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:38:34 GMT</pubDate>
+<category>Donanım</category>
+<description>&lt;p&gt;vLLM'in verilerine göre Kimi K3'ü sunan sekiz GPU'lu AMD Instinct MI355X sistemi, AgentX benchmark'ında GPU başına yaklaşık 7.567 token/s üretiyor. Bu, 50 token/s/kullanıcı P90'da NVIDIA HGX B300'ün (6.083) %24,4 üzerinde. İki GPU'da da 288 GB HBM3E bulunuyor.&lt;/p&gt;&lt;p&gt;Kazancın büyük kısmı cache tarafından geliyor. DCP8, MLA KV geçmişini GPU'lara bölüyor ve 142 bin token'lık bir konuşmanın GPU başına yükünü 1,96 GB'tan 245 MB'a indiriyor. LLMScale'in tahminine göre INT4'te tek kullanıcı ve 8K context için 1458,6 GiB gerekiyor.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://vllm.ai/blog/2026-10-16-kimi-k3-mi355x"&gt;vLLM&lt;/a&gt; · &lt;a href="https://huggingface.co/moonshotai/Kimi-K3"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://vllm.ai/blog/2026-08-07-decode-context-parallelism"&gt;vLLM&lt;/a&gt;&lt;/p&gt;</description>
+</item>
+<item>
+<title>72 saatte dört open-weight model; 24GB'a sığan tek model NVIDIA Nemotron 3.5 Bolt</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-four-open-weight-drops-24gb-fit.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-four-open-weight-drops-24gb-fit.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:38:34 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;r/LocalLLaMA'daki bir özet, 72 saatte çıkan dört open-weight modeli sıralıyor: Meta Muse Spark Open (816B toplam, 42B aktif), Reflection Beam (501B, 23B aktif), DeepSeek V4.1 Flash 1017 (510GB repo) ve NVIDIA Nemotron 3.5 Bolt (74B, 9B aktif).&lt;/p&gt;&lt;p&gt;24GB GPU'yu hedefleyen tek model Bolt: 2 bit'e kadar quantization-aware eğitimle ağırlıklar 22GB, üstüne 1,7GB vision projector geliyor; KV cache için pay çok az kalıyor. Beam'in en küçük resmi checkpoint'i NVFP4 ile 294GB. Boyutlar gönderiden alındı, LLMScale tahmini değil.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://reddit.com/r/LocalLLaMA/comments/1x9d23j/72_hours_four_big_open_weights_drops_the_only_one"&gt;Reddit r/LocalLLaMA&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>vLLM, GB300'de Kimi K3 decode hızını özel kernel'lerle 1,9 kata kadar artırdı</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-vllm-kimi-k3-gb300-decode.html</link>

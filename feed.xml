@@ -6,7 +6,23 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:38:19 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:38:34 GMT</lastBuildDate>
+<item>
+<title>vLLM on eight MI355X GPUs tops HGX B300 per-GPU throughput on Kimi K3</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-kimi-k3-mi355x-vllm-throughput.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-kimi-k3-mi355x-vllm-throughput.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:38:34 GMT</pubDate>
+<category>Hardware</category>
+<description>&lt;p&gt;vLLM reports that an eight-GPU AMD Instinct MI355X system serving Kimi K3 reaches about 7,567 total tokens/s per GPU on the AgentX coding-agent benchmark. That is 24.4% more than NVIDIA HGX B300 (6,083) at 50 tokens/s/user P90. Both GPUs have 288 GB HBM3E.&lt;/p&gt;&lt;p&gt;The biggest gains came from cache handling. DCP8 splits the MLA KV history across GPUs, cutting a 142K-token conversation from about 1.96 GB to 245 MB per GPU. LLMScale estimates 1458.6 GiB at INT4 for one user at 8K context.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://vllm.ai/blog/2026-10-16-kimi-k3-mi355x"&gt;vLLM&lt;/a&gt; · &lt;a href="https://huggingface.co/moonshotai/Kimi-K3"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://vllm.ai/blog/2026-08-07-decode-context-parallelism"&gt;vLLM&lt;/a&gt;&lt;/p&gt;</description>
+</item>
+<item>
+<title>Four open-weight releases in 72 hours; only NVIDIA's Nemotron 3.5 Bolt fits 24GB</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-four-open-weight-drops-24gb-fit.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-four-open-weight-drops-24gb-fit.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:38:34 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;A r/LocalLLaMA recap lists four open-weight releases in 72 hours: Meta's Muse Spark Open (816B total, 42B active), Reflection's Beam (501B, 23B active), DeepSeek V4.1 Flash 1017 (510GB repo) and NVIDIA's Nemotron 3.5 Bolt (74B, 9B active).&lt;/p&gt;&lt;p&gt;Only Bolt targets a 24GB GPU: quantization-aware training to 2 bit puts weights at 22GB plus a 1.7GB vision projector, leaving little room for KV cache. Beam's smallest official checkpoint is 294GB in NVFP4. Sizes are from the post, not LLMScale estimates.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://reddit.com/r/LocalLLaMA/comments/1x9d23j/72_hours_four_big_open_weights_drops_the_only_one"&gt;Reddit r/LocalLLaMA&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>vLLM's specialized decode path speeds Kimi K3 up to 1.9x on NVIDIA GB300</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-vllm-kimi-k3-gb300-decode.html</link>
