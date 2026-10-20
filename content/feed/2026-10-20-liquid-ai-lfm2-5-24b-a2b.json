@@ -1,0 +1,41 @@
+{
+  "id": "2026-10-20-liquid-ai-lfm2-5-24b-a2b",
+  "published": "2026-10-20T05:42:15Z",
+  "category": "model",
+  "en": {
+    "title": "Liquid AI releases LFM2.5-24B-A2B, a 24B MoE with 2B active and 131K context",
+    "body": "Liquid AI released LFM2.5-24B-A2B, an open-weight reasoning MoE with 24B parameters, about 2B active per token and 64 experts with top-4 routing. Context grows from 32,768 to 131,072 tokens, on a hybrid of gated short convolutions and GQA. Liquid reports 184 tokens/s decode on an Apple M5 Max.\n\nLLMScale estimates for one user at 8,192 tokens of context: 45.97 GiB in BF16 (A100 80GB), 23.89 GiB in FP8 (RTX 5090) and 13.54 GiB in INT4 (RTX 4060 Ti 16GB)."
+  },
+  "tr": {
+    "title": "Liquid AI, 2B aktif parametreli ve 131K context'li 24B MoE LFM2.5-24B-A2B'yi yayımladı",
+    "body": "Liquid AI, açık ağırlıklı LFM2.5-24B-A2B'yi yayımladı. Model 24B parametreli bir reasoning MoE; token başına yaklaşık 2B parametre aktif ve top-4 yönlendirmeli 64 expert içeriyor. Context 32.768'den 131.072 token'a çıktı. Mimari, gated kısa konvolüsyonları GQA ile birleştiriyor. Liquid, Apple M5 Max'te saniyede 184 token decode hızı bildiriyor.\n\nLLMScale tahmini, 8.192 token context'te tek kullanıcı için: BF16'da 45,97 GiB (A100 80GB), FP8'de 23,89 GiB (RTX 5090), INT4'te 13,54 GiB (RTX 4060 Ti 16GB)."
+  },
+  "refs": [
+    {
+      "url": "https://liquid.ai/blog/lfm2-5-24b-a2b",
+      "title": "LFM2.5-24B-A2B: Built for Fast On-Device Agents",
+      "source": "Liquid AI"
+    },
+    {
+      "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B",
+      "title": "LiquidAI/LFM2.5-24B-A2B",
+      "source": "Hugging Face"
+    }
+  ],
+  "tags": [
+    "moe",
+    "on-device",
+    "long-context",
+    "quantization"
+  ],
+  "hf": "LiquidAI/LFM2.5-24B-A2B",
+  "arch": {
+    "numParams": 23971585280,
+    "numLayers": 40,
+    "hiddenSize": 2048,
+    "numAttentionHeads": 32,
+    "numKeyValueHeads": 8,
+    "maxContext": 131072,
+    "activeParams": 1322343680
+  }
+}
