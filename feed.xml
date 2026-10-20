@@ -6,7 +6,23 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:38:34 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:38:45 GMT</lastBuildDate>
+<item>
+<title>Unsloth opens GGUF repo for DeepSeek-V4.1-Flash-1017; quants not yet posted</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-unsloth-deepseek-v41-flash-1017-gguf.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-unsloth-deepseek-v41-flash-1017-gguf.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:38:45 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;Unsloth has opened a Hugging Face repo for GGUF builds of DeepSeek-V4.1-Flash-1017, an MIT-licensed minor update to DeepSeek-V4.1-Flash with reported gains in reasoning, coding and agentic tasks. The page says the quants are not posted yet.&lt;/p&gt;&lt;p&gt;LLMScale estimates 748.49B parameters, about 173.27B active per token (MoE). For one user at 8,192 tokens of context: 701.1 GiB at FP8 (8× B200) and 374.9 GiB at INT4, enough for a 512GB M3 Ultra. Recommended context is 1M tokens.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://huggingface.co/unsloth/DeepSeek-V4.1-Flash-1017-GGUF"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://reddit.com/r/LocalLLaMA/comments/1x95491/unslothdeepseekv41flash1017gguf_hugging_face"&gt;Reddit r/LocalLLaMA&lt;/a&gt;&lt;/p&gt;</description>
+</item>
+<item>
+<title>Amazon releases ALoDLM-8B, a looped diffusion language model built on Qwen3-8B</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-amazon-alodlm-8b-looped-diffusion.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-amazon-alodlm-8b-looped-diffusion.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:38:45 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;Amazon has released ALoDLM-8B, a diffusion language model initialized from Qwen3-8B. It reuses shared transformer layers in a loop and gives unresolved tokens extra passes. A Reddit post claims about 3x Qwen3-8B's speed. The model card measures throughput single-stream on one B200, in a parallel-commit mode separate from its quality runs. The license is CC BY-NC 4.0.&lt;/p&gt;&lt;p&gt;LLMScale estimates for one user at 8,192 tokens of context: 18.37 GiB in BF16, 11.90 GiB in FP8 and 8.87 GiB in INT4.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://huggingface.co/amazon/ALoDLM-8B"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://reddit.com/r/LocalLLaMA/comments/1x75bme/alodlm_8b_looped_diffusion_language_model_3x"&gt;Reddit r/LocalLLaMA&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>vLLM on eight MI355X GPUs tops HGX B300 per-GPU throughput on Kimi K3</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-kimi-k3-mi355x-vllm-throughput.html</link>
