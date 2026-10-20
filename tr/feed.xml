@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:39:30 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:39:42 GMT</lastBuildDate>
+<item>
+<title>NVIDIA, 120B-A12B multimodal MoE modeli Nemotron 3.5 Super VL'i NVFP4 ile yayımladı</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-3-5-super-vl.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-3-5-super-vl.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:39:42 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;NVIDIA, 120B parametreli ve token başına 12B parametre aktive eden açık multimodal MoE modeli Nemotron 3.5 Super VL'i yayımladı. Metin, görsel, doküman ve video tek modelde ele alınıyor. Checkpoint NVFP4: Blackwell'de 4 bit ağırlık ve aktivasyon, diğer GPU'larda 4 bit ağırlık ve 16 bit aktivasyon.&lt;/p&gt;&lt;p&gt;Token başına yalnızca 12B çalışsa da 120B ağırlığın tamamı belleğe sığmalı. NVIDIA, LiLiCorr speculative decoding ile DGX Spark'ta token üretiminin 2,3 kata kadar hızlandığını söylüyor.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://developer.nvidia.com/blog/nvidia-nemotron-3-5-super-vl-powers-specialized-agents-with-multimodal-reasoning"&gt;NVIDIA Developer Blog&lt;/a&gt; · &lt;a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4"&gt;Hugging Face&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>vLLM, 816B-A42B MoE ve 1M context'li Muse Spark Open'a ilk gün desteği verdi</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-vllm-day-zero-muse-spark-open.html</link>

@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:39:30 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:39:42 GMT</lastBuildDate>
+<item>
+<title>NVIDIA releases Nemotron 3.5 Super VL, a 120B-A12B multimodal MoE in NVFP4</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-nvidia-nemotron-3-5-super-vl.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-nvidia-nemotron-3-5-super-vl.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:39:42 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;NVIDIA has released Nemotron 3.5 Super VL, an open multimodal MoE model with 120B parameters, 12B active per token. One model covers text, image, document and video input. The checkpoint uses NVFP4: 4-bit weights and activations on Blackwell, 4-bit weights with 16-bit activations on other GPUs.&lt;/p&gt;&lt;p&gt;All 120B weights must fit in memory even though only 12B run per token. NVIDIA says LiLiCorr speculative decoding speeds generation up to 2.3x on DGX Spark.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://developer.nvidia.com/blog/nvidia-nemotron-3-5-super-vl-powers-specialized-agents-with-multimodal-reasoning"&gt;NVIDIA Developer Blog&lt;/a&gt; · &lt;a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4"&gt;Hugging Face&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>vLLM adds day-0 support for Muse Spark Open, an 816B-A42B MoE with 1M context</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-vllm-day-zero-muse-spark-open.html</link>
