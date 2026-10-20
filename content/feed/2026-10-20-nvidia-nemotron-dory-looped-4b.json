@@ -1,0 +1,46 @@
+{
+  "id": "2026-10-20-nvidia-nemotron-dory-looped-4b",
+  "published": "2026-10-20T05:39:10Z",
+  "category": "model",
+  "en": {
+    "title": "NVIDIA releases Nemotron-Labs-Dory1.0-4B, a looped model with 256K context",
+    "body": "NVIDIA released Nemotron-Labs-Dory1.0-4B, an open 4B looped model. A shared 20-layer block sits between 8-layer input and output blocks and runs repeatedly. It mixes sliding-window and full attention and supports up to 256K context.\n\nPer-loop caching grows the KV cache with each loop; last-loop mode keeps it at one-loop size. LLMScale estimates 11.12 GiB in BF16 and 8.05 GiB in FP8 for one user at 8K context. vLLM support is still an open PR."
+  },
+  "tr": {
+    "title": "NVIDIA, 256K context'li looped model Nemotron-Labs-Dory1.0-4B'yi yayımladı",
+    "body": "NVIDIA, açık 4B'lik looped model Nemotron-Labs-Dory1.0-4B'yi yayımladı. Paylaşılan 20 katmanlı bir blok, 8 katmanlı giriş ve çıkış blokları arasında tekrar tekrar çalışıyor. Sliding-window ve full attention katmanlarını birlikte kullanıyor; context 256K'ya kadar çıkıyor.\n\nPer-loop modda KV cache her döngüyle büyüyor; last-loop modu onu tek döngü boyutunda tutuyor. LLMScale tahmini, 8K context'te tek kullanıcı için BF16'da 11,12 GiB, FP8'de 8,05 GiB. vLLM desteği henüz açık bir PR'da."
+  },
+  "refs": [
+    {
+      "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "title": "NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+      "source": "Hugging Face"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/60149",
+      "title": "vllm-project/vllm pull request #60149 (Dory support)",
+      "source": "GitHub"
+    },
+    {
+      "url": "https://github.com/ggml-org/llama.cpp/pull/30306",
+      "title": "ggml-org/llama.cpp pull request #30306 (Dory support)",
+      "source": "GitHub"
+    }
+  ],
+  "tags": [
+    "looped-models",
+    "kv-cache",
+    "long-context",
+    "vllm"
+  ],
+  "hf": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16",
+  "arch": {
+    "numParams": 3975229440,
+    "numLayers": 72,
+    "hiddenSize": 2560,
+    "numAttentionHeads": 16,
+    "numKeyValueHeads": 4,
+    "headDim": 256,
+    "maxContext": 262144
+  }
+}
