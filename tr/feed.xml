@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:42:15 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:42:40 GMT</lastBuildDate>
+<item>
+<title>inclusionAI, 25B aktif parametreli 560B hybrid-linear MoE Ling-3.1-flash'ı yayınladı</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-inclusionai-ling-3-1-flash-moe.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-inclusionai-ling-3-1-flash-moe.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:42:40 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;inclusionAI, toplam 560B ve token başına 25B aktif parametreye sahip, 1M token context desteği belirtilen hybrid-linear MoE modeli Ling-3.1-flash'ı yayınladı. 72 katmanın 63'ü KDA, 9'u Gated MLA. Bu yüzden klasik KV cache tutan katman sayısı az.&lt;/p&gt;&lt;p&gt;LLMScale tahminleri, tek kullanıcı ve 8K context için: FP8'de 537,3 GiB (4× B200), INT4'te 287,8 GiB (512GB M3 Ultra'ya sığıyor). Model kartındaki SGLang tarifi 8× H200 ya da 4× GB300 kullanıyor. vLLM için ayrı bir branch gerekiyor.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://huggingface.co/inclusionAI/Ling-3.1-flash"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://github.com/vllm-project/vllm.git"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>Liquid AI, 2B aktif parametreli ve 131K context'li 24B MoE LFM2.5-24B-A2B'yi yayımladı</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-liquid-ai-lfm2-5-24b-a2b.html</link>

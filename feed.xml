@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:42:15 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:42:40 GMT</lastBuildDate>
+<item>
+<title>inclusionAI releases Ling-3.1-flash, a 560B hybrid-linear MoE with 25B active</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-inclusionai-ling-3-1-flash-moe.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-10-20-inclusionai-ling-3-1-flash-moe.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:42:40 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;inclusionAI has released Ling-3.1-flash, a hybrid-linear MoE with 560B total and 25B active parameters and a stated 1M-token context. Its 72 layers split into 63 KDA and 9 Gated MLA layers, so only a small share of layers hold a conventional KV cache.&lt;/p&gt;&lt;p&gt;LLMScale estimates for one user at 8K context: 537.3 GiB at FP8 (4× B200) and 287.8 GiB at INT4 (fits a 512GB M3 Ultra). The card's SGLang recipe uses 8× H200 or 4× GB300. vLLM needs a dedicated branch.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://huggingface.co/inclusionAI/Ling-3.1-flash"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://github.com/vllm-project/vllm.git"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>Liquid AI releases LFM2.5-24B-A2B, a 24B MoE with 2B active and 131K context</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-liquid-ai-lfm2-5-24b-a2b.html</link>
