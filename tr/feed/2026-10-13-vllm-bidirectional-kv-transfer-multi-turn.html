@@ -253,6 +253,26 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <div class="acts"><button type="button" data-share="https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-10-mistral-large-4-preview-moe.html" data-title="Mistral Large 4 önizlemesi: 1T parametreli, 49B aktif MoE; açık ağırlıklar ay sonunda" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg><span>Paylaş</span></button></div>
 </div>
 </article>
+<article class="post" id="2026-10-20-liquid-ai-lfm2-5-24b-a2b" data-href="/LLMScale/tr/feed/2026-10-20-liquid-ai-lfm2-5-24b-a2b.html">
+<a class="av" href="/LLMScale/tr/feed/2026-10-20-liquid-ai-lfm2-5-24b-a2b.html" tabindex="-1" aria-hidden="true"><img src="/LLMScale/favicon.svg" alt="" width="22" height="22"></a>
+<div class="pb">
+<div class="ph"><b>LLMScale</b><span aria-hidden="true">·</span><a class="when" href="/LLMScale/tr/feed/2026-10-20-liquid-ai-lfm2-5-24b-a2b.html"><time datetime="2026-10-20T05:42:15Z" data-age>20 Eki 2026</time></a><span aria-hidden="true">·</span><span class="cat">Model</span></div>
+<h3 class="lead"><a href="/LLMScale/tr/feed/2026-10-20-liquid-ai-lfm2-5-24b-a2b.html">Liquid AI, 2B aktif parametreli ve 131K context'li 24B MoE LFM2.5-24B-A2B'yi yayımladı</a></h3>
+<p>Liquid AI, açık ağırlıklı LFM2.5-24B-A2B'yi yayımladı. Model 24B parametreli bir reasoning MoE; token başına yaklaşık 2B parametre aktif ve top-4 yönlendirmeli 64 expert içeriyor. Context 32.768'den 131.072 token'a çıktı. Mimari, gated kısa konvolüsyonları GQA ile birleştiriyor. Liquid, Apple M5 Max'te saniyede 184 token decode hızı bildiriyor.</p>
+<p>LLMScale tahmini, 8.192 token context'te tek kullanıcı için: BF16'da 45,97 GiB (A100 80GB), FP8'de 23,89 GiB (RTX 5090), INT4'te 13,54 GiB (RTX 4060 Ti 16GB).</p>
+<p class="tags">#moe #on-device #long-context #quantization</p>
+<figure class="mem">
+<figcaption>LFM2.5-24B-A2B · 23,97B parametre · 8k context, tek kullanıcı</figcaption>
+<table>
+<thead><tr><th scope="col">Hassasiyet</th><th scope="col">Bellek</th><th scope="col">Sığdığı cihaz</th></tr></thead>
+<tbody><tr><th scope="row">BF16</th><td><span class="meter" aria-hidden="true"><span style="width:100%"></span></span>45,99 GiB</td><td><a href="/LLMScale/tr/gpus/a100-80.html">A100 80GB</a></td></tr><tr><th scope="row">FP8</th><td><span class="meter" aria-hidden="true"><span style="width:51%"></span></span>23,66 GiB</td><td><a href="/LLMScale/tr/gpus/rtx5090-32.html">RTX 5090</a></td></tr><tr><th scope="row">INT4</th><td><span class="meter" aria-hidden="true"><span style="width:27%"></span></span>12,50 GiB</td><td><a href="/LLMScale/tr/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a></td></tr></tbody>
+</table>
+<p class="memnote">FP16 KV cache ve her cihazda kendi varsayılanlarıyla vLLM'in ek yükü. “Sığdığı cihaz”: modeli tek başına taşıyan en küçük cihaz ya da en büyüğünden kaç tane gerektiği. <a href="/LLMScale/tr/?m=LiquidAI%2FLFM2.5-24B-A2B">Context, kullanıcı ya da GPU'yu hesaplayıcıda değiştir</a></p>
+</figure>
+<ul class="src" aria-label="Kaynaklar"><li><a href="https://liquid.ai/blog/lfm2-5-24b-a2b" rel="noopener"><span class="d">Liquid AI · liquid.ai</span><span class="t">LFM2.5-24B-A2B: Built for Fast On-Device Agents</span></a></li><li><a href="https://huggingface.co/LiquidAI/LFM2.5-24B-A2B" rel="noopener"><span class="d">Hugging Face · huggingface.co</span><span class="t">LiquidAI/LFM2.5-24B-A2B</span></a></li></ul>
+<div class="acts"><a href="/LLMScale/tr/?m=LiquidAI%2FLFM2.5-24B-A2B" aria-label="LFM2.5-24B-A2B modelini hesaplayıcıda aç"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 14.5h.01M12 14.5h.01M15.5 14.5h.01M8.5 18h.01M12 18h3.5"/></svg><span>Hesapla</span></a><button type="button" data-share="https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-liquid-ai-lfm2-5-24b-a2b.html" data-title="Liquid AI, 2B aktif parametreli ve 131K context'li 24B MoE LFM2.5-24B-A2B'yi yayımladı" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg><span>Paylaş</span></button></div>
+</div>
+</article>
 <article class="post" id="2026-10-20-nvidia-nemotron-3-5-super-vl" data-href="/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-3-5-super-vl.html">
 <a class="av" href="/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-3-5-super-vl.html" tabindex="-1" aria-hidden="true"><img src="/LLMScale/favicon.svg" alt="" width="22" height="22"></a>
 <div class="pb">
@@ -275,26 +295,6 @@ pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
 <p class="tags">#moe #kv-cache #vllm #speculative-decoding</p>
 <ul class="src" aria-label="Kaynaklar"><li><a href="https://vllm.ai/blog/2026-10-15-muse-spark-open" rel="noopener"><span class="d">vLLM · vllm.ai</span><span class="t">Day 0 support for Muse Spark Open on vLLM</span></a></li><li><a href="https://github.com/vllm-project/vllm/pull/61879" rel="noopener"><span class="d">GitHub · github.com</span><span class="t">vLLM PR #61879: Muse Spark Open support</span></a></li></ul>
 <div class="acts"><button type="button" data-share="https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-vllm-day-zero-muse-spark-open.html" data-title="vLLM, 816B-A42B MoE ve 1M context'li Muse Spark Open'a ilk gün desteği verdi" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg><span>Paylaş</span></button></div>
-</div>
-</article>
-<article class="post" id="2026-10-20-nvidia-nemotron-dory-looped-4b-2" data-href="/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-dory-looped-4b-2.html">
-<a class="av" href="/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-dory-looped-4b-2.html" tabindex="-1" aria-hidden="true"><img src="/LLMScale/favicon.svg" alt="" width="22" height="22"></a>
-<div class="pb">
-<div class="ph"><b>LLMScale</b><span aria-hidden="true">·</span><a class="when" href="/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-dory-looped-4b-2.html"><time datetime="2026-10-20T05:39:30Z" data-age>20 Eki 2026</time></a><span aria-hidden="true">·</span><span class="cat">Model</span></div>
-<h3 class="lead"><a href="/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-dory-looped-4b-2.html">NVIDIA, 256K context destekli döngülü 4B model Dory1.0-4B'yi yayımladı</a></h3>
-<p>NVIDIA, 4B parametreli döngülü (looped) dil modeli Dory1.0-4B'yi yayımladı: 20 katmanlık ortak bir blok, 8 giriş ve 8 çıkış katmanı arasında tekrarlanıyor. Sliding-window ve full attention katmanları dönüşümlü, context 256K token'a kadar. Döngü sayısı inference sırasında seçiliyor; SWE-bench Verified 1 döngüde 50,3, 4 döngüde 61,8.</p>
-<p>Model kartına göre last-loop KV caching ile ek döngüler compute ekliyor ama KV cache büyütmüyor. LLMScale tahmini: 8K context'te tek kullanıcı için BF16'da 11,12 GiB, INT4'te 6,60 GiB.</p>
-<p class="tags">#looped-model #kv-cache #nvidia #long-context</p>
-<figure class="mem">
-<figcaption>NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16 · 3,98B parametre · 8k context, tek kullanıcı</figcaption>
-<table>
-<thead><tr><th scope="col">Hassasiyet</th><th scope="col">Bellek</th><th scope="col">Sığdığı cihaz</th></tr></thead>
-<tbody><tr><th scope="row">BF16</th><td><span class="meter" aria-hidden="true"><span style="width:100%"></span></span>10,59 GiB</td><td><a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a></td></tr><tr><th scope="row">FP8</th><td><span class="meter" aria-hidden="true"><span style="width:65%"></span></span>6,89 GiB</td><td><a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a></td></tr><tr><th scope="row">INT4</th><td><span class="meter" aria-hidden="true"><span style="width:48%"></span></span>5,04 GiB</td><td><a href="/LLMScale/tr/gpus/rtx3060-12.html">RTX 3060</a></td></tr></tbody>
-</table>
-<p class="memnote">FP16 KV cache ve her cihazda kendi varsayılanlarıyla vLLM'in ek yükü. “Sığdığı cihaz”: modeli tek başına taşıyan en küçük cihaz ya da en büyüğünden kaç tane gerektiği. <a href="/LLMScale/tr/?m=nvidia%2FNVIDIA-Nemotron-Labs-Dory1.0-4B-BF16">Context, kullanıcı ya da GPU'yu hesaplayıcıda değiştir</a></p>
-</figure>
-<ul class="src" aria-label="Kaynaklar"><li><a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16" rel="noopener"><span class="d">Hugging Face · huggingface.co</span><span class="t">nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16</span></a></li><li><a href="https://reddit.com/r/LocalLLaMA/comments/1x7w7dp/nvidianvidianemotronlabsdory104bbf16_hugging_face" rel="noopener"><span class="d">Reddit r/LocalLLaMA · reddit.com</span><span class="t">nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16 · Hugging Face</span></a></li></ul>
-<div class="acts"><a href="/LLMScale/tr/?m=nvidia%2FNVIDIA-Nemotron-Labs-Dory1.0-4B-BF16" aria-label="NVIDIA-Nemotron-Labs-Dory1.0-4B-BF16 modelini hesaplayıcıda aç"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 14.5h.01M12 14.5h.01M15.5 14.5h.01M8.5 18h.01M12 18h3.5"/></svg><span>Hesapla</span></a><button type="button" data-share="https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-dory-looped-4b-2.html" data-title="NVIDIA, 256K context destekli döngülü 4B model Dory1.0-4B'yi yayımladı" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg><span>Paylaş</span></button></div>
 </div>
 </article>
 <nav class="more" aria-label="Tüm akış"><a href="/LLMScale/tr/feed/">Tüm akış →</a></nav>

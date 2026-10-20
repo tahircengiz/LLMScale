@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:39:42 GMT</lastBuildDate>
+<lastBuildDate>Tue, 20 Oct 2026 05:42:15 GMT</lastBuildDate>
+<item>
+<title>Liquid AI, 2B aktif parametreli ve 131K context'li 24B MoE LFM2.5-24B-A2B'yi yayımladı</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-liquid-ai-lfm2-5-24b-a2b.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-liquid-ai-lfm2-5-24b-a2b.html</guid>
+<pubDate>Tue, 20 Oct 2026 05:42:15 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;Liquid AI, açık ağırlıklı LFM2.5-24B-A2B'yi yayımladı. Model 24B parametreli bir reasoning MoE; token başına yaklaşık 2B parametre aktif ve top-4 yönlendirmeli 64 expert içeriyor. Context 32.768'den 131.072 token'a çıktı. Mimari, gated kısa konvolüsyonları GQA ile birleştiriyor. Liquid, Apple M5 Max'te saniyede 184 token decode hızı bildiriyor.&lt;/p&gt;&lt;p&gt;LLMScale tahmini, 8.192 token context'te tek kullanıcı için: BF16'da 45,97 GiB (A100 80GB), FP8'de 23,89 GiB (RTX 5090), INT4'te 13,54 GiB (RTX 4060 Ti 16GB).&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://liquid.ai/blog/lfm2-5-24b-a2b"&gt;Liquid AI&lt;/a&gt; · &lt;a href="https://huggingface.co/LiquidAI/LFM2.5-24B-A2B"&gt;Hugging Face&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>NVIDIA, 120B-A12B multimodal MoE modeli Nemotron 3.5 Super VL'i NVFP4 ile yayımladı</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-nvidia-nemotron-3-5-super-vl.html</link>
