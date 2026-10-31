@@ -5,7 +5,9 @@
 // Runs last in the build. Every page carries a canonical URL and hreflang links to
 // its English and Turkish versions, so the sitemap is read off the pages rather
 // than listed by hand — a hand list is how a new page goes unsubmitted. It also
-// refuses to write one if a page points at a version that was never built.
+// refuses to write one if a page points at a version that was never built. Each
+// URL's <lastmod> is read off the page too: its structured data's dateModified
+// (see lastModified.ts); a page without one goes without.
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -20,7 +22,7 @@ function* htmlFiles(dir: string): Generator<string> {
   }
 }
 
-type Page = { rel: string; canonical: string; alternates: Record<string, string> };
+type Page = { rel: string; canonical: string; alternates: Record<string, string>; modified?: string };
 const pages: Page[] = [];
 for (const path of htmlFiles(outDir)) {
   const html = readFileSync(path, "utf8");
@@ -34,7 +36,8 @@ for (const path of htmlFiles(outDir)) {
   if (alternates.en !== canonical && alternates.tr !== canonical) {
     throw new Error(`${path}: its canonical ${canonical} is neither of its own language versions`);
   }
-  pages.push({ rel: relative(outDir, path).replaceAll("\\", "/"), canonical, alternates });
+  const modified = html.match(/"dateModified":"([^"]+)"/)?.[1];
+  pages.push({ rel: relative(outDir, path).replaceAll("\\", "/"), canonical, alternates, modified });
 }
 
 const built = new Set(pages.map((p) => p.canonical));
@@ -61,9 +64,9 @@ writeFileSync(
   [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
-    ...pages.map((p) => `  <url><loc>${p.canonical}</loc>${links(p.alternates)}</url>`),
+    ...pages.map((p) => `  <url><loc>${p.canonical}</loc>${p.modified ? `<lastmod>${p.modified}</lastmod>` : ""}${links(p.alternates)}</url>`),
     "</urlset>",
     "",
   ].join("\n")
 );
-console.log(`ok    sitemap.xml  ${pages.length} URLs`);
+console.log(`ok    sitemap.xml  ${pages.length} URLs, ${pages.filter((p) => p.modified).length} with <lastmod>`);

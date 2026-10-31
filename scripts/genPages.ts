@@ -36,9 +36,12 @@ import { CONCEPT_FILES, CONCEPTS_HUB, FEATURED_GPU_IDS, GPUS_HUB, MODELS_HUB, gp
 import { CONCEPTS, type Concept, type Fmt } from "./concepts.ts";
 import { createShell, ctxK, dec, esc, gib, int, LANGS, params, ratio, readSite, words } from "./shell.ts";
 import { loadFeed } from "./feedData.ts";
+import { modifiedDate } from "./lastModified.ts";
 
 const outDir = process.argv[2] ?? "dist";
-const { href, url, page } = createShell(readSite(outDir), { feed: loadFeed().length > 0 });
+// Every guide is made from this script and what it imports, so they share one date.
+const modified = modifiedDate("scripts/genPages.ts");
+const { href, url, page } = createShell(readSite(outDir), { feed: loadFeed().length > 0, modified });
 
 // ── the engine, at the calculator's own defaults ─────────────────────────────
 const WORK = { kvDtype: "fp16" as Dtype };
