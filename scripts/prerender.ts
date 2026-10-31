@@ -12,6 +12,7 @@
 //   - structured data generated from each page's own title, description and
 //     canonical URL — hand copies drift: train.html once described itself to
 //     search engines as the task-fit page;
+//   - the date the page last changed, as dateModified (see lastModified.ts);
 //
 // Before this, every entry shipped an empty <div id="root">, and Turkish existed
 // only after JavaScript switched a page in place, at an address search engines
@@ -26,6 +27,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { TR_META } from "../src/lib/pageMeta.ts";
 import type { Lang } from "../src/lib/dict.ts";
+import { modifiedDate } from "./lastModified.ts";
 
 const [outDir = "dist", ssrDir = "dist-ssr"] = process.argv.slice(2);
 const { render } = (await import(pathToFileURL(resolve(ssrDir, "entry-server.js")).href)) as {
@@ -39,6 +41,26 @@ const LANGS: Lang[] = ["en", "tr"];
 const MOUNT = '<div id="root"></div>';
 const SCROLL_MOUNT = '<div id="scroll"></div>';
 const LD_MARK = "<!-- prerender: language alternates and structured data -->";
+
+// What each entry's page is made from, to date it by: beside the entry itself and
+// the Turkish head (pageMeta.ts), its component — and on an app page the
+// explainer App.tsx puts under every one (About.tsx) — with everything they
+// import. Every entry loads the whole app, so the bundle cannot tell one page's
+// files from another's.
+const PAGE_SOURCES: Record<string, string> = {
+  "index.html": "src/pages/SizingPage.tsx",
+  "anatomy.html": "src/pages/AnatomyPage.tsx",
+  "compare.html": "src/pages/ComparePage.tsx",
+  "config.html": "src/pages/ConfigPage.tsx",
+  "decode.html": "src/pages/DecodePage.tsx",
+  "fit.html": "src/pages/FitPage.tsx",
+  "gpu-compare.html": "src/pages/GpuComparePage.tsx",
+  "learn.html": "src/learn.js",
+  "plan.html": "src/pages/PlanPage.tsx",
+  "serving.html": "src/pages/ServingPage.tsx",
+  "train.html": "src/pages/TrainPage.tsx",
+  "vllm.html": "src/pages/VllmPage.tsx",
+};
 
 const escText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 const escAttr = (s: string) => escText(s).replace(/"/g, "&quot;");
@@ -124,6 +146,10 @@ for (const file of entries) {
   if (base === undefined) throw new Error(`${file}: cannot find the asset base path`);
   const isApp = pristine.includes(MOUNT);
   if (isApp) rendered++;
+  const source = PAGE_SOURCES[file];
+  if (!source) throw new Error(`${file}: no PAGE_SOURCES entry to date the page by`);
+  const modified = modifiedDate(file, "src/lib/pageMeta.ts", source, ...(isApp ? ["src/components/About.tsx"] : []));
+  const dated = modified ? { dateModified: modified } : {};
 
   for (const lang of LANGS) {
     let html = lang === "tr" ? translateHead(pristine, file, urls.tr) : pristine;
@@ -165,7 +191,26 @@ for (const file of entries) {
         offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
         isPartOf: { "@type": "WebSite", name: "LLMScale", url: home[lang] },
         author: { "@type": "Person", name: "Tahir Ali Cengiz", url: "https://github.com/tahircengiz" },
+        ...dated,
       }));
+    } else if (!html.includes("application/ld+json")) {
+      // LLM 101 is a page to read, not an app; it needs structured data of its own
+      // to carry its date.
+      head.push(ld({
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name,
+        url: urls[lang],
+        description,
+        inLanguage: lang,
+        isPartOf: { "@type": "WebSite", name: "LLMScale", url: home[lang] },
+        author: { "@type": "Person", name: "Tahir Ali Cengiz", url: "https://github.com/tahircengiz" },
+        ...dated,
+      }));
+    } else if (modified) {
+      // A hand-written block: index.html's WebApplication, which the English page keeps.
+      html = html.replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/, (_m, open: string, json: string, close: string) =>
+        open + JSON.stringify({ ...JSON.parse(json), dateModified: modified }).replace(/</g, "\\u003c") + close);
     }
     html = replaceOnce(html, file, "</head>", `  ${LD_MARK}\n    ${head.join("\n    ")}\n  </head>`);
 
@@ -189,7 +234,7 @@ for (const file of entries) {
     const dir = lang === "tr" ? join(outDir, "tr") : outDir;
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, file), html);
-    console.log(`ok    ${lang === "tr" ? "tr/" : ""}${file}  ${words(text)} words`);
+    console.log(`ok    ${lang === "tr" ? "tr/" : ""}${file}  ${words(text)} words  ${modified ?? "undated"}`);
   }
 }
 if (rendered === 0) throw new Error(`no React entry found in ${outDir}`);

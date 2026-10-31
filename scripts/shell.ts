@@ -115,8 +115,10 @@ export interface PageSpec {
 }
 
 /** The page builder for one built site. `feed` adds the news feed to the nav,
- *  which it only does once there is a post to show. */
-export function createShell(site: Site, { feed }: { feed: boolean }) {
+ *  which it only does once there is a post to show. `modified` is when the pages
+ *  it builds last changed (lastModified.ts), their dateModified unless a page's
+ *  own structured data has one. */
+export function createShell(site: Site, { feed, modified }: { feed: boolean; modified?: string }) {
   const href = (lang: Lang, file = "") => `${site.base}${lang === "tr" ? "tr/" : ""}${file}`;
   const url = (lang: Lang, file = "") => `${site.home}${lang === "tr" ? "tr/" : ""}${file}`;
 
@@ -146,7 +148,8 @@ export function createShell(site: Site, { feed }: { feed: boolean }) {
       "@type": "BreadcrumbList",
       itemListElement: p.crumbs.map((cr, i) => ({ "@type": "ListItem", position: i + 1, name: cr.name, item: url(p.lang, cr.file ?? p.file) })),
     };
-    const ld = [breadcrumb, p.ld].map((x) => `<script type="application/ld+json">${JSON.stringify(x).replace(/</g, "\\u003c")}</script>`).join("\n");
+    const dated = modified && !("dateModified" in p.ld) ? { ...p.ld, dateModified: modified } : p.ld;
+    const ld = [breadcrumb, dated].map((x) => `<script type="application/ld+json">${JSON.stringify(x).replace(/</g, "\\u003c")}</script>`).join("\n");
     const crumbs = p.crumbs
       .map((cr, i) => (i < p.crumbs.length - 1 ? `<a href="${href(p.lang, cr.file)}">${esc(cr.name)}</a> › ` : esc(cr.name)))
       .join("");

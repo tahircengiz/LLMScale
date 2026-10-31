@@ -25,6 +25,7 @@ import { FEED_HUB, FEED_MEDIA, feedPostFile, feedRssFile, paragraphs, type FeedP
 import { createShell, esc, LANGS, readSite, words } from "./shell.ts";
 import { article, CSS, ICON, postLd, script, shortTitle, summary, T } from "./feedRender.ts";
 import { FEED_DIR, loadFeed } from "./feedData.ts";
+import { modifiedDate } from "./lastModified.ts";
 
 const outDir = process.argv[2] ?? "dist";
 const posts = loadFeed();
@@ -33,7 +34,9 @@ if (!posts.length) {
   process.exit(0);
 }
 const site = readSite(outDir);
-const { href, url, page } = createShell(site, { feed: true });
+// A post page is dated by its post; the stream pages change with every post, as
+// each new one moves the rest along a page.
+const { href, url, page } = createShell(site, { feed: true, modified: modifiedDate("scripts/genFeed.ts", FEED_DIR) });
 
 /** Posts per stream file; scrolling loads the next file's posts in place. */
 const PAGE_SIZE = 20;
