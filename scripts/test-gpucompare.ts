@@ -5,6 +5,7 @@
 // the page renders, and that the figures its copy quotes stay true.
 
 import { readFileSync } from "node:fs";
+import { DICTS } from "../src/lib/dict.ts";
 import { GPUS } from "../src/lib/gpus.ts";
 import { GPU_SPECS } from "../src/lib/gpuSpecs.ts";
 import { findKnownByHfId } from "../src/lib/models.ts";
@@ -69,6 +70,12 @@ console.log("\n--- what the about text says ---");
   check("an RTX 5090 is about twice as fast as an L40S for one user", ratio > 1.8 && ratio < 2.2, `${ratio.toFixed(2)}×`);
   check("…though the L40S is rated higher at BF16", gpu("l40s-48").tflops!.bf16 > gpu("rtx5090-32").tflops!.bf16);
   check("Strix Halo's GPU gets 96 of its 128 GB", gpu("amd-strixhalo-128").vramGiB === 96 && gpu("amd-strixhalo-128").totalGiB === 128);
+  // "Pick two to four of the 45 devices LLMScale knows": a count typed into the
+  // copy, so it is held to the list the picker offers (it once said 43 of 45).
+  for (const lang of ["en", "tr"] as const) {
+    const said = Number(DICTS[lang]["about.gpucompare.p1"].match(/\d+/)?.[0]);
+    check(`the ${lang} text counts the devices the picker offers`, said === GPUS.length, `${said} vs ${GPUS.length}`);
+  }
 }
 
 console.log("\n--- the highlight and the link ---");

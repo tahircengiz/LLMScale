@@ -252,7 +252,7 @@ export function TrainPage() {
 
           {result && (
             <Card className="p-5">
-              <SectionTitle step="4" title={t("train.gpuFit")} hint={t("gpu.usableHint", { p: Math.round(DRIVER_RESERVE * 100) })} />
+              <SectionTitle step="4" title={t("train.gpuFit")} hint={t("train.usableHint", { p: Math.round(DRIVER_RESERVE * 100) })} />
 
               <div className="mb-3 flex flex-wrap gap-1.5">
                 {GPU_CATEGORIES.map((cat) => (

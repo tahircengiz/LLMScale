@@ -1,6 +1,8 @@
 // Unit test for the fine-tuning memory model. Run: node scripts/test-train.ts
+import { readFileSync } from "node:fs";
 import { estimateTraining, loraParams, type TrainInput } from "../src/lib/train.ts";
 import type { ModelArch } from "../src/lib/calc.ts";
+import { DICTS } from "../src/lib/dict.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -72,6 +74,19 @@ console.log("\n--- parts add up ---");
 const sum = full.baseWeightsGiB + full.gradientsGiB + full.optimizerGiB + full.activationsGiB + full.overheadGiB;
 check("breakdown sums to the total", Math.abs(sum - full.totalGiB) < 1e-9);
 check("full fine-tune trains every parameter", full.trainableParams === 8.03e9);
+
+console.log("\n--- what the page says about the budget ---");
+// The fit list budgets DRIVER_RESERVE of each card: what a training job keeps
+// after the CUDA context and the driver. Training does not run through vLLM, and
+// vLLM's own share is another number (VLLM_UTIL) — the page once called its 95%
+// "as vLLM does", beside an llms.txt giving vLLM's default as 92%.
+const trainPage = readFileSync(new URL("../src/pages/TrainPage.tsx", import.meta.url), "utf8");
+check("the fit list does not borrow the serving pages' vLLM hint", !trainPage.includes('t("gpu.usableHint"'));
+check("…it has its own", trainPage.includes('t("train.usableHint", { p: Math.round(DRIVER_RESERVE * 100) })'));
+for (const lang of ["en", "tr"] as const) {
+  const hint = DICTS[lang]["train.usableHint"] ?? "";
+  check(`…which gives the share without calling it vLLM's (${lang})`, hint.includes("{p}") && !hint.includes("vLLM"), hint);
+}
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);
