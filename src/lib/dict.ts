@@ -7,7 +7,7 @@ type Dict = Record<string, string>;
 const en: Dict = {
   "header.badge": "live Hugging Face data",
   "header.subtitle":
-    "How much GPU memory does a model really need? Weights and KV cache scale with your {ctx} and {users}. Pick a model, tune the workload, and see which GPUs fit.",
+    "LLMScale works out how much GPU memory a large language model needs — weights, KV cache, {ctx} and {users} — from each model's own architecture, and which GPUs hold it. Pick a model and tune the workload.",
   "header.subtitle.ctx": "context window",
   "header.subtitle.users": "concurrent users",
   "header.share": "Share this estimate",
@@ -369,7 +369,7 @@ const en: Dict = {
 
   "fit.title": "Model ↔ Task Fit",
   "fit.subtitle":
-    "Is this model built for the job? Pick a model and your use-case — LLMScale matches the characteristics the model declares (size, context, tuning, modality) against what the task needs, and shows every criterion it used.",
+    "LLMScale scores how well a model suits a task, out of 100, by matching the characteristics the model declares on the Hugging Face Hub (size, context, tuning, modality) against what the task needs, and shows every criterion it used. Pick a model and your use-case.",
   "fit.pickTask": "Choose your task",
   "fit.scoreLabel": "Capability match",
   "fit.empty": "Pick a model and a task to check the fit.",
@@ -444,7 +444,7 @@ const en: Dict = {
   "nav.compare": "Model Compare",
   "nav.train": "Fine-tune",
   "train.subtitle":
-    "What does fine-tuning cost in GPU memory? Training drops the KV cache but adds gradients, optimizer state and the activations kept for the backward pass — which is why a model you can serve on one card often cannot be trained on it.",
+    "LLMScale works out how much GPU memory a full fine-tune, LoRA or QLoRA needs: training drops the KV cache but adds gradients, optimizer state and the activations kept for the backward pass — which is why a model you can serve on one card often cannot be trained on it.",
   "train.setup": "Training setup",
   "train.mode": "Method",
   "train.mode.full": "Full",
@@ -1334,7 +1334,7 @@ const en: Dict = {
 const tr: Dict = {
   "header.badge": "canlı Hugging Face verisi",
   "header.subtitle":
-    "Bir model gerçekte ne kadar GPU belleği ister? Ağırlıklar ve KV cache, {ctx} ve {users} ile birlikte ölçeklenir. Bir model seç, yükü ayarla ve hangi GPU'ların yettiğini gör.",
+    "LLMScale, büyük bir dil modelinin ne kadar GPU belleği istediğini — ağırlıklar, KV cache, {ctx} ve {users} — her modelin kendi mimarisinden hesaplar ve hangi GPU'lara sığdığını gösterir. Bir model seç ve yükü ayarla.",
   "header.subtitle.ctx": "context penceresi",
   "header.subtitle.users": "eşzamanlı kullanıcı",
   "header.share": "Bu tahmini paylaş",
@@ -1690,7 +1690,7 @@ const tr: Dict = {
 
   "fit.title": "Model ↔ Görev Uygunluğu",
   "fit.subtitle":
-    "Bu model işi gerçekten yapar mı? Bir model ve kullanım amacını seç — LLMScale, modelin gerçek özelliklerinden (boyut, context, ayar, kip) uygunluğu skorlar ve her kriteri açıklar.",
+    "LLMScale, bir modelin bir göreve ne kadar uygun olduğunu 100 üzerinden puanlar: modelin Hugging Face Hub'da beyan ettiği özellikleri (boyut, context, ayar, kip) görevin ihtiyacıyla karşılaştırır ve kullandığı her kriteri gösterir. Bir model ve kullanım amacını seç.",
   "fit.pickTask": "Görevini seç",
   "fit.scoreLabel": "Yetenek eşleşmesi",
   "fit.empty": "Uygunluğu görmek için bir model ve görev seç.",
@@ -1765,7 +1765,7 @@ const tr: Dict = {
   "nav.compare": "Model Karşılaştırma",
   "nav.train": "İnce ayar",
   "train.subtitle":
-    "İnce ayar GPU belleğinde neye mal olur? Eğitimde KV cache yoktur ama gradyanlar, optimizer durumu ve geri yayılım için saklanan aktivasyonlar eklenir — bu yüzden tek kartta servis edebildiğin bir model çoğu zaman o kartta eğitilemez.",
+    "LLMScale, tam ince ayarın, LoRA'nın ya da QLoRA'nın ne kadar GPU belleği istediğini hesaplar: eğitimde KV cache yoktur ama gradyanlar, optimizer durumu ve geri yayılım için saklanan aktivasyonlar eklenir — bu yüzden tek kartta servis edebildiğin bir model çoğu zaman o kartta eğitilemez.",
   "train.setup": "Eğitim kurulumu",
   "train.mode": "Yöntem",
   "train.mode.full": "Tam",
