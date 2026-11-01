@@ -2,6 +2,7 @@ import { DICTS, useLang } from "../lib/i18n";
 import { Card } from "./ui";
 import { StaticPageLink } from "./StaticPageLink";
 import { CONCEPT_FILES } from "../lib/staticPages";
+import { SOURCE_URLS } from "../lib/sources";
 
 export type AboutPage = "sizing" | "train" | "fit" | "anatomy" | "compare" | "decode" | "vllm" | "config" | "serving" | "plan" | "gpucompare";
 
@@ -17,6 +18,14 @@ const DEEPER: Partial<Record<AboutPage, (keyof typeof CONCEPT_FILES)[]>> = {
   serving: ["quantization"],
   plan: ["kvCache", "quantization"],
   gpucompare: ["quantization"],
+};
+
+/** The primary sources each page's copy cites (src/lib/sources.ts). */
+const SOURCES: Partial<Record<AboutPage, (keyof typeof SOURCE_URLS)[]>> = {
+  sizing: ["deepseekV2"],
+  train: ["zero", "qlora"],
+  fit: ["fitRules"],
+  gpucompare: ["gpuSpecs"],
 };
 
 /** How many numbered keys of one kind a page has — about.<page>.p1, p2, … — so a
@@ -81,6 +90,20 @@ export function About({ page }: { page: AboutPage }) {
                     {(DEEPER[page] ?? []).map((k) => (
                       <li key={k}>
                         <StaticPageLink file={CONCEPT_FILES[k]}>{t(`concept.${k}`)}</StaticPageLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {(SOURCES[page] ?? []).length > 0 && (
+                <div className="mt-5">
+                  <h3 className="text-xs font-medium uppercase tracking-wide text-slate-400">{t("about.sources")}</h3>
+                  <ul className="mt-2 space-y-1">
+                    {(SOURCES[page] ?? []).map((k) => (
+                      <li key={k}>
+                        <a href={SOURCE_URLS[k]} target="_blank" rel="noreferrer" className="text-xs font-medium text-brand-400 hover:underline">
+                          {t(`source.${k}`)}
+                        </a>
                       </li>
                     ))}
                   </ul>

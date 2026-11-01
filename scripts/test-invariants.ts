@@ -2,10 +2,11 @@
 // that enumerate it by hand. The vLLM GPU picker once listed four hardware
 // tiers while the database had five, so a whole tier was unreachable and
 // nothing failed. Run: node scripts/test-invariants.ts
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { DICTS } from "../src/lib/dict.ts";
 import { TR_META } from "../src/lib/pageMeta.ts";
 import { CONCEPT_FILES, FEATURED_GPU_IDS } from "../src/lib/staticPages.ts";
+import { SOURCE_URLS } from "../src/lib/sources.ts";
 import { TASKS } from "../src/lib/fit.ts";
 import { PRIORITIES, VLLM_TASKS } from "../src/lib/vllm.ts";
 import { batchFor, CATEGORY_LABELS, GPUS, GPU_CATEGORIES, MIG_PROFILES, usableGiB } from "../src/lib/gpus.ts";
@@ -257,6 +258,18 @@ check("each has a title, text and at least three answered questions", aboutGaps.
 // modelling it. Copy is where the engine's changes are easiest to leave behind.
 const allCopy = Object.values(DICTS.en).join(" ") + Object.values(DICTS.tr).join(" ");
 check("no copy still says MLA is not modelled", !/MLA[^.]*(not yet capture|henüz modellenmemiş)/.test(allCopy));
+// The About cards link the papers and repository files their copy cites. A moved
+// file leaves a dead link; an arXiv label names its paper by the id its link opens,
+// in both languages.
+const badSources = Object.entries(SOURCE_URLS).filter(([k, url]) => {
+  const labels = [DICTS.en[`source.${k}`], DICTS.tr[`source.${k}`]];
+  if (labels.some((l) => !l)) return true;
+  const arxiv = url.match(/^https:\/\/arxiv\.org\/abs\/(\d{4}\.\d{4,5})$/)?.[1];
+  if (arxiv) return !labels.every((l) => l.includes(`arXiv ${arxiv}`));
+  const file = url.match(/^https:\/\/github\.com\/tahircengiz\/LLMScale\/blob\/main\/(.+)$/)?.[1];
+  return !file || !existsSync(new URL(file, root));
+}).map(([k]) => k);
+check("every cited source has its label and a target that exists", badSources.length === 0, badSources.join(", "));
 
 console.log("\n--- both languages have pages of their own ---");
 // scripts/prerender.ts builds tr/<entry> from each entry and the head in
@@ -320,7 +333,9 @@ check("a preset links to its page from the calculator", read("src/pages/SizingPa
 // no file, or a file genPages no longer builds, is a link to nothing.
 check("the footer links to the concept guides", read("src/App.tsx").includes("{CONCEPTS_HUB}"));
 const conceptNames = Object.keys(CONCEPT_FILES);
-const linkedConcepts = [...read("src/components/About.tsx").matchAll(/"(kvCache|attention|quantization|[a-zA-Z]+)"(?=[,\]])/g)].map((m) => m[1]).filter((n) => !["sizing","train","fit","anatomy","compare","decode","vllm","config","serving"].includes(n));
+// Only DEEPER names guides; SOURCES beside it names papers and files.
+const deeperBlock = read("src/components/About.tsx").match(/const DEEPER[^=]*= \{([\s\S]*?)\n\};/)?.[1] ?? "";
+const linkedConcepts = [...deeperBlock.matchAll(/"(kvCache|attention|quantization|[a-zA-Z]+)"(?=[,\]])/g)].map((m) => m[1]).filter((n) => !["sizing","train","fit","anatomy","compare","decode","vllm","config","serving"].includes(n));
 check("the explainers name only concept guides that exist", linkedConcepts.length > 0 && linkedConcepts.every((n) => conceptNames.includes(n)), [...new Set(linkedConcepts)].join(", "));
 check("every concept guide has its link text in both languages", conceptNames.every((n) => `concept.${n}` in DICTS.en && `concept.${n}` in DICTS.tr));
 
