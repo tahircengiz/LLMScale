@@ -13,6 +13,8 @@
 //     canonical URL — hand copies drift: train.html once described itself to
 //     search engines as the task-fit page;
 //   - the date the page last changed, as dateModified (see lastModified.ts);
+//   - on compare.html, the default comparison's values from the Hub answers kept
+//     in the repository, and a copy of them the page starts from (compareReplay.ts).
 //
 // Before this, every entry shipped an empty <div id="root">, and Turkish existed
 // only after JavaScript switched a page in place, at an address search engines
@@ -27,11 +29,13 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { TR_META } from "../src/lib/pageMeta.ts";
 import type { Lang } from "../src/lib/dict.ts";
-import { modifiedDate } from "./lastModified.ts";
+import type { CompareSnapshot } from "../src/lib/compareSnapshot.ts";
+import { COMPARE_FIXTURES, replayCompare, snapshotTag } from "./compareReplay.ts";
+import { lastCommitDate, modifiedDate } from "./lastModified.ts";
 
 const [outDir = "dist", ssrDir = "dist-ssr"] = process.argv.slice(2);
 const { render } = (await import(pathToFileURL(resolve(ssrDir, "entry-server.js")).href)) as {
-  render: (lang: Lang) => string;
+  render: (lang: Lang, compare?: CompareSnapshot) => string;
 };
 type Chapter = Partial<Record<Lang, { e: string; h: string; p: string }>>;
 // Imported by URL so the type checker does not go looking for types in a .js file.
@@ -46,11 +50,11 @@ const LD_MARK = "<!-- prerender: language alternates and structured data -->";
 // the Turkish head (pageMeta.ts), its component — and on an app page the
 // explainer App.tsx puts under every one (About.tsx) — with everything they
 // import. Every entry loads the whole app, so the bundle cannot tell one page's
-// files from another's.
-const PAGE_SOURCES: Record<string, string> = {
+// files from another's. compare.html also shows the kept Hub answers.
+const PAGE_SOURCES: Record<string, string | string[]> = {
   "index.html": "src/pages/SizingPage.tsx",
   "anatomy.html": "src/pages/AnatomyPage.tsx",
-  "compare.html": "src/pages/ComparePage.tsx",
+  "compare.html": ["src/pages/ComparePage.tsx", COMPARE_FIXTURES],
   "config.html": "src/pages/ConfigPage.tsx",
   "decode.html": "src/pages/DecodePage.tsx",
   "fit.html": "src/pages/FitPage.tsx",
@@ -129,6 +133,10 @@ const entries = readdirSync(outDir)
   .filter((f) => f.endsWith(".html"))
   .sort((a, b) => (a === "index.html" ? -1 : b === "index.html" ? 1 : a.localeCompare(b)));
 let rendered = 0;
+// compare.html opens on two models the browser asks the Hub about; the kept
+// answers fill them in, judged for age at this commit's date.
+const compare = await replayCompare(lastCommitDate(["."]));
+if (compare) console.log(`ok    compare.html  ${compare.anatomies.length} models from the Hub answers of ${compare.fetched}`);
 
 for (const file of entries) {
   const pristine = readFileSync(join(outDir, file), "utf8");
@@ -148,7 +156,7 @@ for (const file of entries) {
   if (isApp) rendered++;
   const source = PAGE_SOURCES[file];
   if (!source) throw new Error(`${file}: no PAGE_SOURCES entry to date the page by`);
-  const modified = modifiedDate(file, "src/lib/pageMeta.ts", source, ...(isApp ? ["src/components/About.tsx"] : []));
+  const modified = modifiedDate(file, "src/lib/pageMeta.ts", ...[source].flat(), ...(isApp ? ["src/components/About.tsx"] : []));
   const dated = modified ? { dateModified: modified } : {};
 
   for (const lang of LANGS) {
@@ -224,9 +232,10 @@ for (const file of entries) {
         location: { pathname, search: "", hash: "", href: `https://prerender.invalid${pathname}` },
         history: { replaceState() {} },
       };
-      text = render(lang);
+      const data = file === "compare.html" ? compare : undefined;
+      text = render(lang, data);
       delete (globalThis as { window?: unknown }).window;
-      html = replaceOnce(html, file, MOUNT, `<div id="root">${text}</div>`);
+      html = replaceOnce(html, file, MOUNT, `<div id="root">${text}</div>${data ? snapshotTag(data) : ""}`);
     } else {
       ({ html, text } = prerenderLearn(html, file, lang));
     }

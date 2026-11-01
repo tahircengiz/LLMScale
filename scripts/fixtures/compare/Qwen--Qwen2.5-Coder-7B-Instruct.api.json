@@ -1,0 +1,107 @@
+{
+ "id": "Qwen/Qwen2.5-Coder-7B-Instruct",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "transformers",
+  "safetensors",
+  "qwen2",
+  "text-generation",
+  "code",
+  "codeqwen",
+  "chat",
+  "qwen",
+  "qwen-coder",
+  "conversational",
+  "en",
+  "arxiv:2409.12186",
+  "arxiv:2309.00071",
+  "arxiv:2407.10671",
+  "base_model:Qwen/Qwen2.5-Coder-7B",
+  "base_model:finetune:Qwen/Qwen2.5-Coder-7B",
+  "license:apache-2.0",
+  "text-generation-inference",
+  "endpoints_compatible",
+  "deploy:sagemaker",
+  "deploy:azure",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "qwen2"
+ },
+ "cardData": {
+  "base_model": [
+   "Qwen/Qwen2.5-Coder-7B"
+  ],
+  "license": "apache-2.0"
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 7615616512
+  },
+  "total": 7615616512
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1519
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 11343
+  },
+  {
+   "rfilename": "README.md",
+   "size": 6392
+  },
+  {
+   "rfilename": "config.json",
+   "size": 663
+  },
+  {
+   "rfilename": "generation_config.json",
+   "size": 242
+  },
+  {
+   "rfilename": "merges.txt",
+   "size": 1671839
+  },
+  {
+   "rfilename": "model-00001-of-00004.safetensors",
+   "size": 4877660776
+  },
+  {
+   "rfilename": "model-00002-of-00004.safetensors",
+   "size": 4932751008
+  },
+  {
+   "rfilename": "model-00003-of-00004.safetensors",
+   "size": 4330865200
+  },
+  {
+   "rfilename": "model-00004-of-00004.safetensors",
+   "size": 1089994880
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 27752
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 7031645
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 7305
+  },
+  {
+   "rfilename": "vocab.json",
+   "size": 2776833
+  }
+ ],
+ "downloads": 1499654,
+ "likes": 855,
+ "createdAt": "2024-09-17T13:38:49.000Z",
+ "lastModified": "2025-01-12T02:03:41.000Z",
+ "usedStorage": 15231271864
+}

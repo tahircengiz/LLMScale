@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { BYTES_PER_GIB, calculate, kvBytesPerToken, weightsBytes } from "../lib/calc";
 import { fetchAnatomy, type Anatomy } from "../lib/anatomy";
+import { DEFAULT_IDS, pageSnapshot } from "../lib/compareSnapshot";
 import { extractCaps, scoreFit, TASKS, type Caps } from "../lib/fit";
 import { searchModels, type HfSearchResult } from "../lib/hf";
 import { useLang } from "../lib/i18n";
@@ -10,13 +11,29 @@ import { formatBytes, formatGiB, formatInt, formatParams } from "../lib/format";
 import { Badge, Card, SectionTitle } from "../components/ui";
 
 const MAX_COLS = 4;
-const DEFAULT_IDS = ["Qwen/Qwen2.5-7B-Instruct", "Qwen/Qwen2.5-Coder-7B-Instruct"];
 
 interface Entry {
   loading: boolean;
   anatomy?: Anatomy;
   caps?: Caps;
   error?: boolean;
+  /** The day of the page's own copy (compareSnapshot.ts), while it stands in for the Hub's answer. */
+  asOf?: string;
+}
+
+function entryOf(a: Anatomy): Entry {
+  const caps = extractCaps({
+    hfId: a.hfId, arch: a.arch, numParams: a.numParams,
+    modelType: a.modelType, isMoE: a.isMoE, tags: a.tags, pipelineTag: a.pipelineTag,
+  });
+  return { loading: false, anatomy: a, caps };
+}
+
+/** The columns the page carries a copy of, filled before the Hub answers, so the
+ *  first render is the table the build wrote. */
+function initialEntries(): Record<string, Entry> {
+  const s = pageSnapshot();
+  return Object.fromEntries((s?.anatomies ?? []).map((a) => [a.hfId, { ...entryOf(a), asOf: s!.fetched }]));
 }
 
 function initialIds(): string[] {
@@ -49,21 +66,21 @@ function winners(vals: (number | undefined)[], higher = true): boolean[] {
 export function ComparePage() {
   const { t } = useLang();
   const [ids, setIds] = useState<string[]>(initialIds);
-  const [entries, setEntries] = useState<Record<string, Entry>>({});
+  const [entries, setEntries] = useState<Record<string, Entry>>(initialEntries);
 
   useEffect(() => {
     for (const id of ids) {
-      if (entries[id]) continue; // already fetched / fetching (cached across removes)
-      setEntries((e) => ({ ...e, [id]: { loading: true } }));
+      const had = entries[id];
+      // Already fetched / fetching (cached across removes); the page's copy is refreshed.
+      if (had && (had.loading || !had.asOf)) continue;
+      setEntries((e) => ({ ...e, [id]: { ...e[id], loading: true } }));
+      // Without the Hub the copy stays up; the table says what day it is from.
+      const keepCopy = (e: Record<string, Entry>): Entry => (e[id]?.asOf ? { ...e[id], loading: false } : { loading: false, error: true });
       fetchAnatomy(id)
-        .then((a) => {
-          const caps = extractCaps({
-            hfId: a.hfId, arch: a.arch, numParams: a.numParams,
-            modelType: a.modelType, isMoE: a.isMoE, tags: a.tags, pipelineTag: a.pipelineTag,
-          });
-          setEntries((e) => ({ ...e, [id]: { loading: false, anatomy: a, caps } }));
-        })
-        .catch(() => setEntries((e) => ({ ...e, [id]: { loading: false, error: true } })));
+        // No downloads: the Hub's record did not answer and the resolver fell back
+        // on what it bundles, which knows less than the copy.
+        .then((a) => setEntries((e) => ({ ...e, [id]: a.downloads === undefined && e[id]?.asOf ? keepCopy(e) : entryOf(a) })))
+        .catch(() => setEntries((e) => ({ ...e, [id]: keepCopy(e) })));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids]);
@@ -79,6 +96,7 @@ export function ComparePage() {
   const remove = (id: string) => setIds((prev) => prev.filter((x) => x !== id));
 
   const cols = ids.map((id) => ({ id, entry: entries[id] as Entry | undefined }));
+  const asOf = cols.find((c) => c.entry?.asOf)?.entry?.asOf;
 
   return (
     <div>
@@ -111,7 +129,7 @@ export function ComparePage() {
                           </div>
                           <div className="truncate text-[10px] text-slate-500" title={c.id}>{c.id}</div>
                           {c.entry?.error && <Badge tone="bad">{t("compare.err")}</Badge>}
-                          {c.entry?.loading && <span className="text-[10px] text-slate-500">{t("compare.loadingCol")}</span>}
+                          {c.entry?.loading && !c.entry.asOf && <span className="text-[10px] text-slate-500">{t("compare.loadingCol")}</span>}
                         </div>
                         <button
                           type="button"
@@ -127,7 +145,7 @@ export function ComparePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                <Section title={t("compare.sec.identity")} span={cols.length} />
+                <Section title={t("compare.sec.identity")} span={cols.length} hint={asOf ? t("compare.asOf", { date: asOf }) : undefined} />
                 <NumRow label={t("compare.row.params")} tip={t("compare.tip.params")} cols={cols} get={(a) => a.numParams} fmt={formatParams} />
                 <TxtRow label={t("compare.row.moe")} tip={t("compare.tip.moe")} cols={cols} get={(a) => (a.isMoE ? `${a.expertsPerTok ?? "?"} / ${a.numExperts ?? "?"}` : t("compare.dense"))} />
                 <NumRow label={t("compare.row.context")} tip={t("compare.tip.context")} cols={cols} get={(a) => a.arch.maxContext} fmt={(n) => (n >= 1024 ? `${Math.round(n / 1024)}k` : String(n))} highlight />
