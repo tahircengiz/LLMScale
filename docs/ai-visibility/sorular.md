@@ -1,8 +1,8 @@
 # AI görünürlüğü — hedef sorular
 
-Durum: **TASLAK, onay bekliyor** (2026-10-31). Onaylanınca bu liste ölçümün sabit soru seti olur: aynı sorular, aynı
-motorlar, ayda bir (`docs/ai-visibility/<YYYY-MM-DD>.md`). Soru değişirse eski ölçümlerle karşılaştırma bozulur; yeni
-soru eklemek serbest, eskisini değiştirmek yerine yenisini ekle.
+Durum: **ONAYLI** (2026-11-01) — ölçüm dili EN; ilk ölçüm: [2026-11-01.md](2026-11-01.md). Bu liste ölçümün sabit
+soru setidir: aynı sorular, aynı motorlar, ayda bir (`docs/ai-visibility/<YYYY-MM-DD>.md`). Soru değişirse eski
+ölçümlerle karşılaştırma bozulur; yeni soru eklemek serbest, eskisini değiştirmek yerine yenisini ekle.
 
 Seçim ölçütü: kullanıcının (altyapı/ML mühendisi, kendi donanımında model çalıştıran) bir AI asistana gerçekten
 yazacağı, koşullu, doğal dilde soru; anahtar kelime parçası değil. Her sorunun sitede doğrudan cevaplayan bir sayfası
