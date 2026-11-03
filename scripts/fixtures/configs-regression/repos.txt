@@ -44,12 +44,14 @@ mistralai/Mistral-Small-3.1-24B-Instruct-2503
 microsoft/Phi-3-small-8k-instruct
 microsoft/Phi-4-mini-flash-reasoning
 
-# DeepSeek: MLA, DSA (V3.2), V4 compressed attention, VL2 nesting
+# DeepSeek: MLA, DSA (V3.2), V4 compressed attention, V4.1 shared compressed caches, VL2 nesting
 deepseek-ai/DeepSeek-V2-Lite-Chat
 deepseek-ai/DeepSeek-V3
 deepseek-ai/DeepSeek-V3.2
 deepseek-ai/DeepSeek-V4-Flash
 deepseek-ai/DeepSeek-V4-Pro
+deepseek-ai/DeepSeek-V4.1-Flash
+diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000
 deepseek-ai/deepseek-vl2-small
 
 # Kimi: MLA MoE, KDA linear attention, DSpark draft layers

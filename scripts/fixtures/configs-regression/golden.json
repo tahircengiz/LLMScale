@@ -1679,6 +1679,166 @@
    "int4": 838421842379.745
   }
  },
+ "deepseek-ai/DeepSeek-V4.1-Flash": {
+  "arch": {
+   "activeParams": 174962460533.9535,
+   "compressedAttn": {
+    "csa": 0,
+    "cuts": [
+     0,
+     1,
+     2,
+     8,
+     14,
+     20
+    ],
+    "hca": 0,
+    "indexDim": 128,
+    "shared": [
+     {
+      "indexers": 5,
+      "keys": 1,
+      "ratio": 1,
+      "readers": 20,
+      "sources": 1
+     },
+     {
+      "indexers": 3,
+      "keys": 3,
+      "ratio": 2,
+      "readers": 18,
+      "sources": 3
+     }
+    ],
+    "topk": 512,
+    "window": 128
+   },
+   "expertsPerToken": 6,
+   "headDim": 512,
+   "hiddenSize": 5120,
+   "maxContext": 1048576,
+   "moeIntermediateSize": 2304,
+   "numAttentionHeads": 64,
+   "numExperts": 384,
+   "numKeyValueHeads": 1,
+   "numLayers": 40,
+   "numParams": 763205315794,
+   "qkRopeHeadDim": 64,
+   "shipped": {
+    "bytes": 510296708312,
+    "dtype": "fp8"
+   },
+   "specParams": 53154522460.04651,
+   "tieEmbeddings": false,
+   "vocabSize": 129280
+  },
+  "expertWeightsBf16": 1087163596800,
+  "headDim": 512,
+  "kvPerToken": {
+   "bf16": 2890,
+   "fp8": 1790
+  },
+  "kvReserved": {
+   "bf16@131072": 553222144,
+   "bf16@32768": 269123584,
+   "bf16@32768,tp2": 269123584,
+   "bf16@4096": 181018624,
+   "fp8@32768": 160129536
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "deepseek_v41_text",
+   "numParams": 763205315794,
+   "source": "config",
+   "weightDtype": "fp8"
+  },
+  "weights": {
+   "bf16": 1420101586667.907,
+   "fp8": 474756366438.1505,
+   "int4": 379158855158.6628
+  }
+ },
+ "diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000": {
+  "arch": {
+   "activeParams": 174962460533.9535,
+   "compressedAttn": {
+    "csa": 0,
+    "cuts": [
+     0,
+     1,
+     2,
+     8,
+     14,
+     20
+    ],
+    "hca": 0,
+    "indexDim": 128,
+    "shared": [
+     {
+      "indexers": 5,
+      "keys": 1,
+      "ratio": 1,
+      "readers": 20,
+      "sources": 1
+     },
+     {
+      "indexers": 3,
+      "keys": 3,
+      "ratio": 2,
+      "readers": 18,
+      "sources": 3
+     }
+    ],
+    "topk": 512,
+    "window": 128
+   },
+   "expertsPerToken": 6,
+   "headDim": 512,
+   "hiddenSize": 5120,
+   "maxContext": 1048576,
+   "moeIntermediateSize": 2304,
+   "numAttentionHeads": 64,
+   "numExperts": 384,
+   "numKeyValueHeads": 1,
+   "numLayers": 40,
+   "numParams": 763205315794,
+   "qkRopeHeadDim": 64,
+   "shipped": {
+    "bytes": 331786256616,
+    "dtype": "int4"
+   },
+   "specParams": 53154522460.04651,
+   "tieEmbeddings": false,
+   "vocabSize": 129280
+  },
+  "expertWeightsBf16": 1087163596800,
+  "headDim": 512,
+  "kvPerToken": {
+   "bf16": 2890,
+   "fp8": 1790
+  },
+  "kvReserved": {
+   "bf16@131072": 553222144,
+   "bf16@32768": 269123584,
+   "bf16@32768,tp2": 269123584,
+   "bf16@4096": 181018624,
+   "fp8@32768": 160129536
+  },
+  "resolution": {
+   "gated": false,
+   "isMoE": true,
+   "modelType": "deepseek_v41_text",
+   "numParams": 763205315794,
+   "source": "config",
+   "weightDtype": "int4"
+  },
+  "weights": {
+   "bf16": 1420101586667.907,
+   "fp8": 711374620533.9535,
+   "int4": 308678529685.55743
+  }
+ },
  "deepseek-ai/deepseek-vl2-small": {
   "arch": {
    "activeParams": 3103015488,

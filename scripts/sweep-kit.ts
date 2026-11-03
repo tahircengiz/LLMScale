@@ -20,6 +20,7 @@ export interface NamedArch {
  *  cache shape, state, sharing rule and checkpoint format the sizing knows. */
 export const EDGE_REPOS = [
   "deepseek-ai/DeepSeek-V4-Flash", // compressed attention, ships FP8 + FP4 experts
+  "deepseek-ai/DeepSeek-V4.1-Flash", // compressed caches shared from source layers
   "deepseek-ai/DeepSeek-V3.2", // DeepSeek Sparse Attention
   "zai-org/GLM-5.3-Flash", // KDA state + pooled sparse index
   "moonshotai/Kimi-Linear-48B-A3B-Instruct", // KDA linear attention

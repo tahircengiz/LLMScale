@@ -81,7 +81,7 @@ export function Results({ result, cardName, moe = false }: { result: CalcResult;
       </div>
       {result.compressed && (
         <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
-          {t("results.compressedNote", {
+          {t(result.compressed.shared ? "results.compressedNote41" : "results.compressedNote", {
             grow: formatGiB(result.compressed.growGiB),
             fixed: formatGiB(result.compressed.fixedGiB),
             w: formatInt(result.compressed.window),

@@ -1,0 +1,1140 @@
+{
+ "id": "diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000",
+ "gated": false,
+ "pipeline_tag": "text-generation",
+ "tags": [
+  "safetensors",
+  "deepseek_v41",
+  "exl3",
+  "exllamav3",
+  "vllm",
+  "deepseek",
+  "deepseek-v4.1-flash",
+  "deepseek-v4.1-flash-1017",
+  "mixture-of-experts",
+  "3-bit",
+  "rtx-pro-6000",
+  "blackwell",
+  "sm120",
+  "text-generation",
+  "base_model:deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "base_model:quantized:deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "license:mit",
+  "region:us"
+ ],
+ "config": {
+  "model_type": "deepseek_v41"
+ },
+ "cardData": {
+  "base_model": "deepseek-ai/DeepSeek-V4.1-Flash-1017"
+ },
+ "safetensors": {
+  "parameters": {
+   "BF16": 1976441856,
+   "F32": 42307282,
+   "F16": 6494833168,
+   "I16": 104469626880,
+   "F8_E4M3": 7401373696,
+   "U8": 98306924800
+  },
+  "total": 218691507682
+ },
+ "siblings": [
+  {
+   "rfilename": ".gitattributes",
+   "size": 1859
+  },
+  {
+   "rfilename": "LICENSE",
+   "size": 1084
+  },
+  {
+   "rfilename": "README.md",
+   "size": 8647
+  },
+  {
+   "rfilename": "config.json",
+   "size": 4667
+  },
+  {
+   "rfilename": "docs/CHANGELOG.md",
+   "size": 7823
+  },
+  {
+   "rfilename": "docs/DRAFTER.md",
+   "size": 1503
+  },
+  {
+   "rfilename": "docs/FIDELITY.md",
+   "size": 5550
+  },
+  {
+   "rfilename": "docs/HOW-IT-FITS.md",
+   "size": 8530
+  },
+  {
+   "rfilename": "docs/PROFILE-8x.md",
+   "size": 4616
+  },
+  {
+   "rfilename": "docs/SPEED.md",
+   "size": 10687
+  },
+  {
+   "rfilename": "drafter-code-fp8/README.md",
+   "size": 3308
+  },
+  {
+   "rfilename": "drafter-code-fp8/config.json",
+   "size": 3311
+  },
+  {
+   "rfilename": "drafter-code-fp8/model-00044-of-00048.safetensors",
+   "size": 2652728736
+  },
+  {
+   "rfilename": "drafter-code-fp8/model-00045-of-00048.safetensors",
+   "size": 2573998176
+  },
+  {
+   "rfilename": "drafter-code-fp8/model-00046-of-00048.safetensors",
+   "size": 2706402896
+  },
+  {
+   "rfilename": "drafter-code-fp8/model.safetensors.index.json",
+   "size": 171465
+  },
+  {
+   "rfilename": "drafter-code-k7/README.md",
+   "size": 4788
+  },
+  {
+   "rfilename": "drafter-code-k7/config.json",
+   "size": 4667
+  },
+  {
+   "rfilename": "drafter-code-k7/model-00044-of-00048.safetensors",
+   "size": 1950710352
+  },
+  {
+   "rfilename": "drafter-code-k7/model-00045-of-00048.safetensors",
+   "size": 1871979808
+  },
+  {
+   "rfilename": "drafter-code-k7/model-00046-of-00048.safetensors",
+   "size": 2004386840
+  },
+  {
+   "rfilename": "drafter-code-k7/model.safetensors.index.json",
+   "size": 329597
+  },
+  {
+   "rfilename": "encoding/README.md",
+   "size": 12164
+  },
+  {
+   "rfilename": "encoding/encoding.py",
+   "size": 37962
+  },
+  {
+   "rfilename": "encoding/test_encoding.py",
+   "size": 22449
+  },
+  {
+   "rfilename": "encoding/tests/test_input_1.json",
+   "size": 2761
+  },
+  {
+   "rfilename": "encoding/tests/test_input_2.json",
+   "size": 527
+  },
+  {
+   "rfilename": "encoding/tests/test_input_3.json",
+   "size": 2554
+  },
+  {
+   "rfilename": "encoding/tests/test_input_4.json",
+   "size": 712
+  },
+  {
+   "rfilename": "encoding/tests/test_input_5.json",
+   "size": 1143
+  },
+  {
+   "rfilename": "encoding/tests/test_output_1.txt",
+   "size": 2476
+  },
+  {
+   "rfilename": "encoding/tests/test_output_2.txt",
+   "size": 294
+  },
+  {
+   "rfilename": "encoding/tests/test_output_3.txt",
+   "size": 2481
+  },
+  {
+   "rfilename": "encoding/tests/test_output_4.txt",
+   "size": 574
+  },
+  {
+   "rfilename": "encoding/tests/test_output_5.txt",
+   "size": 408
+  },
+  {
+   "rfilename": "inference/README.md",
+   "size": 2029
+  },
+  {
+   "rfilename": "inference/config.json",
+   "size": 1982
+  },
+  {
+   "rfilename": "inference/convert.py",
+   "size": 9458
+  },
+  {
+   "rfilename": "inference/engram.py",
+   "size": 8138
+  },
+  {
+   "rfilename": "inference/examples/example.txt",
+   "size": 332
+  },
+  {
+   "rfilename": "inference/examples/example_harmony.json",
+   "size": 2156
+  },
+  {
+   "rfilename": "inference/examples/images/carrots.jpeg",
+   "size": 212495
+  },
+  {
+   "rfilename": "inference/examples/images/corn.jpeg",
+   "size": 56122
+  },
+  {
+   "rfilename": "inference/generate.py",
+   "size": 8722
+  },
+  {
+   "rfilename": "inference/image_processor.py",
+   "size": 7699
+  },
+  {
+   "rfilename": "inference/kernel.py",
+   "size": 23790
+  },
+  {
+   "rfilename": "inference/model.py",
+   "size": 61669
+  },
+  {
+   "rfilename": "inference/requirements.txt",
+   "size": 98
+  },
+  {
+   "rfilename": "inference/run.sh",
+   "size": 1759
+  },
+  {
+   "rfilename": "inference/vision.py",
+   "size": 4457
+  },
+  {
+   "rfilename": "model-00001-of-00048.safetensors",
+   "size": 970533624
+  },
+  {
+   "rfilename": "model-00002-of-00048.safetensors",
+   "size": 1323858272
+  },
+  {
+   "rfilename": "model-00003-of-00048.safetensors",
+   "size": 5283715824
+  },
+  {
+   "rfilename": "model-00004-of-00048.safetensors",
+   "size": 5283715824
+  },
+  {
+   "rfilename": "model-00005-of-00048.safetensors",
+   "size": 5299911072
+  },
+  {
+   "rfilename": "model-00006-of-00048.safetensors",
+   "size": 5283715824
+  },
+  {
+   "rfilename": "model-00007-of-00048.safetensors",
+   "size": 5283715824
+  },
+  {
+   "rfilename": "model-00008-of-00048.safetensors",
+   "size": 5283715824
+  },
+  {
+   "rfilename": "model-00009-of-00048.safetensors",
+   "size": 5283715824
+  },
+  {
+   "rfilename": "model-00010-of-00048.safetensors",
+   "size": 5283715824
+  },
+  {
+   "rfilename": "model-00011-of-00048.safetensors",
+   "size": 5299911072
+  },
+  {
+   "rfilename": "model-00012-of-00048.safetensors",
+   "size": 5283715824
+  },
+  {
+   "rfilename": "model-00013-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00014-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00015-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00016-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00017-of-00048.safetensors",
+   "size": 5299915712
+  },
+  {
+   "rfilename": "model-00018-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00019-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00020-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00021-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00022-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00023-of-00048.safetensors",
+   "size": 5294672704
+  },
+  {
+   "rfilename": "model-00024-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00025-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00026-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00027-of-00048.safetensors",
+   "size": 5289296568
+  },
+  {
+   "rfilename": "model-00028-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00029-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00030-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00031-of-00048.safetensors",
+   "size": 5289296568
+  },
+  {
+   "rfilename": "model-00032-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00033-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00034-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00035-of-00048.safetensors",
+   "size": 5289296568
+  },
+  {
+   "rfilename": "model-00036-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00037-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00038-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00039-of-00048.safetensors",
+   "size": 5289296568
+  },
+  {
+   "rfilename": "model-00040-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00041-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00042-of-00048.safetensors",
+   "size": 5283720464
+  },
+  {
+   "rfilename": "model-00043-of-00048.safetensors",
+   "size": 1323837624
+  },
+  {
+   "rfilename": "model-00044-of-00048.safetensors",
+   "size": 1950710352
+  },
+  {
+   "rfilename": "model-00045-of-00048.safetensors",
+   "size": 1871979808
+  },
+  {
+   "rfilename": "model-00046-of-00048.safetensors",
+   "size": 2004386840
+  },
+  {
+   "rfilename": "model-00047-of-00048.safetensors",
+   "size": 55454410760
+  },
+  {
+   "rfilename": "model-00048-of-00048.safetensors",
+   "size": 55455924776
+  },
+  {
+   "rfilename": "model.safetensors.index.json",
+   "size": 14587770
+  },
+  {
+   "rfilename": "recipe/.gitignore",
+   "size": 181
+  },
+  {
+   "rfilename": "recipe/LICENSE",
+   "size": 1064
+  },
+  {
+   "rfilename": "recipe/MODEL_CARD.md",
+   "size": 8647
+  },
+  {
+   "rfilename": "recipe/README.md",
+   "size": 36438
+  },
+  {
+   "rfilename": "recipe/THIRD_PARTY_NOTICES.md",
+   "size": 4336
+  },
+  {
+   "rfilename": "recipe/bench/ab-run.sh",
+   "size": 2238
+  },
+  {
+   "rfilename": "recipe/bench/bench-fanout.py",
+   "size": 3141
+  },
+  {
+   "rfilename": "recipe/bench/bench-fixed.py",
+   "size": 2928
+  },
+  {
+   "rfilename": "recipe/bench/bench-sbs.py",
+   "size": 2578
+  },
+  {
+   "rfilename": "recipe/bench/bulk_decode.py",
+   "size": 4688
+  },
+  {
+   "rfilename": "recipe/bench/codeconc.py",
+   "size": 3954
+  },
+  {
+   "rfilename": "recipe/bench/codegen_bench.py",
+   "size": 2493
+  },
+  {
+   "rfilename": "recipe/bench/dlogprob.py",
+   "size": 4780
+  },
+  {
+   "rfilename": "recipe/bench/fetch-evaldata.sh",
+   "size": 1135
+  },
+  {
+   "rfilename": "recipe/bench/greedy-ref.py",
+   "size": 1433
+  },
+  {
+   "rfilename": "recipe/bench/hit_bench.py",
+   "size": 5180
+  },
+  {
+   "rfilename": "recipe/bench/korean_check.py",
+   "size": 4091
+  },
+  {
+   "rfilename": "recipe/bench/latbench.py",
+   "size": 21720
+  },
+  {
+   "rfilename": "recipe/bench/len_sweep.py",
+   "size": 1389
+  },
+  {
+   "rfilename": "recipe/bench/make_corpus.py",
+   "size": 961
+  },
+  {
+   "rfilename": "recipe/bench/needle-test.py",
+   "size": 1466
+  },
+  {
+   "rfilename": "recipe/bench/profile-run.sh",
+   "size": 2641
+  },
+  {
+   "rfilename": "recipe/bench/quality-probe.py",
+   "size": 4322
+  },
+  {
+   "rfilename": "recipe/bench/test-image.png",
+   "size": 14562
+  },
+  {
+   "rfilename": "recipe/bench/test-image.py",
+   "size": 2952
+  },
+  {
+   "rfilename": "recipe/bench/test-toolcall.py",
+   "size": 1852
+  },
+  {
+   "rfilename": "recipe/bench/trace_breakdown.py",
+   "size": 2120
+  },
+  {
+   "rfilename": "recipe/bench/validate.sh",
+   "size": 1953
+  },
+  {
+   "rfilename": "recipe/cpuexp/README.md",
+   "size": 8156
+  },
+  {
+   "rfilename": "recipe/cpuexp/build.sh",
+   "size": 1634
+  },
+  {
+   "rfilename": "recipe/cpuexp/build_inner.sh",
+   "size": 4736
+  },
+  {
+   "rfilename": "recipe/cpuexp/bwprobe.cpp",
+   "size": 3960
+  },
+  {
+   "rfilename": "recipe/cpuexp/check_host.sh",
+   "size": 10929
+  },
+  {
+   "rfilename": "recipe/cpuexp/cpuexp_gpu.cu",
+   "size": 17051
+  },
+  {
+   "rfilename": "recipe/cpuexp/cpuexp_mbox.h",
+   "size": 5561
+  },
+  {
+   "rfilename": "recipe/cpuexp/cpuexp_pf.cpp",
+   "size": 28677
+  },
+  {
+   "rfilename": "recipe/cpuexp/cpuexp_pf.h",
+   "size": 5529
+  },
+  {
+   "rfilename": "recipe/cpuexp/cpuexp_pf_gpu.cu",
+   "size": 8352
+  },
+  {
+   "rfilename": "recipe/cpuexp/cpuexp_rt.cpp",
+   "size": 127471
+  },
+  {
+   "rfilename": "recipe/cpuexp/cpuexp_rt.py",
+   "size": 18020
+  },
+  {
+   "rfilename": "recipe/docker/LICENSE.sfxnz-recipe",
+   "size": 1084
+  },
+  {
+   "rfilename": "recipe/docker/build.sh",
+   "size": 8297
+  },
+  {
+   "rfilename": "recipe/kernels/ar8tp4/ar8_tp4.py",
+   "size": 17145
+  },
+  {
+   "rfilename": "recipe/kernels/ar8tp4/test_ar8.py",
+   "size": 2276
+  },
+  {
+   "rfilename": "recipe/kernels/ar8tp4/test_hier.py",
+   "size": 1824
+  },
+  {
+   "rfilename": "recipe/kernels/ar8tp4/test_hier_graph.py",
+   "size": 4450
+  },
+  {
+   "rfilename": "recipe/kernels/build.sh",
+   "size": 2347
+  },
+  {
+   "rfilename": "recipe/kernels/build_fp8ar.py",
+   "size": 952
+  },
+  {
+   "rfilename": "recipe/kernels/build_fp8arg.py",
+   "size": 1082
+  },
+  {
+   "rfilename": "recipe/kernels/build_rowtopk.py",
+   "size": 944
+  },
+  {
+   "rfilename": "recipe/kernels/build_xmoe.py",
+   "size": 1618
+  },
+  {
+   "rfilename": "recipe/kernels/build_xmoe_do.py",
+   "size": 767
+  },
+  {
+   "rfilename": "recipe/kernels/build_xmoe_do_i8.py",
+   "size": 1061
+  },
+  {
+   "rfilename": "recipe/kernels/engram4/engram_ag4.py",
+   "size": 6016
+  },
+  {
+   "rfilename": "recipe/kernels/exllamav3-5be8865-exl3_moe.patch",
+   "size": 212407
+  },
+  {
+   "rfilename": "recipe/kernels/fp8ar/fp8ar_ext.cpp",
+   "size": 4660
+  },
+  {
+   "rfilename": "recipe/kernels/fp8ar/fp8ar_kernels.cu",
+   "size": 28602
+  },
+  {
+   "rfilename": "recipe/kernels/fp8ar/fp8ar_ref.py",
+   "size": 6901
+  },
+  {
+   "rfilename": "recipe/kernels/fp8ar/fp8ar_runtime.py",
+   "size": 16404
+  },
+  {
+   "rfilename": "recipe/kernels/fp8arg/fp8arg_ext.cpp",
+   "size": 4783
+  },
+  {
+   "rfilename": "recipe/kernels/fp8arg/fp8arg_kernels.cu",
+   "size": 29254
+  },
+  {
+   "rfilename": "recipe/kernels/fp8arg/fp8arg_runtime.py",
+   "size": 16499
+  },
+  {
+   "rfilename": "recipe/kernels/fp8arg/make_fp8arg.py",
+   "size": 6994
+  },
+  {
+   "rfilename": "recipe/kernels/rowtopk/rowtopk.cu",
+   "size": 7937
+  },
+  {
+   "rfilename": "recipe/kernels/rowtopk/test_mask.py",
+   "size": 2212
+  },
+  {
+   "rfilename": "recipe/kernels/rowtopk/test_rowtopk.py",
+   "size": 4283
+  },
+  {
+   "rfilename": "recipe/kernels/sm120_dense.py",
+   "size": 10170
+  },
+  {
+   "rfilename": "recipe/kernels/sm120_dense2.py",
+   "size": 14283
+  },
+  {
+   "rfilename": "recipe/kernels/sm120_dense_table_v2.json",
+   "size": 1466
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/LICENSE.exllamav3",
+   "size": 1065
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/bindings.cpp",
+   "size": 1311
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/compat.cuh",
+   "size": 642
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/graph.cuh",
+   "size": 2976
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/ptx.cuh",
+   "size": 9623
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/codebook.cuh",
+   "size": 5865
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/comp_units/exl3_moe_inst_k2_cb1.cu",
+   "size": 654
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/comp_units/exl3_moe_inst_k3_cb1.cu",
+   "size": 654
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/comp_units/exl3_moe_inst_k3_cb2.cu",
+   "size": 576
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/comp_units/exl3_moe_inst_pb_s3.cu",
+   "size": 414
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/comp_units/exl3_moe_inst_pb_s4.cu",
+   "size": 414
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/comp_units/exl3_moe_inst_pb_s6.cu",
+   "size": 414
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/comp_units/exl3_moe_inst_pb_s8.cu",
+   "size": 414
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/comp_units/exl3_moe_instances.cuh",
+   "size": 1730
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_dense_flat.cu",
+   "size": 8113
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_devctx.cu",
+   "size": 2904
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_devctx.cuh",
+   "size": 1610
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_dq.cuh",
+   "size": 10324
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_gemm.cuh",
+   "size": 2211
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_gemm_inner.cuh",
+   "size": 23873
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_gemm_inner_flat.cuh",
+   "size": 14147
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_gemm_inner_flat_dense.cuh",
+   "size": 13385
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_gemm_inner_flat_p.cuh",
+   "size": 31749
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_gemm_inner_flat_t.cuh",
+   "size": 26092
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_gemm_inner_mt.cuh",
+   "size": 24024
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_gemm_inner_mt_pb.cuh",
+   "size": 25811
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_kernel_map.cuh",
+   "size": 4845
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_moe.cu",
+   "size": 18536
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_moe.cuh",
+   "size": 1341
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_moe_common.cuh",
+   "size": 2428
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_moe_flat_kernel.cuh",
+   "size": 9124
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_moe_kernel.cuh",
+   "size": 14429
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/exl3_moe_kernel_pb.cuh",
+   "size": 12737
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/quant/hadamard_inner.cuh",
+   "size": 12839
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/util.cuh",
+   "size": 4686
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe/util.h",
+   "size": 8762
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe_do/do_gemm.cu",
+   "size": 12227
+  },
+  {
+   "rfilename": "recipe/kernels/xmoe_do_i8/dof_gemm.cu",
+   "size": 60031
+  },
+  {
+   "rfilename": "recipe/kl/README.md",
+   "size": 6664
+  },
+  {
+   "rfilename": "recipe/kl/capture_server.py",
+   "size": 4047
+  },
+  {
+   "rfilename": "recipe/kl/kyuz0_kld.py",
+   "size": 4958
+  },
+  {
+   "rfilename": "recipe/patches/vllm-exl3/LICENSE",
+   "size": 31719
+  },
+  {
+   "rfilename": "recipe/patches/vllm-exl3/NOTICE.vllm-exl3",
+   "size": 989
+  },
+  {
+   "rfilename": "recipe/patches/vllm-exl3/README.md",
+   "size": 3825
+  },
+  {
+   "rfilename": "recipe/patches/vllm-exl3/exl3-sm120.patch",
+   "size": 147341
+  },
+  {
+   "rfilename": "recipe/patches/vllm/pr59585-dsml-finite-args.diff",
+   "size": 1826
+  },
+  {
+   "rfilename": "recipe/patches/vllm/pr60792-v41-image-order.diff",
+   "size": 8381
+  },
+  {
+   "rfilename": "recipe/patches/vllm/pr61039-length-aware-candidate-blocks.diff",
+   "size": 7556
+  },
+  {
+   "rfilename": "recipe/patches/vllm/pr61142-dsml-drifted-openers.diff",
+   "size": 2159
+  },
+  {
+   "rfilename": "recipe/patches/vllm/pr62196-v41-1017-encoder.diff",
+   "size": 6787
+  },
+  {
+   "rfilename": "recipe/patches/vllm/sitecustomize.py",
+   "size": 141435
+  },
+  {
+   "rfilename": "recipe/patches/vllm/sm120-fixes.diff",
+   "size": 14218
+  },
+  {
+   "rfilename": "recipe/patches/vllm/test_dsml_nan_args.py",
+   "size": 1069
+  },
+  {
+   "rfilename": "recipe/patches/vllm/v41-encoder-api.diff",
+   "size": 29563
+  },
+  {
+   "rfilename": "recipe/patches/vllm/v41-engram-post-lifetime.diff",
+   "size": 601
+  },
+  {
+   "rfilename": "recipe/patches/vllm/v41-indexer-chunked-decode.diff",
+   "size": 11881
+  },
+  {
+   "rfilename": "recipe/patches/vllm/v41-namespaces-thinking.diff",
+   "size": 13297
+  },
+  {
+   "rfilename": "recipe/patches/vllm/v41-parser-strict-dsml.diff",
+   "size": 9559
+  },
+  {
+   "rfilename": "recipe/patches/vllm/v41-replay-final-window.diff",
+   "size": 15169
+  },
+  {
+   "rfilename": "recipe/plans/README.md",
+   "size": 3225
+  },
+  {
+   "rfilename": "recipe/plans/make_plan.py",
+   "size": 3235
+  },
+  {
+   "rfilename": "recipe/plans/none.json",
+   "size": 3
+  },
+  {
+   "rfilename": "recipe/plans/plan-1017-agent30-c512.json",
+   "size": 26990
+  },
+  {
+   "rfilename": "recipe/plans/plan-1017-agent30.json",
+   "size": 24613
+  },
+  {
+   "rfilename": "recipe/quantize/README.md",
+   "size": 8380
+  },
+  {
+   "rfilename": "recipe/quantize/assemble_pack.py",
+   "size": 5260
+  },
+  {
+   "rfilename": "recipe/quantize/calib_client.py",
+   "size": 3333
+  },
+  {
+   "rfilename": "recipe/quantize/convert_engram_int4.py",
+   "size": 3451
+  },
+  {
+   "rfilename": "recipe/quantize/hooks/capture_hook.py",
+   "size": 3971
+  },
+  {
+   "rfilename": "recipe/quantize/hooks/engram_mmap_hook.py",
+   "size": 4763
+  },
+  {
+   "rfilename": "recipe/quantize/quantize_ds41_experts.py",
+   "size": 10593
+  },
+  {
+   "rfilename": "recipe/quantize/quantize_mtp_exl3.diff",
+   "size": 6506
+  },
+  {
+   "rfilename": "recipe/quantize/quantize_mtp_exl3.py",
+   "size": 22666
+  },
+  {
+   "rfilename": "recipe/quantize/selftest_experts.py",
+   "size": 2239
+  },
+  {
+   "rfilename": "recipe/quantize/serve_original.sh",
+   "size": 5740
+  },
+  {
+   "rfilename": "recipe/results/RESULTS.md",
+   "size": 40031
+  },
+  {
+   "rfilename": "recipe/results/raw/agentic-1017.txt",
+   "size": 10040
+  },
+  {
+   "rfilename": "recipe/results/raw/agentic-1stream-1001.txt",
+   "size": 362
+  },
+  {
+   "rfilename": "recipe/results/raw/agentic-4stream-1001.txt",
+   "size": 639
+  },
+  {
+   "rfilename": "recipe/results/raw/ctx1m-1017.txt",
+   "size": 1347
+  },
+  {
+   "rfilename": "recipe/results/raw/dev-1017b.txt",
+   "size": 18119
+  },
+  {
+   "rfilename": "recipe/results/raw/fp8ar-1017.txt",
+   "size": 4342
+  },
+  {
+   "rfilename": "recipe/results/raw/kl-1017.txt",
+   "size": 3523
+  },
+  {
+   "rfilename": "recipe/results/raw/kl-served-1001b.txt",
+   "size": 293
+  },
+  {
+   "rfilename": "recipe/results/raw/kl-served-rope-bug.txt",
+   "size": 269
+  },
+  {
+   "rfilename": "recipe/results/raw/kl-served.txt",
+   "size": 269
+  },
+  {
+   "rfilename": "recipe/results/raw/korean_check.json",
+   "size": 86947
+  },
+  {
+   "rfilename": "recipe/results/raw/power-1017.txt",
+   "size": 881
+  },
+  {
+   "rfilename": "recipe/results/raw/pr58560-1005.txt",
+   "size": 2959
+  },
+  {
+   "rfilename": "recipe/results/raw/pr59894-ab-1004.txt",
+   "size": 5759
+  },
+  {
+   "rfilename": "recipe/results/raw/quality-1017.txt",
+   "size": 1608
+  },
+  {
+   "rfilename": "recipe/results/raw/rebase-1015.txt",
+   "size": 3428
+  },
+  {
+   "rfilename": "recipe/results/raw/recipe-1m-smoke.txt",
+   "size": 1119
+  },
+  {
+   "rfilename": "recipe/results/raw/recipe-path-1017.txt",
+   "size": 4520
+  },
+  {
+   "rfilename": "recipe/results/raw/recipe-path-1017b.txt",
+   "size": 12185
+  },
+  {
+   "rfilename": "recipe/results/raw/recipe-path-fp8ar-1017.txt",
+   "size": 4964
+  },
+  {
+   "rfilename": "recipe/results/raw/rowtopk-1022.txt",
+   "size": 2365
+  },
+  {
+   "rfilename": "recipe/results/raw/rtx8-1024.txt",
+   "size": 5330
+  },
+  {
+   "rfilename": "recipe/results/raw/validate-recipe-1001b.txt",
+   "size": 2669
+  },
+  {
+   "rfilename": "recipe/results/raw/validate-recipe-vision.txt",
+   "size": 3168
+  },
+  {
+   "rfilename": "recipe/results/raw/validate-recipe.txt",
+   "size": 4019
+  },
+  {
+   "rfilename": "recipe/serve/profile-8x.env",
+   "size": 4649
+  },
+  {
+   "rfilename": "recipe/serve/serve-8x.sh",
+   "size": 1403
+  },
+  {
+   "rfilename": "recipe/serve/serve.sh",
+   "size": 20954
+  },
+  {
+   "rfilename": "tokenizer.json",
+   "size": 6367257
+  },
+  {
+   "rfilename": "tokenizer_config.json",
+   "size": 801
+  }
+ ]
+}

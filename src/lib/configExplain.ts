@@ -13,7 +13,7 @@
 //
 // React-free: scripts/test-config.ts runs it against real configs.
 
-import { BYTES_PER_GIB, kvBytesPerLayerToken, kvBytesPerToken, resolveHeadDim, usesDsa, usesMla, type Dtype, type ModelArch } from "./calc.ts";
+import { BYTES_PER_GIB, kvBytesPerLayerToken, kvBytesPerToken, resolveHeadDim, usesDsa, usesMla, type Dtype, type ModelArch, type SharedCompressed } from "./calc.ts";
 import { archFromConfig } from "./hf.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
@@ -24,6 +24,10 @@ import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers, mimoAtten
 // Configs are free-form JSON.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;
+
+/** DeepSeek V4.1's compressed caches of one ratio, or none of them. */
+const sharedAt = (groups: SharedCompressed[], ratio: number): SharedCompressed =>
+  groups.find((g) => g.ratio === ratio) ?? { ratio, sources: 0, keys: 0, readers: 0, indexers: 0 };
 
 // ── number formatting ─────────────────────────────────────────────────────
 
@@ -435,7 +439,10 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
     } else if (type && typeof factor === "number") {
       parts.push({ k: "context.scaledBy", v: { f: fmtNum(factor, lang, 2), type: ropeLabel(type) } });
     }
-    if (compressed) {
+    if (compressed?.shared) {
+      const sum = (f: (g: SharedCompressed) => number) => compressed.shared!.reduce((n, g) => n + f(g), 0);
+      parts.push({ k: "context.compressed41", v: { w: F(compressed.window), r: F(sum((g) => g.readers)), s: F(sum((g) => g.sources)), k: F(c.index_topk ?? 512) } });
+    } else if (compressed) {
       parts.push({ k: "context.compressed", v: { w: F(compressed.window), csa: F(compressed.csa), hca: F(compressed.hca), k: F(c.index_topk ?? 512) } });
     }
     if (arch && usesDsa(arch)) parts.push({ k: "context.sparse", v: { k: F(arch.sparseAttn!.topk) } });
@@ -485,6 +492,11 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
       ? [{ k: "kv.w.dsa", v: { L: F(L), r: F(arch.kvLoraRank!), q: F(arch.qkRopeHeadDim!), n: F(sparse.indexLayers), i: F(indexKey), b: F(perToken) } }]
       : mla
         ? [{ k: "kv.w.mla", v: { L: F(L), r: F(arch.kvLoraRank!), q: F(arch.qkRopeHeadDim!), b: F(perToken) } }]
+        : compressed?.shared
+          ? [{ k: "kv.w.compressed41", v: {
+              h: F(sharedAt(compressed.shared, 2).sources), hk: F(sharedAt(compressed.shared, 2).keys),
+              f: F(sharedAt(compressed.shared, 1).sources), fk: F(sharedAt(compressed.shared, 1).keys),
+              e: F(kvBytesPerLayerToken(arch, dt)), i: F(compressed.indexDim + Math.ceil(compressed.indexDim / 128) * 4), b: F(Math.round(perToken)) } }]
         : compressed
           ? [{ k: "kv.w.compressed", v: { csa: F(compressed.csa), hca: F(compressed.hca), e: F(kvBytesPerLayerToken(arch, dt)), i: F(compressed.indexDim + Math.ceil(compressed.indexDim / 128) * 4), b: F(Math.round(perToken)) } }]
           : global
@@ -519,7 +531,7 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
         ? cites(at("num_hidden_layers"), at("kv_lora_rank"), at("qk_rope_head_dim"),
             sparse ? at("index_head_dim") : undefined, sparse ? at("index_topk_pattern", "index_topk_freq") : undefined)
         : compressed
-          ? cites(at("compress_ratios"), at("sliding_window"), at("head_dim"), at("index_head_dim"))
+          ? cites(at("compress_ratios"), at("sliding_window"), at("head_dim"), at("index_head_dim"), at("kv_source_layer_ids"), at("index_source_layer_ids"))
           : cites(at("num_hidden_layers", "n_layer", "num_layers"), at("num_key_value_heads", "num_kv_heads"), at("head_dim"),
             c.head_dim === undefined ? at("hidden_size", "n_embd") : undefined,
             c.head_dim === undefined ? at("num_attention_heads", "n_head") : undefined, hybrid ? prefix + hybrid.path : undefined, window ? prefix + window.path : undefined,

@@ -88,6 +88,9 @@ const SAMPLES: [string, ModelArch][] = [
   ["MLA, rope 0", { ...common, kvLoraRank: 512, qkRopeHeadDim: 0 }],
   // DeepSeek V4's compressed attention: a rope width without an MLA rank (v4Bytes reads it).
   ["V4 compressed", { ...common, qkRopeHeadDim: 96, compressedAttn: { csa: 21, hca: 20, window: 128, indexDim: 128, topk: 1024 } }],
+  // DeepSeek V4.1's shared caches: no CSA or HCA layers, only source groups.
+  ["V4.1 shared", { ...common, qkRopeHeadDim: 64, compressedAttn: { csa: 0, hca: 0, window: 128, indexDim: 128, topk: 512,
+    shared: [{ ratio: 1, sources: 1, keys: 1, readers: 20, indexers: 5 }, { ratio: 2, sources: 3, keys: 2, readers: 18, indexers: 3 }], cuts: [0, 2, 8, 20] } }],
 ];
 const fieldsCovered = new Prop("the samples set every ModelArch field (add a new field to them)");
 const covered = new Set(SAMPLES.flatMap(([, a]) => Object.keys(a)));
@@ -147,7 +150,11 @@ function randomArch(): ModelArch {
     a.qkRopeHeadDim = pick([0, 64]);
     if (maybe(0.4)) a.sparseAttn = { topk: 2048, indexDim: 128, indexLayers: maybe(0.5) ? layers : int(1, layers), ...(maybe(0.3) ? { kpool: 4 } : {}) };
   } else if (maybe(0.08)) {
-    a.compressedAttn = { csa: int(1, layers), hca: int(0, layers), window: 128, indexDim: 128, ...(maybe() ? { topk: 512 } : {}) };
+    a.compressedAttn = maybe(0.3)
+      ? { csa: 0, hca: 0, window: 128, indexDim: 128, ...(maybe() ? { topk: 512 } : {}),
+        shared: [{ ratio: 1, sources: 1, keys: int(0, 1), readers: int(1, layers), indexers: int(0, layers) }, { ratio: 2, sources: int(1, 4), keys: 1, readers: int(1, layers), indexers: int(0, layers) }],
+        cuts: maybe() ? [0] : [0, int(1, Math.max(1, layers >> 1)), layers] }
+      : { csa: int(1, layers), hca: int(0, layers), window: 128, indexDim: 128, ...(maybe() ? { topk: 512 } : {}) };
     a.headDim = 512;
     a.qkRopeHeadDim = pick([32, 64, 96]);
   }

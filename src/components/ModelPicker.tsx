@@ -328,7 +328,7 @@ export function ModelPicker({
           {usesMla(arch) ? (
             <Badge tone="good">{t(usesDsa(arch) ? "common.dsa" : "common.mla")}</Badge>
           ) : usesCompressedAttn(arch) ? (
-            <Badge tone="good">{t("common.csa")}</Badge>
+            <Badge tone="good">{t(arch.compressedAttn?.shared ? "common.csa41" : "common.csa")}</Badge>
           ) : (
             arch.numKeyValueHeads < arch.numAttentionHeads && <Badge tone="good">{t("common.gqa")}</Badge>
           )}

@@ -1,4 +1,4 @@
-import { DTYPE_BYTES, type Dtype, type ModelArch } from "./calc.ts";
+import { DTYPE_BYTES, type Dtype, type ModelArch, type SharedCompressed } from "./calc.ts";
 import { VLLM_UTIL } from "./overhead.ts";
 
 // Shareable state encoded in the URL query string so a configured calculation
@@ -112,6 +112,10 @@ export function encodeState(s: AppState): string {
     if (a.compressedAttn) {
       const c = a.compressedAttn;
       p.set("cx", [c.csa, c.hca, c.window, c.indexDim, ...(c.topk ? [c.topk] : [])].join("."));
+      // V4.1's shared caches: without them it decodes with no compressed layers at all.
+      if (c.shared?.length) p.set("cs", c.shared.map((g) => [g.ratio, g.sources, g.keys, g.readers, g.indexers].join(".")).join("_"));
+      // …and where a pipeline stage may start: without them it runs on one stage only.
+      if (c.cuts?.length) p.set("cp", c.cuts.join("."));
     }
     // DeepSeek Sparse Attention: without it the indexer keys drop out of the cache.
     if (a.sparseAttn) {
@@ -156,12 +160,28 @@ export function encodeState(s: AppState): string {
   return p.toString();
 }
 
-/** "csa.hca.window.indexDim[.topk]", as encodeState writes it. */
-function compressedOf(v: string | null): ModelArch["compressedAttn"] {
+/** "csa.hca.window.indexDim[.topk]", and V4.1's "ratio.sources.keys.readers.indexers_…"
+ *  and "0.cut.cut…", as encodeState writes them. */
+function compressedOf(v: string | null, groups: string | null, cuts: string | null): ModelArch["compressedAttn"] {
   const n = (v ?? "").split(".").map(Number);
-  if ((n.length !== 4 && n.length !== 5) || !n.every((x) => Number.isInteger(x) && x >= 0) || n[0] + n[1] === 0 || !n[2]) return undefined;
+  const shared = sharedOf(groups);
+  if ((n.length !== 4 && n.length !== 5) || !n.every((x) => Number.isInteger(x) && x >= 0) || n[0] + n[1] + (shared?.length ?? 0) === 0 || !n[2]) return undefined;
   const out: ModelArch["compressedAttn"] = { csa: n[0], hca: n[1], window: n[2], indexDim: n[3] };
   if (n[4]) out.topk = n[4];
+  if (shared) out.shared = shared;
+  const at = (cuts ?? "").split(".").map(Number);
+  if (shared && cuts && at[0] === 0 && at.every((x, i) => Number.isInteger(x) && x >= 0 && (i === 0 || x > at[i - 1]))) out.cuts = at;
+  return out;
+}
+
+function sharedOf(v: string | null): SharedCompressed[] | undefined {
+  if (!v) return undefined;
+  const out: SharedCompressed[] = [];
+  for (const part of v.split("_")) {
+    const n = part.split(".").map(Number);
+    if (n.length !== 5 || !n.every((x) => Number.isInteger(x) && x >= 0) || !n[0] || !n[1] || n[2] > n[1]) return undefined;
+    out.push({ ratio: n[0], sources: n[1], keys: n[2], readers: n[3], indexers: n[4] });
+  }
   return out;
 }
 
@@ -269,7 +289,7 @@ export function decodeState(search: string): Partial<AppState> {
       globalAttn: globalOf(p.get("ga")),
       vHeadDim: pos(p.get("vd")),
       crossAttn: crossOf(p.get("ca")),
-      compressedAttn: compressedOf(p.get("cx")),
+      compressedAttn: compressedOf(p.get("cx"), p.get("cs"), p.get("cp")),
       sparseAttn: sparseOf(p.get("dx")),
       unmodelled: unmodelledOf(p.get("um")),
       notInVllm: notInVllmOf(p.get("nv")),

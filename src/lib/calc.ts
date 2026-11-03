@@ -73,8 +73,10 @@ export interface ModelArch {
    *  keeps its last `window` tokens; on top of that `csa` layers keep one entry per
    *  4 tokens, each with an `indexDim`-wide indexer key, and `hca` layers one entry
    *  per 128. The entry is one `headDim`-wide vector serving as key and value. A CSA
-   *  query reads the `topk` entries its indexer picks (config `index_topk`, 512). */
-  compressedAttn?: { csa: number; hca: number; window: number; indexDim: number; topk?: number };
+   *  query reads the `topk` entries its indexer picks (config `index_topk`, 512).
+   *  DeepSeek V4.1 has no CSA or HCA layers: its compressed caches are `shared`,
+   *  and a pipeline stage may start only at one of the `cuts` layers (ppAllowed). */
+  compressedAttn?: { csa: number; hca: number; window: number; indexDim: number; topk?: number; shared?: SharedCompressed[]; cuts?: number[] };
   /** DeepSeek Sparse Attention (V3.2, GLM-5; config `index_topk`). Beside MLA's
    *  latent, `indexLayers` layers keep an `indexDim`-wide indexer key for every
    *  token — every `kpool` tokens where GLM-5.3-Flash pools them — and a query
@@ -135,6 +137,18 @@ export interface ModelArch {
   vision?: { patches: number; tokens: number; hidden: number };
 }
 
+/** DeepSeek V4.1's compressed caches of one `ratio` (1 or 2 tokens an entry; config
+ *  `compress_ratios`, `kv_source_layer_ids`, `index_source_layer_ids`): `sources`
+ *  layers keep one, `keys` of them an indexer key beside it, and `readers` layers
+ *  read it, `indexers` of them scoring its keys. */
+export interface SharedCompressed {
+  ratio: number;
+  sources: number;
+  keys: number;
+  readers: number;
+  indexers: number;
+}
+
 /** Does this architecture cache a compressed latent instead of K and V tensors? */
 export function usesMla(arch: ModelArch): boolean {
   // A positional part of 0 is still MLA: GLM-5.3-Flash caches its 512-wide latent
@@ -150,7 +164,7 @@ export function usesDsa(arch: ModelArch): boolean {
 /** Does it keep DeepSeek V4's compressed caches instead of one entry per token? */
 export function usesCompressedAttn(arch: ModelArch): boolean {
   const c = arch.compressedAttn;
-  return !!c && c.csa + c.hca > 0 && c.window > 0;
+  return !!c && (c.csa + c.hca > 0 || !!c.shared?.length) && c.window > 0;
 }
 
 export interface CalcInput {
@@ -193,8 +207,9 @@ export interface CalcResult {
   totalGiB: number;
   headDim: number;
   /** DeepSeek V4: of one request's cache, the compressed part that grows with the
-   *  context and the window and compressor state sized for the tokens in flight. */
-  compressed?: { growGiB: number; fixedGiB: number; inFlight: number; window: number };
+   *  context and the window and compressor state sized for the tokens in flight;
+   *  `shared` for V4.1, whose compressed part sits in its source layers. */
+  compressed?: { growGiB: number; fixedGiB: number; inFlight: number; window: number; shared?: boolean };
 }
 
 export function resolveHeadDim(arch: ModelArch): number {
@@ -268,11 +283,13 @@ function attnCounts(arch: ModelArch): { full: number; sliding: number } {
 /** KV cache bytes for ONE token of ONE sequence, across every layer that keeps a
  *  cache: what a token costs while the context is shorter than any window. For
  *  DeepSeek V4, what each further token adds to a long context: a quarter of an
- *  entry and its indexer key in every CSA layer, a 128th of one in every HCA layer. */
+ *  entry and its indexer key in every CSA layer, a 128th of one in every HCA layer;
+ *  for V4.1, its share of an entry and a key in every source. */
 export function kvBytesPerToken(arch: ModelArch, kvDtype: Dtype): number {
   if (usesCompressedAttn(arch)) {
     const c = arch.compressedAttn!;
     const b = v4Bytes(arch, kvDtype);
+    if (c.shared) return c.shared.reduce((sum, g) => sum + (g.sources * b.entry + g.keys * b.index) / g.ratio, 0);
     return (c.csa * (b.entry + b.index)) / CSA_RATIO + (c.hca * b.entry) / HCA_RATIO;
   }
   if (usesDsa(arch)) return dsaBytesPerToken(arch, kvDtype);
@@ -373,6 +390,15 @@ function dsaHybridLayout(arch: ModelArch, kvDtype: Dtype, tp: number, family?: S
  * 16-bit cache keeps the 512 values plain. The indexer key is fp8 with an fp32
  * scale, 132 bytes, whatever the cache dtype. Treating every layer as keeping every
  * token made DeepSeek-V4-Flash's cache 11x too large at 256k tokens.
+ *
+ * DeepSeek V4.1 (vllm/models/deepseek_v41/attention.py, compressor.py) keeps the
+ * window in 32-token blocks, and a compressed cache in its kv-source layers only:
+ * one entry per 1 or 2 tokens, with the indexer key beside it in the same 256-token
+ * blocks, which every compressed layer above the source reads. A ratio-2 source's
+ * compressor keeps one block of 8 fp32 rows per request (CircularBufferSpec); a
+ * ratio-1 source has none. SM100 cards write V4.1's own record, 512 fp8 values and
+ * 16 scales in 512-byte pages; the others V4's. Read as V4, every V4.1 layer came
+ * out a sliding window and the cache did not grow with the context.
  */
 const CSA_RATIO = 4;
 const HCA_RATIO = 128;
@@ -384,15 +410,21 @@ const V4_BLOCK = 256;
 const V4_SWA_BLOCK = 64;
 const V4_CSA_STATE_BLOCK = 4;
 const V4_HCA_STATE_BLOCK = 8;
+/** V4.1: tokens per block of the window cache, and rows of a compressor's ring
+ *  without speculative decoding (max(8, the next power of two)). */
+const V41_SWA_BLOCK = 32;
+const V41_RING_ROWS = 8;
 
-function v4Bytes(arch: ModelArch, kvDtype: Dtype) {
+function v4Bytes(arch: ModelArch, kvDtype: Dtype, family?: SparseMlaFamily) {
   const hd = resolveHeadDim(arch);
   const rope = arch.qkRopeHeadDim ?? 64;
   const packed = DTYPE_BYTES[kvDtype] < 2;
   const nope = hd - rope;
-  const entry = packed ? nope + rope * 2 + Math.ceil(nope / 64 / 8) * 8 : hd * DTYPE_BYTES[kvDtype];
+  // V4.1's record on SM100 (_use_v41_mxfp8_kv_record): every value fp8, a scale per 32.
+  const v41Record = packed && !!arch.compressedAttn?.shared && family === "sm100";
+  const entry = v41Record ? hd + hd / 32 : packed ? nope + rope * 2 + Math.ceil(nope / 64 / 8) * 8 : hd * DTYPE_BYTES[kvDtype];
   const indexDim = arch.compressedAttn?.indexDim ?? 128;
-  const align = packed ? 576 : 512;
+  const align = packed && !v41Record ? 576 : 512;
   return {
     entry,
     index: indexDim + Math.ceil(indexDim / 128) * 4,
@@ -401,6 +433,8 @@ function v4Bytes(arch: ModelArch, kvDtype: Dtype) {
     csaState: 2 * 2 * hd * 4,
     indexState: 2 * 2 * indexDim * 4,
     hcaState: 2 * hd * 4,
+    // V4.1: a projection and a score in fp32 per row of a ratio-2 compressor's ring.
+    ringRow: 2 * hd * 4,
   };
 }
 
@@ -408,15 +442,25 @@ function v4Bytes(arch: ModelArch, kvDtype: Dtype) {
  *  compressed caches, which grow with the context, and the window and compressor
  *  state, which vLLM sizes for `window − 1` tokens plus two batches in flight
  *  (SlidingWindowSpec.max_admission_blocks_per_request). */
-function v4Reserved(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens: number) {
+function v4Reserved(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens: number, family?: SparseMlaFamily) {
   const c = arch.compressedAttn!;
-  const b = v4Bytes(arch, kvDtype);
+  const b = v4Bytes(arch, kvDtype, family);
   const blocks = Math.ceil(contextLength / V4_BLOCK);
+  const slide = (window: number, block: number) =>
+    Math.ceil(Math.min(window - 1 + 2 * batchTokens, contextLength) / block) + 1;
+  if (c.shared) {
+    let perBlock = 0;
+    let rings = 0;
+    for (const g of c.shared) {
+      perBlock += g.sources * b.page((V4_BLOCK / g.ratio) * b.entry) + g.keys * b.page((V4_BLOCK / g.ratio) * b.index);
+      if (g.ratio > 1) rings += g.sources * V41_RING_ROWS * b.ringRow;
+    }
+    const fixed = arch.numLayers * slide(c.window, V41_SWA_BLOCK) * b.page(V41_SWA_BLOCK * b.entry) + rings;
+    return { grow: blocks * perBlock, fixed, perBlock };
+  }
   const perBlock =
     c.csa * (b.page((V4_BLOCK / CSA_RATIO) * b.entry) + b.page((V4_BLOCK / CSA_RATIO) * b.index)) +
     c.hca * b.page((V4_BLOCK / HCA_RATIO) * b.entry);
-  const slide = (window: number, block: number) =>
-    Math.ceil(Math.min(window - 1 + 2 * batchTokens, contextLength) / block) + 1;
   const csaWindow = 2 * CSA_RATIO;
   const fixed =
     arch.numLayers * slide(c.window, V4_SWA_BLOCK) * b.page(V4_SWA_BLOCK * b.entry) +
@@ -434,6 +478,11 @@ export function kvBytesPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: nu
     const c = arch.compressedAttn!;
     const b = v4Bytes(arch, kvDtype);
     const at = (n: number) => Math.min(contextLength, n);
+    if (c.shared) {
+      return c.shared.reduce((sum, g) => sum +
+        Math.floor(contextLength / g.ratio) * (g.sources * b.entry + g.keys * b.index) +
+        (g.ratio > 1 ? g.sources * at(g.ratio) * b.ringRow : 0), arch.numLayers * at(c.window) * b.entry);
+    }
     return (
       arch.numLayers * at(c.window) * b.entry +
       c.csa * Math.floor(contextLength / CSA_RATIO) * (b.entry + b.index) +
@@ -459,7 +508,11 @@ export function kvBytesPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: nu
  *  reads every layer's window and every HCA entry, and in a CSA layer every indexer
  *  key and the `topk` entries picked from the compressed context, all of them while
  *  there are no more (vLLM 0.31.0, vllm/models/deepseek_v4/attention.py). A V4
- *  compressor's working state is read once per group it folds, so it is left out. */
+ *  compressor's working state is read once per group it folds, so it is left out.
+ *  V4.1 reads every layer's window, in each reader the `topk` entries picked from
+ *  its source's cache, and in each indexer all of that source's keys: the later
+ *  indexers mask their scores to the candidate blocks the first one picked, which
+ *  is counted here as no saving. */
 export function kvBytesReadPerStep(arch: ModelArch, kvDtype: Dtype, contextLength: number): number {
   if (usesDsa(arch)) {
     const s = arch.sparseAttn!;
@@ -471,6 +524,12 @@ export function kvBytesReadPerStep(arch: ModelArch, kvDtype: Dtype, contextLengt
   if (usesCompressedAttn(arch)) {
     const c = arch.compressedAttn!;
     const b = v4Bytes(arch, kvDtype);
+    if (c.shared) {
+      return c.shared.reduce((sum, g) => {
+        const entries = Math.floor(contextLength / g.ratio);
+        return sum + g.readers * Math.min(entries, c.topk ?? V4_TOPK) * b.entry + g.indexers * entries * b.index;
+      }, arch.numLayers * Math.min(contextLength, c.window) * b.entry);
+    }
     const csaEntries = Math.floor(contextLength / CSA_RATIO);
     return (
       arch.numLayers * Math.min(contextLength, c.window) * b.entry +
@@ -566,7 +625,7 @@ function kvLayout(arch: ModelArch, kvDtype: Dtype, tp = 1) {
  */
 export function kvReservedPerSeq(arch: ModelArch, kvDtype: Dtype, contextLength: number, batchTokens = 2048, tp = 1, family?: SparseMlaFamily): number {
   if (usesCompressedAttn(arch)) {
-    const r = v4Reserved(arch, kvDtype, contextLength, batchTokens);
+    const r = v4Reserved(arch, kvDtype, contextLength, batchTokens, family);
     return r.grow + r.fixed;
   }
   if (usesDsa(arch)) {
@@ -607,7 +666,7 @@ export function tokensInUse(load: TypicalLoad, contextLength: number): number {
  *  window and a hybrid's state is per request, so neither is shared. */
 export function kvSharedPrefix(arch: ModelArch, kvDtype: Dtype, prefixTokens: number, tp = 1, family?: SparseMlaFamily): number {
   // DeepSeek V4 shares its compressed caches' whole 256-token blocks.
-  if (usesCompressedAttn(arch)) return Math.floor(Math.max(0, prefixTokens) / V4_BLOCK) * v4Reserved(arch, kvDtype, 1, 1).perBlock;
+  if (usesCompressedAttn(arch)) return Math.floor(Math.max(0, prefixTokens) / V4_BLOCK) * v4Reserved(arch, kvDtype, 1, 1, family).perBlock;
   if (usesDsa(arch)) {
     const h = dsaHybridLayout(arch, kvDtype, tp, family);
     if (h) return Math.floor(Math.max(0, prefixTokens) / h.block) * h.perBlock;
@@ -678,9 +737,9 @@ export function calculate(input: CalcInput): CalcResult {
     headDim,
   };
   if (usesCompressedAttn(arch)) {
-    const tokens = (input.batch ?? SMALL_CARD_BATCH).tokens;
-    const r = v4Reserved(arch, kvDtype, contextLength, tokens);
+    const r = v4Reserved(arch, kvDtype, contextLength, tokens, sparseMla);
     result.compressed = { growGiB: r.grow / BYTES_PER_GIB, fixedGiB: r.fixed / BYTES_PER_GIB, inFlight: 2 * tokens, window: arch.compressedAttn!.window };
+    if (arch.compressedAttn!.shared) result.compressed.shared = true;
   }
   return result;
 }
@@ -856,6 +915,28 @@ type Shape = Pick<Layout, "tp" | "pp" | "dp" | "ep">;
  *  than they hold. */
 const MAX_PP = 16;
 
+/** The layer each of `pp` pipeline stages starts at, as vLLM splits the layers
+ *  (get_pp_indices in vllm/distributed/utils.py): evenly, with the remainder going
+ *  one each to the stages before the last, from the back. */
+function stageStarts(layers: number, pp: number): number[] {
+  const parts: number[] = Array(pp).fill(Math.floor(layers / pp));
+  for (let i = 2; i < (layers % pp) + 2; i++) parts[pp - i]++;
+  const starts = [0];
+  for (const p of parts.slice(0, -1)) starts.push(starts[starts.length - 1] + p);
+  return starts;
+}
+
+/** Whether vLLM runs the model on `pp` pipeline stages. DeepSeek V4.1 refuses a
+ *  stage that starts between a compressed cache's source and a layer reading it
+ *  ("PP splits inside a v4.1 kv-sharing group are not supported",
+ *  vllm/models/deepseek_v41/attention.py): DeepSeek-V4.1-Flash runs on 2 stages,
+ *  not on 4. */
+export function ppAllowed(arch: ModelArch, pp: number): boolean {
+  const c = arch.compressedAttn;
+  if (pp <= 1 || !c?.shared) return true;
+  return stageStarts(arch.numLayers, pp).every((s) => !!c.cuts?.includes(s));
+}
+
 /** Everything a layout's per-GPU sum reads that does not depend on the layout,
  *  worked out once: what one request's cache reserves, and the weights. */
 function layoutBasis(input: Omit<CalcInput, "concurrency">) {
@@ -941,6 +1022,7 @@ export function layoutFor(input: CalcInput, usableGiB: number, limit = 1024, spe
   for (let tp = 1; tp <= Math.min(heads, limit); tp++) {
     if (!tpValid(tp, heads, kv)) continue;
     for (let pp = 1; pp <= Math.min(MAX_PP, b.layers, Math.floor(limit / tp)); pp++) {
+      if (!ppAllowed(arch, pp)) continue;
       for (const ep of moe ? [false, true] : [false]) {
         // Without expert parallelism, replicas past one per request add nothing.
         const top = ep ? Math.floor(limit / (tp * pp)) : Math.min(Math.floor(limit / (tp * pp)), users);
@@ -1047,7 +1129,7 @@ export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number, spe
   for (let tp = 1; tp <= gpus; tp++) {
     if (gpus % tp || !tpValid(tp, heads, kv)) continue;
     for (let pp = 1; pp <= Math.min(gpus / tp, MAX_PP); pp++) {
-      if ((gpus / tp) % pp || pp > b.layers) continue;
+      if ((gpus / tp) % pp || pp > b.layers || !ppAllowed(arch, pp)) continue;
       const dp = gpus / (tp * pp);
       for (const ep of moe && dp > 1 ? [false, true] : [false]) {
         const shape = { tp, pp, dp, ep };

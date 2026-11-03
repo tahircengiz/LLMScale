@@ -14,6 +14,8 @@
 //
 // React-free: hf.ts and configExplain.ts read configs with it, and the tests run it.
 
+import type { ModelArch, SharedCompressed } from "./calc.ts";
+
 // Configs are free-form JSON.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;
@@ -324,11 +326,13 @@ export function stateBytesPerLayer(c: Json): number {
  *  and 128 into one (HCA), beside the sliding window every layer keeps. The list
  *  carries the speculative-decoding layers after the model's own, so only the
  *  first num_hidden_layers count. vLLM builds an indexer for ratio 4 only and
- *  accepts no other ratio (vllm/models/deepseek_v4/attention.py). */
-export function compressedLayers(c: Json): { csa: number; hca: number; window: number; indexDim: number; topk?: number } | undefined {
+ *  accepts no other ratio (vllm/models/deepseek_v4/attention.py). A V4.1 list,
+ *  which comes with kv_source_layer_ids, means something else (sharedCompressed). */
+export function compressedLayers(c: Json): ModelArch["compressedAttn"] {
   const L = c?.num_hidden_layers ?? 0;
   if (!Array.isArray(c?.compress_ratios) || !L || typeof c.sliding_window !== "number" || c.sliding_window <= 0) return undefined;
   const ratios: number[] = c.compress_ratios.slice(0, L).map(Number);
+  if (Array.isArray(c.kv_source_layer_ids)) return sharedCompressed(c, ratios);
   const csa = ratios.filter((r) => r === 4).length;
   const hca = ratios.filter((r) => r === 128).length;
   if (csa + hca === 0) return undefined;
@@ -336,6 +340,52 @@ export function compressedLayers(c: Json): { csa: number; hca: number; window: n
     { csa, hca, window: c.sliding_window, indexDim: typeof c.index_head_dim === "number" ? c.index_head_dim : 128 };
   if (typeof c.index_topk === "number" && c.index_topk > 0) out.topk = c.index_topk;
   return out;
+}
+
+/** DeepSeek V4.1: compress_ratios 0 (the window only), 1 and 2 (also a compressed
+ *  cache of one entry per 1 or 2 tokens). Only the kv-source layers keep that
+ *  cache, with an indexer key beside it when they are index sources too; every
+ *  other compressed layer reads the latest source below it, and every other index
+ *  source scores that source's keys (vllm/models/deepseek_v41/attention.py). */
+function sharedCompressed(c: Json, ratios: number[]): ModelArch["compressedAttn"] {
+  const L = ratios.length;
+  const ids = (v: unknown) => (Array.isArray(v) ? v.map(Number).filter((l) => Number.isInteger(l) && l >= 0 && l < L) : []);
+  const kv = ids(c.kv_source_layer_ids);
+  const index = ids(c.index_source_layer_ids);
+  // vLLM refuses any other ratio, and a compressed layer with no source below it.
+  if (!kv.length || ratios.some((r) => r !== 0 && r !== 1 && r !== 2)) return undefined;
+  const sourceOf = (l: number) => Math.max(-1, ...kv.filter((s) => s <= l));
+  const indexOf = (l: number) => Math.max(-1, ...index.filter((s) => s <= l));
+  const groups = new Map<number, SharedCompressed>();
+  const group = (ratio: number) => {
+    if (!groups.has(ratio)) groups.set(ratio, { ratio, sources: 0, keys: 0, readers: 0, indexers: 0 });
+    return groups.get(ratio)!;
+  };
+  for (const s of kv) {
+    if (!ratios[s]) return undefined;
+    const g = group(ratios[s]);
+    g.sources++;
+    if (index.includes(s)) g.keys++;
+  }
+  for (let l = 0; l < L; l++) {
+    if (!ratios[l]) continue;
+    const s = sourceOf(l);
+    if (s < 0 || indexOf(l) < 0) return undefined;
+    group(ratios[s]).readers++;
+    if (index.includes(l)) group(ratios[s]).indexers++;
+  }
+  // A pipeline stage may start only where no compressed layer at or above it reads
+  // a source below it (calc.ts, ppAllowed).
+  const cuts = [0];
+  for (let b = 1; b < L; b++) {
+    let whole = true;
+    for (let l = b; l < L && whole; l++) if (ratios[l] && (sourceOf(l) < b || indexOf(l) < b)) whole = false;
+    if (whole) cuts.push(b);
+  }
+  const out: { csa: number; hca: number; window: number; indexDim: number; topk?: number } =
+    { csa: 0, hca: 0, window: c.sliding_window, indexDim: typeof c.index_head_dim === "number" ? c.index_head_dim : 128 };
+  if (typeof c.index_topk === "number" && c.index_topk > 0) out.topk = c.index_topk;
+  return { ...out, shared: [...groups.values()].sort((a, b) => a.ratio - b.ratio), cuts };
 }
 
 /** DeepSeek Sparse Attention (DeepSeek-V3.2, GLM-5): vLLM serves an MLA config
