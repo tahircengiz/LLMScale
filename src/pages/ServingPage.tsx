@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ModelArch } from "../lib/calc";
+import type { Dtype, ModelArch } from "../lib/calc";
 import { resolveModel } from "../lib/hf";
 import { fetchSnapshot, READ_FILES } from "../lib/repoFetch";
 import {
@@ -15,6 +15,7 @@ import {
 } from "../lib/serving";
 import { fmtBytes } from "../lib/configExplain";
 import { useLang } from "../lib/i18n";
+import { decodeState, DEFAULT_STATE } from "../lib/urlState";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, Segmented } from "../components/ui";
 
@@ -48,6 +49,11 @@ function initialHfId(): string {
   return typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("m") ?? "";
 }
 
+/** The KV-cache precision of the sizing page that linked here (`kd`, urlState.ts). */
+function initialKd(): Dtype | undefined {
+  return typeof window === "undefined" ? undefined : decodeState(window.location.search).kvDtype;
+}
+
 /** A sentence with its **figure** set in bold. */
 function Rich({ text }: { text: string }) {
   return (
@@ -73,6 +79,8 @@ function useSay() {
 export function ServingPage() {
   const { t, lang } = useLang();
   const [hfId, setHfId] = useState(initialHfId);
+  // Belongs to the model the link came with; another model starts from its own.
+  const [kd, setKd] = useState(initialKd);
   const [data, setData] = useState<Loaded | null>(null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -117,12 +125,24 @@ export function ServingPage() {
   // The model lives in the address, so a brief can be shared as a link.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const q = hfId ? `?m=${encodeURIComponent(hfId).replace(/%2F/g, "/")}` : "";
+    const q = hfId ? `?m=${encodeURIComponent(hfId).replace(/%2F/g, "/")}${kd ? `&kd=${kd}` : ""}` : "";
     window.history.replaceState(null, "", `${window.location.pathname}${q}`);
-  }, [hfId]);
+  }, [hfId, kd]);
 
   const current = data && data.id === hfId ? data : null;
-  const brief = useMemo<ServingBrief | null>(() => (current ? buildBrief(current.snap, lang) : null), [current, lang]);
+  // The commands start the server the sizing page counted: the precision its link
+  // carries, or what it shows for this model on its own (the detected precision,
+  // else its default). A repository it cannot size keeps the checkpoint's choice.
+  const brief = useMemo<ServingBrief | null>(
+    () =>
+      current
+        ? buildBrief(current.snap, lang, {
+            kvDtype: kd ?? (current.meta ? current.meta.kvDtype ?? DEFAULT_STATE.kvDtype : undefined),
+            ownRuntime: current.arch?.ownRuntime,
+          })
+        : null,
+    [current, lang, kd],
+  );
 
   return (
     <div>
@@ -136,20 +156,28 @@ export function ServingPage() {
           hideCustom
           compact
           onModel={(id) => {
-            if (id) setHfId(id);
+            if (id && id !== hfId) {
+              setHfId(id);
+              setKd(undefined);
+            }
           }}
         />
       </Card>
 
       {!hfId ? (
-        <EmptyState onPick={setHfId} />
+        <EmptyState
+          onPick={(id) => {
+            setHfId(id);
+            setKd(undefined);
+          }}
+        />
       ) : loading && !current ? (
         <Loading id={hfId} />
       ) : current && brief ? (
         <div className={"transition-opacity duration-200 " + (loading ? "opacity-50" : "opacity-100")}>
           <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-12 lg:items-start">
             <div className="flex min-w-0 flex-col gap-3 lg:col-span-7">
-              <Portrait id={current.snap.id} brief={brief} />
+              <Portrait id={current.snap.id} brief={brief} kd={kd} />
               <Gotchas brief={brief} />
               <Sections brief={brief} onCite={setLitFile} />
             </div>
@@ -227,7 +255,8 @@ function Loading({ id }: { id: string }) {
 
 // ── in short, and what to check ─────────────────────────────────────────────
 
-function Portrait({ id, brief }: { id: string; brief: ServingBrief }) {
+/** `kd`: the KV precision the sizing page linked here with; the way back keeps it. */
+function Portrait({ id, brief, kd }: { id: string; brief: ServingBrief; kd?: Dtype }) {
   const { t, lang } = useLang();
   const say = useSay();
   const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
@@ -246,7 +275,7 @@ function Portrait({ id, brief }: { id: string; brief: ServingBrief }) {
       {sizable && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <a
-            href={`${home}${q}`}
+            href={`${home}${q}${kd ? `&kd=${kd}` : ""}`}
             className={FOCUS + " rounded-xl bg-brand-600 px-3 py-1.5 text-sm font-medium text-onbrand shadow-lg shadow-brand-600/30 transition hover:bg-brand-500"}
           >
             {t("serve.link.size")}

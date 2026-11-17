@@ -112,7 +112,8 @@ export function VllmPage() {
   const effCount = migId ? 1 : gpuCount;
 
   const rec = useMemo(() => {
-    if (!arch) return null;
+    // No command for a model on its own code (calc.ts, ModelArch.ownRuntime).
+    if (!arch || arch.ownRuntime) return null;
     const caps = extractCaps({
       hfId, arch, numParams: arch.numParams, modelType: meta?.modelType,
       isMoE: meta?.isMoE, tags: meta?.tags, pipelineTag: meta?.pipelineTag,
@@ -375,14 +376,14 @@ export function VllmPage() {
                 )}
               </div>
             ) : (
-              <p className="py-10 text-center text-sm text-slate-400">{t("vllm.empty")}</p>
+              <p className="py-10 text-center text-sm text-slate-400">{t(arch?.ownRuntime ? "own.hidden" : "vllm.empty")}</p>
             )}
           </Card>
         </div>
       </div>
 
       {/* Full width: a pasted log is long, and the table reads better wide. */}
-      {arch && (
+      {arch && !arch.ownRuntime && (
         <Card className="mt-5 p-5">
           <LogCheck
             hfId={hfId}

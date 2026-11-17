@@ -157,6 +157,10 @@ export function SizingPage() {
                 <a href={`${home}anatomy.html${modelQuery}`} className={SIDE_LINK}>
                   {t("model.link.anatomy")}
                 </a>
+                {/* The brief starts the server this page counts, so it takes its KV precision. */}
+                <a href={`${home}serving.html${modelQuery}&kd=${state.kvDtype}`} className={SIDE_LINK}>
+                  {t("model.link.serving")}
+                </a>
                 {known && (
                   <span className="ml-1">
                     <StaticPageLink file={modelPageFile(known.id)}>{t("model.page", { name: known.displayName })}</StaticPageLink>
@@ -190,7 +194,12 @@ export function SizingPage() {
               <>
                 {/* A stand-in architecture: say so above its figures, not only beside the picker. */}
                 {state.arch?.placeholder && <p className="mb-3 text-xs font-medium text-warn">{t("results.placeholder")}</p>}
-                <Results result={result} cardName={cardName && state.migId ? `${cardName} MIG ${state.migId}` : cardName} moe={!!state.arch?.numExperts} />
+                <Results
+                  result={result}
+                  cardName={cardName && state.migId ? `${cardName} MIG ${state.migId}` : cardName}
+                  moe={!!state.arch?.numExperts}
+                  ownRuntime={!!state.arch?.ownRuntime}
+                />
               </>
             ) : (
               <div className="py-10 text-center">
@@ -201,7 +210,8 @@ export function SizingPage() {
               </div>
             )}
           </Card>
-          {result && state.arch && (
+          {/* Fitting a card counts the cache and vLLM's overhead: not for a model on its own code. */}
+          {result && state.arch && !state.arch.ownRuntime && (
             <Card className="p-5">
               <GpuFit
                 hfId={state.hfId}

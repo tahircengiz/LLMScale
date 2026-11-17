@@ -111,7 +111,8 @@ export function AnatomyPage() {
               <MetaStrip a={anatomy} />
               <ParamCard a={anatomy} />
               <PrecisionCard a={anatomy} />
-              <KvCard a={anatomy} />
+              {/* The cache curve is a text generator's; not drawn for a model on its own code (calc.ts, ModelArch.ownRuntime). */}
+              {!anatomy.arch.ownRuntime && <KvCard a={anatomy} />}
             </div>
           </div>
         </div>

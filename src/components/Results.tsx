@@ -13,8 +13,33 @@ const SEGMENTS = [
 
 /** `cardName`: the device the overhead was sized for, when one is chosen. */
 /** `moe`: the model routes to experts, the case the multi-GPU overhead note is about (E1). */
-export function Results({ result, cardName, moe = false }: { result: CalcResult; cardName?: string; moe?: boolean }) {
+/** `ownRuntime`: the model runs on its own code (calc.ts, ModelArch.ownRuntime); only its
+ *  weights are shown, as the cache and the overhead are vLLM's. */
+export function Results({
+  result,
+  cardName,
+  moe = false,
+  ownRuntime = false,
+}: {
+  result: CalcResult;
+  cardName?: string;
+  moe?: boolean;
+  ownRuntime?: boolean;
+}) {
   const { t } = useLang();
+  if (ownRuntime)
+    return (
+      <div>
+        <div className="flex items-end justify-between">
+          <SectionTitle title={t("results.title")} />
+          <div className="text-right">
+            <div className="text-3xl font-bold tracking-tight text-white">{formatGiB(result.weightsGiB)}</div>
+            <div className="text-xs text-slate-500">{t("results.weightsOnly")}</div>
+          </div>
+        </div>
+        <p className="mt-2 text-[11.5px] leading-relaxed text-slate-400">{t("own.hidden")}</p>
+      </div>
+    );
   const parts = {
     weights: result.weightsGiB,
     kv: result.kvCacheGiB,

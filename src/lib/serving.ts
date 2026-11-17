@@ -13,10 +13,12 @@
 //
 // React-free: scripts/test-serving.ts runs it against snapshots of real repos.
 
+import type { Dtype } from "./calc.ts";
 import { fmtBytes, fmtInt, fmtNum, shortTokens } from "./configExplain.ts";
 import type { Lang } from "./dict.ts";
 import { textConfig } from "./layers.ts";
 import { specTensors, type TensorDigest } from "./tensors.ts";
+import { specFileBytes } from "./hf.ts";
 
 export { digestTensors, type TensorDigest } from "./tensors.ts";
 
@@ -197,6 +199,15 @@ export interface Facts {
   };
   eos: { config: number[]; generation: number[]; extra: number[] };
   remoteCode: { arch: boolean; tokenizer: boolean; files: string[] };
+}
+
+/** What the sizing page counted, so the commands start the server it sized: its
+ *  KV-cache precision, and the class of a model whose own code is its runtime
+ *  (calc.ts, ModelArch.ownRuntime). Without a precision the checkpoint's KV scales
+ *  decide, as before. */
+export interface BriefSizing {
+  kvDtype?: Dtype;
+  ownRuntime?: string;
 }
 
 export interface ServingBrief {
@@ -581,7 +592,7 @@ function mtpOf(s: RepoSnapshot): Facts["mtp"] {
 
 // ── the brief ─────────────────────────────────────────────────────────────
 
-export function buildBrief(s: RepoSnapshot, lang: Lang): ServingBrief {
+export function buildBrief(s: RepoSnapshot, lang: Lang, sizing: BriefSizing = {}): ServingBrief {
   const cfg = s.config;
   const c = textCfg(cfg);
   const fmt = formatOf(s);
@@ -643,7 +654,7 @@ export function buildBrief(s: RepoSnapshot, lang: Lang): ServingBrief {
     portrait: portraitOf(facts, lang),
     gotchas: gotchas.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "warn" ? -1 : 1)),
     sections,
-    commands: { vllm: vllmCommand(s, facts), sglang: sglangCommand(s, facts) },
+    commands: { vllm: vllmCommand(s, facts, sizing, lang), sglang: sglangCommand(s, facts, sizing) },
   };
 }
 
@@ -989,18 +1000,19 @@ function portraitOf(f: Facts, lang: Lang): Part[] {
 // ── the commands ──────────────────────────────────────────────────────────
 
 /** Why a repository gets no launch command, if it gets none. */
-function skipReason(f: Facts): string | null {
-  if (f.format === "gguf") return "cmd.gguf";
-  if (f.format === "none") return "cmd.noWeights";
-  if (f.role === "draft") return "cmd.draft";
+function skipReason(f: Facts, sizing: BriefSizing): Part | null {
+  if (f.format === "gguf") return { k: "cmd.gguf" };
+  if (f.format === "none") return { k: "cmd.noWeights" };
+  if (f.role === "draft") return { k: "cmd.draft" };
+  if (sizing.ownRuntime) return { k: "cmd.ownRuntime", v: { cls: sizing.ownRuntime } };
   return null;
 }
 
-function vllmCommand(s: RepoSnapshot, f: Facts): Command {
+function vllmCommand(s: RepoSnapshot, f: Facts, sizing: BriefSizing, lang: Lang): Command {
   const notes: Part[] = [];
   const flags: Flag[] = [];
-  const skip = skipReason(f);
-  if (skip) return { engine: "vllm", base: null, flags, notes: [{ k: skip }] };
+  const skip = skipReason(f, sizing);
+  if (skip) return { engine: "vllm", base: null, flags, notes: [skip] };
   let model = s.id;
   if (f.role === "adapter") {
     if (!f.derivedFrom) return { engine: "vllm", base: null, flags, notes: [{ k: "cmd.adapterNoBase" }] };
@@ -1017,20 +1029,33 @@ function vllmCommand(s: RepoSnapshot, f: Facts): Command {
     if (p.template) flags.push({ flag: "--chat-template", value: p.template, why: { k: "why.engineTemplate", v: { engine: "vLLM" } } });
   }
   if (p.reasoning) flags.push({ flag: "--reasoning-parser", value: p.reasoning, why: { k: "why.reasoningParser" } });
-  if (f.mtp.status === "ready" && f.mtp.vllm)
+  if (f.mtp.status === "ready" && f.mtp.vllm) {
     flags.push({ flag: "--speculative-config", value: `'{"method":"mtp","num_speculative_tokens":${f.mtp.declared || 1}}'`, why: { k: "why.mtp" } });
-  if (f.quant.kvScales) flags.push({ flag: "--kv-cache-dtype", value: "fp8", why: { k: "why.kvFp8" } });
+    // The sizing page counts the model as vLLM loads it without this flag, its MTP
+    // layers left out (qwen3_5.py, "mtp." mapped to None). With it they load, and a
+    // Mamba or linear-attention group keeps one more state block per request in
+    // "align" mode (mamba/abstract.py, num_speculative_blocks; kv_cache_interface.py,
+    // MambaSpec.max_memory_usage_bytes), its conv state a column wider (mamba_utils.py).
+    const b = specFileBytes(s.files);
+    notes.push(b ? { k: "cmd.mtpUnsized", v: { size: fmtBytes(b, lang) } } : { k: "cmd.mtpUnsizedPlain" });
+  }
+  // The cache the sizing page counted: FP8 when it was asked for, with or without
+  // the checkpoint's scales (vLLM scales by 1.0 without them, attention.py,
+  // set_default_quant_scales); with no sizing given, the scales decide.
+  const fp8Kv = sizing.kvDtype ? sizing.kvDtype === "fp8" : f.quant.kvScales;
+  if (fp8Kv) flags.push({ flag: "--kv-cache-dtype", value: "fp8", why: { k: f.quant.kvScales ? "why.kvFp8" : "why.kvFp8NoScales" } });
+  else if (f.quant.kvScales) notes.push({ k: "cmd.kvScalesUnused" });
   if (f.format === "mistral") notes.push({ k: "cmd.mistral" });
   if (s.gated) notes.push({ k: "cmd.token" });
   if (f.template?.tools && !p.tool && f.role === "chat") notes.push({ k: "cmd.noParser", v: { engine: "vLLM" } });
   return { engine: "vllm", base: `vllm serve ${model}`, flags, notes };
 }
 
-function sglangCommand(s: RepoSnapshot, f: Facts): Command {
+function sglangCommand(s: RepoSnapshot, f: Facts, sizing: BriefSizing): Command {
   const notes: Part[] = [];
   const flags: Flag[] = [];
-  const skip = skipReason(f);
-  if (skip) return { engine: "sglang", base: null, flags, notes: [{ k: skip }] };
+  const skip = skipReason(f, sizing);
+  if (skip) return { engine: "sglang", base: null, flags, notes: [skip] };
   let model = s.id;
   if (f.role === "adapter") {
     if (!f.derivedFrom) return { engine: "sglang", base: null, flags, notes: [{ k: "cmd.adapterNoBase" }] };

@@ -13,6 +13,7 @@
 // The Hub's answers are replayed from scripts/fixtures/configs-regression/
 // (scripts/hub-replay.ts).
 
+import { readdirSync, readFileSync } from "node:fs";
 import { BYTES_PER_GIB, weightsBytes } from "../src/lib/calc.ts";
 import { resolveModel } from "../src/lib/hf.ts";
 import { DEFAULT_STATE, decodeState, encodeState } from "../src/lib/urlState.ts";
@@ -58,6 +59,13 @@ try {
   // ChatGLM3's AutoModel is its own ChatGLMForConditionalGeneration: a generator.
   check("no other regression repo is flagged, ChatGLM3 included", flagged.length === 0, flagged.join(", "));
   check("a forged value is dropped", decodeState("p=1e9&L=4&h=512&a=8&k=8&or=%3Cscript%3E").arch?.ownRuntime === undefined);
+  // Its cache, overhead, users, context and speed would be vLLM's guesses, so every
+  // page that sizes a Hub model with the engine holds them back for it; the weights stay.
+  const pages = new URL("../src/pages/", import.meta.url);
+  const ENGINE = /\b(calculate|maxConcurrency|planOptions|recommend|kvBytesPerToken|buildBrief)\(/;
+  const sizing = readdirSync(pages).filter((f) => ENGINE.test(readFileSync(new URL(f, pages), "utf8")));
+  for (const f of sizing) check(`${f} holds vLLM's figures back for it`, /\.ownRuntime\b/.test(readFileSync(new URL(f, pages), "utf8")));
+  check("…six pages size a Hub model", sizing.length === 6, sizing.join(", "));
 } finally {
   restore();
 }

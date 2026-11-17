@@ -106,7 +106,8 @@ export function PlanPage() {
   // Every request has to fit --max-model-len, prompt and reply together.
   const maxLen = Math.max(ctx, w.promptTokens + w.outputTokens);
   const plan = useMemo(
-    () => (arch && gpu ? planOptions({ arch, weightDtype, kvDtype, maxModelLen: maxLen }, w, gpu) : null),
+    // A model on its own code is not planned: the plan is vLLM's cache and speed.
+    () => (arch && gpu && !arch.ownRuntime ? planOptions({ arch, weightDtype, kvDtype, maxModelLen: maxLen }, w, gpu) : null),
     [arch, weightDtype, kvDtype, maxLen, w, gpu],
   );
   const best = plan?.options[0];
@@ -226,6 +227,8 @@ export function PlanPage() {
             <SectionTitle title={t("plan.resultTitle")} />
             {!arch ? (
               <p className="py-10 text-center text-sm text-slate-400">{t("vllm.empty")}</p>
+            ) : arch.ownRuntime ? (
+              <p className="py-10 text-center text-sm text-slate-400">{t("own.hidden")}</p>
             ) : best ? (
               <div>
                 <div className="flex flex-wrap items-end justify-between gap-2">

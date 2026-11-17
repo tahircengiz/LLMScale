@@ -163,8 +163,9 @@ export function ComparePage() {
                 <NumRow label={t("compare.row.headDim")} tip={t("compare.tip.headDim")} cols={cols} get={(a) => a.headDim} fmt={String} />
                 <NumRow label={t("compare.row.vocab")} tip={t("compare.tip.vocab")} cols={cols} get={(a) => a.arch.vocabSize} fmt={formatInt} />
                 <TxtRow label={t("compare.row.weights")} tip={t("compare.tip.weights")} cols={cols} get={(a) => formatGiB(weightsBytes(a.arch, a.weightDtype ?? "bf16") / BYTES_PER_GIB)} />
-                <TxtRow label={t("compare.row.kvtoken")} tip={t("compare.tip.kvtoken")} cols={cols} get={(a) => formatBytes(kvBytesPerToken(a.arch, "fp16"))} />
-                <TxtRow label={t("compare.row.vram8k")} tip={t("compare.tip.vram8k")} cols={cols} get={(a) => formatGiB(vram8k(a))} />
+                <TxtRow label={t("compare.row.kvtoken")} tip={t("compare.tip.kvtoken")} cols={cols} get={(a) => (a.arch.ownRuntime ? "—" : formatBytes(kvBytesPerToken(a.arch, "fp16")))} />
+                {/* Both rows are vLLM's cache; a model on its own code (calc.ts, ModelArch.ownRuntime) has neither. */}
+                <TxtRow label={t("compare.row.vram8k")} tip={t("compare.tip.vram8k")} cols={cols} get={(a) => (a.arch.ownRuntime ? "—" : formatGiB(vram8k(a)))} />
 
                 <Section title={t("compare.sec.caps")} span={cols.length} />
                 {CAP_ROWS.map((cap) => (

@@ -291,6 +291,39 @@ console.log("\n--- the vLLM page names the same parsers ---");
   }
 }
 
+console.log("\n--- the commands start the server the sizing page counted ---");
+{
+  const { decodeState } = await import("../src/lib/urlState.ts");
+  // The sizing page's link carries its KV precision as kd (SizingPage, model.link.serving).
+  check("a sizing link's kd reaches the brief; a forged one does not", decodeState("?m=a/b&kd=fp8").kvDtype === "fp8" && decodeState("?m=a/b&kd=fp4").kvDtype === undefined);
+  // Qwen3-8B-FP8-dynamic ships no KV scales, as RedHatAI/Qwen3.8-27B-FP8 does not.
+  const r = load("RedHatAI_Qwen3-8B-FP8-dynamic");
+  const r8 = buildBrief(r, "en", { kvDtype: "fp8" });
+  const kv8 = flag(r8, "vllm", "--kv-cache-dtype");
+  check("FP8 KV counted, no scales: --kv-cache-dtype fp8", !r8.facts.quant.kvScales && kv8?.value === "fp8");
+  check("…and why it runs without them", kv8?.why.k === "why.kvFp8NoScales" && fill("tr", kv8.why).includes("1,0"));
+  check("16-bit KV counted: no flag", !flag(buildBrief(r, "en", { kvDtype: "bf16" }), "vllm", "--kv-cache-dtype"));
+  check("no sizing given: the scales decide, as before", !flag(brief("RedHatAI_Qwen3-8B-FP8-dynamic"), "vllm", "--kv-cache-dtype"));
+  // Llama 3.3 70B NVFP4 ships them.
+  const n = load("nvidia_Llama-3.3-70B-Instruct-FP4");
+  const n16 = buildBrief(n, "en", { kvDtype: "fp16" });
+  check("scales shipped, 16-bit counted: no flag, a note", !flag(n16, "vllm", "--kv-cache-dtype") && n16.commands.vllm.notes.some((x) => x.k === "cmd.kvScalesUnused"));
+  check("scales shipped, FP8 counted: the scales' reason", flag(buildBrief(n, "en", { kvDtype: "fp8" }), "vllm", "--kv-cache-dtype")?.why.k === "why.kvFp8");
+  // MTP: the flag stays, and the note says the sizing counted the model without it.
+  const q = buildBrief(load("Qwen_Qwen3-Next-80B-A3B-Instruct"), "en", { kvDtype: "bf16" });
+  check("MTP on: the sizing left it out, says so", !!flag(q, "vllm", "--speculative-config") && q.commands.vllm.notes.some((x) => x.k === "cmd.mtpUnsizedPlain"));
+  const qs = load("Qwen_Qwen3-Next-80B-A3B-Instruct");
+  const withFile = buildBrief({ ...qs, files: [...qs.files, { name: "mtp.safetensors", size: 1_610_612_736 }] }, "en", { kvDtype: "bf16" });
+  const mtpNote = withFile.commands.vllm.notes.find((x) => x.k === "cmd.mtpUnsized");
+  check("…with the size of its mtp file", !!mtpNote && fill("en", mtpNote).includes("1.5 GiB"), mtpNote ? fill("en", mtpNote) : "");
+  check("no MTP: no such note", !hasKey(brief("Qwen_Qwen3-32B"), "cmd.mtpUnsizedPlain") && !hasKey(brief("Qwen_Qwen3-32B"), "cmd.mtpUnsized"));
+  // A model on its own code (vllm-sr/d3-ultra, modeling_d3.D3Model) gets no command.
+  const o = buildBrief(load("Qwen_Qwen3-4B"), "en", { ownRuntime: "modeling_d3.D3Model" });
+  for (const e of ["vllm", "sglang"] as const)
+    check(`own runtime: no ${e} command`, o.commands[e].base === null && o.commands[e].flags.length === 0 && o.commands[e].notes[0]?.k === "cmd.ownRuntime");
+  check("…and the note names its class", fill("en", o.commands.vllm.notes[0]).includes("modeling_d3.D3Model") && fill("tr", o.commands.vllm.notes[0]).includes("modeling_d3.D3Model"));
+}
+
 console.log("\n--- the page's own strings ---");
 {
   const uiKeys = Object.keys(DICTS.en).filter((k) => k.startsWith("serve.") || k.startsWith("about.serving."));
