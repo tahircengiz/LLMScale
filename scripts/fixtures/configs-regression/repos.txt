@@ -115,3 +115,6 @@ unsloth/gpt-oss-20b-GGUF
 unsloth/DeepSeek-V3-0324-GGUF
 bartowski/Llama-3.3-70B-Instruct-GGUF
 bartowski/google_gemma-3-27b-it-GGUF
+
+# Decision models: a Qwen3.5 backbone with no MTP layer in its files, run on its own code
+vllm-sr/d3-ultra

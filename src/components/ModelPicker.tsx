@@ -351,6 +351,8 @@ export function ModelPicker({
             : t("warning.vllmLinear", { arch: arch.notInVllm.arch })}
         </p>
       ) : null}
+      {/* Its own code is its runtime, not vLLM: the figures stay, marked as vLLM's. */}
+      {arch?.ownRuntime ? <p className="mt-2 text-xs text-warn">{t("warning.ownRuntime", { cls: arch.ownRuntime })}</p> : null}
     </div>
   );
 }

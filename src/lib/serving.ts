@@ -16,6 +16,9 @@
 import { fmtBytes, fmtInt, fmtNum, shortTokens } from "./configExplain.ts";
 import type { Lang } from "./dict.ts";
 import { textConfig } from "./layers.ts";
+import { specTensors, type TensorDigest } from "./tensors.ts";
+
+export { digestTensors, type TensorDigest } from "./tensors.ts";
 
 // Configs are free-form JSON.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,33 +69,6 @@ export interface RepoSnapshot {
 
 // ── tensor names ──────────────────────────────────────────────────────────
 
-/** Tensor names reduced to what the brief reads: every name with its numbers
- *  replaced by {n}, and how many tensors each numbered stack holds per layer.
- *  DeepSeek-V3's 91,991 names become ~60 templates, small enough for a fixture. */
-export interface TensorDigest {
-  total: number;
-  templates: Record<string, number>;
-  /** e.g. { "model.layers": { "0": 12, …, "61": 1564 } } */
-  stacks: Record<string, Record<string, number>>;
-}
-
-const STACK = /^((?:[\w-]+\.)*?(?:layers|h|blocks|mtp_layers|mtp_modules))\.(\d+)\./;
-
-export function digestTensors(names: readonly string[]): TensorDigest {
-  const templates: Record<string, number> = {};
-  const stacks: Record<string, Record<string, number>> = {};
-  for (const name of names) {
-    const t = name.replace(/\.\d+(?=\.|$)/g, ".{n}");
-    templates[t] = (templates[t] ?? 0) + 1;
-    const m = STACK.exec(name);
-    if (m) {
-      const s = (stacks[m[1]] ??= {});
-      s[m[2]] = (s[m[2]] ?? 0) + 1;
-    }
-  }
-  return { total: names.length, templates, stacks };
-}
-
 const lastSeg = (t: string) => t.slice(t.lastIndexOf(".") + 1);
 
 function suffixCount(d: TensorDigest, ...suffixes: string[]): number {
@@ -105,21 +81,6 @@ function countWhere(d: TensorDigest, test: (template: string) => boolean): numbe
   let n = 0;
   for (const [t, c] of Object.entries(d.templates)) if (test(t)) n += c;
   return n;
-}
-
-const SIDE_STACK = /vision|visual|audio|mtp|nextn|encoder|projector/i;
-
-/** The decoder's own layer stack: the largest numbered stack that is not a vision,
- *  audio or MTP tower. */
-function mainStack(d: TensorDigest): string | undefined {
-  let best: string | undefined;
-  let size = 0;
-  for (const [name, layers] of Object.entries(d.stacks)) {
-    if (SIDE_STACK.test(name)) continue;
-    const n = Object.values(layers).reduce((a, b) => a + b, 0);
-    if (n > size) [best, size] = [name, n];
-  }
-  return best;
 }
 
 // ── output shapes ─────────────────────────────────────────────────────────
@@ -607,25 +568,7 @@ function mtpOf(s: RepoSnapshot): Facts["mtp"] {
   const sglang = types.some((t) => SGLANG_MTP_TYPES.has(t)) || archs.some((a) => SGLANG_MTP_ARCHS.has(a));
 
   const d = s.tensors;
-  let tensors = 0;
-  let where: string | undefined;
-  if (d) {
-    // DeepSeek and GLM append the MTP block to the decoder stack as layer N…
-    const L = c?.num_hidden_layers;
-    const main = mainStack(d);
-    if (main && typeof L === "number") {
-      const extra = Object.entries(d.stacks[main]).filter(([i]) => Number(i) >= L);
-      tensors = extra.reduce((a, [, n]) => a + n, 0);
-      if (tensors) where = `${main}.${extra.map(([i]) => i).join(",")}.*`;
-    }
-    // …Qwen3-Next and MiMo keep it under a name of its own.
-    if (!tensors) {
-      const named = Object.keys(d.templates).filter((t) => /(^|\.)(mtp|nextn)([._]|$)/.test(t));
-      tensors = named.reduce((a, t) => a + d.templates[t], 0);
-      // "model.mtp_layers.{n}." reads better as "model.mtp_layers.*".
-      if (tensors) where = commonPrefix(named).replace(/(\.\{n\})+\.$/, ".") + "*";
-    }
-  }
+  const { tensors, where } = d ? specTensors(d, c?.num_hidden_layers) : { tensors: 0, where: undefined };
   const status: MtpStatus = tensors
     ? "ready"
     : declared && declared > 0
@@ -634,13 +577,6 @@ function mtpOf(s: RepoSnapshot): Facts["mtp"] {
         : "unverified"
       : "none";
   return { declared, field, tensors, where, status, vllm, sglang };
-}
-
-function commonPrefix(xs: string[]): string {
-  if (!xs.length) return "";
-  let p = xs[0];
-  for (const x of xs) while (!x.startsWith(p)) p = p.slice(0, p.lastIndexOf(".", p.length - 2) + 1);
-  return p;
 }
 
 // ── the brief ─────────────────────────────────────────────────────────────

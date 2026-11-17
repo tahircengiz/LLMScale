@@ -92,6 +92,11 @@ export interface ModelArch {
    *  load, the last release that served it, or `linear` for Nemotron NAS blocks
    *  its model code cannot build. The figures still show, beside a warning. */
   notInVllm?: { arch: string; until?: string; linear?: boolean };
+  /** The class the repository's own code runs it with, when that code is its runtime
+   *  and the model neither generates nor embeds (hf.ts, ownRuntime): vllm-sr/d3-ultra's
+   *  modeling_d3.D3Model. The figures follow vLLM serving a text generator; the pages
+   *  say so beside them. */
+  ownRuntime?: string;
   /** Layers that keep a KV cache, when not all of them do: hybrids keep a fixed
    *  state in their linear-attention or Mamba layers instead (layers.ts). */
   attnLayers?: number;

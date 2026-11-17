@@ -18,6 +18,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { textConfig } from "../src/lib/layers.ts";
+import { digestTensors, specTensors, STACK } from "../src/lib/tensors.ts";
 import { hubFile, listedRepos } from "./hub-replay.ts";
 
 const dir = new URL("./fixtures/configs-regression/", import.meta.url);
@@ -52,6 +54,28 @@ function trimApi(d: any): any {
     gguf: d?.gguf?.total !== undefined ? { total: d.gguf.total } : undefined,
     siblings: Array.isArray(d?.siblings) ? d.siblings.map((s: any) => ({ rfilename: s.rfilename, size: s.size })) : undefined,
   };
+}
+
+/** A safetensors index cut to what the resolver reads from it (hf.ts,
+ *  specLayersMissing): each numbered stack's layers once, and every other name once
+ *  by its template, so Qwen3.5-9B's 80 kB come down to a few. The cut keeps the
+ *  answer the full index gives for the config's speculative layers, or nothing is
+ *  written. */
+function trimIndex(d: any, cfg: any): any {
+  const all: string[] = Object.keys(d?.weight_map ?? {});
+  const seen = new Set<string>();
+  const weight_map: Record<string, string> = {};
+  for (const name of all) {
+    const m = STACK.exec(name);
+    const key = m ? `${m[1]}#${m[2]}` : name.replace(/\.\d+(?=\.|$)/g, ".{n}");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    weight_map[name] = d.weight_map[name];
+  }
+  const L = textConfig(cfg)?.num_hidden_layers;
+  const ships = (names: string[]) => specTensors(digestTensors(names), L).tensors > 0;
+  if (ships(all) !== ships(Object.keys(weight_map))) throw new Error("the trimmed index answers the speculative layers differently");
+  return { metadata: d?.metadata, weight_map };
 }
 
 type Answer = { status: number; body: string; from: string };
@@ -103,6 +127,10 @@ globalThis.fetch = (async (input: string | URL | Request) => {
   let body = a.body;
   if (a.status === 200 && name) {
     if (name.endsWith(".api.json")) body = JSON.stringify(trimApi(JSON.parse(a.body)), null, 1) + "\n";
+    if (name.endsWith(".model.safetensors.index.json")) {
+      const cfg = kept.get(name.replace(/\.model\.safetensors\.index\.json$/, ".config.json"));
+      body = JSON.stringify(trimIndex(JSON.parse(a.body), cfg ? JSON.parse(cfg) : null), null, 1) + "\n";
+    }
     kept.set(name, body);
   }
   return new Response(body, { status: a.status });

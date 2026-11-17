@@ -126,6 +126,7 @@ export function encodeState(s: AppState): string {
     // A placeholder stays one through a reload: its figures are not the model's.
     if (a.placeholder) p.set("ph", "1");
     if (a.notInVllm) p.set("nv", `${a.notInVllm.arch}${a.notInVllm.until ? `@${a.notInVllm.until}` : ""}${a.notInVllm.linear ? "!" : ""}`);
+    if (a.ownRuntime) p.set("or", a.ownRuntime);
     if (a.stateBytesPerSeq) p.set("st", String(a.stateBytesPerSeq));
     if (a.stateLayers) p.set("sn", String(a.stateLayers));
     if (a.numExperts && a.expertsPerToken) {
@@ -225,6 +226,11 @@ function notInVllmOf(v: string | null): ModelArch["notInVllm"] {
   return out;
 }
 
+/** A class name as an auto_map writes it ("modeling_d3.D3Model"); anything else is dropped. */
+function ownRuntimeOf(v: string | null): string | undefined {
+  return v && /^[\w./-]{1,128}$/.test(v) ? v : undefined;
+}
+
 /** Config key names, as encodeState writes them; anything else is dropped. */
 function unmodelledOf(v: string | null): string[] | undefined {
   const keys = (v ?? "").split(",").map((k) => k.trim()).filter((k) => /^[a-z0-9_ ().:]{1,48}$/i.test(k)).slice(0, 12);
@@ -293,6 +299,7 @@ export function decodeState(search: string): Partial<AppState> {
       sparseAttn: sparseOf(p.get("dx")),
       unmodelled: unmodelledOf(p.get("um")),
       notInVllm: notInVllmOf(p.get("nv")),
+      ownRuntime: ownRuntimeOf(p.get("or")),
       placeholder: p.get("ph") === "1" ? true : undefined,
       stateBytesPerSeq: pos(p.get("st")),
       stateLayers: pos(p.get("sn")),

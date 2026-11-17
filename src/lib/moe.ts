@@ -53,6 +53,18 @@ export function specLayers(c: Config | null | undefined, L: number): number {
   return Math.max(0, ...counts.filter((n): n is number => typeof n === "number" && n > 0));
 }
 
+/** The config with its speculative-decoding layers (specLayers) taken out, for a
+ *  checkpoint that ships none of them (hf.ts, resolveModel): there is nothing for
+ *  vLLM to leave out. vllm-sr/d3-ultra declares one MTP layer and stores no mtp.* tensor. */
+export function withoutSpecLayers(c: Config, L: number): Config {
+  const out: Config = { ...c };
+  delete out.num_nextn_predict_layers;
+  delete out.mtp_num_hidden_layers;
+  if (Array.isArray(c.compress_ratios)) out.compress_ratios = c.compress_ratios.slice(0, L);
+  if (Array.isArray(c.layer_types)) out.layer_types = c.layer_types.slice(0, L);
+  return out;
+}
+
 /** Parameters in tables a token reads a few rows of, not all of: Qwen4Exp's
  *  n-gram embeddings (ngram_vocab_size_base rows per n-gram head, ple_embed_dim
  *  wide across the heads, per PLE layer: 51.2B in Qwen3.8-Flash-Next), and Gemma

@@ -5,9 +5,10 @@
 
 import type { Dtype, ModelArch } from "./calc";
 import { findKnownByHfId } from "./models.ts";
-import { activeParamsOf, denseParamsOf, expertCount, expertsPerToken, expertWidth, lookupParams, specParamsOf } from "./moe.ts";
+import { activeParamsOf, denseParamsOf, expertCount, expertsPerToken, expertWidth, lookupParams, specParamsOf, withoutSpecLayers } from "./moe.ts";
 import { vllmRefuses } from "./vllmSupport.ts";
 import { compressedLayers, crossAttention, layerPlan, mimoAttention, nasAttention, sparseIndexer, textConfig, unmodelledCacheKeys } from "./layers.ts";
+import { digestTensors, specTensors } from "./tensors.ts";
 
 const HF = "https://huggingface.co";
 
@@ -59,6 +60,8 @@ export interface HfModelInfo {
   weightFileBytes?: number;
   /** The repository's file names. */
   files?: string[];
+  /** Bytes in its model.safetensors.index.json, when it has one. */
+  indexBytes?: number;
 }
 
 /** Bytes in a repository's weight files: its top-level .safetensors, without an
@@ -194,6 +197,9 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
     files: Array.isArray(d?.siblings) ? d.siblings.map((x: any) => String(x.rfilename)) : undefined,
     weightFileBytes: Array.isArray(d?.siblings)
       ? weightFileBytes(d.siblings.map((x: any) => ({ name: String(x.rfilename), size: x.size })))
+      : undefined,
+    indexBytes: Array.isArray(d?.siblings)
+      ? d.siblings.find((x: any) => x?.rfilename === "model.safetensors.index.json" && typeof x.size === "number")?.size
       : undefined,
   };
 }
@@ -533,6 +539,52 @@ export function unpackedParams(dtypeParams: Record<string, number> | undefined):
   return n;
 }
 
+/** The largest safetensors index read to see which speculative layers a checkpoint
+ *  ships: Qwen3.5's run to 0.2 MB and GLM-4.5-Air's to 1.7 MB. DeepSeek-V3's 8.9 MB
+ *  and GLM-5's 5.4 MB would be downloaded with every pick of the model, so they stay unread. */
+const SPEC_INDEX_MAX_BYTES = 2_000_000;
+
+/** Whether a checkpoint ships none of the speculative-decoding layers its config
+ *  declares: true only when its safetensors index was read and names no tensor of
+ *  them (tensors.ts, specTensors). vllm-sr/d3-ultra declares one MTP layer and its
+ *  index has no mtp.* tensor. An index too large to read, or one that does not load,
+ *  leaves the layers out as the config says. */
+async function specLayersMissing(hfId: string, info: HfModelInfo | null, numLayers: number): Promise<boolean> {
+  const size = info?.indexBytes;
+  if (!size || size > SPEC_INDEX_MAX_BYTES) return false;
+  try {
+    const res = await fetchWithTimeout(`${HF}/${hfId}/resolve/main/model.safetensors.index.json`, 8000);
+    if (!res.ok) return false;
+    const names = Object.keys((await res.json())?.weight_map ?? {});
+    return names.length > 0 && specTensors(digestTensors(names), numLayers).tensors === 0;
+  } catch {
+    return false;
+  }
+}
+
+/** Tasks an engine like vLLM serves a model for: generating, or embedding and scoring. */
+const ENGINE_TASKS = new Set([
+  "text-generation", "text2text-generation", "image-text-to-text", "image-to-text", "any-to-any", "visual-question-answering",
+  "video-text-to-text", "audio-text-to-text", "automatic-speech-recognition", "translation", "summarization",
+  "feature-extraction", "sentence-similarity", "text-ranking",
+]);
+const GENERATOR = /For(CausalLM|ConditionalGeneration)$|LMHeadModel$/;
+
+/** The class a repository's own code runs it with, when that code is its runtime:
+ *  Transformers' AutoModel points at a class the repository ships, no class it names
+ *  is a generator, and its task is neither generating nor embedding.
+ *  vllm-sr/d3-ultra (modeling_d3.D3Model, zero-shot-classification) answers questions
+ *  with a readout over one forward pass, with no vLLM in its runtime; ChatGLM3's
+ *  AutoModel is its own ChatGLMForConditionalGeneration, a generator. */
+export function ownRuntime(cfg: any, pipelineTag: string | undefined): string | undefined {
+  const map = cfg?.auto_map;
+  const cls = map?.AutoModel;
+  if (typeof cls !== "string" || !/^[\w./-]{1,128}$/.test(cls) || !pipelineTag || ENGINE_TASKS.has(pipelineTag)) return undefined;
+  const archs: unknown[] = Array.isArray(cfg?.architectures) ? cfg.architectures : [];
+  const named = [...Object.values(map), ...archs].filter((x): x is string => typeof x === "string");
+  return named.some((x) => GENERATOR.test(x)) ? undefined : cls;
+}
+
 /**
  * Full resolution pipeline:
  *  1. metadata (param count, gated) — always works
@@ -562,6 +614,14 @@ export async function resolveModel(hfId: string): Promise<ResolvedModel> {
       await sizeShipped(arch, info, weightDtype, textConfig(cfg));
       // A packed checkpoint's total was corrected: count the rest from it.
       if (arch.numParams !== counted) countParams(arch, textConfig(cfg));
+      // Speculative layers the files do not ship are not left out: d3-ultra's BF16
+      // weights came out 47.91 GiB where its files hold 48.59.
+      if (arch.specParams && (await specLayersMissing(hfId, info, arch.numLayers))) {
+        countParams(arch, withoutSpecLayers(textConfig(cfg), arch.numLayers));
+      }
+      // Its own code is its runtime: the pages say the figures assume vLLM.
+      const own = ownRuntime(cfg, pipelineTag);
+      if (own) arch.ownRuntime = own;
       // A preset's active count comes from its model card; prefer it to the estimate.
       if (known?.activeParams) arch.activeParams = known.activeParams;
       const modelType = textConfig(cfg)?.model_type ?? cfg.model_type ?? info?.modelType;

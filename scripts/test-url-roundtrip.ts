@@ -76,7 +76,7 @@ const common: ModelArch = {
   numParams: 123_456_789_012, numLayers: 61, hiddenSize: 7168, numAttentionHeads: 128, numKeyValueHeads: 8,
   headDim: 192, vocabSize: 129_280, maxContext: 163_840, intermediateSize: 18_432, activeParams: 37_123_456_789.4,
   specParams: 11_234_567_890.6, lookupParams: 2_345_678_901, unmodelled: ["rope_scaling.type", "attn_logit_softcapping"],
-  placeholder: true, notInVllm: { arch: "SomeForCausalLM", until: "0.30.2", linear: true }, attnLayers: 13,
+  placeholder: true, notInVllm: { arch: "SomeForCausalLM", until: "0.30.2", linear: true }, ownRuntime: "modeling_d3.D3Model", attnLayers: 13,
   slidingLayers: 40, slidingWindow: 4096, vHeadDim: 128, crossAttn: { layers: 8, tokens: 6404 }, globalAttn: { kvHeads: 4, headDim: 512 },
   stateBytesPerSeq: 12_345_678, stateLayers: 48, numExperts: 256, expertsPerToken: 8, moeIntermediateSize: 2048,
   tieEmbeddings: true, shipped: { dtype: "fp8", bytes: 166_886_535_336 }, mxfp4: true, vision: { patches: 16_384, tokens: 4096, hidden: 1280 },

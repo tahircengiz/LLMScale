@@ -3908,5 +3908,53 @@
    "fp8": 28418632448,
    "int4": 16418926808
   }
+ },
+ "vllm-sr/d3-ultra": {
+  "arch": {
+   "attnLayers": 16,
+   "headDim": 256,
+   "hiddenSize": 5120,
+   "intermediateSize": 17408,
+   "maxContext": 262144,
+   "numAttentionHeads": 24,
+   "numKeyValueHeads": 4,
+   "numLayers": 64,
+   "numParams": 26085330160,
+   "ownRuntime": "modeling_d3.D3Model",
+   "stateBytesPerSeq": 153944064,
+   "stateLayers": 48,
+   "tieEmbeddings": false,
+   "vision": {
+    "hidden": 1152,
+    "patches": 65536,
+    "tokens": 16384
+   },
+   "vocabSize": 248320
+  },
+  "expertWeightsBf16": 0,
+  "headDim": 256,
+  "kvPerToken": {
+   "bf16": 65536,
+   "fp8": 32768
+  },
+  "kvReserved": {
+   "bf16@131072": 8940158976,
+   "bf16@32768": 2466250752,
+   "bf16@32768,tp2": 1233125376,
+   "bf16@4096": 616562688,
+   "fp8@32768": 1387266048
+  },
+  "resolution": {
+   "gated": false,
+   "modelType": "qwen3_5_text",
+   "numParams": 26085330160,
+   "source": "config",
+   "weightDtype": "bf16"
+  },
+  "weights": {
+   "bf16": 52170660320,
+   "fp8": 28628126960,
+   "int4": 17592564447.5
+  }
  }
 }

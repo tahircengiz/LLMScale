@@ -10,6 +10,11 @@ gpt-oss, Mistral v0.1 sliding, and GGUF/AWQ/NVFP4/ModelOpt/bnb/MLX derivatives).
 - `<owner>--<name>.api.json` — the model API record (`/api/models/<id>?blobs=true`),
   trimmed to the fields `fetchModelInfo` (src/lib/hf.ts) reads.
 - `<owner>--<name>.config.json`, `.hf_quant_config.json` — the files as served.
+- `<owner>--<name>.model.safetensors.index.json` — for a config that declares
+  speculative layers and an index of at most 2 MB, the index the resolver reads to
+  see whether the checkpoint ships them (hf.ts, `specLayersMissing`), cut by
+  `regression-fixtures.ts` to each layer once and every other name once by its
+  template; the writer checks the cut gives the full index's answer.
 - Anything else the resolver asks for answers 404, as a gated repo's config does in a browser.
 - `golden.json` — what the resolver and the sizing give for each repo.
 
