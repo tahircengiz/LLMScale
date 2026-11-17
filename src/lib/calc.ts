@@ -130,8 +130,10 @@ export interface ModelArch {
   tieEmbeddings?: boolean;
   /** A checkpoint that ships quantized: its precision and the bytes its weight
    *  files hold. Read from the repository, it is exact where a per-parameter
-   *  estimate is not (hf.ts). */
-  shipped?: { dtype: Dtype; bytes: number };
+   *  estimate is not (hf.ts). `spec`: the bytes of the files that hold only the
+   *  speculative-decoding layers (RedHatAI's Qwen3.5 and Qwen3.8 FP8 put them in an
+   *  mtp.safetensors of their own), which vLLM leaves out. */
+  shipped?: { dtype: Dtype; bytes: number; spec?: number };
   /** The routed experts ship as MXFP4 (quant_method mxfp4, gpt-oss): only they are
    *  4-bit, attention, router and embeddings stay 16-bit, and vLLM pads the expert
    *  matrices to its kernel's tile on each card (mxfp4Pad). */
@@ -237,7 +239,16 @@ export function weightsBytes(arch: ModelArch, dtype: Dtype): number {
   // vLLM leaves the speculative-decoding layers out unless asked for them (C6).
   const spec = specOf(arch);
   const params = arch.numParams - spec;
-  if (arch.shipped && arch.shipped.dtype === dtype) return spec ? arch.shipped.bytes * (params / arch.numParams) : arch.shipped.bytes;
+  if (arch.shipped && arch.shipped.dtype === dtype) {
+    const s = arch.shipped;
+    if (!spec) return s.bytes;
+    // The speculative layers' own file, where there is one: its fc and norms stay
+    // 16-bit beside block-FP8 matrices, so the parameters' average byte did not
+    // fit it. Qwen3.8-27B-FP8 loads 30,389,664,704 bytes, its files less mtp.safetensors;
+    // the share by parameters had put 45.8 MB more.
+    if (s.spec && s.spec > 0 && s.spec < s.bytes) return s.bytes - s.spec;
+    return s.bytes * (params / arch.numParams);
+  }
   // MXFP4 leaves everything but the routed experts in 16-bit (gpt-oss: attention,
   // router, embeddings), which counted 4-bit put gpt-oss-120b 1.3 GiB light.
   if (arch.mxfp4 && dtype === "int4") {
@@ -372,7 +383,7 @@ function dsaHybridLayout(arch: ModelArch, kvDtype: Dtype, tp: number, family?: S
   const b = dsaBytes(arch, kvDtype, family);
   const layers = arch.attnLayers ?? arch.numLayers;
   const kpool = s.kpool ?? 1;
-  const state = (arch.stateBytesPerSeq! / stateLayers) * headShare(arch.numKeyValueHeads, tp);
+  const state = arch.stateBytesPerSeq! / stateLayers / Math.max(1, tp);
   const block = Math.max(DSA_BLOCK, Math.ceil(state / b.row / 128) * 128);
   const perBlock = layers * block * b.row + Math.min(s.indexLayers, layers) * (block / kpool) * b.index;
   return { block, perBlock, extra: (kpool > 1 ? 1 : 0) + 2 * Math.ceil(stateLayers / layers) };
@@ -585,10 +596,12 @@ function kvLayout(arch: ModelArch, kvDtype: Dtype, tp = 1) {
   const fullTok = kvBytesPerFullLayerToken(arch, kvDtype) * (mla || !arch.globalAttn ? share : headShare(arch.globalAttn.kvHeads, tp));
   const stateLayers = arch.stateBytesPerSeq ? arch.stateLayers ?? 0 : 0;
   // A state splits by its own heads, which vLLM shards across every GPU of the
-  // group. The KV heads' split stands in for that: the same where there are at
-  // least as many KV heads as GPUs, too little past it (Qwen3.5-397B's 2 KV heads
-  // at TP 8 leave each GPU 4x the state it holds), as the sizing always had it.
-  const statePerLayer = stateLayers ? (arch.stateBytesPerSeq! / stateLayers) * headShare(arch.numKeyValueHeads, tp) : 0;
+  // group, past the KV heads (divide(num_v_heads, tp) and the like in
+  // MambaStateShapeCalculator, vllm/model_executor/layers/mamba/mamba_utils.py). Split
+  // by the KV heads instead, Qwen3.5-397B's state at TP 8 came out 4x what each GPU
+  // holds, and a request at 8k tokens 81% too large. A Mamba2 layer with one group
+  // copies its group to every GPU, a few KiB this leaves out.
+  const statePerLayer = stateLayers ? arch.stateBytesPerSeq! / stateLayers / Math.max(1, tp) : 0;
   const baseTok = n.full ? fullTok : slidingTok;
   const align = mla ? 128 : VLLM_BLOCK;
   const base = statePerLayer > 0 && baseTok > 0 ? Math.ceil(statePerLayer / baseTok / align) * align : VLLM_BLOCK;
@@ -782,6 +795,20 @@ export function maxContextLength(input: Omit<CalcInput, "contextLength">, usable
   if (!(concurrency > 0)) return 0;
   const perSeq = kvRoom(input, usableGiB) / concurrency;
   return contextWithin(arch, kvDtype, input.batch ?? SMALL_CARD_BATCH, perSeq, input.gpus ?? 1);
+}
+
+/** Why maxContextLength holds no context for the requests, null when it holds one:
+ *  "weights" when the weights and the overhead leave no room for a cache; "requests"
+ *  when the room holds fewer of them than asked even at the shortest context, with
+ *  how many it holds there (`users`, 0 when not even one). What a request reserves
+ *  does not fall to nothing with the context: a hybrid keeps its state blocks whatever
+ *  the length, and Qwen3.8-27B's 7 blocks at one token are 0.34 GiB, so 128 requests
+ *  did not fit on an H200 slice beside weights that fit, and the page had said the
+ *  weights did not. */
+export function contextShortfall(input: Omit<CalcInput, "contextLength">, usableGiB: number): { reason: "weights" | "requests"; users: number } | null {
+  if (maxContextLength(input, usableGiB) > 0) return null;
+  if (kvRoom(input, usableGiB) <= 0) return { reason: "weights", users: 0 };
+  return { reason: "requests", users: maxConcurrency({ ...input, contextLength: 1 }, usableGiB) };
 }
 
 /** The longest context whose reservation on one GPU of a `tp`-wide group fits in
@@ -1090,6 +1117,11 @@ export interface LayoutFit {
   fits: boolean;
   maxUsers: number;
   maxContext: number;
+  /** Whether the weights and the overhead leave a GPU of it room for any cache, and
+   *  the most requests it holds at the shortest context: why maxContext is 0 when it
+   *  is (contextShortfall). */
+  room: boolean;
+  shortUsers: number;
   /** Milliseconds per output token each request sees (LayoutSpeed), when ranked by speed. */
   stepMs?: number;
 }
@@ -1143,12 +1175,16 @@ export function layoutsOn(input: CalcInput, usableGiB: number, gpus: number, spe
         const maxUsers = room > 0 && per > 0 ? Math.floor(room / per) * dp : 0;
         // The longest context each replica's share of the requests fits in.
         const perSeq = room > 0 ? (room * BYTES_PER_GIB) / stageShare(b, pp) / Math.ceil(users / dp) : 0;
+        // What one request reserves at a single token, on a GPU of the layout.
+        const least = (kvReservedPerSeq(arch, kvDtype, 1, b.batch.tokens, tp, b.batch.sparseMla) * stageShare(b, pp)) / BYTES_PER_GIB;
         const layout: Layout = { gpus, ...shape, usersPerReplica: Math.ceil(users / dp), perGpuGiB: layoutPerGpu(b, shape, users) };
         out.push({
           layout,
           fits: layout.perGpuGiB <= usableGiB,
           maxUsers,
           maxContext: contextWithin(arch, kvDtype, b.batch, perSeq, tp),
+          room: room > 0,
+          shortUsers: room > 0 && least > 0 ? Math.floor(room / least) * dp : 0,
           ...(speed ? { stepMs: speed(layout) } : {}),
         });
       }

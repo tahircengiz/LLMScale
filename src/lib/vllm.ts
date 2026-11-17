@@ -152,7 +152,8 @@ export function recommend(i: VllmInput): VllmRec {
   // config-only FP8 that the name-based detectQuant misses); fall back to the
   // name-based guess.
   const wDtype = servingDtype(i.hfId, i.weightDtype);
-  const card = vllmBatch(i.gpuVramGiB, i.gpuName);
+  // A MIG slice takes the small card's defaults, as vLLM falls back to them there (gpus.ts, batchFor).
+  const card = vllmBatch(i.mig ? 0 : i.gpuVramGiB, i.gpuName);
   const preset = i.priority === "throughput" ? 512 : i.priority === "latency" ? 32 : i.priority === "memory" ? 64 : undefined;
   const batch: BatchShape = {
     tokens: i.priority === "throughput" ? 8192 : i.priority === "latency" ? 2048 : card.tokens,

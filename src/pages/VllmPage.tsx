@@ -276,8 +276,8 @@ export function VllmPage() {
                     { value: "", label: t("gpu.migOff"), hint: t("gpu.migOffHint") },
                     ...migProfiles.map((m) => ({
                       value: m.id,
-                      label: `MIG ${m.id} — ${m.memGiB} GB${m.max > 1 ? ` (×${m.max})` : ""}`,
-                      hint: t("gpu.migHint", { gb: m.memGiB, n: m.max }),
+                      label: `MIG ${m.id} — ${m.memGiB.toFixed(1)} GiB${m.max > 1 ? ` (×${m.max})` : ""}`,
+                      hint: t("gpu.migHint", { gb: m.memGiB.toFixed(1), n: m.max }),
                     })),
                   ]}
                   onChange={(v) => {

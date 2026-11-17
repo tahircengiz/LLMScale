@@ -115,6 +115,10 @@ export function SizingPage() {
     });
   }, [state]);
 
+  // The card the overhead was sized for; a MIG slice by its own name, as it batches
+  // differently from the whole card (gpus.ts, batchFor).
+  const cardName = GPUS.find((g) => g.id === state.gpuId)?.name;
+
   // A preset has a static page of its own (scripts/genPages.ts); point to it.
   const known = state.hfId ? findKnownByHfId(state.hfId) : undefined;
   const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
@@ -186,7 +190,7 @@ export function SizingPage() {
               <>
                 {/* A stand-in architecture: say so above its figures, not only beside the picker. */}
                 {state.arch?.placeholder && <p className="mb-3 text-xs font-medium text-warn">{t("results.placeholder")}</p>}
-                <Results result={result} cardName={GPUS.find((g) => g.id === state.gpuId)?.name} moe={!!state.arch?.numExperts} />
+                <Results result={result} cardName={cardName && state.migId ? `${cardName} MIG ${state.migId}` : cardName} moe={!!state.arch?.numExperts} />
               </>
             ) : (
               <div className="py-10 text-center">

@@ -62,6 +62,9 @@ export interface HfModelInfo {
   files?: string[];
   /** Bytes in its model.safetensors.index.json, when it has one. */
   indexBytes?: number;
+  /** Bytes in the top-level weight files that hold only speculative-decoding layers
+   *  (an mtp.safetensors), counted in weightFileBytes too. */
+  specFileBytes?: number;
 }
 
 /** Bytes in a repository's weight files: its top-level .safetensors, without an
@@ -201,7 +204,18 @@ export async function fetchModelInfo(hfId: string): Promise<HfModelInfo> {
     indexBytes: Array.isArray(d?.siblings)
       ? d.siblings.find((x: any) => x?.rfilename === "model.safetensors.index.json" && typeof x.size === "number")?.size
       : undefined,
+    specFileBytes: Array.isArray(d?.siblings)
+      ? specFileBytes(d.siblings.map((x: any) => ({ name: String(x.rfilename), size: x.size })))
+      : undefined,
   };
+}
+
+/** Bytes in a repository's top-level weight files that hold the multi-token-prediction
+ *  layers alone, by their name (mtp.safetensors, as RedHatAI ships Qwen3.5 and Qwen3.8):
+ *  vLLM does not load them without a speculative config. undefined when there is none. */
+export function specFileBytes(files: { name: string; size?: number }[]): number | undefined {
+  const mtp = files.filter((f) => /^mtp(?:[-_.]\w+)*\.safetensors$/i.test(f.name) && typeof f.size === "number");
+  return mtp.length ? mtp.reduce((a, f) => a + (f.size as number), 0) : undefined;
 }
 
 /** Model types whose Transformers config ties the embedding and the output head
@@ -511,7 +525,7 @@ async function sizeShipped(arch: ModelArch, info: HfModelInfo | null, dtype: Dty
   // A tied head stored anyway sits in the files in 16-bit beside the quantized
   // layers (Qwen3-0.6B-FP8: 311M BF16 elements, the embedding twice); vLLM skips it.
   const bytes = files - 2 * (info?.numParams ? storedTiedHead(arch, c, info.numParams) : 0);
-  arch.shipped = { dtype, bytes };
+  arch.shipped = { dtype, bytes, ...(info?.specFileBytes ? { spec: info.specFileBytes } : {}) };
   if (dtype === "int4" && arch.numParams > 0 && bytes / arch.numParams > 0.8) {
     const base = info?.baseModel ? await fetchModelInfo(info.baseModel).catch(() => null) : null;
     const baseParams = base?.numParams ? base.numParams - storedTiedHead(arch, c, base.numParams) : 0;

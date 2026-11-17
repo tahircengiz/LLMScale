@@ -132,88 +132,55 @@ export const CATEGORY_LABELS: Record<GpuCategory, string> = {
 };
 
 // Multi-Instance GPU (MIG) profiles per GPU. A MIG instance gets an isolated
-// slice of memory (memGiB) and compute. Source: NVIDIA MIG User Guide.
+// slice of memory and compute. Source: NVIDIA MIG User Guide, supported-mig-profiles.html.
 // (+me media-engine variants are omitted — same memory as the base profile.)
 export interface MigProfile {
   id: string; // e.g. "1g.10gb"
-  memGiB: number; // memory per instance
+  /** The card's memory slices it holds, of eight: the guide's fraction (A30 and
+   *  RTX PRO 6000 Blackwell cut theirs in quarters, two eighths each). A memory
+   *  slice carries its share of the bandwidth too (concepts.html, "GPU Memory Slice"). */
+  eighths: 1 | 2 | 4 | 8;
+  /** What the runtime reports for the instance, GiB (migShare). */
+  memGiB: number;
   max: number; // max instances of this profile on one GPU
 }
 
-export const MIG_PROFILES: Record<string, MigProfile[]> = {
-  "a30-24": [
-    { id: "1g.6gb", memGiB: 6, max: 4 },
-    { id: "2g.12gb", memGiB: 12, max: 2 },
-    { id: "4g.24gb", memGiB: 24, max: 1 },
-  ],
-  "a100-40": [
-    { id: "1g.5gb", memGiB: 5, max: 7 },
-    { id: "1g.10gb", memGiB: 10, max: 4 },
-    { id: "2g.10gb", memGiB: 10, max: 3 },
-    { id: "3g.20gb", memGiB: 20, max: 2 },
-    { id: "4g.20gb", memGiB: 20, max: 1 },
-    { id: "7g.40gb", memGiB: 40, max: 1 },
-  ],
-  "a100-80": [
-    { id: "1g.10gb", memGiB: 10, max: 7 },
-    { id: "1g.20gb", memGiB: 20, max: 4 },
-    { id: "2g.20gb", memGiB: 20, max: 3 },
-    { id: "3g.40gb", memGiB: 40, max: 2 },
-    { id: "4g.40gb", memGiB: 40, max: 1 },
-    { id: "7g.80gb", memGiB: 80, max: 1 },
-  ],
-  "h100-80": [
-    { id: "1g.10gb", memGiB: 10, max: 7 },
-    { id: "1g.20gb", memGiB: 20, max: 4 },
-    { id: "2g.20gb", memGiB: 20, max: 3 },
-    { id: "3g.40gb", memGiB: 40, max: 2 },
-    { id: "4g.40gb", memGiB: 40, max: 1 },
-    { id: "7g.80gb", memGiB: 80, max: 1 },
-  ],
+/**
+ * An instance's memory as a share of the whole card's. The guide prints absolute
+ * sizes for one card only, the A100 40GB (`nvidia-smi mig -lgip`,
+ * getting-started-with-mig.html): 4.75, 9.62, 19.50 and 39.25 GiB for one, two,
+ * four and eight memory slices, of a card the runtime reports at 39.38 GiB out of
+ * MIG mode (visibleGiB): even the whole-card instance gives up 0.13 GiB. Every card's
+ * slices are sized at those fractions of its own visibleGiB: H200's 4g.71gb at
+ * 69.2 GiB. Read as the profile's name in GiB, it had come out 71, and its 1g.18gb
+ * 18 where the A100's fractions give 16.9. Not measured on a card other than the
+ * guide's A100.
+ */
+const GUIDE_CARD = GPUS.find((x) => x.id === "a100-40")!.visibleGiB!;
+const MIG_SHARE: Record<MigProfile["eighths"], number> = { 1: 4.75 / GUIDE_CARD, 2: 9.62 / GUIDE_CARD, 4: 19.5 / GUIDE_CARD, 8: 39.25 / GUIDE_CARD };
 
-  "h100pcie-80": [
-    { id: "1g.10gb", memGiB: 10, max: 7 },
-    { id: "1g.20gb", memGiB: 20, max: 4 },
-    { id: "2g.20gb", memGiB: 20, max: 3 },
-    { id: "3g.40gb", memGiB: 40, max: 2 },
-    { id: "4g.40gb", memGiB: 40, max: 1 },
-    { id: "7g.80gb", memGiB: 80, max: 1 },
-  ],
-  "h200-141": [
-    { id: "1g.18gb", memGiB: 18, max: 7 },
-    { id: "1g.35gb", memGiB: 35, max: 4 },
-    { id: "2g.35gb", memGiB: 35, max: 3 },
-    { id: "3g.71gb", memGiB: 71, max: 2 },
-    { id: "4g.71gb", memGiB: 71, max: 1 },
-    { id: "7g.141gb", memGiB: 141, max: 1 },
-  ],
-  "gh200-96": [
-    { id: "1g.12gb", memGiB: 12, max: 7 },
-    { id: "1g.24gb", memGiB: 24, max: 4 },
-    { id: "2g.24gb", memGiB: 24, max: 3 },
-    { id: "3g.48gb", memGiB: 48, max: 2 },
-    { id: "4g.48gb", memGiB: 48, max: 1 },
-    { id: "7g.96gb", memGiB: 96, max: 1 },
-  ],
-  "b200-192": [
-    { id: "1g.23gb", memGiB: 23, max: 7 },
-    { id: "1g.45gb", memGiB: 45, max: 4 },
-    { id: "2g.45gb", memGiB: 45, max: 3 },
-    { id: "3g.90gb", memGiB: 90, max: 2 },
-    { id: "4g.90gb", memGiB: 90, max: 1 },
-    { id: "7g.180gb", memGiB: 180, max: 1 },
-  ],
+function migProfiles(gpuId: string, rows: [id: string, eighths: MigProfile["eighths"], max: number][]): MigProfile[] {
+  const g = GPUS.find((x) => x.id === gpuId)!;
+  const card = g.visibleGiB ?? g.vramGiB;
+  return rows.map(([id, eighths, max]) => ({ id, eighths, max, memGiB: Math.round(card * MIG_SHARE[eighths] * 100) / 100 }));
+}
+
+/** The six profiles of an eight-slice card, as Hopper and Blackwell name theirs. */
+const EIGHT_SLICE = (names: string[]): [string, MigProfile["eighths"], number][] =>
+  names.map((n, i) => [n, ([1, 2, 2, 4, 4, 8] as const)[i], [7, 4, 3, 2, 1, 1][i]]);
+
+export const MIG_PROFILES: Record<string, MigProfile[]> = {
+  "a30-24": migProfiles("a30-24", [["1g.6gb", 2, 4], ["2g.12gb", 4, 2], ["4g.24gb", 8, 1]]),
+  "a100-40": migProfiles("a100-40", [["1g.5gb", 1, 7], ["1g.10gb", 2, 4], ["2g.10gb", 2, 3], ["3g.20gb", 4, 2], ["4g.20gb", 4, 1], ["7g.40gb", 8, 1]]),
+  "a100-80": migProfiles("a100-80", EIGHT_SLICE(["1g.10gb", "1g.20gb", "2g.20gb", "3g.40gb", "4g.40gb", "7g.80gb"])),
+  "h100-80": migProfiles("h100-80", EIGHT_SLICE(["1g.10gb", "1g.20gb", "2g.20gb", "3g.40gb", "4g.40gb", "7g.80gb"])),
+  "h100pcie-80": migProfiles("h100pcie-80", EIGHT_SLICE(["1g.10gb", "1g.20gb", "2g.20gb", "3g.40gb", "4g.40gb", "7g.80gb"])),
+  "h200-141": migProfiles("h200-141", EIGHT_SLICE(["1g.18gb", "1g.35gb", "2g.35gb", "3g.71gb", "4g.71gb", "7g.141gb"])),
+  "gh200-96": migProfiles("gh200-96", EIGHT_SLICE(["1g.12gb", "1g.24gb", "2g.24gb", "3g.48gb", "4g.48gb", "7g.96gb"])),
+  "b200-192": migProfiles("b200-192", EIGHT_SLICE(["1g.23gb", "1g.45gb", "2g.45gb", "3g.90gb", "4g.90gb", "7g.180gb"])),
   // RTX PRO 6000 Blackwell (96GB) supports up to 4 MIG instances.
-  "rtxpro6000-96": [
-    { id: "1g.24gb", memGiB: 24, max: 4 },
-    { id: "2g.48gb", memGiB: 48, max: 2 },
-    { id: "4g.96gb", memGiB: 96, max: 1 },
-  ],
-  "rtxpro6000s-96": [
-    { id: "1g.24gb", memGiB: 24, max: 4 },
-    { id: "2g.48gb", memGiB: 48, max: 2 },
-    { id: "4g.96gb", memGiB: 96, max: 1 },
-  ],
+  "rtxpro6000-96": migProfiles("rtxpro6000-96", [["1g.24gb", 2, 4], ["2g.48gb", 4, 2], ["4g.96gb", 8, 1]]),
+  "rtxpro6000s-96": migProfiles("rtxpro6000s-96", [["1g.24gb", 2, 4], ["2g.48gb", 4, 2], ["4g.96gb", 8, 1]]),
 };
 
 /** Fraction of a discrete board's nominal VRAM a training job can use, after the
@@ -255,10 +222,26 @@ export function stepDevice(g: Gpu, scale = 1) {
   };
 }
 
-/** The batch `vllm serve` profiles with on this device by default (overhead.ts). */
+/** The batch `vllm serve` profiles with on this device by default (overhead.ts).
+ *  vLLM picks it by the memory NVML reports for the physical GPU, not by what CUDA
+ *  gives the process (EngineArgs.get_batch_defaults → CudaPlatform.get_device_total_memory
+ *  in vllm/platforms/cuda.py), so a MIG slice is never measured by its own size. In
+ *  MIG mode NVML gives the whole GPU's memory only to a caller allowed to monitor it
+ *  (root on the host); in a container or as another user the query fails, and vLLM
+ *  falls back to the defaults of a card under 70 GiB. A slice is sized at those, as
+ *  it runs in the usual setup: an H200 4g.71gb profiles 2,048 tokens and 256
+ *  sequences, where reading 71 against the 70 GiB line had given it an H200's
+ *  8,192 and 1,024. Not measured on a MIG instance. */
 export function batchFor(g: Gpu, migId?: string): BatchShape {
   const slice = migId ? migMem(g.id, migId) : null;
-  return vllmBatch(slice ?? g.totalGiB ?? g.vramGiB, g.name);
+  return vllmBatch(slice ? 0 : g.totalGiB ?? g.vramGiB, g.name);
+}
+
+/** The share of the card's memory system, and so of its bandwidth, a MIG slice
+ *  holds: its memory slices of eight (MigProfile.eighths). 1 for the whole card. */
+export function migBandwidthShare(gpuId: string, migId?: string): number {
+  const p = migId ? (MIG_PROFILES[gpuId] ?? []).find((x) => x.id === migId) : undefined;
+  return p ? p.eighths / 8 : 1;
 }
 
 /** What a deployment needs on one of these devices: the overhead follows the

@@ -79,7 +79,7 @@ const common: ModelArch = {
   placeholder: true, notInVllm: { arch: "SomeForCausalLM", until: "0.30.2", linear: true }, ownRuntime: "modeling_d3.D3Model", attnLayers: 13,
   slidingLayers: 40, slidingWindow: 4096, vHeadDim: 128, crossAttn: { layers: 8, tokens: 6404 }, globalAttn: { kvHeads: 4, headDim: 512 },
   stateBytesPerSeq: 12_345_678, stateLayers: 48, numExperts: 256, expertsPerToken: 8, moeIntermediateSize: 2048,
-  tieEmbeddings: true, shipped: { dtype: "fp8", bytes: 166_886_535_336 }, mxfp4: true, vision: { patches: 16_384, tokens: 4096, hidden: 1280 },
+  tieEmbeddings: true, shipped: { dtype: "fp8", bytes: 166_886_535_336, spec: 2_345_678_912 }, mxfp4: true, vision: { patches: 16_384, tokens: 4096, hidden: 1280 },
 };
 const SAMPLES: [string, ModelArch][] = [
   // MLA with DeepSeek Sparse Attention, every other field set too.
@@ -175,6 +175,7 @@ function randomArch(): ModelArch {
   if (maybe(0.1)) a.vision = { patches: pick([4096, 16384]), tokens: pick([1024, 4096]), hidden: pick([1152, 1280]) };
   if (maybe(0.3)) a.tieEmbeddings = true;
   if (maybe(0.15)) a.shipped = { dtype: pick(["fp8", "int4", "int8"] as Dtype[]), bytes: Math.round(a.numParams * (0.5 + rnd())) };
+  if (a.shipped && maybe(0.3)) a.shipped.spec = Math.round(a.shipped.bytes * 0.02);
   if (maybe(0.05)) a.placeholder = true;
   return a;
 }

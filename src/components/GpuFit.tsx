@@ -1,8 +1,8 @@
 import { FEATURED_GPU_IDS, gpuPageFile } from "../lib/staticPages";
 import { StaticPageLink } from "./StaticPageLink";
 import { useEffect, useState } from "react";
-import { calculate, layoutFor, layoutsOn, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type Layout, type ModelArch, type TypicalLoad } from "../lib/calc";
-import { batchFor, GPUS, GPU_CATEGORIES, migMem, migProfilesFor, stepDevice, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
+import { calculate, contextShortfall, layoutFor, layoutsOn, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type Layout, type ModelArch, type TypicalLoad } from "../lib/calc";
+import { batchFor, GPUS, GPU_CATEGORIES, migBandwidthShare, migMem, migProfilesFor, stepDevice, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { splitDevices } from "../lib/deviceGrid";
 import { formatGiB, formatInt } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
@@ -78,7 +78,9 @@ export function GpuFit({
   const selected: Gpu = sel ?? GPUS.find((g) => g.category === activeCat) ?? GPUS[0];
   const migProfiles = migProfilesFor(selected.id);
   const migSlice = migId ? migMem(selected.id, migId) : null;
-  const capGiB = migSlice ?? (selected.unified ? selected.totalGiB ?? selected.vramGiB : selected.vramGiB);
+  const migProfile = migProfiles.find((m) => m.id === migId);
+  // A slice's memory is what the runtime reports for it (gpus.ts, MIG_SHARE), not its name's.
+  const capGiB = migSlice ? Math.round(migSlice * 10) / 10 : selected.unified ? selected.totalGiB ?? selected.vramGiB : selected.vramGiB;
   const usableOf = (g: Gpu, mig = "") => usableGiB(g, mig, gpuUtil);
   const effUsable = usableOf(selected, migId);
   const base = { arch, weightDtype, kvDtype };
@@ -164,8 +166,9 @@ export function GpuFit({
         .map((d) => ({ d, total: calculate({ ...base, weightDtype: d, contextLength, concurrency, batch: selBatch }).totalGiB }))
         .find((x) => x.total <= effUsable) ?? null;
 
-  // A MIG slice gets roughly its share of the memory system and of the SMs.
-  const bwScale = migSlice ? migSlice / selected.vramGiB : 1;
+  // A MIG slice gets its memory slices' share of the bandwidth (gpus.ts,
+  // migBandwidthShare), and here the same share of the compute.
+  const bwScale = migBandwidthShare(selected.id, migId);
   const decodeIn = { arch, weightDtype, kvDtype, contextLength };
   const speedOf = (g: Gpu) => (g.bandwidthGBs ? decodeStep(decodeIn, concurrency, stepDevice(g)) : null);
   const selDevice = stepDevice(selected, bwScale);
@@ -174,6 +177,11 @@ export function GpuFit({
   const shown = best
     ? { fits: best.fits, pct: best.layout.perGpuGiB / effUsable, users: best.maxUsers, ctx: best.maxContext }
     : { fits: selUsage.fits, pct: selUsage.pct, users: maxUsers, ctx: maxCtx };
+  // Why no context fits, when none does: the weights leave no room, or the room
+  // holds fewer requests than asked even at the shortest context (calc.ts, contextShortfall).
+  const short = best
+    ? best.maxContext > 0 ? null : best.room ? { reason: "requests" as const, users: best.shortUsers } : { reason: "weights" as const, users: 0 }
+    : contextShortfall({ ...base, concurrency, batch: selBatch }, effUsable);
   // Stage 2: devices within the selected category, split by whether they fit the model.
   const catGpus = GPUS.filter((g) => g.category === activeCat).sort(
     (a, b) => (a.totalGiB ?? a.vramGiB) - (b.totalGiB ?? b.vramGiB)
@@ -335,7 +343,7 @@ export function GpuFit({
               <option value="">{t("gpu.migOff")}</option>
               {migProfiles.map((m) => (
                 <option key={m.id} value={m.id}>
-                  MIG {m.id} — {m.memGiB} GB{m.max > 1 ? ` (×${m.max})` : ""}
+                  MIG {m.id} — {m.memGiB.toFixed(1)} GiB{m.max > 1 ? ` (×${m.max})` : ""}
                 </option>
               ))}
             </select>
@@ -362,7 +370,11 @@ export function GpuFit({
             {t("gpu.unified", { total: selected.totalGiB ?? selected.vramGiB, usable: Math.round(effUsable), bw: selected.bandwidthGBs ?? 0 })}
           </div>
         ) : selected.bandwidthGBs ? (
-          <div className="mt-0.5 text-[11px] text-slate-500">{t("gpu.bw", { bw: selected.bandwidthGBs })}</div>
+          <div className="mt-0.5 text-[11px] text-slate-500">
+            {migProfile
+              ? t("gpu.bwMig", { bw: formatInt(Math.round(selected.bandwidthGBs * bwScale)), e: migProfile.eighths, full: formatInt(selected.bandwidthGBs) })
+              : t("gpu.bw", { bw: selected.bandwidthGBs })}
+          </div>
         ) : null}
 
         {/* Three stats share a row; four sit two by two, since the card is half the page wide. */}
@@ -394,7 +406,11 @@ export function GpuFit({
             value={shown.ctx > 0 ? formatInt(shown.ctx) : "0"}
             sub={
               shown.ctx <= 0
-                ? t("gpu.weightsNoFit")
+                ? short?.reason === "requests"
+                  ? short.users > 0
+                    ? t("gpu.ctxTooMany", { u: formatInt(short.users), n: formatInt(concurrency) })
+                    : t("gpu.ctxNoOne")
+                  : t("gpu.weightsNoFit")
                 : concurrency === 1
                   ? t("gpu.tokens")
                   : `${t("gpu.tokens")} · ${t("gpu.atUsers", { n: concurrency })}`
@@ -503,7 +519,8 @@ export function GpuFit({
             </p>
           ) : migId ? (
             <p className="mt-3 rounded-xl bg-ink-800/60 p-3 text-[11.5px] leading-relaxed text-slate-300">
-              {t("gpu.migLayout")}
+              {/* The slice may hold the model and some requests, just not these (calc.ts, contextShortfall). */}
+              {t(maxConcurrency({ ...base, contextLength: 1, batch: selBatch }, effUsable) > 0 ? "gpu.migRequests" : "gpu.migLayout")}
             </p>
           ) : !layout ? (
             <p className="mt-3 rounded-xl bg-ink-800/60 p-3 text-[11.5px] leading-relaxed text-slate-300">
@@ -545,9 +562,13 @@ export function GpuFit({
             </div>
             {!best.fits && (
               <p className="mb-1.5 text-[11.5px] leading-relaxed text-bad">
-                {best.maxUsers > 0
+                {best.maxContext > 0
                   ? t("gpu.onShort", { u: formatInt(best.maxUsers), users: formatInt(concurrency), c: formatInt(best.maxContext) })
-                  : t("gpu.onNone")}
+                  : !best.room
+                    ? t("gpu.onNone")
+                    : best.shortUsers > 0
+                      ? t("gpu.onShortCtx", { u: formatInt(best.maxUsers), users: formatInt(concurrency), s: formatInt(best.shortUsers) })
+                      : t("gpu.onNoneShort")}
               </p>
             )}
             <ul className="space-y-1 text-[11.5px] leading-relaxed text-slate-400">{layoutBullets(best.layout, true)}</ul>

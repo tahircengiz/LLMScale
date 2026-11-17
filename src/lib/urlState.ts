@@ -136,6 +136,7 @@ export function encodeState(s: AppState): string {
     if (a.shipped) {
       p.set("sd", a.shipped.dtype);
       p.set("sb", String(a.shipped.bytes));
+      if (a.shipped.spec) p.set("sx", String(a.shipped.spec));
     }
     // MXFP4 experts: the rest of the model stays 16-bit, and vLLM pads them per card.
     if (a.mxfp4) p.set("mx", "1");
@@ -310,7 +311,8 @@ export function decodeState(search: string): Partial<AppState> {
     } as ModelArch;
     const sd = dtype(p.get("sd"));
     const sb = pos(p.get("sb"));
-    if (sd && sb) out.arch.shipped = { dtype: sd, bytes: sb };
+    const sx = pos(p.get("sx"));
+    if (sd && sb) out.arch.shipped = { dtype: sd, bytes: sb, ...(sx && sx < sb ? { spec: sx } : {}) };
     // Drop what the URL did not carry, so a decoded arch has no undefined keys.
     for (const k of Object.keys(out.arch) as (keyof ModelArch)[]) if (out.arch[k] === undefined) delete out.arch[k];
   }
