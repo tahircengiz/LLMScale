@@ -191,6 +191,7 @@ export function SizingPage() {
               load={{ prompt: state.loadPrompt, output: state.loadOutput, prefix: state.loadPrefix }}
               hfId={state.hfId}
               maxContext={state.arch?.maxContext}
+              ownRuntime={!!state.arch?.ownRuntime}
               onChange={patch}
             />
           </Card>
