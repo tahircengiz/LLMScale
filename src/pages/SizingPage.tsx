@@ -12,6 +12,7 @@ import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Controls } from "../components/Controls";
 import { Results } from "../components/Results";
 import { GpuFit } from "../components/GpuFit";
+import { WeightsFit } from "../components/WeightsFit";
 import { Card } from "../components/ui";
 
 const HERO = findKnownByHfId(HERO_MODEL_ID)!;
@@ -102,6 +103,17 @@ export function SizingPage() {
   }, [state]);
 
   const patch = (p: Partial<AppState>) => setState((s) => ({ ...s, ...p }));
+
+  function onGpu(id: string) {
+    markActivated("device");
+    // The model side has had `model-view` since the beginning; the
+    // device side had nothing, which is why the report was reduced
+    // to inferring device choice from the URL. Every path that
+    // changes the device funnels through here — the grid, the
+    // dropdown, the category chips and the recommendation buttons.
+    if (id !== state.gpuId) track("device-select", { device: id });
+    patch({ gpuId: id, migId: "" });
+  }
 
   const result = useMemo(() => {
     if (!state.arch) return null;
@@ -210,36 +222,32 @@ export function SizingPage() {
               </div>
             )}
           </Card>
-          {/* Fitting a card counts the cache and vLLM's overhead: not for a model on its own code. */}
-          {result && state.arch && !state.arch.ownRuntime && (
+          {/* Fitting a card counts the cache and vLLM's overhead: a model on its own code
+              is set against each card by its weights alone. */}
+          {result && state.arch && (
             <Card className="p-5">
-              <GpuFit
-                hfId={state.hfId}
-                arch={state.arch}
-                weightDtype={state.weightDtype}
-                kvDtype={state.kvDtype}
-                contextLength={state.contextLength}
-                concurrency={state.concurrency}
-                gpuUtil={state.gpuUtil}
-                load={state.loadPrompt > 0 ? { promptTokens: state.loadPrompt, outputTokens: state.loadOutput, sharedPrefix: state.loadPrefix } : null}
-                totalGiB={result.totalGiB}
-                gpuId={state.gpuId}
-                migId={state.migId}
-                onGpu={(id) => {
-                  markActivated("device");
-                  // The model side has had `model-view` since the beginning; the
-                  // device side had nothing, which is why the report was reduced
-                  // to inferring device choice from the URL. Every path that
-                  // changes the device funnels through here — the grid, the
-                  // dropdown, the category chips and the recommendation buttons.
-                  if (id !== state.gpuId) track("device-select", { device: id });
-                  patch({ gpuId: id, migId: "" });
-                }}
-                onMig={(id) => patch({ migId: id, gpuCount: 1 })}
-                gpuCount={state.gpuCount}
-                onGpuCount={(n) => patch({ gpuCount: n, migId: "" })}
-                onWeightDtype={(d) => patch({ weightDtype: d })}
-              />
+              {state.arch.ownRuntime ? (
+                <WeightsFit weightsGiB={result.weightsGiB} gpuId={state.gpuId} onGpu={onGpu} />
+              ) : (
+                <GpuFit
+                  hfId={state.hfId}
+                  arch={state.arch}
+                  weightDtype={state.weightDtype}
+                  kvDtype={state.kvDtype}
+                  contextLength={state.contextLength}
+                  concurrency={state.concurrency}
+                  gpuUtil={state.gpuUtil}
+                  load={state.loadPrompt > 0 ? { promptTokens: state.loadPrompt, outputTokens: state.loadOutput, sharedPrefix: state.loadPrefix } : null}
+                  totalGiB={result.totalGiB}
+                  gpuId={state.gpuId}
+                  migId={state.migId}
+                  onGpu={onGpu}
+                  onMig={(id) => patch({ migId: id, gpuCount: 1 })}
+                  gpuCount={state.gpuCount}
+                  onGpuCount={(n) => patch({ gpuCount: n, migId: "" })}
+                  onWeightDtype={(d) => patch({ weightDtype: d })}
+                />
+              )}
             </Card>
           )}
         </div>
