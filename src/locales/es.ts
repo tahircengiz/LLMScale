@@ -1484,6 +1484,7 @@ const es = {
   "serve.ability.reasonToggle": "razonamiento que se puede desactivar",
   "serve.ability.vision": "entrada de imágenes",
   "serve.and": "y",
+  "list.sep": ", ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

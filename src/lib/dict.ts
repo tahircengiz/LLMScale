@@ -41,6 +41,13 @@ export function hasKey(lang: Lang, key: string): boolean {
   return key in (loaded[lang] ?? {});
 }
 
+/** Items listed in running text, joined the way `lang` writes them (list.sep):
+ *  ", " in most languages, 、 in Chinese. Not Intl.ListFormat, which would change
+ *  the English and Turkish text too. */
+export function joinList(lang: Lang, items: readonly (string | number)[]): string {
+  return items.join(translate(lang, "list.sep"));
+}
+
 export function translate(lang: Lang, key: string, vars?: Record<string, string | number>): string {
   let s = loaded[lang]?.[key] ?? loaded.en?.[key] ?? key;
   if (vars) {

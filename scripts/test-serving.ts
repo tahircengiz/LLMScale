@@ -334,5 +334,13 @@ console.log("\n--- the page's own strings ---");
   check("no Turkish-only keys", trOnly.length === 0, trOnly.join(", "));
 }
 
+console.log("\n--- a list in running text is joined the way its language writes one ---");
+{
+  // generation_config.json's recommended values, as the sampling answer lists them.
+  const listed = (lang: Lang) => String(brief("Qwen_Qwen2.5-7B-Instruct-AWQ", lang).sections.find((s) => s.id === "sampling")?.parts.find((p) => p.k === "sampling.set")?.v?.list);
+  check("en: comma and space", listed("en") === "temperature 0.7, top_p 0.8, top_k 20, repetition_penalty 1.05", listed("en"));
+  check("zh: 、, as docs/i18n/glossary/zh.md has it", listed("zh") === "temperature 0.7、top_p 0.8、top_k 20、repetition_penalty 1.05", listed("zh"));
+}
+
 console.log(fails ? `\n${fails} FAILED` : "\nALL PASS");
 process.exit(fails ? 1 : 0);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { formatInt } from "../lib/format";
-import { useLang } from "../lib/i18n";
+import { joinList, useLang } from "../lib/i18n";
 import { hintsFromSnapshot, matchingPreset, presetFor, PRESETS, THINKING_TOKENS, type AppliedPreset, type ModelHints, type PresetId } from "../lib/presets";
 import { fetchSnapshot } from "../lib/repoFetch";
 
@@ -20,7 +20,7 @@ export function PresetChips({
   current: { promptTokens: number; outputTokens: number; sharedPrefix: number };
   onApply: (a: AppliedPreset, id: PresetId) => void;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [hints, setHints] = useState<{ id: string; h: ModelHints } | null>(null);
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export function PresetChips({
       </div>
       {preset && applied && (
         <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
-          {t(`preset.desc.${preset.id}`)} {t("preset.from", { src: preset.sources.join(", ") })}
+          {t(`preset.desc.${preset.id}`)} {t("preset.from", { src: joinList(lang, preset.sources) })}
           {applied.notes.map((n) => (
             <span key={n}>
               {" "}
