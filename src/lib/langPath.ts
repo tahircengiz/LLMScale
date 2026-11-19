@@ -101,4 +101,5 @@ export const SUGGEST: Record<Lang, { text: string; go: string; dismiss: string }
   bn: { text: "এই পৃষ্ঠাটি বাংলাতেও পাওয়া যায়।", go: "বাংলায় দেখুন", dismiss: "বন্ধ করুন" },
   ru: { text: "Эта страница доступна и на русском языке.", go: "Перейти на русский", dismiss: "Закрыть" },
   de: { text: "Diese Seite gibt es auch auf Deutsch.", go: "Auf Deutsch wechseln", dismiss: "Schließen" },
+  ja: { text: "このページは日本語でもご覧いただけます。", go: "日本語に切り替え", dismiss: "閉じる" },
 };

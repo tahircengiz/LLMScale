@@ -1005,4 +1005,103 @@ const de: Record<string, PageMeta> = {
   },
 };
 
-export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, zh, hi, es, fr, pt, id, bn, ru, de };
+const ja: Record<string, PageMeta> = {
+  "index.html": {
+    title: "LLM の VRAM 計算ツール：重み、KV キャッシュ、収まる GPU | LLMScale",
+    description:
+      "LLM に必要な GPU メモリを見積もります。モデルの重み、KV キャッシュ、コンテキスト ウィンドウ、同時ユーザー数から計算し、収まる GPU を確認できます。設定は Hugging Face から直接読み込みます。",
+    ogTitle: "LLMScale — LLM の VRAM 計算ツール",
+    ogDescription:
+      "お使いの LLM に必要な VRAM は？重み + KV キャッシュ + コンテキスト + 同時実行数から計算し、推奨される GPU も示します。",
+  },
+  "train.html": {
+    title: "ファインチューニングに必要な VRAM：LoRA、QLoRA、フル | LLMScale",
+    description:
+      "ファインチューニングに必要な GPU メモリを計算します（LoRA、QLoRA、フル ファインチューニング）。勾配、オプティマイザーの状態、バックワードパスのために保持するアクティベーションを含め、収まる GPU も示します。ZeRO と QLoRA の論文の値で検証済みです。",
+    ogTitle: "LLMScale — ファインチューニングに必要な VRAM",
+    ogDescription:
+      "ファインチューニングにはどれだけの VRAM が必要？LoRA、QLoRA、フル ファインチューニングを、重み、勾配、オプティマイザーの状態、アクティベーションに分けて示します。",
+  },
+  "fit.html": {
+    title: "LLM のタスク適合性：用途に合うモデルかを確認 | LLMScale",
+    description:
+      "LLM がタスク（チャット、コード、RAG、エージェント、リーズニング、ビジョン、埋め込み）に合うかを確認できます。モデルの実際のサイズ、コンテキスト、チューニング、モダリティからスコアを算出します。データは Hugging Face から直接取得します。",
+    ogTitle: "LLMScale — モデル ↔ タスクの適合性",
+    ogDescription:
+      "この LLM はタスクに合っている？チャット、コード、RAG、エージェント、リーズニング、ビジョンなどについて、ルールに基づく透明な適合性スコアを示します。",
+  },
+  "anatomy.html": {
+    title: "LLM の構造：パラメータ、精度、KV キャッシュ | LLMScale",
+    description:
+      "Hugging Face の任意のモデルを X 線写真のように可視化します。パラメータの内訳（埋め込み / アテンション / エキスパート）、精度ごとの重みのサイズ、アーキテクチャ、GQA、KV キャッシュの増え方を、Hugging Face から直接取得したデータで示します。",
+    ogTitle: "LLMScale — モデルの構造",
+    ogDescription:
+      "任意の LLM を X 線写真のように可視化します。パラメータの分布、精度ごとの重みのサイズ、アーキテクチャ、GQA、KV キャッシュの増え方を、Hugging Face から直接取得したデータで示します。",
+  },
+  "compare.html": {
+    title: "LLM を並べて比較：仕様とタスク適合性 | LLMScale",
+    description:
+      "Hugging Face の LLM を 2～4 個並べて比較できます。パラメータ数、コンテキスト、量子化、機能、タスクごとの適合性から、どのモデルがどの用途に向いているかを確認できます。データは Hugging Face から直接取得します。",
+    ogTitle: "LLMScale — モデル比較",
+    ogDescription:
+      "2～4 個の LLM を並べて比較できます。仕様、機能、タスクごとの適合性から、どのモデルがどの用途に向いているかがわかります。",
+  },
+  "decode.html": {
+    title: "LLM のモデル名の読み方：70B、A3B、AWQ、GGUF、FP8 | LLMScale",
+    description:
+      "LLM のモデル名を読み解きます。70B、AWQ、GGUF、FP8、A3B、Instruct などの意味を、色分けとインタラクティブな解説で示します。",
+    ogTitle: "LLMScale — モデル名の読み方",
+    ogDescription:
+      "LLM のモデル名の各部分は何を意味する？70B · AWQ · GGUF · FP8 · A3B などを色分けし、インタラクティブに解説します。",
+  },
+  "vllm.html": {
+    title: "vLLM serve のパラメータ：チューニング済みコマンド | LLMScale",
+    description:
+      "任意のモデル向けに、チューニングした vllm serve コマンドを生成します。スループット、レイテンシ、正確性、メモリ向けのフラグに加え、ツール呼び出し、長いコンテキスト、量子化にも対応し、そのままコピーできるコマンドを出力します。",
+    ogTitle: "LLMScale — vLLM パラメータ",
+    ogDescription:
+      "モデルとワークロードを選ぶと、パフォーマンス、正確性、信頼性に合わせてチューニングした、そのままコピーできる vllm serve コマンドを生成します。",
+  },
+  "config.html": {
+    title: "LLM の config.json をわかりやすく解説 | LLMScale",
+    description:
+      "Hugging Face の任意のモデルの config.json を、わかりやすい言葉で読み解きます。層、アテンション ヘッド、GQA と MLA、エキスパート、コンテキストと RoPE スケーリング、量子化について、各回答を実際のファイルの該当行と対応付けて示します。",
+    ogTitle: "LLMScale — config.json の解説",
+    ogDescription:
+      "LLM の config.json の各フィールドは何を意味する？メモリ、コンテキスト、アテンション、エキスパートについて、実際のファイルと対応付けてわかりやすく答えます。",
+  },
+  "serving.html": {
+    title: "サービングの概要：チャットテンプレート、MTP、量子化 | LLMScale",
+    description:
+      "推論エンジンと同じ視点で、Hugging Face のモデルのリポジトリを読み解きます。チャットテンプレート、ツール呼び出し用・リーズニング用のパーサー、generation_config、テンソル名から判別した量子化、MTP 層が含まれているかどうかを示し、vLLM と SGLang のフラグも提示します。",
+    ogTitle: "LLMScale — サービングの概要",
+    ogDescription:
+      "モデルのファイルからわかるサービングの要点として、ツール呼び出し用・リーズニング用のパーサー、サンプリングのデフォルト値、量子化、MTP、そして対応する vLLM と SGLang のフラグを示します。",
+  },
+  "plan.html": {
+    title: "LLM の容量計画：ワークロードに必要な GPU 数 | LLMScale",
+    description:
+      "ワークロードに必要な GPU の数を求めます。1 秒あたりのリクエスト数、プロンプトと応答の長さ、最初のトークンまでの時間とトークンあたりのレイテンシの目標を入力すると、レプリカ数、テンソル並列、GPU 数を出力します。計算は vLLM 自体のメモリ使用量と、GPU のメモリ帯域幅および Tensor コアのスループットに基づきます。",
+    ogTitle: "LLMScale — 容量計画",
+    ogDescription:
+      "1 秒あたりのリクエスト数とレイテンシの目標を入力すると、必要な GPU を出力します。vLLM のレプリカ数とテンソル並列を、メモリ、帯域幅、Tensor コアのスループットから求めます。",
+  },
+  "gpu-compare.html": {
+    title: "GPU の仕様比較：VRAM、帯域幅、TFLOPS | LLMScale",
+    description:
+      "2～4 種類の GPU をデータシートに基づいて並べて比較できます。アーキテクチャ、メモリの種類と帯域幅、スパース性なしの BF16、FP8、FP4 TFLOPS、消費電力、NVLink、フォーム ファクターを掲載。コンシューマー向けとデータセンター向けの GPU、Apple Silicon、AI PC に対応しています。",
+    ogTitle: "LLMScale — GPU 比較",
+    ogDescription:
+      "2～4 種類の GPU を並べて比較できます。アーキテクチャ、メモリと帯域幅、スパース性なしの Tensor コア TFLOPS、消費電力、インターコネクトを、メーカーのデータシートに基づいて示します。",
+  },
+  "learn.html": {
+    title: "LLM 入門：LLM の仕組みを図解 | LLMScale",
+    description:
+      "大規模言語モデルが文から次の単語を導き出すまでを、インタラクティブなアニメーションでたどります。トークン化、埋め込み、アテンション、層、サンプリングを、3D で描いたニューロンの星座として表現しています。",
+    ogTitle: "LLM 入門 — LLM の仕組みを図解",
+    ogDescription:
+      "言語モデルが文から次の単語を導き出すまでを、インタラクティブにたどります。トークン、埋め込み、アテンション、層、サンプリングを 3D で表現しています。",
+  },
+};
+
+export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, zh, hi, es, fr, pt, id, bn, ru, de, ja };

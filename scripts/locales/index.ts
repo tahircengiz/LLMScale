@@ -13,6 +13,7 @@ import id from "./id.ts";
 import bn from "./bn.ts";
 import ru from "./ru.ts";
 import de from "./de.ts";
+import ja from "./ja.ts";
 import type { PageText } from "./types.ts";
 
-export const PAGE_TEXT: Record<Lang, PageText> = { en, tr, zh, hi, es, fr, pt, id, bn, ru, de };
+export const PAGE_TEXT: Record<Lang, PageText> = { en, tr, zh, hi, es, fr, pt, id, bn, ru, de, ja };

@@ -307,6 +307,7 @@ console.log("\n--- a count of one takes the dictionary's singular word ---");
   check("ru: 0 идентификаторов", v("eos_token_id", [], "ru") === "0 идентификаторов", v("eos_token_id", [], "ru"));
   check("de: 1 Experte", v("n_shared_experts", 1, "de") === "1 Experte", v("n_shared_experts", 1, "de"));
   check("de: 2 Experten", v("n_shared_experts", 2, "de") === "2 Experten", v("n_shared_experts", 2, "de"));
+  check("ja: 1 個のエキスパート", v("n_shared_experts", 1, "ja") === "1 個のエキスパート", v("n_shared_experts", 1, "ja"));
 }
 
 console.log("\n--- a language with one form for more than one keeps it for every other count ---");
@@ -339,6 +340,7 @@ console.log("\n--- a layer count meets its tally the way its language writes a c
   // English has no singular for this count word; German adds config.w.layers.one.
   const one = humanValue(["full_attention"], GLOSSARY.layer_types, "de");
   check("de: 1 Schicht", one === "1 Schicht: 1 full_attention", one);
+  check("ja: full-width colon and 、", types("ja") === "3 層：2 sliding_attention、1 full_attention", types("ja"));
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
