@@ -1,4 +1,4 @@
-import { DICTS, useLang } from "../lib/i18n";
+import { hasKey, useLang, type Lang } from "../lib/i18n";
 import { Card } from "./ui";
 import { StaticPageLink } from "./StaticPageLink";
 import { CONCEPT_FILES } from "../lib/staticPages";
@@ -30,10 +30,11 @@ const SOURCES: Partial<Record<AboutPage, (keyof typeof SOURCE_URLS)[]>> = {
 
 /** How many numbered keys of one kind a page has — about.<page>.p1, p2, … — so a
  *  page's text can grow or shrink in the dictionary without touching this file.
- *  Counted on English; scripts/test-invariants.ts keeps Turkish in step. */
-function numbered(page: AboutPage, kind: "p" | "f" | "q"): number[] {
+ *  Counted on the page's own dictionary, the only one it loads; every language
+ *  has the same keys (src/locales/). */
+function numbered(lang: Lang, page: AboutPage, kind: "p" | "f" | "q"): number[] {
   const out: number[] = [];
-  while (`about.${page}.${kind}${out.length + 1}` in DICTS.en) out.push(out.length + 1);
+  while (hasKey(lang, `about.${page}.${kind}${out.length + 1}`)) out.push(out.length + 1);
   return out;
 }
 
@@ -43,10 +44,10 @@ function numbered(page: AboutPage, kind: "p" | "f" | "q"): number[] {
  *  against. It also gives search engines something to read — the tool itself is
  *  mostly controls and numbers. */
 export function About({ page }: { page: AboutPage }) {
-  const { t } = useLang();
-  const [first, ...rest] = numbered(page, "p");
-  const formulas = numbered(page, "f");
-  const questions = numbered(page, "q");
+  const { t, lang } = useLang();
+  const [first, ...rest] = numbered(lang, page, "p");
+  const formulas = numbered(lang, page, "f");
+  const questions = numbered(lang, page, "q");
   const id = `about-${page}`;
 
   return (

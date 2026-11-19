@@ -34,6 +34,11 @@ export function sourcesOf(...roots: string[]): string[] {
       const target = resolveImport(join(dirname(file), m[2]));
       if (target) visit(target);
     }
+    // import("…"): a page's dictionary is loaded this way (src/lib/dict.ts).
+    for (const m of readFileSync(file, "utf8").matchAll(/\bimport\(\s*["'](\.\.?\/[^"']+)["']\s*\)/g)) {
+      const target = resolveImport(join(dirname(file), m[1]));
+      if (target) visit(target);
+    }
   };
   for (const root of roots) {
     if (!existsSync(root)) throw new Error(`${root}: no such file to date a page by`);

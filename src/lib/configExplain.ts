@@ -17,7 +17,7 @@ import { BYTES_PER_GIB, kvBytesPerLayerToken, kvBytesPerToken, resolveHeadDim, u
 import { archFromConfig } from "./hf.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
-import type { Lang } from "./dict.ts";
+import { LANG_META, type Lang } from "./langs.ts";
 import { lookupField, type FieldGroup, type GlossaryEntry, type Relevance } from "./configGlossary.ts";
 import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers, mimoAttention, nasAttention, textConfig, textConfigPrefix } from "./layers.ts";
 
@@ -32,7 +32,7 @@ const sharedAt = (groups: SharedCompressed[], ratio: number): SharedCompressed =
 // ── number formatting ─────────────────────────────────────────────────────
 
 function nf(lang: Lang, digits = 0): Intl.NumberFormat {
-  return new Intl.NumberFormat(lang === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: digits });
+  return new Intl.NumberFormat(LANG_META[lang].intl, { maximumFractionDigits: digits });
 }
 export const fmtInt = (n: number, lang: Lang) => nf(lang).format(n);
 export const fmtNum = (n: number, lang: Lang, digits = 2) => nf(lang, digits).format(n);

@@ -1,6 +1,6 @@
 // The app's look for the static pages — the news feed and the guides — so they
 // wear the calculator's clothes: the same three themes (dark, light and the glass
-// material), the same header with its theme and language switches, and the same
+// material), the same header with its theme switch and language menu, and the same
 // nav, built from the same src/lib/nav.ts. Moving between the tools, the guides and the news does not feel
 // like leaving the site.
 //
@@ -8,14 +8,12 @@
 // checks the theme tokens and the bootstrap against them. Pages read the tokens
 // through --bg, --card, --line and friends.
 
-import { DICTS, type Lang } from "../src/lib/dict.ts";
-import { LANG_NAME } from "../src/lib/langPath.ts";
+import { DICTS } from "../src/locales/index.ts";
+import { LANG_META, type Lang } from "../src/lib/langs.ts";
 import { CONCEPTS_HUB, GPUS_HUB, MODELS_HUB } from "../src/lib/staticPages.ts";
 import { menuOf, NAV_HOME, navMenus, navPages, type NavItem } from "../src/lib/nav.ts";
 
-const LANGS: Lang[] = ["en", "tr"];
 export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-export const other = (lang: Lang): Lang => (lang === "tr" ? "en" : "tr");
 
 /** The bootstrap every app entry runs before paint (index.html): a stored theme,
  *  else dark when the OS asks for it, else glass. */
@@ -32,7 +30,7 @@ body{margin:0;background:radial-gradient(1100px 620px at 18% -14%,rgba(77,139,25
 a{color:var(--brand);text-underline-offset:2px}
 a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-th,td{text-align:left;vertical-align:top}
+th,td{text-align:start;vertical-align:top}
 thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
 th[scope=row]{font-weight:600}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -82,12 +80,24 @@ th[scope=row]{font-weight:600}
 .peek strong{display:block;margin-top:.375rem;font-size:.875rem;line-height:1.25rem;font-weight:600;letter-spacing:-.015em;color:var(--c-white)}
 .peek p.t{margin:.25rem 0 0;font-size:.75rem;line-height:1.6;color:var(--slate-300)}
 @media (min-width:640px){.hdr{padding-inline:1.5rem}.navpill{width:auto;max-width:100%}.mbar,#site-nav,#site-nav.open{display:none}.menus{display:flex}}
+.lmenu{position:relative;flex-shrink:0}
+.seg .ltrig{display:flex;align-items:center;gap:.375rem}
+.ltrig svg{width:14px;height:14px;flex-shrink:0}
+.ltrig svg.chev{width:12px;height:12px;transition:transform .2s}
+.ltrig[aria-expanded=true] svg.chev{transform:rotate(180deg)}
+.lpanel{display:none;position:absolute;top:100%;inset-inline-end:0;z-index:50;min-width:10rem;padding-top:.5rem}
+.lpanel.open{display:block}
+.lpanel ul{list-style:none;margin:0;border-radius:.75rem;background:var(--ink-850);padding:.375rem;box-shadow:inset 0 0 0 1px var(--line),0 25px 50px -12px rgb(0 0 0/.25)}
+.lpanel a{display:flex;align-items:center;justify-content:space-between;gap:.75rem;border-radius:.5rem;padding:.375rem .75rem;font-size:.875rem;line-height:1.25rem;font-weight:500;color:var(--c-white);text-decoration:none;white-space:nowrap;transition:background-color .15s}
+.lpanel a:hover{background:color-mix(in oklab,var(--c-white) 5%,transparent)}
+.lpanel a[aria-current=page]{background:var(--brand-600);color:var(--onbrand);box-shadow:0 1px 3px 0 rgb(0 0 0/.1),0 1px 2px -1px rgb(0 0 0/.1)}
+.lpanel a svg{width:14px;height:14px;flex-shrink:0}
 @media (max-width:360px){.seg a,.seg button{padding-inline:.375rem}.ctrls{gap:.375rem}}
-@media (scripting:none){#site-nav,#site-nav.open{display:flex}.mbar button,.menus{display:none}}
+@media (scripting:none){#site-nav,#site-nav.open{display:flex}.mbar button,.menus{display:none}.lmenu>.seg{display:none}.lpanel{display:block;position:static;min-width:0;padding:0}.lpanel ul{display:flex;gap:.25rem;padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}.lpanel a{font-size:.75rem;line-height:1rem;padding:.25rem .625rem}.lpanel a svg{display:none}}
 .glass .card{background:rgba(255,255,255,.52);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.65);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),inset 0 -1px 0 0 rgba(255,255,255,.25),0 12px 32px -14px rgba(20,28,66,.42)}
 .glass .hdr{background:rgba(255,255,255,.46);-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);border-bottom-color:rgba(255,255,255,.55)}
 .glass .navpill{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.8)}
-.glass .pin{background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),0 18px 40px -16px rgba(20,28,66,.45)}
+.glass .pin,.glass .lpanel ul{background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),0 18px 40px -16px rgba(20,28,66,.45)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.92)}}
 @media (prefers-reduced-transparency:reduce){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}}
 .theme-switching,.theme-switching *,.theme-switching *::before,.theme-switching *::after{transition:none!important}
@@ -100,13 +110,14 @@ th[scope=row]{font-weight:600}
 .ffoot nav a:hover{text-decoration:underline}
 .ffoot p{margin:0;font-size:.75rem;color:var(--slate-500)}
 @media (min-width:640px){.fmain{padding-inline:1.5rem}}
-.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--ink-900);border:1px solid var(--line);border-radius:1rem;padding:.5rem .55rem .5rem 1rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--slate-300)}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--ink-900);border:1px solid var(--line);border-radius:1rem;padding-block:.5rem;padding-inline:1rem .55rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--slate-300)}
 .langsuggest a{background:var(--brand-600);color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
 .langsuggest button{background:none;border:0;color:var(--slate-400);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}
 `.trim();
 
-/** The header's theme switch, the phone menu and the language links, as the app
- *  wires them: a theme picked here is the same stored choice the app reads. */
+/** The header's theme switch, the phone menu, the language menu and the language
+ *  links, as the app wires them: a theme or language picked here is the same
+ *  stored choice the app reads. */
 export const APP_SCRIPT = `(function(){var r=document.documentElement,bs=document.querySelectorAll("[data-theme-set]");
 function cur(){return r.classList.contains("glass")?"glass":r.classList.contains("light")?"light":"dark"}
 function mark(){var c=cur();bs.forEach(function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-theme-set")===c))})}
@@ -122,15 +133,19 @@ document.querySelectorAll(".menu").forEach(function(m){var t=m.querySelector(".t
 var pk=m.querySelector(".peek");m.querySelectorAll(".panel a").forEach(function(a){function lit(){m.querySelectorAll(".panel a.lit").forEach(function(x){x.classList.remove("lit")});a.classList.add("lit");if(pk&&a.dataset.more){pk.querySelector("strong").textContent=a.querySelector("b").textContent;pk.querySelector("p.t").textContent=a.dataset.more}}a.addEventListener("pointerenter",lit);a.addEventListener("focus",lit)})});
 document.addEventListener("pointerdown",function(e){if(!(e.target.closest&&e.target.closest(".menu")))shut(null)});
 document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;var t=document.querySelector(".trig[aria-expanded=true]");if(t){shut(null);t.focus()}else if(mb&&l&&l.classList.contains("open")){l.classList.remove("open");mb.setAttribute("aria-expanded","false");mb.focus()}});
-document.querySelectorAll("[data-lang]").forEach(function(a){a.addEventListener("click",function(){try{localStorage.setItem("lang",a.getAttribute("data-lang"))}catch(e){}})})})();`;
+document.querySelectorAll("[data-lang]").forEach(function(a){a.addEventListener("click",function(){try{localStorage.setItem("lang",a.getAttribute("data-lang"))}catch(e){}})});
+var lb=document.querySelector(".ltrig"),lp=document.getElementById("lang-menu"),lm=lb&&lb.closest(".lmenu");if(lb&&lp&&lm){var lset=function(o){lb.setAttribute("aria-expanded",String(o));lp.classList.toggle("open",o)};lb.addEventListener("click",function(){lset(lb.getAttribute("aria-expanded")!=="true")});lb.addEventListener("keydown",function(e){if(e.key!=="ArrowDown")return;e.preventDefault();lset(true);var a=lp.querySelector("a");if(a)a.focus()});lm.addEventListener("focusout",function(e){if(!lm.contains(e.relatedTarget))lset(false)});lm.addEventListener("keydown",function(e){if(e.key==="Escape"&&lb.getAttribute("aria-expanded")==="true"){e.stopPropagation();lset(false);lb.focus()}});document.addEventListener("pointerdown",function(e){if(!lm.contains(e.target))lset(false)});addEventListener("pageshow",function(e){if(e.persisted)lset(false)})}})();`;
 
 // ── header and footer ─────────────────────────────────────────────────────────
 const CHEVRON = `<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>`;
-const THEME_LABEL = { en: "Theme", tr: "Tema" };
-const LANG_LABEL = { en: "Language", tr: "Dil" };
+// The same marks as src/components/LangMenu.tsx.
+const GLOBE = `<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.25"/><path d="M1.75 8h12.5M8 1.75c1.7 1.75 2.55 3.83 2.55 6.25S9.7 12.5 8 14.25M8 1.75C6.3 3.5 5.45 5.58 5.45 8S6.3 12.5 8 14.25"/></svg>`;
+const CHECK = `<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`;
 
 export interface FrameCtx {
   lang: Lang;
+  /** The languages this page is in, which the language menu and footer list. */
+  langs: readonly Lang[];
   file: string;
   href: (lang: Lang, file?: string) => string;
   /** The site's base path, for the favicon. */
@@ -141,7 +156,7 @@ export interface FrameCtx {
 
 /** The app's header. `current` is the nav page this one is (the news), or null for
  *  a page the nav does not list (a guide), whose own name then labels the phone menu. */
-export function appHeader({ lang, file, href, base, feed }: FrameCtx, current: string | null, label: string): string {
+export function appHeader({ lang, langs, file, href, base, feed }: FrameCtx, current: string | null, label: string): string {
   const d = DICTS[lang];
   const menus = navMenus(feed);
   const here = current ? menuOf(menus, current) : undefined;
@@ -171,10 +186,19 @@ export function appHeader({ lang, file, href, base, feed }: FrameCtx, current: s
     .map((m) => `<div class="grp"><p class="cap">${esc(d[m.label])}</p><div class="row">${m.sections.flatMap((sec) => sec.items).map(tab).join("")}</div></div>`)
     .join("")}</div>`;
   const themes = (["dark", "light", "glass"] as const).map((v) => `<button type="button" data-theme-set="${v}" aria-pressed="false">${esc(d[`theme.${v}`])}</button>`).join("");
-  const langs = LANGS.map((l) => `<a href="${href(l, file)}" hreflang="${l}" lang="${l}" data-lang="${l}"${l === lang ? ' aria-current="page"' : ""}>${l.toUpperCase()}</a>`).join("");
+  // The language menu lists this page in each of its languages, every entry a
+  // plain link; without scripts the list shows in place of the button.
+  const mine = LANG_META[lang];
+  const langItems = langs
+    .map((l) => {
+      const m = LANG_META[l];
+      return `<li><a href="${href(l, file)}" hreflang="${m.hreflang}" lang="${m.hreflang}" dir="${m.dir}" data-lang="${l}"${l === lang ? ` aria-current="page"><span>${esc(m.name)}</span>${CHECK}` : `><span>${esc(m.name)}</span>`}</a></li>`;
+    })
+    .join("");
+  const langMenu = `<div class="lmenu"><div class="seg"><button type="button" class="ltrig" aria-expanded="false" aria-controls="lang-menu" aria-label="${esc(`${d["lang.label"]}: ${mine.name}`)}">${GLOBE}<span>${esc(mine.name)}</span>${CHEVRON.replace("<svg ", '<svg class="chev" ')}</button></div><div class="lpanel" id="lang-menu"><ul>${langItems}</ul></div></div>`;
   return `<header class="hdr"><div class="hin">
 <div class="hrow"><a class="brand" href="${href(lang)}"><img src="${base}favicon.svg" alt="" width="28" height="28"><b>LLMScale</b><span class="badge">${esc(d["header.badge"])}</span></a>
-<div class="ctrls"><div class="seg" role="group" aria-label="${THEME_LABEL[lang]}">${themes}</div><div class="seg" role="group" aria-label="${LANG_LABEL[lang]}">${langs}</div></div></div>
+<div class="ctrls"><div class="seg" role="group" aria-label="${esc(d["theme.label"])}">${themes}</div>${langMenu}</div></div>
 <nav class="pnav" aria-label="LLMScale"><div class="navpill">
 <div class="mbar"><span class="tab on">${esc(label)}</span><button type="button" class="tab" aria-controls="site-nav" aria-expanded="false">${esc(d["nav.menu"])}${CHEVRON}</button></div>
 ${desktop}
@@ -183,11 +207,16 @@ ${phone}
 </div></header>`;
 }
 
-export function appFooter({ lang, file, href }: FrameCtx): string {
+export function appFooter({ lang, langs, file, href }: FrameCtx): string {
   const d = DICTS[lang];
-  const o = other(lang);
+  // This page in its other languages, as plain links: the versions link to each
+  // other in the HTML itself, not only through hreflang.
+  const others = langs
+    .filter((l) => l !== lang)
+    .map((l) => `<a href="${href(l, file)}" hreflang="${LANG_META[l].hreflang}" lang="${LANG_META[l].hreflang}" data-lang="${l}">${esc(LANG_META[l].name)}</a>`)
+    .join("");
   return `<footer class="ffoot">
-<div class="links"><a href="https://github.com/tahircengiz/LLMScale" rel="noreferrer">github.com/tahircengiz/LLMScale</a><a href="https://tr.linkedin.com/in/tahircengiz" rel="noreferrer">linkedin.com/tahircengiz</a><a href="${href(o, file)}" hreflang="${o}" lang="${o}" data-lang="${o}">${LANG_NAME[o]}</a></div>
+<div class="links"><a href="https://github.com/tahircengiz/LLMScale" rel="noreferrer">github.com/tahircengiz/LLMScale</a><a href="https://tr.linkedin.com/in/tahircengiz" rel="noreferrer">linkedin.com/tahircengiz</a>${others}</div>
 <nav aria-label="${esc(d["footer.guides"])}"><a href="${href(lang, MODELS_HUB)}">${esc(d["footer.models"])}</a><a href="${href(lang, GPUS_HUB)}">${esc(d["footer.gpus"])}</a><a href="${href(lang, CONCEPTS_HUB)}">${esc(d["footer.concepts"])}</a></nav>
 <p>${esc(d["footer.privacy"])}</p>
 </footer>`;

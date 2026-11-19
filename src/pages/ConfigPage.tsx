@@ -4,6 +4,7 @@ import { resolveModel, type ArchSource } from "../lib/hf";
 import { configFromArch, explainConfig, lineCited, type Answer, type ConfigReport, type ExplainedField, type Part, type QuestionId } from "../lib/configExplain";
 import { FIELD_GROUPS, GROUP_LABEL, GROUP_NOTE, type FieldGroup } from "../lib/configGlossary";
 import { useLang } from "../lib/i18n";
+import { langHome } from "../lib/langPath";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, Segmented } from "../components/ui";
 
@@ -200,7 +201,7 @@ export function ConfigPage() {
                 type="button"
                 onClick={() => setShowJson((s) => !s)}
                 aria-expanded={showJson}
-                className="w-full rounded-xl bg-ink-850 px-3 py-2 text-left text-sm font-medium text-slate-200 ring-1 ring-control transition outline-none hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
+                className="w-full rounded-xl bg-ink-850 px-3 py-2 text-start text-sm font-medium text-slate-200 ring-1 ring-control transition outline-none hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
               >
                 {showJson ? t("config.json.hide") : t("config.json.show", { n: report.lines.length })}
               </button>
@@ -294,7 +295,7 @@ function RetryButton({ onRetry }: { onRetry: () => void }) {
 function Portrait({ data, report, onRetry }: { data: Loaded; report: ConfigReport; onRetry: () => void }) {
   const { t, lang } = useLang();
   const say = useSay();
-  const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
+  const home = langHome(import.meta.env.BASE_URL, lang);
   const q = `?m=${encodeURIComponent(data.id).replace(/%2F/g, "/")}`;
   return (
     <Card className="p-5">
@@ -418,7 +419,7 @@ function AnswerRow({
           onClick={() => onPin(`answer:${a.id}`, a.cites)}
           onFocus={enter}
           onBlur={leave}
-          className="rounded-md text-left text-sm font-semibold tracking-tight text-white outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="rounded-md text-start text-sm font-semibold tracking-tight text-white outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           {t(`config.q.${a.id}`)}
         </button>
@@ -548,12 +549,12 @@ function JsonPane({
                 data-line={i}
                 onClick={clickable ? () => onLine(ln.path) : undefined}
                 className={
-                  "grid grid-cols-[2.75rem_minmax(0,1fr)] pr-3 transition-colors duration-150 " +
+                  "grid grid-cols-[2.75rem_minmax(0,1fr)] pe-3 transition-colors duration-150 " +
                   (on ? "bg-brand-500/20" : "")
                 }
               >
-                <span className={"select-none pr-3 text-right tabular-nums " + (on ? "text-brand-400" : "text-slate-500")}>{i + 1}</span>
-                <span className="break-words" style={{ paddingLeft: `${ln.depth * 2}ch` }}>
+                <span className={"select-none pe-3 text-end tabular-nums " + (on ? "text-brand-400" : "text-slate-500")}>{i + 1}</span>
+                <span className="break-words" style={{ paddingInlineStart: `${ln.depth * 2}ch` }}>
                   {ln.key !== undefined && (
                     <>
                       <span className={on ? "font-semibold text-brand-400" : "text-slate-400"}>"{ln.key}"</span>
@@ -619,6 +620,7 @@ function Fields({
             ]}
           />
           <input
+            dir="ltr"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("config.fields.search")}

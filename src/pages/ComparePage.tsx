@@ -116,10 +116,10 @@ export function ComparePage() {
       ) : (
         <Card className="overflow-hidden p-0">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
+            <table className="w-full border-collapse text-start">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="sticky left-0 z-10 bg-ink-900 px-3 py-3" />
+                  <th className="sticky start-0 z-10 bg-ink-900 px-3 py-3" />
                   {cols.map((c) => (
                     <th key={c.id} className="min-w-[150px] px-3 py-3 align-top">
                       <div className="flex items-start justify-between gap-2">
@@ -255,7 +255,7 @@ function InfoTip({ text }: { text: string }) {
 
 function LabelCell({ children, tip }: { children: ReactNode; tip?: string }) {
   return (
-    <td className="sticky left-0 z-10 whitespace-nowrap bg-ink-900 px-3 py-2 text-xs font-medium text-slate-400 transition-colors group-hover:bg-ink-850">
+    <td className="sticky start-0 z-10 whitespace-nowrap bg-ink-900 px-3 py-2 text-xs font-medium text-slate-400 transition-colors group-hover:bg-ink-850">
       <span className="inline-flex items-center gap-1.5">
         {children}
         {tip && <InfoTip text={tip} />}
@@ -282,7 +282,7 @@ function Section({ title, span, hint }: { title: string; span: number; hint?: st
     <tr>
       <td colSpan={span + 1} className="bg-ink-850/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
         {title}
-        {hint && <span className="ml-2 font-normal normal-case text-slate-500">{hint}</span>}
+        {hint && <span className="ms-2 font-normal normal-case text-slate-500">{hint}</span>}
       </td>
     </tr>
   );
@@ -391,6 +391,7 @@ function AddSearch({ onPick, disabled }: { onPick: (id: string) => void; disable
   return (
     <div className="relative w-full sm:w-72">
       <input
+        dir="ltr"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         disabled={disabled}
@@ -398,7 +399,7 @@ function AddSearch({ onPick, disabled }: { onPick: (id: string) => void; disable
         className="w-full rounded-xl bg-ink-850 px-3 py-2 text-sm text-white ring-1 ring-control outline-none placeholder:text-slate-500 focus:ring-brand-500/60 disabled:opacity-50"
       />
       {results.length > 0 && (
-        <ul className="absolute right-0 z-30 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-white/10 bg-ink-850 shadow-2xl">
+        <ul className="absolute end-0 z-30 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-white/10 bg-ink-850 shadow-2xl">
           {results.map((r) => (
             <li key={r.id}>
               <button
@@ -408,7 +409,7 @@ function AddSearch({ onPick, disabled }: { onPick: (id: string) => void; disable
                   setQ("");
                   setResults([]);
                 }}
-                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-brand-600/20"
+                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-start text-sm hover:bg-brand-600/20"
               >
                 <span className="truncate text-slate-200">{r.id}</span>
                 {typeof r.downloads === "number" && (

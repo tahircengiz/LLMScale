@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLang } from "../lib/i18n";
+import { langHome } from "../lib/langPath";
 import { menuOf, NAV_HOME, navMenus, navPages, type NavItem, type NavMenu } from "../lib/nav";
 
 const MENUS = navMenus(__HAS_FEED__);
@@ -38,7 +39,7 @@ function Chevron({ open }: { open: boolean }) {
  *  render, so the prerendered page carries the whole site map. */
 export function SiteNav({ page }: { page: string }) {
   const { t, lang } = useLang();
-  const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
+  const home = langHome(import.meta.env.BASE_URL, lang);
   const [open, setOpen] = useState<NavMenu["id"] | null>(null);
   // The entry the pointer or focus is on, which the panel's side describes.
   const [peek, setPeek] = useState<string | null>(null);

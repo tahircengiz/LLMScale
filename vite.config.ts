@@ -3,6 +3,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { ENABLED_LANGS, LANG_META } from "./src/lib/langs.ts";
 
 // `base` must match the GitHub Pages sub-path (https://<user>.github.io/<repo>/).
 // Override with VITE_BASE for a custom domain (set VITE_BASE=/ for the root).
@@ -14,16 +15,18 @@ const base = process.env.VITE_BASE ?? "/LLMScale/";
 const feedDir = process.env.FEED_DIR ?? "content/feed";
 const hasFeed = existsSync(feedDir) && readdirSync(feedDir).some((f) => f.endsWith(".json"));
 
-// /tr/… pages exist only in the build: scripts/prerender.ts writes them from the
-// English entries. The dev server serves the English entry for them instead, and
-// the app still takes its language from the address bar.
-function turkishPagesInDev(): Plugin {
-  const trTree = new RegExp("^" + base.replace(/[.*+?^$()|[\]\\{}]/g, "\\$&") + "tr/");
+// /tr/… and every other language's pages exist only in the build:
+// scripts/prerender.ts writes them from the English entries. The dev server serves
+// the English entry for them instead, and the app still takes its language from
+// the address bar.
+function languagePagesInDev(): Plugin {
+  const folders = ENABLED_LANGS.map((l) => LANG_META[l].prefix).filter(Boolean);
+  const langTree = new RegExp("^" + base.replace(/[.*+?^$()|[\]\\{}]/g, "\\$&") + `(${folders.join("|") || "(?!)"})`);
   return {
-    name: "turkish-pages-in-dev",
+    name: "language-pages-in-dev",
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
-        if (req.url) req.url = req.url.replace(trTree, base);
+        if (req.url) req.url = req.url.replace(langTree, base);
         next();
       });
     },
@@ -33,7 +36,7 @@ function turkishPagesInDev(): Plugin {
 export default defineConfig({
   base,
   define: { __HAS_FEED__: JSON.stringify(hasFeed) },
-  plugins: [react(), tailwindcss(), turkishPagesInDev()],
+  plugins: [react(), tailwindcss(), languagePagesInDev()],
   build: {
     rollupOptions: {
       input: {

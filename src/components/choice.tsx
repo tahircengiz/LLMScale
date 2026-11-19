@@ -56,7 +56,7 @@ export function AdvancedToggle() {
         className="inline-flex items-center gap-2 rounded-full px-1 py-0.5 text-[11px] font-medium text-slate-400 transition hover:text-slate-200"
       >
         <span className={"relative h-4 w-7 rounded-full ring-1 transition " + (on ? "bg-brand-600 ring-brand-500" : "bg-ink-850 ring-white/15")}>
-          <span className={"absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all " + (on ? "left-3.5" : "left-0.5")} />
+          <span className={"absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all " + (on ? "start-3.5" : "start-0.5")} />
         </span>
         {t("adv.label")}
       </button>
@@ -156,7 +156,7 @@ export function Select<T extends string | number>({
         aria-label={label}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={key}
-        className="flex w-full items-center justify-between gap-2 rounded-xl bg-ink-850 px-3 py-2 text-left text-sm text-white ring-1 ring-control outline-none transition focus-visible:ring-brand-500/60 hover:bg-white/5"
+        className="flex w-full items-center justify-between gap-2 rounded-xl bg-ink-850 px-3 py-2 text-start text-sm text-white ring-1 ring-control outline-none transition focus-visible:ring-brand-500/60 hover:bg-white/5"
       >
         <span className="min-w-0 truncate">{current}</span>
         <span aria-hidden className={"text-xs text-slate-500 transition " + (open ? "rotate-180" : "")}>

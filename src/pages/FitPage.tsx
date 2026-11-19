@@ -100,7 +100,7 @@ export function FitPage() {
                   aria-pressed={task === tid}
                   onClick={() => setTask(tid)}
                   className={
-                    "w-full rounded-xl px-3 py-2 text-left text-xs ring-1 transition " +
+                    "w-full rounded-xl px-3 py-2 text-start text-xs ring-1 transition " +
                     (task === tid ? "bg-brand-600/30 ring-brand-500/50 text-white" : "bg-ink-850 ring-white/10 text-slate-300 hover:bg-white/5")
                   }
                 >
@@ -118,7 +118,7 @@ export function FitPage() {
               <div>
                 <div className="flex items-start justify-between">
                   <SectionTitle title={t("fit.scoreLabel")} />
-                  <div className="text-right">
+                  <div className="text-end">
                     <div className="text-3xl font-bold leading-none" style={{ color: scoreText(result.overall) }}>
                       {result.overall}
                       <span className="text-base font-normal text-slate-500">/100</span>
@@ -153,7 +153,7 @@ export function FitPage() {
                         </span>
                         <span className="text-[11px] text-slate-500">{Math.round(c.weight * 100)}%</span>
                       </div>
-                      <p className="mt-1 pl-4 text-xs text-slate-400">{t(c.msgKey, c.vars)}</p>
+                      <p className="mt-1 ps-4 text-xs text-slate-400">{t(c.msgKey, c.vars)}</p>
                     </li>
                   ))}
                 </ul>

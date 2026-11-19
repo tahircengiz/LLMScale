@@ -219,7 +219,7 @@ export function TrainPage() {
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <SectionTitle step="3" title={t("train.results")} />
-                  <div className="text-right">
+                  <div className="text-end">
                     <div className="text-3xl font-bold leading-none text-white">{formatGiB(result.totalGiB)}</div>
                     <div className="mt-0.5 text-xs text-slate-500">{t("train.totalRequired")}</div>
                   </div>
@@ -318,7 +318,7 @@ export function TrainPage() {
                     <button
                       type="button"
                       onClick={() => setGpuId(smallestFit.id)}
-                      className="mt-2 rounded-lg bg-ink-850 px-2.5 py-1.5 text-left text-[11.5px] ring-1 ring-control transition hover:bg-white/5"
+                      className="mt-2 rounded-lg bg-ink-850 px-2.5 py-1.5 text-start text-[11.5px] ring-1 ring-control transition hover:bg-white/5"
                     >
                       <span className="block font-medium text-white">{smallestFit.name}</span>
                       <span className="text-slate-400">{t("gpu.recSmallest")}</span>

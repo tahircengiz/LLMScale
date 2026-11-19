@@ -7,6 +7,7 @@ import { planOptions, type Infeasible, type Limit, type Workload } from "../lib/
 import { layoutKey, layoutLabel } from "../lib/parallel";
 import { formatInt } from "../lib/format";
 import { useLang } from "../lib/i18n";
+import { langHome } from "../lib/langPath";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, Field, SectionTitle, Segmented, Stat } from "../components/ui";
 import { ChipField, Select, type Choice } from "../components/choice";
@@ -111,7 +112,7 @@ export function PlanPage() {
     [arch, weightDtype, kvDtype, maxLen, w, gpu],
   );
   const best = plan?.options[0];
-  const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
+  const home = langHome(import.meta.env.BASE_URL, lang);
   // The vLLM page sets up one replica, laid out as the plan lays it out.
   const vllmLink = best && gpu
     ? `${home}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${gpu.id}&n=${best.size}&ctx=${maxLen}&lay=${layoutKey(best)}`
@@ -256,13 +257,13 @@ export function PlanPage() {
 
                 <div className="mt-5 text-[11px] uppercase tracking-wide text-slate-400">{t("plan.optionsTitle")}</div>
                 <div className="mt-2 overflow-x-auto rounded-xl ring-1 ring-white/10">
-                  <table className="w-full border-collapse text-left text-xs">
+                  <table className="w-full border-collapse text-start text-xs">
                     <thead>
                       <tr className="border-b border-white/10 text-[11px] text-slate-400">
                         <th scope="col" className="px-3 py-2 font-medium">{t("plan.col.layout")}</th>
-                        <th scope="col" className="px-3 py-2 text-right font-medium">{t("plan.col.replicas")}</th>
-                        <th scope="col" className="px-3 py-2 text-right font-medium">GPU</th>
-                        <th scope="col" className="px-3 py-2 text-right font-medium">{t("plan.col.rps")}</th>
+                        <th scope="col" className="px-3 py-2 text-end font-medium">{t("plan.col.replicas")}</th>
+                        <th scope="col" className="px-3 py-2 text-end font-medium">GPU</th>
+                        <th scope="col" className="px-3 py-2 text-end font-medium">{t("plan.col.rps")}</th>
                         <th scope="col" className="px-3 py-2 font-medium">{t("plan.col.limit")}</th>
                       </tr>
                     </thead>
@@ -270,9 +271,9 @@ export function PlanPage() {
                       {shownOptions.map((o) => (
                         <tr key={layoutKey(o) + o.size} className={o === best ? "bg-brand-600/10" : undefined}>
                           <th scope="row" className="px-3 py-2 font-medium text-white">{layoutLabel(o)}</th>
-                          <td className="px-3 py-2 text-right tabular-nums text-slate-200">{o.replicas}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-white">{o.gpus}</td>
-                          <td className="px-3 py-2 text-right tabular-nums text-slate-200">{o.replicaRps.toFixed(1)}</td>
+                          <td className="px-3 py-2 text-end tabular-nums text-slate-200">{o.replicas}</td>
+                          <td className="px-3 py-2 text-end tabular-nums text-white">{o.gpus}</td>
+                          <td className="px-3 py-2 text-end tabular-nums text-slate-200">{o.replicaRps.toFixed(1)}</td>
                           <td className="px-3 py-2 text-slate-400">{limitText(o.limit)}</td>
                         </tr>
                       ))}

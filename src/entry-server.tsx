@@ -1,7 +1,9 @@
 import { StrictMode } from "react";
 import { renderToString } from "react-dom/server";
 import Root from "./Root.tsx";
-import type { Lang } from "./lib/dict.ts";
+import type { Lang } from "./lib/langs.ts";
+// Every dictionary, handed to translate(): the build renders each language.
+import "./locales/index.ts";
 import { primeSnapshot, type CompareSnapshot } from "./lib/compareSnapshot.ts";
 
 /** The page that `window.location` names, in `lang`, with nothing chosen — what a

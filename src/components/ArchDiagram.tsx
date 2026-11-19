@@ -181,6 +181,7 @@ export function ArchDiagram({ a }: { a: Anatomy }) {
   return (
     <div className="flex w-full justify-center overflow-x-auto lg:h-full lg:overflow-visible">
       <svg
+        direction="ltr"
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label="Transformer architecture diagram"

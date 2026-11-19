@@ -140,7 +140,7 @@ export function NumberInput({
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full bg-transparent px-3 py-2 text-sm text-white outline-none"
       />
-      {suffix && <span className="pr-3 text-xs text-slate-500">{suffix}</span>}
+      {suffix && <span className="pe-3 text-xs text-slate-500">{suffix}</span>}
     </div>
   );
 }

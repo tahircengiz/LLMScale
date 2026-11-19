@@ -15,6 +15,7 @@ import {
 } from "../lib/serving";
 import { fmtBytes } from "../lib/configExplain";
 import { useLang } from "../lib/i18n";
+import { langHome } from "../lib/langPath";
 import { decodeState, DEFAULT_STATE } from "../lib/urlState";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Badge, Card, Segmented } from "../components/ui";
@@ -259,7 +260,7 @@ function Loading({ id }: { id: string }) {
 function Portrait({ id, brief, kd }: { id: string; brief: ServingBrief; kd?: Dtype }) {
   const { t, lang } = useLang();
   const say = useSay();
-  const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
+  const home = langHome(import.meta.env.BASE_URL, lang);
   const q = `?m=${encodeURIComponent(id).replace(/%2F/g, "/")}`;
   const sizable = brief.facts.role !== "adapter" && brief.facts.role !== "draft" && brief.facts.format !== "none";
   const SECOND = FOCUS + " rounded-xl px-3 py-1.5 text-sm font-medium text-slate-300 ring-1 ring-control transition hover:bg-white/5 hover:text-white";

@@ -6,7 +6,7 @@
 import { calculate, type Dtype, type ModelArch } from "../src/lib/calc.ts";
 import { KNOWN_MODELS } from "../src/lib/models.ts";
 import { cardsFor, GPUS, needOn, usableGiB, type Gpu } from "../src/lib/gpus.ts";
-import type { Lang } from "../src/lib/dict.ts";
+import type { FeedLang as Lang } from "../src/lib/langs.ts";
 import { FEATURED_GPU_IDS, gpuPageFile, modelPageFile } from "../src/lib/staticPages.ts";
 import { FEED_HUB, FEED_MEDIA, feedPostFile, paragraphs, type FeedCategory, type FeedPost } from "../src/lib/feed.ts";
 import { ctxK, esc, gib, params } from "./shell.ts";

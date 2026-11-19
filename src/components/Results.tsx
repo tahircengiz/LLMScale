@@ -32,7 +32,7 @@ export function Results({
       <div>
         <div className="flex items-end justify-between">
           <SectionTitle title={t("results.title")} />
-          <div className="text-right">
+          <div className="text-end">
             <div className="text-3xl font-bold tracking-tight text-white">{formatGiB(result.weightsGiB)}</div>
             <div className="text-xs text-slate-500">{t("results.weightsOnly")}</div>
           </div>
@@ -52,7 +52,7 @@ export function Results({
     <div>
       <div className="flex items-end justify-between">
         <SectionTitle title={t("results.title")} />
-        <div className="text-right">
+        <div className="text-end">
           <div className="text-3xl font-bold tracking-tight text-white">
             {formatGiB(result.totalGiB)}
           </div>

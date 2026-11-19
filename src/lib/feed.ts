@@ -1,4 +1,4 @@
-import type { Lang } from "./dict";
+import { FEED_LANGS, type FeedLang as Lang } from "./langs.ts";
 import type { ModelArch } from "./calc";
 
 // The news feed: short posts about LLM releases, serving engines and hardware,
@@ -128,7 +128,7 @@ export function validatePost(raw: unknown, opts: ValidateOptions): string[] {
     errs.push(`category must be one of ${FEED_CATEGORIES.join(", ")}`);
   }
 
-  for (const lang of ["en", "tr"] as const) {
+  for (const lang of FEED_LANGS) {
     const t = p[lang];
     if (!isObj(t)) {
       errs.push(`${lang} must hold the post's title and body`);
@@ -214,7 +214,7 @@ export function validatePost(raw: unknown, opts: ValidateOptions): string[] {
         if (typeof n !== "number" || !Number.isInteger(n) || n < 16 || n > 4096) errs.push(`image.${d} must be a whole number of pixels`);
       }
       const alt = img.alt;
-      for (const lang of ["en", "tr"] as const) {
+      for (const lang of FEED_LANGS) {
         const a = isObj(alt) ? alt[lang] : undefined;
         if (!str(a) || !a.trim() || chars(a) > FEED_LIMITS.alt) errs.push(`image.alt.${lang} must describe the image in 1–${FEED_LIMITS.alt} characters`);
       }

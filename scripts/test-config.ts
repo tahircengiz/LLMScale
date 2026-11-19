@@ -10,7 +10,8 @@
 // papers state, not ones this engine produced and then copied here.
 
 import { readFileSync, readdirSync } from "node:fs";
-import { DICTS } from "../src/lib/dict.ts";
+import { DICTS } from "../src/locales/index.ts";
+import { ENABLED_LANGS } from "../src/lib/langs.ts";
 import { ALIASES, FIELD_GROUPS, GLOSSARY, GROUP_LABEL, PATTERNS, lookupField } from "../src/lib/configGlossary.ts";
 import {
   configFromArch,
@@ -22,7 +23,7 @@ import {
   type ConfigReport,
   type Part,
 } from "../src/lib/configExplain.ts";
-import type { Lang } from "../src/lib/dict.ts";
+import type { Lang } from "../src/lib/langs.ts";
 import { parseConfigJson } from "../src/lib/hf.ts";
 
 let fails = 0;
@@ -252,7 +253,7 @@ console.log("\n--- every sentence the engine can produce exists in both dictiona
 {
   const keys = new Set<string>();
   for (const f of readdirSync(dir).filter((x) => x.endsWith(".json"))) {
-    for (const lang of ["en", "tr"] as const) {
+    for (const lang of ENABLED_LANGS) {
       const r = explainConfig({ cfg: load(f.slice(0, -5)), lang, numParams: 7e9 });
       for (const a of r.answers) {
         keys.add(`config.q.${a.id}`);

@@ -2,8 +2,6 @@ import { useEffect } from "react";
 import App from "./App.tsx";
 import { LangSuggest } from "./components/LangSuggest.tsx";
 import { LanguageContext, translate, type Lang } from "./lib/i18n";
-import { pathFor, rememberLang } from "./lib/langPath";
-import { track } from "./lib/analytics";
 
 /** Put on <html> by each entry's inline bootstrap when the prerendered page in
  *  #root is not what this visitor is about to see — a link carrying its own state.
@@ -13,17 +11,9 @@ export const PRERENDER_STALE_CLASS = "prerender-stale";
 
 /** The app with its language context. Shared by the browser entry (main.tsx) and
  *  the build-time prerender (entry-server.tsx). The language comes from the URL —
- *  /tr/… is Turkish — so both pass it in rather than detecting it here. */
+ *  /tr/… is Turkish — so both pass it in rather than detecting it here. Switching
+ *  language is following a link in the language menu (LangMenu.tsx). */
 export default function Root({ lang }: { lang: Lang }) {
-  // Switching language is navigating to the other version's address, keeping
-  // whatever the page has in its query. The choice is remembered, so the other
-  // version is not offered back to them.
-  const setLang = (l: Lang) => {
-    if (l === lang) return;
-    rememberLang(l);
-    track("lang-switch", { to: l });
-    window.location.assign(pathFor(window.location.pathname, l) + window.location.search + window.location.hash);
-  };
   const t = (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars);
 
   // Effects run after the commit, so the page React rendered has already replaced
@@ -33,7 +23,7 @@ export default function Root({ lang }: { lang: Lang }) {
   }, []);
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <LanguageContext.Provider value={{ lang, t }}>
       <App />
       <LangSuggest />
     </LanguageContext.Provider>

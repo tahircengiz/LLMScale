@@ -53,6 +53,7 @@ export function LogCheck({
       <SectionTitle title={t("logcheck.title")} />
       <p className="-mt-1 mb-3 max-w-3xl text-xs leading-relaxed text-slate-400">{t("logcheck.lede")}</p>
       <textarea
+        dir="ltr"
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={5}
@@ -82,13 +83,13 @@ export function LogCheck({
       {check && check.rows.length > 0 && (
         <>
           <div className="mt-3 overflow-x-auto rounded-xl ring-1 ring-white/10">
-            <table className="w-full border-collapse text-left text-xs">
+            <table className="w-full border-collapse text-start text-xs">
               <thead>
                 <tr className="border-b border-white/10 text-[11px] uppercase tracking-wide text-slate-400">
                   <th scope="col" className="px-3 py-2 font-medium">{t("logcheck.col.figure")}</th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">vLLM {log?.version ?? ""}</th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">LLMScale</th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">{t("logcheck.col.gap")}</th>
+                  <th scope="col" className="px-3 py-2 text-end font-medium">vLLM {log?.version ?? ""}</th>
+                  <th scope="col" className="px-3 py-2 text-end font-medium">LLMScale</th>
+                  <th scope="col" className="px-3 py-2 text-end font-medium">{t("logcheck.col.gap")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -99,9 +100,9 @@ export function LogCheck({
                       <th scope="row" className="px-3 py-2 font-normal text-slate-300">
                         {t(`logcheck.row.${r.key}`)}
                       </th>
-                      <td className="px-3 py-2 text-right tabular-nums text-white">{fmt(r, r.vllm)}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-white">{fmt(r, r.ours)}</td>
-                      <td className="px-3 py-2 text-right">
+                      <td className="px-3 py-2 text-end tabular-nums text-white">{fmt(r, r.vllm)}</td>
+                      <td className="px-3 py-2 text-end tabular-nums text-white">{fmt(r, r.ours)}</td>
+                      <td className="px-3 py-2 text-end">
                         <Badge tone={g.tone}>{g.text}</Badge>
                       </td>
                     </tr>

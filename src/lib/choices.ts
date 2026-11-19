@@ -6,6 +6,8 @@
 // React-free: pages pass their t(); scripts/test-choices.ts checks every list.
 
 import type { Gpu } from "./gpus.ts";
+import { formatNumber } from "./format.ts";
+import type { Lang } from "./langs.ts";
 
 type T = (key: string, vars?: Record<string, string | number>) => string;
 export interface Opt {
@@ -18,21 +20,21 @@ export interface Opt {
 const WORDS_PER_TOKEN = 0.75;
 const WORDS_PER_PAGE = 500;
 
-const fmt = (n: number, lang: string) => n.toLocaleString(lang === "tr" ? "tr-TR" : "en-US");
+const fmt = (n: number, lang: Lang) => formatNumber(n, lang);
 const k = (n: number) => (n >= 1048576 ? `${n / 1048576}M` : n >= 1024 && n % 1024 === 0 ? `${n / 1024}k` : n >= 1000 && n % 1000 === 0 ? `${n / 1000}k` : String(n));
-function words(n: number, lang: string): { w: string; p: string } {
+function words(n: number, lang: Lang): { w: string; p: string } {
   const w = n * WORDS_PER_TOKEN;
   const round = (x: number) => (x >= 1000 ? Math.round(x / 100) * 100 : x >= 100 ? Math.round(x / 10) * 10 : Math.round(x));
   return { w: fmt(round(w), lang), p: fmt(Math.max(1, Math.round(w / WORDS_PER_PAGE)), lang) };
 }
 /** A token count's plain size: words and, past a page, pages. */
-function size(t: T, n: number, lang: string): string {
+function size(t: T, n: number, lang: Lang): string {
   const { w, p } = words(n, lang);
   return n * WORDS_PER_TOKEN >= WORDS_PER_PAGE ? t("choice.tokensPages", { w, p }) : t("choice.tokensWords", { w });
 }
 const band = <B extends string>(n: number, bands: [number, B][], last: B): B => bands.find(([max]) => n <= max)?.[1] ?? last;
 
-export function contextChoices(t: T, lang: string, modelMax?: number): Opt[] {
+export function contextChoices(t: T, lang: Lang, modelMax?: number): Opt[] {
   const all = [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576];
   const list = modelMax ? all.filter((n) => n <= modelMax) : all;
   if (modelMax && !list.includes(modelMax)) list.push(modelMax);
@@ -43,7 +45,7 @@ export function contextChoices(t: T, lang: string, modelMax?: number): Opt[] {
   }));
 }
 
-export function userChoices(t: T, lang: string): Opt[] {
+export function userChoices(t: T, lang: Lang): Opt[] {
   return [1, 2, 4, 8, 16, 32, 64, 128, 256, 512].map((n) => ({
     value: n,
     label: fmt(n, lang),
@@ -63,7 +65,7 @@ export function gpuCountChoices(t: T): Opt[] {
   return [1, 2, 4, 8, 16].map((n) => ({ value: n, label: String(n), hint: t(`choice.gpus.${n}`) }));
 }
 
-export function promptChoices(t: T, lang: string): Opt[] {
+export function promptChoices(t: T, lang: Lang): Opt[] {
   return [128, 256, 512, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000].map((n) => ({
     value: n,
     label: fmt(n, lang),
@@ -71,7 +73,7 @@ export function promptChoices(t: T, lang: string): Opt[] {
   }));
 }
 
-export function outputChoices(t: T, lang: string): Opt[] {
+export function outputChoices(t: T, lang: Lang): Opt[] {
   return [0, 16, 32, 64, 128, 256, 512, 1000, 2000, 4000, 8000, 16000].map((n) => ({
     value: n,
     label: fmt(n, lang),
@@ -79,7 +81,7 @@ export function outputChoices(t: T, lang: string): Opt[] {
   }));
 }
 
-export function prefixChoices(t: T, lang: string): Opt[] {
+export function prefixChoices(t: T, lang: Lang): Opt[] {
   return [0, 128, 256, 512, 1000, 2000, 4000, 8000].map((n) => ({
     value: n,
     label: fmt(n, lang),
@@ -87,7 +89,7 @@ export function prefixChoices(t: T, lang: string): Opt[] {
   }));
 }
 
-export function rpsChoices(t: T, lang: string): Opt[] {
+export function rpsChoices(t: T, lang: Lang): Opt[] {
   return [0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].map((r) => ({
     value: r,
     label: fmt(r, lang),
@@ -95,7 +97,7 @@ export function rpsChoices(t: T, lang: string): Opt[] {
   }));
 }
 
-export function ttftChoices(t: T, lang: string): Opt[] {
+export function ttftChoices(t: T, lang: Lang): Opt[] {
   return [0.1, 0.2, 0.3, 0.5, 1, 2, 3, 6, 10].map((s) => ({
     value: s,
     label: s < 1 ? `${fmt(Math.round(s * 1000), lang)} ms` : `${fmt(s, lang)} s`,
@@ -103,7 +105,7 @@ export function ttftChoices(t: T, lang: string): Opt[] {
   }));
 }
 
-export function tpotChoices(t: T, lang: string): Opt[] {
+export function tpotChoices(t: T, lang: Lang): Opt[] {
   return [10, 15, 20, 30, 40, 50, 80, 100, 200].map((ms) => {
     const tps = 1000 / ms;
     return {
@@ -122,12 +124,12 @@ export function batchChoices(t: T): Opt[] {
   return [1, 2, 4, 8, 16, 32, 64].map((b) => ({ value: b, label: String(b), hint: t(`choice.batch.${band(b, [[1, "one"], [8, "small"]], "large")}`, { n: b }) }));
 }
 
-export function seqChoices(t: T, lang: string): Opt[] {
+export function seqChoices(t: T, lang: Lang): Opt[] {
   return [512, 1024, 2048, 4096, 8192, 16384, 32768].map((n) => ({ value: n, label: `${k(n)} · ${fmt(n, lang)}`, hint: `${size(t, n, lang)} ${t(`choice.seq.${band(n, [[1024, "short"], [4096, "common"]], "long")}`)}` }));
 }
 
 /** A device's figures in one line, for hovering it in a menu. */
-export function gpuHint(t: T, g: Gpu, lang: string): string {
+export function gpuHint(t: T, g: Gpu, lang: Lang): string {
   const parts = [t("choice.gpu.mem", { gb: fmt(g.totalGiB ?? g.vramGiB, lang) })];
   if (g.unified && g.totalGiB) parts.push(t("choice.gpu.usable", { gb: fmt(g.vramGiB, lang) }));
   if (g.bandwidthGBs) parts.push(t("choice.gpu.bw", { bw: fmt(g.bandwidthGBs, lang) }));
