@@ -32,9 +32,9 @@ const pt: PageText = {
     ctx: (k) => `contexto de ${k}`,
     answer: ({ weights, kv, overhead, int4 }) =>
       `${weights} de pesos, ${kv} de cache KV e ${overhead} de sobrecarga do vLLM. Em INT4, a mesma carga de trabalho precisa de ${int4}.`,
-    specLayers: "camadas",
-    specMaxContext: "contexto máx.",
-    specHeads: "cabeças",
+    specLayers: (n) => `${n} camadas`,
+    specMaxContext: (k) => `${k} contexto máx.`,
+    specHeads: ({ heads, kvHeads }) => `${heads}/${kvHeads} cabeças`,
     h2Memory: (name) => `Memória do ${name} por precisão e contexto`,
     thPrecision: "Precisão",
     kvCache: "cache KV",

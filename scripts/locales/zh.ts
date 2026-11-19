@@ -32,9 +32,9 @@ const zh: PageText = {
     ctx: (k) => `${k} 上下文`,
     answer: ({ weights, kv, overhead, int4 }) =>
       `权重 ${weights}，KV 缓存 ${kv}，vLLM 开销 ${overhead}。同样的工作负载在 INT4 下需要 ${int4}。`,
-    specLayers: "层",
-    specMaxContext: "最大上下文",
-    specHeads: "头",
+    specLayers: (n) => `${n} 层`,
+    specMaxContext: (k) => `${k} 最大上下文`,
+    specHeads: ({ heads, kvHeads }) => `${heads}/${kvHeads} 头`,
     h2Memory: (name) => `${name} 在不同精度和上下文下的显存`,
     thPrecision: "精度",
     kvCache: "KV 缓存",

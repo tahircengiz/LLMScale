@@ -32,9 +32,9 @@ const id: PageText = {
     ctx: (k) => `konteks ${k}`,
     answer: ({ weights, kv, overhead, int4 }) =>
       `${weights} untuk bobot, ${kv} untuk cache KV, dan ${overhead} untuk overhead vLLM. Pada INT4, beban kerja yang sama membutuhkan ${int4}.`,
-    specLayers: "lapisan",
-    specMaxContext: "konteks maks.",
-    specHeads: "head",
+    specLayers: (n) => `${n} lapisan`,
+    specMaxContext: (k) => `${k} konteks maks.`,
+    specHeads: ({ heads, kvHeads }) => `${heads}/${kvHeads} head`,
     h2Memory: (name) => `Memori ${name} menurut presisi dan konteks`,
     thPrecision: "Presisi",
     kvCache: "cache KV",

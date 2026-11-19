@@ -32,9 +32,9 @@ const bn: PageText = {
     ctx: (k) => `${k} কনটেক্সট`,
     answer: ({ weights, kv, overhead, int4 }) =>
       `${weights} ওজন, ${kv} KV ক্যাশ এবং ${overhead} vLLM-এর ওভারহেড। INT4-এ একই ওয়ার্কলোডে ${int4} লাগে।`,
-    specLayers: "লেয়ার",
-    specMaxContext: "সর্বোচ্চ কনটেক্সট",
-    specHeads: "হেড",
+    specLayers: (n) => `${n} লেয়ার`,
+    specMaxContext: (k) => `${k} সর্বোচ্চ কনটেক্সট`,
+    specHeads: ({ heads, kvHeads }) => `${heads}/${kvHeads} হেড`,
     h2Memory: (name) => `প্রিসিশন ও কনটেক্সট অনুযায়ী ${name}-এর মেমরি`,
     thPrecision: "প্রিসিশন",
     kvCache: "KV ক্যাশ",
