@@ -100,4 +100,5 @@ export const SUGGEST: Record<Lang, { text: string; go: string; dismiss: string }
   id: { text: "Halaman ini juga tersedia dalam bahasa Indonesia.", go: "Beralih ke bahasa Indonesia", dismiss: "Tutup" },
   bn: { text: "এই পৃষ্ঠাটি বাংলাতেও পাওয়া যায়।", go: "বাংলায় দেখুন", dismiss: "বন্ধ করুন" },
   ru: { text: "Эта страница доступна и на русском языке.", go: "Перейти на русский", dismiss: "Закрыть" },
+  de: { text: "Diese Seite gibt es auch auf Deutsch.", go: "Auf Deutsch wechseln", dismiss: "Schließen" },
 };

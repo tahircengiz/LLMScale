@@ -305,6 +305,8 @@ console.log("\n--- a count of one takes the dictionary's singular word ---");
   check("ru: 5 экспертов", v("n_shared_experts", 5, "ru") === "5 экспертов", v("n_shared_experts", 5, "ru"));
   check("ru: 21 эксперт", v("n_shared_experts", 21, "ru") === "21 эксперт", v("n_shared_experts", 21, "ru"));
   check("ru: 0 идентификаторов", v("eos_token_id", [], "ru") === "0 идентификаторов", v("eos_token_id", [], "ru"));
+  check("de: 1 Experte", v("n_shared_experts", 1, "de") === "1 Experte", v("n_shared_experts", 1, "de"));
+  check("de: 2 Experten", v("n_shared_experts", 2, "de") === "2 Experten", v("n_shared_experts", 2, "de"));
 }
 
 console.log("\n--- a language with one form for more than one keeps it for every other count ---");
@@ -333,6 +335,10 @@ console.log("\n--- a layer count meets its tally the way its language writes a c
   check("fr: no-break space before the colon, as docs/i18n/glossary/fr.md has it", types("fr") === "3 couches : 2 sliding_attention, 1 full_attention", types("fr"));
   check("zh: full-width colon and 、", types("zh") === "3 层：2 sliding_attention、1 full_attention", types("zh"));
   check("ru: colon and space, 3 слоя", types("ru") === "3 слоя: 2 sliding_attention, 1 full_attention", types("ru"));
+  check("de: colon and space, 3 Schichten", types("de") === "3 Schichten: 2 sliding_attention, 1 full_attention", types("de"));
+  // English has no singular for this count word; German adds config.w.layers.one.
+  const one = humanValue(["full_attention"], GLOSSARY.layer_types, "de");
+  check("de: 1 Schicht", one === "1 Schicht: 1 full_attention", one);
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);

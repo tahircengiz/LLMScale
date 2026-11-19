@@ -16,7 +16,8 @@ export const CH = [
       pt:{e:"01 · PROMPT", h:"Tudo começa com uma <em>frase</em>", p:"Você entrega um texto ao modelo: <b>“The cat sat on the mat.”</b> Ele não lê letras — se prepara para ver pedaços com significado."},
       id:{e:"01 · PROMPT", h:"Semuanya dimulai dari sebuah <em>kalimat</em>", p:"Anda memberikan teks kepada model: <b>“The cat sat on the mat.”</b> Model tidak membaca huruf — ia bersiap melihat potongan-potongan yang bermakna."},
       bn:{e:"01 · প্রম্পট", h:"শুরু হয় একটি <em>বাক্য</em> দিয়ে", p:"আপনি মডেলকে টেক্সট দেন: <b>“The cat sat on the mat.”</b> মডেল অক্ষর পড়বে না — সে অর্থপূর্ণ টুকরো দেখার জন্য তৈরি হয়।"},
-      ru:{e:"01 · ПРОМПТ", h:"Все начинается с <em>предложения</em>", p:"Вы передаете модели текст: <b>«The cat sat on the mat.»</b> Букв она не читает — она готовится увидеть в нем осмысленные фрагменты."} } },
+      ru:{e:"01 · ПРОМПТ", h:"Все начинается с <em>предложения</em>", p:"Вы передаете модели текст: <b>«The cat sat on the mat.»</b> Букв она не читает — она готовится увидеть в нем осмысленные фрагменты."},
+      de:{e:"01 · PROMPT", h:"Alles beginnt mit einem <em>Satz</em>", p:"Sie geben dem Modell einen Text: <b>„The cat sat on the mat.“</b> Es liest keine Buchstaben – es bereitet sich darauf vor, bedeutungstragende Stücke zu sehen."} } },
   { id:"token", cam:[0,0,8], look:[0,0,0], layout:"row", spin:false, edges:0, axes:0, planes:0, field:0, loop:0, ids:true,
     text:{
       en:{e:"02 · TOKENIZATION", h:'Text is split into <em>tokens</em>', p:'The sentence is chopped into pieces, each mapped to a number (<b>ID</b>). From here the model works in numbers, not words.'},
@@ -28,7 +29,8 @@ export const CH = [
       pt:{e:"02 · TOKENIZAÇÃO", h:"O texto é dividido em <em>tokens</em>", p:"A frase é cortada em pedaços, e cada um é associado a um número (<b>ID</b>). Daqui em diante, o modelo trabalha com números, não com palavras."},
       id:{e:"02 · TOKENISASI", h:"Teks dipecah menjadi <em>token</em>", p:"Kalimat dipotong menjadi beberapa bagian, dan masing-masing dipetakan ke sebuah angka (<b>ID</b>). Mulai dari sini, model bekerja dengan angka, bukan kata."},
       bn:{e:"02 · টোকেনাইজেশন", h:"টেক্সট <em>টোকেনে</em> ভাগ হয়", p:"বাক্যটিকে টুকরো টুকরো করা হয়, আর প্রতিটি টুকরোকে একটি সংখ্যার (<b>ID</b>) সাথে মেলানো হয়। এখান থেকে মডেল শব্দ নয়, সংখ্যা নিয়ে কাজ করে।"},
-      ru:{e:"02 · ТОКЕНИЗАЦИЯ", h:"Текст делится на <em>токены</em>", p:"Предложение разрезается на фрагменты, и каждому сопоставляется число — <b>идентификатор</b> (ID). Дальше модель работает с числами, а не со словами."} } },
+      ru:{e:"02 · ТОКЕНИЗАЦИЯ", h:"Текст делится на <em>токены</em>", p:"Предложение разрезается на фрагменты, и каждому сопоставляется число — <b>идентификатор</b> (ID). Дальше модель работает с числами, а не со словами."},
+      de:{e:"02 · TOKENISIERUNG", h:"Der Text wird in <em>Token</em> zerlegt", p:"Der Satz wird in Stücke zerschnitten, und jedes Stück wird einer Zahl zugeordnet (<b>ID</b>). Ab hier arbeitet das Modell mit Zahlen, nicht mit Wörtern."} } },
   { id:"embed", cam:[0.4,0.6,9.4], look:[0,0,0], layout:"scatter", spin:true, edges:0, axes:1, planes:0, field:0, loop:0, ids:true,
     text:{
       en:{e:"03 · EMBEDDING", h:'Each token becomes a <em>vector</em>', p:'Every ID turns into a point in a high-dimensional <b>meaning space</b>. Similar meanings land close together.'},
@@ -40,7 +42,8 @@ export const CH = [
       pt:{e:"03 · EMBEDDING", h:"Cada token vira um <em>vetor</em>", p:"Cada ID se transforma em um ponto de um <b>espaço de significado</b> de alta dimensão. Significados parecidos ficam perto uns dos outros."},
       id:{e:"03 · EMBEDDING", h:"Setiap token menjadi sebuah <em>vektor</em>", p:"Setiap ID berubah menjadi sebuah titik dalam <b>ruang makna</b> berdimensi tinggi. Makna yang mirip berada berdekatan."},
       bn:{e:"03 · এম্বেডিং", h:"প্রতিটি টোকেন একটি <em>ভেক্টর</em> হয়ে যায়", p:"প্রতিটি ID বহুমাত্রিক একটি <b>অর্থের স্পেসে</b> একটি বিন্দুতে পরিণত হয়। কাছাকাছি অর্থগুলো একে অপরের কাছাকাছি এসে পড়ে।"},
-      ru:{e:"03 · ЭМБЕДДИНГ", h:"Каждый токен становится <em>вектором</em>", p:"Каждый идентификатор превращается в точку в многомерном <b>пространстве смыслов</b>. Близкие по смыслу токены оказываются рядом."} } },
+      ru:{e:"03 · ЭМБЕДДИНГ", h:"Каждый токен становится <em>вектором</em>", p:"Каждый идентификатор превращается в точку в многомерном <b>пространстве смыслов</b>. Близкие по смыслу токены оказываются рядом."},
+      de:{e:"03 · EINBETTUNG", h:"Jedes Token wird zu einem <em>Vektor</em>", p:"Jede ID wird zu einem Punkt in einem hochdimensionalen <b>Bedeutungsraum</b>. Ähnliche Bedeutungen liegen nah beieinander."} } },
   { id:"attention", cam:[0,0,9], look:[0,0,0], layout:"scatter", spin:false, edges:1, axes:0, planes:0, field:0, loop:0, ids:false, attn:true,
     text:{
       en:{e:"04 · ATTENTION", h:'Tokens <em>look at each other</em>', p:'Each token computes <b>how much to attend</b> to the others. With a causal mask, a token only looks at the ones before it.'},
@@ -52,7 +55,8 @@ export const CH = [
       pt:{e:"04 · ATENÇÃO", h:"Os tokens <em>olham uns para os outros</em>", p:"Cada token calcula <b>quanta atenção dar</b> aos outros. Com uma máscara causal, um token só olha para os que vêm antes dele."},
       id:{e:"04 · PERHATIAN", h:"Token <em>saling memperhatikan</em>", p:"Setiap token menghitung <b>seberapa besar perhatian</b> yang harus diberikannya kepada token lain. Dengan causal mask, sebuah token hanya melihat token-token sebelumnya."},
       bn:{e:"04 · অ্যাটেনশন", h:"টোকেনগুলো <em>একে অপরের দিকে তাকায়</em>", p:"প্রতিটি টোকেন হিসাব করে অন্যগুলোর প্রতি তাকে <b>কতটা মনোযোগ দিতে হবে</b>। একটি causal mask থাকায় কোনো টোকেন কেবল তার আগের টোকেনগুলোর দিকেই তাকায়।"},
-      ru:{e:"04 · ВНИМАНИЕ", h:"Токены <em>смотрят друг на друга</em>", p:"Каждый токен вычисляет, <b>сколько внимания уделить</b> остальным. С каузальной маской токен видит только те, что стоят перед ним."} } },
+      ru:{e:"04 · ВНИМАНИЕ", h:"Токены <em>смотрят друг на друга</em>", p:"Каждый токен вычисляет, <b>сколько внимания уделить</b> остальным. С каузальной маской токен видит только те, что стоят перед ним."},
+      de:{e:"04 · AUFMERKSAMKEIT", h:"Die Token <em>sehen einander an</em>", p:"Jedes Token berechnet, <b>wie viel Aufmerksamkeit</b> es den anderen schenkt. Mit einer kausalen Maske sieht ein Token nur die Token vor sich."} } },
   { id:"layers", cam:[0,1.7,10.6], look:[0,-0.3,0], layout:"scatter", spin:false, edges:1, axes:0, planes:1, field:0, loop:0, ids:false,
     text:{
       en:{e:"05 · LAYERS", h:'The same block, <em>stacked deep</em>', p:'Attention + feed-forward repeats, stacked dozens deep (e.g. <b>×32</b>). Every pass refines the representation.'},
@@ -64,7 +68,8 @@ export const CH = [
       pt:{e:"05 · CAMADAS", h:"O mesmo bloco, <em>empilhado em profundidade</em>", p:"Atenção + feed-forward se repetem, empilhados dezenas de vezes (ex.: <b>×32</b>). Cada passada refina a representação."},
       id:{e:"05 · LAPISAN", h:"Blok yang sama, <em>ditumpuk dalam-dalam</em>", p:"Perhatian + feed-forward berulang, ditumpuk hingga puluhan lapis (mis. <b>×32</b>). Setiap lintasan menyempurnakan representasinya."},
       bn:{e:"05 · লেয়ার", h:"একই ব্লক, <em>অনেক গভীর পর্যন্ত সাজানো</em>", p:"অ্যাটেনশন + ফিড-ফরোয়ার্ড ব্লকটি বারবার আসে, কয়েক ডজন বার একের ওপর এক সাজানো (যেমন <b>×32</b>)। প্রতিটি ধাপ উপস্থাপনাকে আরও নিখুঁত করে।"},
-      ru:{e:"05 · СЛОИ", h:"Один и тот же блок <em>в глубоком стеке</em>", p:"Внимание + полносвязный слой повторяются десятки раз подряд (например, <b>×32</b>). Каждый проход уточняет представление."} } },
+      ru:{e:"05 · СЛОИ", h:"Один и тот же блок <em>в глубоком стеке</em>", p:"Внимание + полносвязный слой повторяются десятки раз подряд (например, <b>×32</b>). Каждый проход уточняет представление."},
+      de:{e:"05 · SCHICHTEN", h:"Derselbe Block, <em>tief gestapelt</em>", p:"Aufmerksamkeit + Feedforward wiederholen sich, Dutzende Male übereinander gestapelt (z. B. <b>×32</b>). Jeder Durchlauf verfeinert die Repräsentation."} } },
   { id:"predict", cam:[-1.6,0.4,7.8], look:[0.4,0,0], layout:"scatter", spin:false, edges:1, axes:0, planes:0, field:0, loop:0, ids:false, bars:true,
     text:{
       en:{e:"06 · PREDICTION", h:'The next most <em>likely</em> token', p:'The final layer scores the entire vocabulary into a <b>probability distribution</b>. The top token is picked (or sampled).'},
@@ -76,7 +81,8 @@ export const CH = [
       pt:{e:"06 · PREVISÃO", h:"O próximo token mais <em>provável</em>", p:"A última camada pontua todo o vocabulário e o transforma em uma <b>distribuição de probabilidade</b>. O token do topo é escolhido (ou amostrado)."},
       id:{e:"06 · PREDIKSI", h:"Token berikutnya yang paling <em>mungkin</em>", p:"Lapisan terakhir memberi skor pada seluruh kosakata dan mengubahnya menjadi <b>distribusi probabilitas</b>. Token teratas dipilih (atau diambil melalui sampling)."},
       bn:{e:"06 · পূর্বাভাস", h:"পরের সবচেয়ে <em>সম্ভাব্য</em> টোকেন", p:"শেষ লেয়ার পুরো ভোকাবুলারিকে স্কোর করে একটি <b>সম্ভাবনা বণ্টনে</b> পরিণত করে। সবচেয়ে ওপরের টোকেনটি বেছে নেওয়া হয় (অথবা স্যাম্পল করা হয়)।"},
-      ru:{e:"06 · ПРЕДСКАЗАНИЕ", h:"Следующий наиболее <em>вероятный</em> токен", p:"Последний слой оценивает весь словарь и превращает оценки в <b>распределение вероятностей</b>. Выбирается самый вероятный токен (или он сэмплируется)."} } },
+      ru:{e:"06 · ПРЕДСКАЗАНИЕ", h:"Следующий наиболее <em>вероятный</em> токен", p:"Последний слой оценивает весь словарь и превращает оценки в <b>распределение вероятностей</b>. Выбирается самый вероятный токен (или он сэмплируется)."},
+      de:{e:"06 · VORHERSAGE", h:"Das <em>wahrscheinlichste</em> nächste Token", p:"Die letzte Schicht bewertet das gesamte Vokabular und macht daraus eine <b>Wahrscheinlichkeitsverteilung</b>. Das oberste Token wird gewählt (oder per Sampling gezogen)."} } },
   { id:"loop", cam:[0,0.2,10], look:[0,0,0], layout:"scatter", spin:false, edges:1, axes:0, planes:0, field:0, loop:1, ids:false,
     text:{
       en:{e:"07 · AUTOREGRESSION", h:'The prediction <em>feeds back</em>', p:'The chosen token is appended and the whole process runs <b>again</b>. Word by word, that’s how text is generated.'},
@@ -88,7 +94,8 @@ export const CH = [
       pt:{e:"07 · AUTORREGRESSÃO", h:"A previsão <em>volta como entrada</em>", p:"O token escolhido é acrescentado ao final, e todo o processo roda <b>de novo</b>. Palavra por palavra, é assim que o texto é gerado."},
       id:{e:"07 · AUTOREGRESI", h:"Prediksi <em>diumpankan kembali</em>", p:"Token yang dipilih ditambahkan di akhir, lalu seluruh proses berjalan <b>lagi</b>. Kata demi kata, begitulah teks dihasilkan."},
       bn:{e:"07 · অটোরিগ্রেশন", h:"পূর্বাভাস <em>আবার ইনপুটে ফেরে</em>", p:"বেছে নেওয়া টোকেনটি শেষে যোগ করা হয় এবং পুরো প্রক্রিয়াটি <b>আবার</b> চলে। শব্দের পর শব্দ, এভাবেই টেক্সট তৈরি হয়।"},
-      ru:{e:"07 · АВТОРЕГРЕССИЯ", h:"Предсказание <em>возвращается на вход</em>", p:"Выбранный токен добавляется в конец, и весь процесс запускается <b>снова</b>. Так, слово за словом, и генерируется текст."} } },
+      ru:{e:"07 · АВТОРЕГРЕССИЯ", h:"Предсказание <em>возвращается на вход</em>", p:"Выбранный токен добавляется в конец, и весь процесс запускается <b>снова</b>. Так, слово за словом, и генерируется текст."},
+      de:{e:"07 · AUTOREGRESSION", h:"Die Vorhersage <em>fließt zurück</em>", p:"Das gewählte Token wird angehängt, und der ganze Prozess läuft <b>erneut</b>. Wort für Wort entsteht so der Text."} } },
   { id:"scale", cam:[0,0,17], look:[0,0,0], layout:"scatter", spin:true, edges:1, axes:0, planes:0, field:1, loop:0, ids:false, cta:true,
     text:{
       en:{e:"08 · SCALE", h:'Now at <em>billions</em>-scale', p:'This tiny network is really <b>billions of parameters</b> — which is exactly why VRAM matters. Does your model fit a GPU?'},
@@ -100,7 +107,8 @@ export const CH = [
       pt:{e:"08 · ESCALA", h:"Agora, na escala de <em>bilhões</em>", p:"Na verdade, esta rede minúscula tem <b>bilhões de parâmetros</b> — e é exatamente por isso que a VRAM importa. Seu modelo cabe em uma GPU?"},
       id:{e:"08 · SKALA", h:"Kini dalam skala <em>miliaran</em>", p:"Jaringan kecil ini sebenarnya berisi <b>miliaran parameter</b> — itulah sebabnya VRAM penting. Apakah model Anda muat di sebuah GPU?"},
       bn:{e:"08 · স্কেল", h:"এবার <em>বিলিয়নের</em> মাপে", p:"এই ছোট্ট নেটওয়ার্কটি আসলে <b>বহু বিলিয়ন প্যারামিটার</b> — ঠিক এ কারণেই VRAM গুরুত্বপূর্ণ। আপনার মডেল কি একটি GPU-তে ধরে?"},
-      ru:{e:"08 · МАСШТАБ", h:"Теперь в масштабе <em>миллиардов</em>", p:"На самом деле в этой крошечной сети <b>миллиарды параметров</b> — именно поэтому VRAM так важна. Поместится ли ваша модель на GPU?"} } },
+      ru:{e:"08 · МАСШТАБ", h:"Теперь в масштабе <em>миллиардов</em>", p:"На самом деле в этой крошечной сети <b>миллиарды параметров</b> — именно поэтому VRAM так важна. Поместится ли ваша модель на GPU?"},
+      de:{e:"08 · SKALIERUNG", h:"Jetzt im Maßstab von <em>Milliarden</em>", p:"Hinter diesem winzigen Netz stecken in Wahrheit <b>Milliarden Parameter</b> – genau deshalb zählt VRAM. Passt Ihr Modell auf eine GPU?"} } },
 ];
 
 // The page's other words, by language: learn.html marks where each goes with
@@ -186,5 +194,13 @@ export const UI = {
     scrollHint: "ПРОКРУТИТЕ ↓",
     attnHint: "⊹ наведите на узел · переключайте головы · нажмите для импульса",
     cta: "→ Рассчитать VRAM в LLMScale",
+  },
+  de: {
+    kicker: "// EIN SPRACHMODELL ALS KONSTELLATION",
+    sub: "Ein Satz wird zu einer Konstellation aus Knoten. Ziehen, tippen, auslösen – dann hineinscrollen.",
+    hint: "⊹ ZIEHEN · ZEIGEN · KLICKEN · SCROLLEN",
+    scrollHint: "SCROLLEN ↓",
+    attnHint: "⊹ auf einen Knoten zeigen · Köpfe umschalten · zum Auslösen klicken",
+    cta: "→ Mit LLMScale dimensionieren",
   },
 };

@@ -14,7 +14,7 @@ export const LANGS = ["en", "tr", "zh", "hi", "es", "fr", "pt", "id", "bn", "ar"
 /** Any planned language, enabled or not. */
 export type LangCode = (typeof LANGS)[number];
 
-export const ENABLED_LANGS = ["en", "tr", "zh", "hi", "es", "fr", "pt", "id", "bn", "ru"] as const satisfies readonly LangCode[];
+export const ENABLED_LANGS = ["en", "tr", "zh", "hi", "es", "fr", "pt", "id", "bn", "ru", "de"] as const satisfies readonly LangCode[];
 /** A language this build writes pages in. */
 export type Lang = (typeof ENABLED_LANGS)[number];
 
