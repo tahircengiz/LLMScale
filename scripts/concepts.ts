@@ -88,7 +88,7 @@ function kvCache(f: Fmt): Concept {
     return `<tr><th scope="row">${f.modelLink(m.id)}</th><td>${m.numLayers}</td><td>${shape}</td><td>${kib(f, kvTok(m))}</td>${cells}</tr>`;
   }).join("");
   const table = `<div class="scroll"><table>
-<thead><tr><th scope="col">Model</th><th scope="col">${C.thLayers}</th><th scope="col">${C.thShape}</th><th scope="col">${C.thPerToken}</th><th scope="col">8k</th><th scope="col">32k</th><th scope="col">128k</th></tr></thead>
+<thead><tr><th scope="col">${C.thModel}</th><th scope="col">${C.thLayers}</th><th scope="col">${C.thShape}</th><th scope="col">${C.thPerToken}</th><th scope="col">8k</th><th scope="col">32k</th><th scope="col">128k</th></tr></thead>
 <tbody>${rows}</tbody>
 </table></div>`;
 
@@ -147,7 +147,7 @@ function attention(f: Fmt): Concept {
     `<tr><th scope="row">${f.modelLink(m.id)}</th><td>${m.numAttentionHeads}</td><td>${usesMla(m) ? "—" : m.numKeyValueHeads}</td><td>${attentionType(m)}</td><td>${kib(f, kvTok(m))}</td><td>${f.ratio(kvTok(asMha(m)) / kvTok(m))}</td></tr>`
   ).join("");
   const table = `<div class="scroll"><table>
-<thead><tr><th scope="col">Model</th><th scope="col">${C.thQueryHeads}</th><th scope="col">${C.thKvHeads}</th><th scope="col">Attention</th><th scope="col">${C.thPerToken}</th><th scope="col">${C.thVsMha}</th></tr></thead>
+<thead><tr><th scope="col">${C.thModel}</th><th scope="col">${C.thQueryHeads}</th><th scope="col">${C.thKvHeads}</th><th scope="col">${C.thAttention}</th><th scope="col">${C.thPerToken}</th><th scope="col">${C.thVsMha}</th></tr></thead>
 <tbody>${rows}</tbody>
 </table></div>`;
 

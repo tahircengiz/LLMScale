@@ -10,6 +10,7 @@
 
 import { DICTS } from "../src/locales/index.ts";
 import { LANG_META, type Lang } from "../src/lib/langs.ts";
+import { fixUrl } from "../src/lib/langPath.ts";
 import { CONCEPTS_HUB, GPUS_HUB, MODELS_HUB } from "../src/lib/staticPages.ts";
 import { menuOf, NAV_HOME, navMenus, navPages, type NavItem } from "../src/lib/nav.ts";
 
@@ -109,6 +110,8 @@ th[scope=row]{font-weight:600}
 .ffoot nav a{font-size:.75rem;font-weight:500;color:var(--brand);text-decoration:none}
 .ffoot nav a:hover{text-decoration:underline}
 .ffoot p{margin:0;font-size:.75rem;color:var(--slate-500)}
+.ffoot p a{color:inherit}
+.ffoot p a:hover{color:var(--brand)}
 @media (min-width:640px){.fmain{padding-inline:1.5rem}}
 .langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--ink-900);border:1px solid var(--line);border-radius:1rem;padding-block:.5rem;padding-inline:1rem .55rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--slate-300)}
 .langsuggest a{background:var(--brand-600);color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
@@ -219,5 +222,5 @@ export function appFooter({ lang, langs, file, href }: FrameCtx): string {
 <div class="links"><a href="https://github.com/tahircengiz/LLMScale" rel="noreferrer">github.com/tahircengiz/LLMScale</a><a href="https://tr.linkedin.com/in/tahircengiz" rel="noreferrer">linkedin.com/tahircengiz</a>${others}</div>
 <nav aria-label="${esc(d["footer.guides"])}"><a href="${href(lang, MODELS_HUB)}">${esc(d["footer.models"])}</a><a href="${href(lang, GPUS_HUB)}">${esc(d["footer.gpus"])}</a><a href="${href(lang, CONCEPTS_HUB)}">${esc(d["footer.concepts"])}</a></nav>
 <p>${esc(d["footer.privacy"])}</p>
-</footer>`;
+${LANG_META[lang].ai ? `<p>${esc(d["footer.aiTranslated"])} · <a href="${esc(fixUrl(lang, href(lang, file)))}" rel="noreferrer">${esc(d["footer.suggestFix"])}</a></p>\n` : ""}</footer>`;
 }

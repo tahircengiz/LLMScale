@@ -53,6 +53,11 @@ export default defineConfig({
         plan: fileURLToPath(new URL("./plan.html", import.meta.url)),
         gpucompare: fileURLToPath(new URL("./gpu-compare.html", import.meta.url)),
       },
+      // Each language's dictionary is a chunk of its own (src/lib/dict.ts), named
+      // dict-<lang>-… so scripts/prerender.ts can preload the page's one.
+      output: {
+        chunkFileNames: (c) => (c.facadeModuleId?.includes("/src/locales/") ? "assets/dict-[name]-[hash].js" : "assets/[name]-[hash].js"),
+      },
     },
   },
 });

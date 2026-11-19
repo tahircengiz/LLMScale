@@ -37,9 +37,13 @@ export interface ModelPageText {
   description(v: { name: string; ctx: string; bf16: string; int4: string }): string;
   h1(name: string): string;
   oneUser: string;
+  /** A context length's column and caption: "8k context". */
+  ctx(k: string): string;
   answer(v: { weights: string; kv: string; overhead: string; int4: string }): string;
   specLayers: string;
   specMaxContext: string;
+  /** After the query/key-value head counts: "64/8 heads". */
+  specHeads: string;
   h2Memory(name: string): string;
   thPrecision: string;
   /** Under a memory figure: the KV cache's share of it. */
@@ -105,6 +109,7 @@ export interface HubsText {
     h1: string;
     lede(models: number): string;
     active: string;
+    thModel: string;
     thParams: string;
     thMaxContext: string;
     note: string;
@@ -235,6 +240,7 @@ export interface QuantizationVars {
 
 export interface ConceptsText {
   kvCache: {
+    thModel: string;
     thLayers: string;
     thShape: string;
     thPerToken: string;
@@ -243,8 +249,10 @@ export interface ConceptsText {
     text(v: KvCacheVars): ConceptText;
   };
   attention: {
+    thModel: string;
     thQueryHeads: string;
     thKvHeads: string;
+    thAttention: string;
     thPerToken: string;
     thVsMha: string;
     kvLink: string;

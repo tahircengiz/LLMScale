@@ -354,6 +354,8 @@ const tr = {
 
   "footer.builtBy": "Yapan:",
   "footer.privacy": "Hesaplama tarayıcında yapılır — hesap yok, sunucu yok. Ziyaretler anonim ve çerezsiz sayılır.",
+  "footer.aiTranslated": "Bu sayfa AI ile çevrildi",
+  "footer.suggestFix": "Düzeltme öner",
   "footer.guides": "Rehberler",
   "footer.models": "Modele göre VRAM gereksinimleri",
   "footer.gpus": "Hangi GPU'ya hangi LLM sığar",

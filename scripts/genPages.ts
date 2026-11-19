@@ -115,7 +115,7 @@ function modelPage(lang: Lang, m: KnownModel): string {
   ].filter(Boolean).join(" ");
 
   const table = `<div class="scroll"><table>
-<thead><tr><th scope="col">${T.thPrecision}</th>${contexts.map((c) => `<th scope="col">${ctxK(c)} context</th>`).join("")}</tr></thead>
+<thead><tr><th scope="col">${T.thPrecision}</th>${contexts.map((c) => `<th scope="col">${T.ctx(ctxK(c))}</th>`).join("")}</tr></thead>
 <tbody>${PRECISIONS.map((d) => `<tr><th scope="row">${LABEL[d]}</th>${contexts
     .map((c) => {
       const r = size(m, d, c);
@@ -171,10 +171,10 @@ function modelPage(lang: Lang, m: KnownModel): string {
 
   const body = `<p class="lede">${lede}</p>
 <div class="answer">
-  <div class="cap">BF16 · ${ctxK(ctx)} context · ${T.oneUser}</div>
+  <div class="cap">BF16 · ${T.ctx(ctxK(ctx))} · ${T.oneUser}</div>
   <div class="big">${gib(lang, bf16.totalGiB)}</div>
   <p>${T.answer({ weights: gib(lang, bf16.weightsGiB), kv: gib(lang, bf16.kvCacheGiB), overhead: gib(lang, bf16.activationsGiB + bf16.runtimeGiB), int4: gib(lang, int4.totalGiB) })}</p>
-  <ul class="spec"><li>${m.numLayers} ${T.specLayers}</li><li>hidden ${m.hiddenSize}</li><li>${m.numAttentionHeads}/${m.numKeyValueHeads} heads</li><li>head_dim ${bf16.headDim}</li><li>${ctxK(max)} ${T.specMaxContext}</li>${m.isMoE ? "<li>MoE</li>" : ""}${usesMla(m) ? "<li>MLA</li>" : ""}</ul>
+  <ul class="spec"><li>${m.numLayers} ${T.specLayers}</li><li>hidden ${m.hiddenSize}</li><li>${m.numAttentionHeads}/${m.numKeyValueHeads} ${T.specHeads}</li><li>head_dim ${bf16.headDim}</li><li>${ctxK(max)} ${T.specMaxContext}</li>${m.isMoE ? "<li>MoE</li>" : ""}${usesMla(m) ? "<li>MLA</li>" : ""}</ul>
 </div>
 <h2>${T.h2Memory(name)}</h2>
 ${table}
@@ -305,7 +305,7 @@ function modelsHub(lang: Lang): string {
   }).join("");
   const body = `<p class="lede">${T.lede(MODELS.length)}</p>
 <div class="scroll"><table>
-<thead><tr><th scope="col">Model</th><th scope="col">${T.thParams}</th><th scope="col">BF16 · 8k</th><th scope="col">INT4 · 8k</th><th scope="col">${T.thMaxContext}</th></tr></thead>
+<thead><tr><th scope="col">${T.thModel}</th><th scope="col">${T.thParams}</th><th scope="col">BF16 · 8k</th><th scope="col">INT4 · 8k</th><th scope="col">${T.thMaxContext}</th></tr></thead>
 <tbody>${rows}</tbody>
 </table></div>
 <p class="note">${T.note}</p>
