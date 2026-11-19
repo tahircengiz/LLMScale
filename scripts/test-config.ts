@@ -286,6 +286,8 @@ console.log("\n--- a count of one takes the dictionary's singular word ---");
   check("en: 2 shared experts", v("n_shared_experts", 2, "en") === "2 experts", v("n_shared_experts", 2, "en"));
   check("en: one end-of-sequence id", v("eos_token_id", [2], "en") === "1 id", v("eos_token_id", [2], "en"));
   check("tr: 1 uzman", v("n_shared_experts", 1, "tr") === "1 uzman", v("n_shared_experts", 1, "tr"));
+  check("es: 1 experto", v("n_shared_experts", 1, "es") === "1 experto", v("n_shared_experts", 1, "es"));
+  check("es: 2 expertos", v("n_shared_experts", 2, "es") === "2 expertos", v("n_shared_experts", 2, "es"));
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
