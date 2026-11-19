@@ -1485,6 +1485,8 @@ const bn = {
   "serve.ability.vision": "ছবি ইনপুট",
   "serve.and": "ও",
   "list.sep": ", ",
+  "colon.sep": ": ",
+  "semicolon.sep": "; ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

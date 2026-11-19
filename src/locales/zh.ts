@@ -1485,6 +1485,8 @@ const zh = {
   "serve.ability.vision": "图像输入",
   "serve.and": "和",
   "list.sep": "、",
+  "colon.sep": "：",
+  "semicolon.sep": "；",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

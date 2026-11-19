@@ -76,7 +76,7 @@ export function LangMenu() {
           type="button"
           aria-expanded={open}
           aria-controls="lang-menu"
-          aria-label={`${t("lang.label")}: ${here.name}`}
+          aria-label={`${t("lang.label")}${t("colon.sep")}${here.name}`}
           onClick={() => setOpen((o) => !o)}
           onKeyDown={(e) => {
             if (e.key !== "ArrowDown") return;

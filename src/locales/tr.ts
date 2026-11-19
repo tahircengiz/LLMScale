@@ -1469,6 +1469,8 @@ const tr = {
   "serve.ability.vision": "görüntü girdisi",
   "serve.and": "ve",
   "list.sep": ", ",
+  "colon.sep": ": ",
+  "semicolon.sep": "; ",
 
   "gloss.architectures.title": "Mimari sınıfı",
   "gloss.architectures.meaning": "Bu ağırlıkların kaydedildiği model sınıfı. vLLM kendi uygulamasını bu isme göre seçer; Transformers'ın Auto sınıfları ise model_type'a bakar.",

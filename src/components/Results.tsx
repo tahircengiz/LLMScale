@@ -70,7 +70,7 @@ export function Results({
             <div
               key={s.key}
               style={{ width: `${pct}%`, backgroundColor: s.color }}
-              title={`${t(s.i18n)}: ${formatGiB(v)} (${pct.toFixed(0)}%)`}
+              title={`${t(s.i18n)}${t("colon.sep")}${formatGiB(v)} (${pct.toFixed(0)}%)`}
             />
           );
         })}

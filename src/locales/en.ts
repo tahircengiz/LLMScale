@@ -1485,6 +1485,10 @@ const en = {
   "serve.ability.vision": "image input",
   "serve.and": "and",
   "list.sep": ", ",
+  // "Label: value" and "one reason; another" in running text. French puts a no-break
+  // space (U+00A0) before both marks; Chinese writes the full-width ： and ； with no space.
+  "colon.sep": ": ",
+  "semicolon.sep": "; ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

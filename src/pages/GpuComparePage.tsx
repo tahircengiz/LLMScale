@@ -89,7 +89,7 @@ export function GpuComparePage() {
                           type="button"
                           onClick={() => remove(g.id)}
                           title={t("gpucmp.remove")}
-                          aria-label={`${t("gpucmp.remove")}: ${g.name}`}
+                          aria-label={`${t("gpucmp.remove")}${t("colon.sep")}${g.name}`}
                           className="shrink-0 rounded-md px-1.5 text-slate-500 ring-1 ring-white/10 transition hover:bg-white/5 hover:text-bad"
                         >
                           ×
