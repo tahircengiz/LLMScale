@@ -16,6 +16,7 @@
 import type { Dtype } from "./calc.ts";
 import { fmtBytes, fmtInt, fmtNum, shortTokens } from "./configExplain.ts";
 import type { Lang } from "./langs.ts";
+import { translate } from "./dict.ts";
 import { textConfig } from "./layers.ts";
 import { specTensors, type TensorDigest } from "./tensors.ts";
 import { specFileBytes } from "./hf.ts";
@@ -230,9 +231,9 @@ const short = (s: string, n = 40) => (s.length > n ? s.slice(0, n - 1) + "…" :
 const json = (v: unknown) => (typeof v === "string" ? v : JSON.stringify(v));
 /** English plural ending for a count; Turkish templates do not use it. */
 const s_ = (n: number) => (n === 1 ? "" : "s");
-/** "1 tensor", "2 tensors": English counts the plural, Turkish does not. */
-const TENSORS: Record<Lang, (n: number) => string> = { en: (n) => (n === 1 ? "tensor" : "tensors"), tr: () => "tensör" };
-const tensorsWord = (n: number, lang: Lang) => `${fmtInt(n, lang)} ${TENSORS[lang](n)}`;
+/** "1 tensor", "2 tensors": the dictionary has the word for one and for more
+ *  (serve.tensor.one, .other); a language without plurals gives the same word twice. */
+const tensorsWord = (n: number, lang: Lang) => `${fmtInt(n, lang)} ${translate(lang, n === 1 ? "serve.tensor.one" : "serve.tensor.other")}`;
 
 // ── the repository: format, role, lineage ─────────────────────────────────
 
@@ -865,12 +866,14 @@ function sameFamily(a: QuantScheme, b: QuantScheme): boolean {
   return a === "other";
 }
 
-/** Where each language puts the percent sign: 99.7% in English, %99,7 in Turkish. */
-const PERCENT: Record<Lang, (n: string) => string> = { en: (n) => `${n}%`, tr: (n) => (n.startsWith("<") ? `<%${n.slice(1)}` : `%${n}`) };
+/** Where each language puts the percent sign (serve.percent): 99.7% in English,
+ *  %99,7 in Turkish. A "<" stays in front: <0.1%, <%0,1. */
+const percent = (n: string, lang: Lang) =>
+  n.startsWith("<") ? `<${translate(lang, "serve.percent", { n: n.slice(1) })}` : translate(lang, "serve.percent", { n });
 /** A share as each language writes it. */
 function pct(x: number, lang: Lang): string {
   const n = x >= 0.9995 ? "100" : x < 0.001 ? `<${fmtNum(0.1, lang, 1)}` : fmtNum(x * 100, lang, 1);
-  return PERCENT[lang](n);
+  return percent(n, lang);
 }
 
 function mtpSection(f: Facts, lang: Lang, g: G): Section | null {
@@ -960,17 +963,11 @@ function loadSection(s: RepoSnapshot, f: Facts, g: G): Section | null {
 
 // ── in short ──────────────────────────────────────────────────────────────
 
-/** What a chat model can do, as the portrait lists it. */
-const ABILITY: Record<string, Record<Lang, string>> = {
-  tools: { en: "tool calling", tr: "araç çağırma" },
-  reason: { en: "reasoning", tr: "akıl yürütme" },
-  reasonToggle: { en: "reasoning that can be switched off", tr: "kapatılabilen akıl yürütme" },
-  vision: { en: "image input", tr: "görüntü girdisi" },
-};
+/** What a chat model can do, as the portrait lists it: serve.ability.<k>. */
+const ability = (k: string, lang: Lang) => translate(lang, `serve.ability.${k}`);
 
-const AND: Record<Lang, string> = { en: "and", tr: "ve" };
 const listOf = (xs: string[], lang: Lang) =>
-  xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} ${AND[lang]} ${xs[xs.length - 1]}`;
+  xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} ${translate(lang, "serve.and")} ${xs[xs.length - 1]}`;
 
 function portraitOf(f: Facts, lang: Lang): Part[] {
   const out: Part[] = [];
@@ -978,9 +975,9 @@ function portraitOf(f: Facts, lang: Lang): Part[] {
   switch (f.role) {
     case "chat": {
       const abil = [
-        t?.tools || f.mistralCommon ? ABILITY.tools[lang] : "",
-        t?.reasoning ? (t.thinkToggle ? ABILITY.reasonToggle[lang] : ABILITY.reason[lang]) : "",
-        f.vision ? ABILITY.vision[lang] : "",
+        t?.tools || f.mistralCommon ? ability("tools", lang) : "",
+        t?.reasoning ? (t.thinkToggle ? ability("reasonToggle", lang) : ability("reason", lang)) : "",
+        f.vision ? ability("vision", lang) : "",
       ].filter(Boolean);
       out.push(abil.length ? { k: "p.chatWith", v: { abil: listOf(abil, lang) } } : { k: "p.chat" });
       break;

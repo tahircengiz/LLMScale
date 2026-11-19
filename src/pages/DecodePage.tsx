@@ -20,7 +20,7 @@ const EXAMPLES = [
 ];
 
 export function DecodePage() {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const [hfId, setHfId] = useState(EXAMPLES[0]);
   const [active, setActive] = useState<number | null>(null);
   const parsed = useMemo(() => parseModelName(hfId), [hfId]);
@@ -111,10 +111,10 @@ export function DecodePage() {
                     <code className="font-mono text-sm font-semibold" style={{ color: ink(info.color) }}>
                       {tok.text}
                     </code>
-                    <span className="text-xs font-medium text-slate-300">{info.title[lang]}</span>
+                    <span className="text-xs font-medium text-slate-300">{t(`decode.kind.${tok.kind}.title`)}</span>
                   </div>
                   <p className={"mt-1 ps-[18px] text-xs transition " + (on ? "text-slate-200" : "text-slate-400")}>
-                    {info.desc[lang]}
+                    {t(`decode.kind.${tok.kind}.desc`)}
                   </p>
                 </div>
               );
