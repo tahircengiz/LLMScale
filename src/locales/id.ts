@@ -361,9 +361,9 @@ const id = {
 
   "footer.builtBy": "Dibuat oleh",
   "footer.privacy": "Perhitungan berjalan di browser Anda — tanpa akun, tanpa backend. Kunjungan dihitung secara anonim, tanpa cookie.",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "Halaman ini diterjemahkan dengan AI",
+  "ainote.label": "Pemberitahuan AI",
+  "ainote.text": "Data, perhitungan, dan terjemahan di situs ini disiapkan dengan bantuan AI dan mungkin mengandung kesalahan. Sebelum mengambil keputusan penting, periksa dengan sumber lain.",
+  "ainote.close": "Tutup pemberitahuan",
   "footer.suggestFix": "Usulkan koreksi",
   "footer.guides": "Panduan",
   "footer.models": "Kebutuhan VRAM menurut model",

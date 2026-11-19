@@ -77,6 +77,19 @@
   visibility: hidden;
 }
 
+/* The AI notice above the header (AiNote.tsx). A visitor who closed it carries
+ * this class from the entry's bootstrap on, so the prerendered notice never
+ * flashes in. Without scripts it stays, and its close button, which would do
+ * nothing, goes. */
+.ainote-off .ainote {
+  display: none;
+}
+@media (scripting: none) {
+  .ainote button {
+    display: none;
+  }
+}
+
 /* Dark surfaces follow the layering model used by IBM Carbon (g100) and
  * Material's dark theme: near-neutral greys stepped by luminance, with colour
  * reserved for accents. Keeping every surface a saturated navy made the whole
@@ -287,6 +300,15 @@ input[type="number"] {
   border-bottom-color: rgba(255, 255, 255, 0.55);
 }
 
+/* The AI notice is a strip of the same material, a shade more opaque than the
+ * header beneath it so the two read as separate panes. */
+.glass .ainote {
+  background: rgba(255, 255, 255, 0.62);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+  border-bottom-color: rgba(255, 255, 255, 0.55);
+}
+
 .glass nav > div {
   background: rgba(255, 255, 255, 0.5);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
@@ -310,6 +332,7 @@ input[type="number"] {
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass .card,
   .glass header,
+  .glass .ainote,
   .glass nav > div {
     background: rgba(255, 255, 255, 0.92);
   }
@@ -324,6 +347,7 @@ input[type="number"] {
 @media (prefers-reduced-transparency: reduce) {
   .glass .card,
   .glass header,
+  .glass .ainote,
   .glass nav > div {
     background: rgba(255, 255, 255, 0.86);
     -webkit-backdrop-filter: blur(10px) saturate(130%);

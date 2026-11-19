@@ -243,6 +243,26 @@ check("the build runs the prerender", /vite build --ssr src\/entry-server\.tsx[^
 // the build wrote into it is always what the visitor sees.
 check("LLM 101 takes its language from the URL", read("src/learn.js").includes("langOfPath(location.pathname)"));
 
+console.log("\n--- a closed AI notice stays closed, and only learn.html has none ---");
+// The notice (src/components/AiNote.tsx) is in every prerendered and static page.
+// A visitor who closed it gets a class from each page's bootstrap before first
+// paint, so it does not flash in. The key and class are named in places that
+// cannot import each other — AiNote.tsx, each entry's bootstrap, index.css and the
+// static pages' copy (scripts/appLook.ts) — so pin them here; the static side is
+// checked with the rest of appLook below.
+const noteSrc = read("src/components/AiNote.tsx");
+const noteKey = noteSrc.match(/AINOTE_KEY = "([^"]+)"/)?.[1] ?? "";
+const noteClass = noteSrc.match(/AINOTE_OFF_CLASS = "([^"]+)"/)?.[1] ?? "";
+check("AiNote names its storage key and class", noteKey !== "" && noteClass !== "", `${noteKey} / ${noteClass}`);
+check("AiNote stores the value the bootstraps read", noteSrc.includes('localStorage.setItem(AINOTE_KEY, "off")'));
+const noteBoot = `if (localStorage.getItem("${noteKey}") === "off") document.documentElement.classList.add("${noteClass}");`;
+const unbooted = reactEntries.filter((p) => !read(p).includes(noteBoot));
+check("every React entry hides a closed notice before first paint", noteKey !== "" && unbooted.length === 0, unbooted.join(", "));
+check("index.css hides the notice under that class", css.includes(`.${noteClass} .ainote`));
+check("the app draws the notice above its header", /<AiNote \/>\s*\{\/\*[^*]*\*\/\}\s*<header/.test(read("src/App.tsx")));
+// LLM 101 keeps its own look (2026-10-14): no notice, no bootstrap for one.
+check("learn.html has no notice", !read("learn.html").includes(noteKey) && !read("src/learn.js").includes(noteKey));
+
 console.log("\n--- every tool explains itself ---");
 // About.tsx counts numbered keys (p1, p2…, f1…, q1…) on the English dictionary,
 // so a page with no title or no text would render an empty card, and a question
@@ -361,7 +381,12 @@ console.log("\n--- the static pages wear the app's theme ---");
 // but they are dressed as the app: same theme bootstrap, same tokens for dark,
 // light and glass, same nav. Their copies of those live in scripts/appLook.ts;
 // these keep them from drifting.
-const { APP_CSS, APP_THEME_BOOT } = await import("./appLook.ts");
+const { AINOTE_BOOT, APP_CSS, APP_SCRIPT, APP_THEME_BOOT } = await import("./appLook.ts");
+check("the static pages hide a closed notice like the entries",
+  AINOTE_BOOT.includes(`localStorage.getItem("${noteKey}")==="off"`) && AINOTE_BOOT.includes(`classList.add("${noteClass}")`) &&
+  APP_CSS.includes(`.${noteClass} .ainote{display:none}`) && APP_SCRIPT.includes(`localStorage.setItem("${noteKey}","off")`) &&
+  APP_SCRIPT.includes(`classList.add("${noteClass}")`));
+check("the static pages run that bootstrap and draw the notice", /<script>\$\{APP_THEME_BOOT\}\$\{AINOTE_BOOT\}<\/script>/.test(read("scripts/shell.ts")) && read("scripts/shell.ts").includes("${appNote(frame)}\n${appHeader("));
 check("the static pages bootstrap their theme like the entries",
   APP_THEME_BOOT.includes(`"${DEFAULT_THEME_DARK}":"${DEFAULT_THEME}"`) && APP_THEME_BOOT.includes("classList.add(m)") && APP_THEME_BOOT.includes(DARK_QUERY) && !APP_THEME_BOOT.includes('add("dark")'));
 const hex6 = (h: string) => (h.length === 4 ? `#${[...h.slice(1)].map((c) => c + c).join("")}` : h).toLowerCase();

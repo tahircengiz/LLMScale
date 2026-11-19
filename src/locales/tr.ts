@@ -354,7 +354,9 @@ const tr = {
 
   "footer.builtBy": "Yapan:",
   "footer.privacy": "Hesaplama tarayıcında yapılır — hesap yok, sunucu yok. Ziyaretler anonim ve çerezsiz sayılır.",
-  "footer.aiTranslated": "Bu sayfa AI ile çevrildi",
+  "ainote.label": "Yapay zekâ uyarısı",
+  "ainote.text": "Sitedeki veriler, hesaplamalar ve çeviriler yapay zekâ yardımıyla hazırlandı; hata içerebilir. Önemli bir karardan önce ikinci bir kaynakla kontrol et.",
+  "ainote.close": "Uyarıyı kapat",
   "footer.suggestFix": "Düzeltme öner",
   "footer.guides": "Rehberler",
   "footer.models": "Modele göre VRAM gereksinimleri",

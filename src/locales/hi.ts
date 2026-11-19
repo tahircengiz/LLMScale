@@ -361,9 +361,9 @@ const hi = {
 
   "footer.builtBy": "निर्माता:",
   "footer.privacy": "आकलन आपके ब्राउज़र में होता है — कोई अकाउंट नहीं, कोई बैकएंड नहीं। विज़िट बिना कुकीज़ के, गुमनाम रूप से गिनी जाती हैं।",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "इस पेज का अनुवाद AI से किया गया है",
+  "ainote.label": "AI सूचना",
+  "ainote.text": "इस साइट का डेटा, गणनाएँ और अनुवाद AI की मदद से तैयार किए गए हैं और इनमें गलतियाँ हो सकती हैं। कोई महत्वपूर्ण निर्णय लेने से पहले किसी दूसरे स्रोत से जाँच लें।",
+  "ainote.close": "सूचना बंद करें",
   "footer.suggestFix": "सुधार सुझाएँ",
   "footer.guides": "गाइड",
   "footer.models": "मॉडल के अनुसार VRAM आवश्यकताएँ",

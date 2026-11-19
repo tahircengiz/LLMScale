@@ -361,9 +361,11 @@ const en = {
 
   "footer.builtBy": "Built by",
   "footer.privacy": "Sizing runs in your browser — no account, no backend. Visits are counted anonymously, without cookies.",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "This page was translated with AI",
+  // The AI notice above every page's header (src/components/AiNote.tsx; appNote()
+  // in scripts/appLook.ts for the guides and the feed). Its link is footer.suggestFix.
+  "ainote.label": "AI notice",
+  "ainote.text": "Data, calculations and translations on this site are AI-assisted and may contain errors. Check a second source before important decisions.",
+  "ainote.close": "Dismiss notice",
   "footer.suggestFix": "Suggest a correction",
   "footer.guides": "Guides",
   "footer.models": "VRAM requirements by model",

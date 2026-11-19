@@ -20,6 +20,10 @@ export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
  *  else dark when the OS asks for it, else glass. */
 export const APP_THEME_BOOT = `try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}`;
 
+/** The app entries' other bootstrap line: a visitor who closed the AI notice
+ *  (src/components/AiNote.tsx) gets the class that hides it before first paint. */
+export const AINOTE_BOOT = `try{if(localStorage.getItem("ainote")==="off")document.documentElement.classList.add("ainote-off")}catch(e){}`;
+
 export const APP_CSS = `
 :root{color-scheme:dark;--ink-950:#0e1013;--ink-900:#16181d;--ink-850:#1d2026;--ink-800:#262a31;--ink-700:#353a44;--c-white:#fff;--fg:#e4e7ec;--slate-300:#c1c6cf;--slate-400:#a1a7b2;--slate-500:#8a919d;--brand-400:#7eaaff;--brand-500:#4d8bff;--brand-600:#1f63e6;--accent-400:#29c48a;--accent-500:#3dc28c;--bad-c:#f26b6b;--onbrand:#fff;--bg:var(--ink-950);--card:var(--ink-900);--inset:var(--ink-850);--line:color-mix(in oklab,var(--c-white) 10%,transparent);--text:var(--fg);--muted:var(--slate-300);--faint:var(--slate-400);--brand:var(--brand-400);--button:var(--brand-600);--good:var(--accent-400);--bad:var(--bad-c)}
 .light{color-scheme:light;--ink-950:#eef1f5;--ink-900:#fff;--ink-850:#f5f7fa;--ink-800:#eaedf2;--ink-700:#d9dee6;--c-white:#121620;--fg:#121620;--slate-300:#343a46;--slate-400:#4a515e;--slate-500:#5c6471;--brand-400:#0a47b0;--brand-500:#0f62fe;--brand-600:#0f5be0;--accent-400:#0b6e4a;--accent-500:#0a8f62;--bad-c:#be212d}
@@ -113,6 +117,21 @@ th[scope=row]{font-weight:600}
 .ffoot p a{color:inherit}
 .ffoot p a:hover{color:var(--brand)}
 @media (min-width:640px){.fmain{padding-inline:1.5rem}}
+.ainote{border-bottom:1px solid var(--line);background:var(--ink-850);padding:.375rem 1rem;font-size:.75rem;line-height:1rem;color:var(--slate-400)}
+.ainote .hin{display:flex;align-items:flex-start;gap:.5rem}
+.ainote svg{display:block;width:16px;height:16px;flex-shrink:0;color:var(--slate-500)}
+.ainote p{margin:0;flex:1;min-width:0}
+.ainote a{font-weight:500;white-space:nowrap;text-decoration:none}
+.ainote a:hover{text-decoration:underline}
+.ainote button{flex-shrink:0;margin-block:-.25rem;margin-inline-end:-.375rem;border:0;background:none;padding:.25rem;border-radius:.375rem;color:var(--slate-400);cursor:pointer;transition:background-color .15s,color .15s}
+.ainote button:hover{background:color-mix(in oklab,var(--c-white) 5%,transparent);color:var(--c-white)}
+.ainote button svg{width:14px;height:14px;color:inherit}
+.ainote-off .ainote{display:none}
+@media (min-width:640px){.ainote{padding-inline:1.5rem}}
+@media (scripting:none){.ainote button{display:none}}
+.glass .ainote{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);border-bottom-color:rgba(255,255,255,.55)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass .ainote{background:rgba(255,255,255,.92)}}
+@media (prefers-reduced-transparency:reduce){.glass .ainote{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}}
 .langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--ink-900);border:1px solid var(--line);border-radius:1rem;padding-block:.5rem;padding-inline:1rem .55rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--slate-300)}
 .langsuggest a{background:var(--brand-600);color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
 .langsuggest button{background:none;border:0;color:var(--slate-400);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}
@@ -136,10 +155,14 @@ document.querySelectorAll(".menu").forEach(function(m){var t=m.querySelector(".t
 var pk=m.querySelector(".peek");m.querySelectorAll(".panel a").forEach(function(a){function lit(){m.querySelectorAll(".panel a.lit").forEach(function(x){x.classList.remove("lit")});a.classList.add("lit");if(pk&&a.dataset.more){pk.querySelector("strong").textContent=a.querySelector("b").textContent;pk.querySelector("p.t").textContent=a.dataset.more}}a.addEventListener("pointerenter",lit);a.addEventListener("focus",lit)})});
 document.addEventListener("pointerdown",function(e){if(!(e.target.closest&&e.target.closest(".menu")))shut(null)});
 document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;var t=document.querySelector(".trig[aria-expanded=true]");if(t){shut(null);t.focus()}else if(mb&&l&&l.classList.contains("open")){l.classList.remove("open");mb.setAttribute("aria-expanded","false");mb.focus()}});
+var an=document.querySelector(".ainote button");if(an)an.addEventListener("click",function(){try{localStorage.setItem("ainote","off")}catch(e){}r.classList.add("ainote-off");var b=document.querySelector(".brand");if(b)b.focus()});
 document.querySelectorAll("[data-lang]").forEach(function(a){a.addEventListener("click",function(){try{localStorage.setItem("lang",a.getAttribute("data-lang"))}catch(e){}})});
 var lb=document.querySelector(".ltrig"),lp=document.getElementById("lang-menu"),lm=lb&&lb.closest(".lmenu");if(lb&&lp&&lm){var lset=function(o){lb.setAttribute("aria-expanded",String(o));lp.classList.toggle("open",o)};lb.addEventListener("click",function(){lset(lb.getAttribute("aria-expanded")!=="true")});lb.addEventListener("keydown",function(e){if(e.key!=="ArrowDown")return;e.preventDefault();lset(true);var a=lp.querySelector("a");if(a)a.focus()});lm.addEventListener("focusout",function(e){if(!lm.contains(e.relatedTarget))lset(false)});lm.addEventListener("keydown",function(e){if(e.key==="Escape"&&lb.getAttribute("aria-expanded")==="true"){e.stopPropagation();lset(false);lb.focus()}});document.addEventListener("pointerdown",function(e){if(!lm.contains(e.target))lset(false)});addEventListener("pageshow",function(e){if(e.persisted)lset(false)})}})();`;
 
-// ── header and footer ─────────────────────────────────────────────────────────
+// ── notice, header and footer ─────────────────────────────────────────────────
+// The same marks as src/components/AiNote.tsx.
+const INFO = `<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.25v3.5M8 5.1v.01"/></svg>`;
+const CLOSE = `<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`;
 const CHEVRON = `<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>`;
 // The same marks as src/components/LangMenu.tsx.
 const GLOBE = `<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.25"/><path d="M1.75 8h12.5M8 1.75c1.7 1.75 2.55 3.83 2.55 6.25S9.7 12.5 8 14.25M8 1.75C6.3 3.5 5.45 5.58 5.45 8S6.3 12.5 8 14.25"/></svg>`;
@@ -155,6 +178,16 @@ export interface FrameCtx {
   base: string;
   /** Whether the build has news posts: the nav links to the feed only then. */
   feed: boolean;
+}
+
+/** The app's AI notice (src/components/AiNote.tsx) above the header: the data,
+ *  the calculations and the translations were made with AI and may be wrong, with
+ *  the link for a correction. In the HTML for everyone; a visitor who closed it
+ *  has the class that hides it (AINOTE_BOOT), and the close button is wired in
+ *  APP_SCRIPT. */
+export function appNote({ lang, file, href }: FrameCtx): string {
+  const d = DICTS[lang];
+  return `<aside class="ainote" aria-label="${esc(d["ainote.label"])}"><div class="hin">${INFO}<p>${esc(d["ainote.text"])} <a href="${esc(fixUrl(lang, href(lang, file)))}" rel="noreferrer">${esc(d["footer.suggestFix"])}</a></p><button type="button" aria-label="${esc(d["ainote.close"])}">${CLOSE}</button></div></aside>`;
 }
 
 /** The app's header. `current` is the nav page this one is (the news), or null for
@@ -222,5 +255,5 @@ export function appFooter({ lang, langs, file, href }: FrameCtx): string {
 <div class="links"><a href="https://github.com/tahircengiz/LLMScale" rel="noreferrer">github.com/tahircengiz/LLMScale</a><a href="https://tr.linkedin.com/in/tahircengiz" rel="noreferrer">linkedin.com/tahircengiz</a>${others}</div>
 <nav aria-label="${esc(d["footer.guides"])}"><a href="${href(lang, MODELS_HUB)}">${esc(d["footer.models"])}</a><a href="${href(lang, GPUS_HUB)}">${esc(d["footer.gpus"])}</a><a href="${href(lang, CONCEPTS_HUB)}">${esc(d["footer.concepts"])}</a></nav>
 <p>${esc(d["footer.privacy"])}</p>
-${LANG_META[lang].ai ? `<p>${esc(d["footer.aiTranslated"])} · <a href="${esc(fixUrl(lang, href(lang, file)))}" rel="noreferrer">${esc(d["footer.suggestFix"])}</a></p>\n` : ""}</footer>`;
+</footer>`;
 }

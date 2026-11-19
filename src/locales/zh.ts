@@ -361,9 +361,9 @@ const zh = {
 
   "footer.builtBy": "作者",
   "footer.privacy": "计算在你的浏览器中运行——无需账号，没有后端。访问以匿名方式统计，不使用 cookie。",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "本页由 AI 翻译",
+  "ainote.label": "AI 提示",
+  "ainote.text": "本站的数据、计算和翻译借助 AI 完成，可能有误。做重要决定前，请用另一个来源核对。",
+  "ainote.close": "关闭提示",
   "footer.suggestFix": "建议更正",
   "footer.guides": "指南",
   "footer.models": "各模型的 VRAM 需求",

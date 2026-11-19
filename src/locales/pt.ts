@@ -361,9 +361,9 @@ const pt = {
 
   "footer.builtBy": "Criado por",
   "footer.privacy": "O cálculo roda no seu navegador — sem conta, sem backend. As visitas são contadas de forma anônima, sem cookies.",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "Esta página foi traduzida com IA",
+  "ainote.label": "Aviso sobre IA",
+  "ainote.text": "Os dados, cálculos e traduções deste site foram feitos com ajuda de IA e podem conter erros. Antes de uma decisão importante, confira em uma segunda fonte.",
+  "ainote.close": "Fechar aviso",
   "footer.suggestFix": "Sugerir uma correção",
   "footer.guides": "Guias",
   "footer.models": "Requisitos de VRAM por modelo",

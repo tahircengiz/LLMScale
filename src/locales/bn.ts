@@ -361,9 +361,9 @@ const bn = {
 
   "footer.builtBy": "নির্মাতা:",
   "footer.privacy": "হিসাব আপনার ব্রাউজারেই চলে — কোনো অ্যাকাউন্ট নেই, কোনো ব্যাকএন্ড নেই। ভিজিট কুকি ছাড়াই, বেনামে গোনা হয়।",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "এই পৃষ্ঠাটি AI দিয়ে অনুবাদ করা হয়েছে",
+  "ainote.label": "AI বিজ্ঞপ্তি",
+  "ainote.text": "এই সাইটের ডেটা, হিসাব ও অনুবাদ AI-এর সাহায্যে তৈরি করা হয়েছে এবং এতে ভুল থাকতে পারে। গুরুত্বপূর্ণ সিদ্ধান্ত নেওয়ার আগে অন্য একটি উৎস থেকে যাচাই করুন।",
+  "ainote.close": "বিজ্ঞপ্তি বন্ধ করুন",
   "footer.suggestFix": "সংশোধনের প্রস্তাব দিন",
   "footer.guides": "গাইড",
   "footer.models": "মডেল অনুযায়ী VRAM প্রয়োজন",
