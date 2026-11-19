@@ -174,7 +174,7 @@ function modelPage(lang: Lang, m: KnownModel): string {
   <div class="cap">BF16 · ${T.ctx(ctxK(ctx))} · ${T.oneUser}</div>
   <div class="big">${gib(lang, bf16.totalGiB)}</div>
   <p>${T.answer({ weights: gib(lang, bf16.weightsGiB), kv: gib(lang, bf16.kvCacheGiB), overhead: gib(lang, bf16.activationsGiB + bf16.runtimeGiB), int4: gib(lang, int4.totalGiB) })}</p>
-  <ul class="spec"><li>${m.numLayers} ${T.specLayers}</li><li>hidden ${m.hiddenSize}</li><li>${m.numAttentionHeads}/${m.numKeyValueHeads} ${T.specHeads}</li><li>head_dim ${bf16.headDim}</li><li>${ctxK(max)} ${T.specMaxContext}</li>${m.isMoE ? "<li>MoE</li>" : ""}${usesMla(m) ? "<li>MLA</li>" : ""}</ul>
+  <ul class="spec"><li>${T.specLayers(m.numLayers)}</li><li>hidden ${m.hiddenSize}</li><li>${T.specHeads({ heads: m.numAttentionHeads, kvHeads: m.numKeyValueHeads })}</li><li>head_dim ${bf16.headDim}</li><li>${T.specMaxContext(ctxK(max))}</li>${m.isMoE ? "<li>MoE</li>" : ""}${usesMla(m) ? "<li>MLA</li>" : ""}</ul>
 </div>
 <h2>${T.h2Memory(name)}</h2>
 ${table}

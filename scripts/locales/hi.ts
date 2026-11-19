@@ -32,9 +32,9 @@ const hi: PageText = {
     ctx: (k) => `${k} संदर्भ`,
     answer: ({ weights, kv, overhead, int4 }) =>
       `${weights} वज़न, ${kv} KV कैश और ${overhead} vLLM का ओवरहेड। INT4 में इसी वर्कलोड को ${int4} चाहिए।`,
-    specLayers: "लेयर",
-    specMaxContext: "अधिकतम संदर्भ",
-    specHeads: "head",
+    specLayers: (n) => `${n} लेयर`,
+    specMaxContext: (k) => `${k} अधिकतम संदर्भ`,
+    specHeads: ({ heads, kvHeads }) => `${heads}/${kvHeads} head`,
     h2Memory: (name) => `सटीकता और संदर्भ के अनुसार ${name} की मेमोरी`,
     thPrecision: "सटीकता",
     kvCache: "KV कैश",

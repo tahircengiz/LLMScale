@@ -40,10 +40,12 @@ export interface ModelPageText {
   /** A context length's column and caption: "8k context". */
   ctx(k: string): string;
   answer(v: { weights: string; kv: string; overhead: string; int4: string }): string;
-  specLayers: string;
-  specMaxContext: string;
-  /** After the query/key-value head counts: "64/8 heads". */
-  specHeads: string;
+  /** The layer count's pill: "80 layers". A function so a language can make the word agree with n. */
+  specLayers(n: number): string;
+  /** The longest context's pill, k already formatted: "128k max context". */
+  specMaxContext(k: string): string;
+  /** The query/key-value head counts' pill: "64/8 heads". */
+  specHeads(v: { heads: number; kvHeads: number }): string;
   h2Memory(name: string): string;
   thPrecision: string;
   /** Under a memory figure: the KV cache's share of it. */
