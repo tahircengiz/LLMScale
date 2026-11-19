@@ -9,6 +9,7 @@ import hi from "./hi.ts";
 import zh from "./zh.ts";
 import fr from "./fr.ts";
 import pt from "./pt.ts";
+import id from "./id.ts";
 import type { PageText } from "./types.ts";
 
-export const PAGE_TEXT: Record<Lang, PageText> = { en, tr, zh, hi, es, fr, pt };
+export const PAGE_TEXT: Record<Lang, PageText> = { en, tr, zh, hi, es, fr, pt, id };

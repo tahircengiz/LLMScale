@@ -609,4 +609,103 @@ const pt: Record<string, PageMeta> = {
   },
 };
 
-export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, zh, hi, es, fr, pt };
+const id: Record<string, PageMeta> = {
+  "index.html": {
+    title: "Kalkulator VRAM LLM — bobot, cache KV, GPU | LLMScale",
+    description:
+      "Perkirakan memori GPU yang dibutuhkan LLM: bobot model, cache KV, jendela konteks, dan pengguna bersamaan — lalu lihat GPU mana yang dapat menampungnya. Mengambil konfigurasi langsung dari Hugging Face.",
+    ogTitle: "LLMScale — Kalkulator VRAM LLM",
+    ogDescription:
+      "Berapa banyak VRAM yang dibutuhkan LLM Anda? Bobot + cache KV + konteks + konkurensi, dengan rekomendasi GPU.",
+  },
+  "train.html": {
+    title: "Kalkulator VRAM fine-tuning — LoRA, QLoRA, penuh | LLMScale",
+    description:
+      "Hitung memori GPU yang dibutuhkan fine-tuning: LoRA, QLoRA, atau penuh. Gradien, state optimizer, dan aktivasi yang disimpan untuk backward pass, beserta GPU yang dapat menampungnya. Divalidasi terhadap makalah ZeRO dan QLoRA.",
+    ogTitle: "LLMScale — VRAM fine-tuning",
+    ogDescription:
+      "Berapa banyak VRAM yang dibutuhkan fine-tuning? LoRA, QLoRA, dan fine-tuning penuh, dirinci menjadi bobot, gradien, state optimizer, dan aktivasi.",
+  },
+  "fit.html": {
+    title: "Kecocokan tugas LLM — apakah modelnya tepat? | LLMScale",
+    description:
+      "Periksa apakah sebuah LLM cocok untuk tugas Anda — chat, kode, RAG, agen, penalaran, visi, embedding — dinilai dari ukuran nyata model, konteks, penyesuaian, dan modalitasnya. Data langsung dari Hugging Face.",
+    ogTitle: "LLMScale — Kecocokan model ↔ tugas",
+    ogDescription:
+      "Apakah LLM ini tepat untuk tugas Anda? Penilaian kecocokan yang transparan dan berbasis aturan untuk chat, kode, RAG, agen, penalaran, visi, dan lainnya.",
+  },
+  "anatomy.html": {
+    title: "Anatomi LLM — parameter, presisi, dan cache KV | LLMScale",
+    description:
+      "Rontgen visual model Hugging Face apa pun: ke mana parameternya pergi (embedding / perhatian / ahli), ukuran bobotnya pada setiap presisi, arsitektur, GQA, dan pertumbuhan cache KV — dari data langsung Hugging Face.",
+    ogTitle: "LLMScale — Anatomi model",
+    ogDescription:
+      "Rontgen visual LLM apa pun: distribusi parameter, ukuran bobot pada setiap presisi, arsitektur, GQA, dan pertumbuhan cache KV, dari data langsung Hugging Face.",
+  },
+  "compare.html": {
+    title: "Bandingkan LLM berdampingan — spesifikasi, tugas | LLMScale",
+    description:
+      "Bandingkan 2–4 LLM Hugging Face secara berdampingan: parameter, konteks, kuantisasi, kemampuan, dan kecocokan per tugas — lihat model mana yang lebih baik untuk penggunaan apa, dari data langsung Hugging Face.",
+    ogTitle: "LLMScale — Bandingkan model",
+    ogDescription:
+      "Bandingkan 2–4 LLM secara berdampingan: spesifikasi, kemampuan, dan kecocokan per tugas — model mana yang lebih baik untuk penggunaan apa.",
+  },
+  "decode.html": {
+    title: "Pengurai nama LLM — 70B, A3B, AWQ, GGUF, FP8 | LLMScale",
+    description:
+      "Uraikan nama model LLM apa pun: arti 70B, AWQ, GGUF, FP8, A3B, Instruct, dan lainnya — berkode warna, dijelaskan, dan interaktif.",
+    ogTitle: "LLMScale — Pengurai nama model",
+    ogDescription:
+      "Apa arti setiap bagian nama model LLM? 70B · AWQ · GGUF · FP8 · A3B… berkode warna dan dijelaskan secara interaktif.",
+  },
+  "vllm.html": {
+    title: "Parameter vLLM serve — perintah yang disetel | LLMScale",
+    description:
+      "Buat perintah vllm serve yang disetel untuk model apa pun — flag untuk throughput, latensi, akurasi, atau memori, ditambah pemanggilan alat, konteks panjang, dan kuantisasi, dengan perintah yang siap disalin.",
+    ogTitle: "LLMScale — Asisten parameter vLLM",
+    ogDescription:
+      "Pilih model + beban kerja dan dapatkan perintah vllm serve yang disetel dan siap disalin, dioptimalkan untuk performa, akurasi, dan keandalan.",
+  },
+  "config.html": {
+    title: "config.json LLM dijelaskan dalam bahasa sederhana | LLMScale",
+    description:
+      "Baca config.json model Hugging Face apa pun dalam bahasa sederhana: lapisan, head self-attention, GQA dan MLA, ahli, konteks dan penskalaan RoPE, kuantisasi — setiap jawaban terhubung ke baris-baris file aslinya.",
+    ogTitle: "LLMScale — Pengurai config.json",
+    ogDescription:
+      "Apa arti setiap field di config.json sebuah LLM? Jawaban dalam bahasa sederhana tentang memori, konteks, perhatian, dan ahli, terhubung ke file aslinya.",
+  },
+  "serving.html": {
+    title: "Penyajian model — template chat, MTP, kuantisasi | LLMScale",
+    description:
+      "Baca repositori model Hugging Face seperti yang dilakukan mesin inferensi: template chat, parser alat dan penalaran, generation_config, kuantisasi dari nama tensor, dan apakah lapisan MTP-nya disertakan — dengan flag vLLM dan SGLang.",
+    ogTitle: "LLMScale — Ringkasan penyajian",
+    ogDescription:
+      "Apa kata file model tentang cara menyajikannya: parser alat dan penalaran, sampling default, kuantisasi, MTP — serta flag vLLM dan SGLang.",
+  },
+  "plan.html": {
+    title: "Perencanaan kapasitas LLM — GPU untuk beban Anda | LLMScale",
+    description:
+      "Berapa GPU yang dibutuhkan suatu beban: masukannya permintaan per detik, panjang prompt dan balasan, serta target waktu hingga token pertama dan per token; keluarannya replika, paralelisme tensor, dan jumlah GPU, dihitung dari memori vLLM sendiri serta bandwidth dan performa Tensor GPU.",
+    ogTitle: "LLMScale — Rencana kapasitas",
+    ogDescription:
+      "Masukkan permintaan per detik dan target latensi, dapatkan GPU: replika dan paralelisme tensor untuk vLLM, dihitung dari memori, bandwidth, dan performa Tensor.",
+  },
+  "gpu-compare.html": {
+    title: "Perbandingan GPU — VRAM, bandwidth, TFLOPS | LLMScale",
+    description:
+      "Bandingkan 2–4 GPU secara berdampingan dari datasheet-nya: arsitektur, jenis dan bandwidth memori, TFLOPS padat BF16, FP8, dan FP4, daya, NVLink, dan faktor bentuk — kartu konsumen dan pusat data, Apple Silicon, dan PC AI.",
+    ogTitle: "LLMScale — Perbandingan GPU",
+    ogDescription:
+      "2–4 GPU berdampingan: arsitektur, memori dan bandwidth, TFLOPS Tensor padat, daya, dan interkoneksi, dari datasheet produsen.",
+  },
+  "learn.html": {
+    title: "LLM 101 — cara kerja LLM, divisualisasikan | LLMScale",
+    description:
+      "Penjelajahan interaktif dan beranimasi tentang cara model bahasa besar mengubah sebuah kalimat menjadi kata berikutnya — tokenisasi, embedding, perhatian, lapisan, dan sampling, sebagai konstelasi neural 3D.",
+    ogTitle: "LLM 101 — cara kerja LLM, divisualisasikan",
+    ogDescription:
+      "Penjelajahan interaktif tentang cara model bahasa mengubah sebuah kalimat menjadi kata berikutnya — token, embedding, perhatian, lapisan, dan sampling, dalam 3D.",
+  },
+};
+
+export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, zh, hi, es, fr, pt, id };

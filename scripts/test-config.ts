@@ -294,6 +294,8 @@ console.log("\n--- a count of one takes the dictionary's singular word ---");
   check("fr: 2 experts", v("n_shared_experts", 2, "fr") === "2 experts", v("n_shared_experts", 2, "fr"));
   check("pt: 1 especialista", v("n_shared_experts", 1, "pt") === "1 especialista", v("n_shared_experts", 1, "pt"));
   check("pt: 2 especialistas", v("n_shared_experts", 2, "pt") === "2 especialistas", v("n_shared_experts", 2, "pt"));
+  check("id: 1 ahli", v("n_shared_experts", 1, "id") === "1 ahli", v("n_shared_experts", 1, "id"));
+  check("id: 2 ahli", v("n_shared_experts", 2, "id") === "2 ahli", v("n_shared_experts", 2, "id"));
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
