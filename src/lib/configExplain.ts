@@ -66,9 +66,14 @@ export function fmtBytes(bytes: number, lang: Lang): string {
 const w = (k: string, lang: Lang) => (hasKey(lang, `config.w.${k}`) ? translate(lang, `config.w.${k}`) : k);
 /** The dictionary's words for a value, if it has them: config.act.silu. */
 const named = (prefix: string, value: string, lang: Lang) => (hasKey(lang, `${prefix}.${value}`) ? translate(lang, `${prefix}.${value}`) : undefined);
-/** English plurals after a count of one. Turkish keeps the noun singular after
- *  any number, so it needs no entry. */
-const SINGULAR: Record<string, string> = { layers: "layer", heads: "head", experts: "expert", tokens: "token", ids: "id" };
+/** After a count of one, the dictionary's singular word: "1 layer", "1 capa".
+ *  Languages that keep the noun singular after any number write it twice. */
+const ONE: Record<string, string> = {
+  "gloss.unit.layers": "gloss.unit.layer",
+  "gloss.unit.heads": "gloss.unit.head",
+  "gloss.unit.experts": "gloss.unit.expert",
+  "gloss.unit.tokens": "gloss.unit.token",
+};
 
 const DTYPE_NAMES: Record<string, { label: string; bytes: number }> = {
   bfloat16: { label: "BF16", bytes: 2 },
@@ -92,8 +97,8 @@ export function humanValue(value: Json, entry: GlossaryEntry | undefined, lang: 
       return typeof value === "number" ? `${fmtInt(value, lang)} ${w("tokens", lang)} · ${shortTokens(value, lang)}` : undefined;
     case "count": {
       if (typeof value !== "number") return undefined;
-      const unit = entry?.unit ? translate(lang, entry.unit) : "";
-      return `${fmtInt(value, lang)} ${value === 1 ? (SINGULAR[unit] ?? unit) : unit}`.trim();
+      const key = entry?.unit && value === 1 ? (ONE[entry.unit] ?? entry.unit) : entry?.unit;
+      return `${fmtInt(value, lang)} ${key ? translate(lang, key) : ""}`.trim();
     }
     case "number":
       return typeof value === "number" && Math.abs(value) >= 1000 ? fmtInt(value, lang) : undefined;
@@ -108,7 +113,7 @@ export function humanValue(value: Json, entry: GlossaryEntry | undefined, lang: 
     case "ropeType":
       return named("config.rope", String(value), lang);
     case "ids":
-      return Array.isArray(value) ? `${value.length} ${value.length === 1 ? (SINGULAR[w("ids", lang)] ?? w("ids", lang)) : w("ids", lang)}` : undefined;
+      return Array.isArray(value) ? `${value.length} ${w(value.length === 1 ? "id" : "ids", lang)}` : undefined;
     case "layerTypes":
       return Array.isArray(value) ? tally(value.map(String), lang) : undefined;
     case "hybridPattern":
