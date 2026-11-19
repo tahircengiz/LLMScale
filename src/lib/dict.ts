@@ -5,7 +5,7 @@
 // own language's, before the app first renders (main.tsx, loadDict); the build
 // and the tests import them all at once from src/locales/index.ts, which hands
 // each one to setDict. So an English page no longer downloads Turkish.
-import type { Lang } from "./langs.ts";
+import { LANG_META, type Lang } from "./langs.ts";
 import type { Key } from "../locales/en.ts";
 
 export type { Lang } from "./langs.ts";
@@ -52,7 +52,25 @@ export function joinList(lang: Lang, items: readonly (string | number)[]): strin
   return items.join(translate(lang, "list.sep"));
 }
 
+const rules: Partial<Record<Lang, Intl.PluralRules>> = {};
+/** A count's CLDR plural category in `lang` (Intl.PluralRules): "one", "few", "many", "other"… */
+export function pluralCategory(lang: Lang, n: number): Intl.LDMLPluralRule {
+  return (rules[lang] ??= new Intl.PluralRules(LANG_META[lang].intl)).select(n);
+}
+
+/** The key for words that change with a count `n`. Most languages have a form
+ *  for one and a form for any other count, `one` and `key`, chosen by n === 1.
+ *  A language whose plural rules have more forms (Russian: 1 слой, 2 слоя,
+ *  5 слоёв, 21 слой) adds `<key>.<category>` entries, and the entry for n's
+ *  category wins. A sentence that changes with its count is its own `one`: pass
+ *  its count as vars.count and translate() picks the entry. */
+export function countKey(lang: Lang, key: string, n: number, one = key): string {
+  const variant = `${key}.${pluralCategory(lang, n)}`;
+  return hasKey(lang, variant) ? variant : n === 1 ? one : key;
+}
+
 export function translate(lang: Lang, key: string, vars?: Record<string, string | number>): string {
+  if (typeof vars?.count === "number") key = countKey(lang, key, vars.count);
   let s = loaded[lang]?.[key] ?? loaded.en?.[key] ?? key;
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {

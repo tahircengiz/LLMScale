@@ -18,7 +18,7 @@ import { archFromConfig } from "./hf.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
 import { LANG_META, type Lang } from "./langs.ts";
-import { hasKey, joinList, translate } from "./dict.ts";
+import { countKey, hasKey, joinList, translate } from "./dict.ts";
 import { lookupField, type FieldGroup, type GlossaryEntry, type Relevance } from "./configGlossary.ts";
 import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers, mimoAttention, nasAttention, textConfig, textConfigPrefix } from "./layers.ts";
 
@@ -64,10 +64,14 @@ export function fmtBytes(bytes: number, lang: Lang): string {
 
 /** A word the explainer puts next to a value: config.w.<k> in the dictionaries. */
 const w = (k: string, lang: Lang) => (hasKey(lang, `config.w.${k}`) ? translate(lang, `config.w.${k}`) : k);
+/** The word for a count of `n`, config.w.<k> (config.w.<one> after a count of one):
+ *  the language's own form for n where it has more (countKey). */
+const wn = (k: string, n: number, lang: Lang, one = k) => translate(lang, countKey(lang, `config.w.${k}`, n, `config.w.${one}`));
 /** The dictionary's words for a value, if it has them: config.act.silu. */
 const named = (prefix: string, value: string, lang: Lang) => (hasKey(lang, `${prefix}.${value}`) ? translate(lang, `${prefix}.${value}`) : undefined);
 /** After a count of one, the dictionary's singular word: "1 layer", "1 capa".
- *  Languages that keep the noun singular after any number write it twice. */
+ *  Languages that keep the noun singular after any number write it twice; one
+ *  with more forms adds them to the plural key (countKey). */
 const ONE: Record<string, string> = {
   "gloss.unit.layers": "gloss.unit.layer",
   "gloss.unit.heads": "gloss.unit.head",
@@ -94,17 +98,17 @@ export function humanValue(value: Json, entry: GlossaryEntry | undefined, lang: 
   }
   switch (kind) {
     case "tokens":
-      return typeof value === "number" ? `${fmtInt(value, lang)} ${w("tokens", lang)} · ${shortTokens(value, lang)}` : undefined;
+      return typeof value === "number" ? `${fmtInt(value, lang)} ${wn("tokens", value, lang)} · ${shortTokens(value, lang)}` : undefined;
     case "count": {
       if (typeof value !== "number") return undefined;
-      const key = entry?.unit && value === 1 ? (ONE[entry.unit] ?? entry.unit) : entry?.unit;
+      const key = entry?.unit && countKey(lang, entry.unit, value, ONE[entry.unit] ?? entry.unit);
       return `${fmtInt(value, lang)} ${key ? translate(lang, key) : ""}`.trim();
     }
     case "number":
       return typeof value === "number" && Math.abs(value) >= 1000 ? fmtInt(value, lang) : undefined;
     case "dtype": {
       const d = DTYPE_NAMES[String(value)];
-      return d ? `${d.label} · ${d.bytes} ${w("bytesPerParam", lang)}` : undefined;
+      return d ? `${d.label} · ${d.bytes} ${wn("bytesPerParam", d.bytes, lang)}` : undefined;
     }
     case "raw":
       return undefined;
@@ -113,14 +117,14 @@ export function humanValue(value: Json, entry: GlossaryEntry | undefined, lang: 
     case "ropeType":
       return named("config.rope", String(value), lang);
     case "ids":
-      return Array.isArray(value) ? `${value.length} ${w(value.length === 1 ? "id" : "ids", lang)}` : undefined;
+      return Array.isArray(value) ? `${value.length} ${wn("ids", value.length, lang, "id")}` : undefined;
     case "layerTypes":
       return Array.isArray(value) ? tally(value.map(String), lang) : undefined;
     case "hybridPattern":
       return typeof value === "string" ? tally([...value].map((ch) => (PATTERN_CHAR[ch] ? translate(lang, `config.pattern.${PATTERN_CHAR[ch]}`) : ch)), lang) : undefined;
   }
-  if (Array.isArray(value)) return `${value.length} ${w("items", lang)}`;
-  if (typeof value === "object") return `${Object.keys(value).length} ${w("fields", lang)}`;
+  if (Array.isArray(value)) return `${value.length} ${wn("items", value.length, lang)}`;
+  if (typeof value === "object") return `${Object.keys(value).length} ${wn("fields", Object.keys(value).length, lang)}`;
   return undefined;
 }
 
@@ -132,7 +136,7 @@ function tally(items: string[], lang: Lang): string {
   const counts = new Map<string, number>();
   for (const it of items) counts.set(it, (counts.get(it) ?? 0) + 1);
   const parts = [...counts].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${fmtInt(n, lang)} ${k}`);
-  return `${fmtInt(items.length, lang)} ${w("layers", lang)}${translate(lang, "colon.sep")}${joinList(lang, parts)}`;
+  return `${fmtInt(items.length, lang)} ${wn("layers", items.length, lang)}${translate(lang, "colon.sep")}${joinList(lang, parts)}`;
 }
 
 // ── the file as lines ─────────────────────────────────────────────────────

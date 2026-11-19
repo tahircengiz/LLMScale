@@ -16,7 +16,7 @@
 import type { Dtype } from "./calc.ts";
 import { fmtBytes, fmtInt, fmtNum, shortTokens } from "./configExplain.ts";
 import type { Lang } from "./langs.ts";
-import { joinList, translate } from "./dict.ts";
+import { countKey, joinList, translate } from "./dict.ts";
 import { textConfig } from "./layers.ts";
 import { specTensors, type TensorDigest } from "./tensors.ts";
 import { specFileBytes } from "./hf.ts";
@@ -229,11 +229,13 @@ const asIds = (v: unknown): number[] =>
 const textCfg = (cfg: Json): Json => textConfig(cfg) ?? {};
 const short = (s: string, n = 40) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 const json = (v: unknown) => (typeof v === "string" ? v : JSON.stringify(v));
-/** English plural ending for a count; Turkish templates do not use it. */
+/** English plural ending for a count; Turkish templates do not use it. Parts that
+ *  take it also pass the count itself (vars.count), for languages with more forms. */
 const s_ = (n: number) => (n === 1 ? "" : "s");
 /** "1 tensor", "2 tensors": the dictionary has the word for one and for more
- *  (serve.tensor.one, .other); a language without plurals gives the same word twice. */
-const tensorsWord = (n: number, lang: Lang) => `${fmtInt(n, lang)} ${translate(lang, n === 1 ? "serve.tensor.one" : "serve.tensor.other")}`;
+ *  (serve.tensor.one, .other); a language without plurals gives the same word twice,
+ *  one with more forms adds them (countKey). */
+const tensorsWord = (n: number, lang: Lang) => `${fmtInt(n, lang)} ${translate(lang, countKey(lang, "serve.tensor.other", n, "serve.tensor.one"))}`;
 
 // ── the repository: format, role, lineage ─────────────────────────────────
 
@@ -691,7 +693,7 @@ function repoSection(s: RepoSnapshot, f: Facts, lang: Lang, g: G): Section {
       cites.push({ file: "adapter_config.json", key: "r", value: json(s.adapterConfig?.r ?? "") });
       break;
     case "pytorch":
-      parts.push({ k: "repo.pytorch", v: { n: f.shards, s: s_(f.shards), size } });
+      parts.push({ k: "repo.pytorch", v: { n: f.shards, s: s_(f.shards), count: f.shards, size } });
       cites.push({ file: "pytorch_model.bin" });
       g("repo", "warn", "g.pickle");
       break;
@@ -786,7 +788,7 @@ function samplingSection(s: RepoSnapshot, f: Facts, lang: Lang, g: G): Section |
     parts.push({ k: "sampling.eosExtra", v: { gen: joinList(lang, f.eos.generation), cfg: joinList(lang, f.eos.config) || "—" } });
     cites.push({ file: "generation_config.json", key: "eos_token_id", value: json(s.generationConfig.eos_token_id) });
     if (f.eos.config.length) cites.push({ file: "config.json", key: "eos_token_id", value: json(s.config?.eos_token_id ?? textCfg(s.config).eos_token_id) });
-    g("sampling", "info", "g.eosExtra", { n: f.eos.extra.length, s: s_(f.eos.extra.length) });
+    g("sampling", "info", "g.eosExtra", { n: f.eos.extra.length, s: s_(f.eos.extra.length), count: f.eos.extra.length });
   }
   const mnt = gc.max_new_tokens;
   if (typeof mnt === "number") {
@@ -834,11 +836,11 @@ function weightsSection(s: RepoSnapshot, f: Facts, lang: Lang, g: G): Section | 
     parts.push({ k: "weights.mix", v: { mix } });
   }
   if (kept.length) {
-    parts.push({ k: "weights.kept", v: { n: kept.length, s: s_(kept.length), list: joinList(lang, kept.slice(0, 3).map((x) => short(x, 28))) } });
+    parts.push({ k: "weights.kept", v: { n: kept.length, s: s_(kept.length), count: kept.length, list: joinList(lang, kept.slice(0, 3).map((x) => short(x, 28))) } });
     cites.push({ file: declared?.file ?? "config.json", key: keptKey(s), value: short(kept[0], 28) });
   }
   if (kvScales) parts.push({ k: "weights.kvScales" });
-  if (f.weightBytes) parts.push({ k: "weights.size", v: { size: fmtBytes(f.weightBytes, lang), n: f.shards, s: s_(f.shards) } });
+  if (f.weightBytes) parts.push({ k: "weights.size", v: { size: fmtBytes(f.weightBytes, lang), n: f.shards, s: s_(f.shards), count: f.shards } });
   return { id: "weights", parts, cites };
 }
 
@@ -885,17 +887,17 @@ function mtpSection(f: Facts, lang: Lang, g: G): Section | null {
   if (m.where) cites.push({ file: "model.safetensors.index.json", key: m.where, value: tensorsWord(m.tensors, lang) });
   switch (m.status) {
     case "ready":
-      parts.push({ k: m.declared ? "mtp.ready" : "mtp.readyUndeclared", v: { n: m.declared ?? 1, s: s_(m.declared ?? 1), t: fmtInt(m.tensors, lang), where: m.where ?? "" } });
+      parts.push({ k: m.declared ? "mtp.ready" : "mtp.readyUndeclared", v: { n: m.declared ?? 1, s: s_(m.declared ?? 1), count: m.declared ?? 1, t: fmtInt(m.tensors, lang), where: m.where ?? "" } });
       parts.push({ k: m.vllm && m.sglang ? "mtp.engines.both" : m.vllm ? "mtp.engines.vllm" : m.sglang ? "mtp.engines.sglang" : "mtp.engines.none" });
       if (!m.vllm && !m.sglang) g("mtp", "info", "g.mtpNoEngine");
       parts.push({ k: "mtp.memory" });
       break;
     case "missing":
-      parts.push({ k: "mtp.missing", v: { n: m.declared ?? 0, s: s_(m.declared ?? 0), field: m.field ?? "" } });
+      parts.push({ k: "mtp.missing", v: { n: m.declared ?? 0, s: s_(m.declared ?? 0), count: m.declared ?? 0, field: m.field ?? "" } });
       g("mtp", "warn", "g.mtpMissing", { field: m.field ?? "" });
       break;
     case "unverified":
-      parts.push({ k: "mtp.unverified", v: { n: m.declared ?? 0, s: s_(m.declared ?? 0) } });
+      parts.push({ k: "mtp.unverified", v: { n: m.declared ?? 0, s: s_(m.declared ?? 0), count: m.declared ?? 0 } });
       break;
     case "none":
       parts.push({ k: "mtp.zero", v: { field: m.field ?? "" } });
