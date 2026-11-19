@@ -92,4 +92,5 @@ export function rememberLang(lang: Lang): void {
 export const SUGGEST: Record<Lang, { text: string; go: string; dismiss: string }> = {
   en: { text: "This page is also available in English.", go: "Switch to English", dismiss: "Dismiss" },
   tr: { text: "Bu sayfa Türkçe olarak da var.", go: "Türkçe'ye geç", dismiss: "Kapat" },
+  es: { text: "Esta página también está disponible en español.", go: "Cambiar a español", dismiss: "Cerrar" },
 };

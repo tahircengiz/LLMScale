@@ -5,7 +5,8 @@ import { setDict, type Dict } from "../lib/dict.ts";
 import { ENABLED_LANGS, type Lang } from "../lib/langs.ts";
 import en from "./en.ts";
 import tr from "./tr.ts";
+import es from "./es.ts";
 
-export const DICTS: Record<Lang, Dict> = { en, tr };
+export const DICTS: Record<Lang, Dict> = { en, tr, es };
 
 for (const lang of ENABLED_LANGS) setDict(lang, DICTS[lang]);
