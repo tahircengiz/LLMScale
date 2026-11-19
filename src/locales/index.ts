@@ -12,7 +12,8 @@ import fr from "./fr.ts";
 import pt from "./pt.ts";
 import id from "./id.ts";
 import bn from "./bn.ts";
+import ru from "./ru.ts";
 
-export const DICTS: Record<Lang, Dict> = { en, tr, zh, hi, es, fr, pt, id, bn };
+export const DICTS: Record<Lang, Dict> = { en, tr, zh, hi, es, fr, pt, id, bn, ru };
 
 for (const lang of ENABLED_LANGS) setDict(lang, DICTS[lang]);

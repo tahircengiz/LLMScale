@@ -299,6 +299,12 @@ console.log("\n--- a count of one takes the dictionary's singular word ---");
   check("id: 2 ahli", v("n_shared_experts", 2, "id") === "2 ahli", v("n_shared_experts", 2, "id"));
   check("bn: 1 বিশেষজ্ঞ", v("n_shared_experts", 1, "bn") === "1 বিশেষজ্ঞ", v("n_shared_experts", 1, "bn"));
   check("bn: 2 বিশেষজ্ঞ", v("n_shared_experts", 2, "bn") === "2 বিশেষজ্ঞ", v("n_shared_experts", 2, "bn"));
+  // Russian has a form for 1 and 21, one for 2–4 and one for 5–20 and 0 (gloss.unit.experts.one/few/many).
+  check("ru: 1 эксперт", v("n_shared_experts", 1, "ru") === "1 эксперт", v("n_shared_experts", 1, "ru"));
+  check("ru: 2 эксперта", v("n_shared_experts", 2, "ru") === "2 эксперта", v("n_shared_experts", 2, "ru"));
+  check("ru: 5 экспертов", v("n_shared_experts", 5, "ru") === "5 экспертов", v("n_shared_experts", 5, "ru"));
+  check("ru: 21 эксперт", v("n_shared_experts", 21, "ru") === "21 эксперт", v("n_shared_experts", 21, "ru"));
+  check("ru: 0 идентификаторов", v("eos_token_id", [], "ru") === "0 идентификаторов", v("eos_token_id", [], "ru"));
 }
 
 console.log("\n--- a language with one form for more than one keeps it for every other count ---");
@@ -326,6 +332,7 @@ console.log("\n--- a layer count meets its tally the way its language writes a c
   check("tr: colon and space", types("tr") === "3 katman: 2 sliding_attention, 1 full_attention", types("tr"));
   check("fr: no-break space before the colon, as docs/i18n/glossary/fr.md has it", types("fr") === "3 couches : 2 sliding_attention, 1 full_attention", types("fr"));
   check("zh: full-width colon and 、", types("zh") === "3 层：2 sliding_attention、1 full_attention", types("zh"));
+  check("ru: colon and space, 3 слоя", types("ru") === "3 слоя: 2 sliding_attention, 1 full_attention", types("ru"));
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
