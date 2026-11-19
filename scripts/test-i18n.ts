@@ -8,6 +8,9 @@
 //   - each key has the same {placeholders} in every language, except English's
 //     plural {s}, which other languages may not need — a string missing one shows
 //     the raw braces;
+//   - no language leaves an English sentence untranslated: a value identical to
+//     EN's with three or more English words (codes, flags and placeholders aside)
+//     fails unless the key is one that stays English everywhere (SAME_OK);
 //   - every key the code names exists: t("ns.key"), key: "ns.key" in warning and
 //     reason objects, and the explainer parts { k, v } the config and serving pages
 //     translate under config.a. and serve.a.; every t(`ns.${…}`) prefix has entries;
@@ -46,7 +49,13 @@ const P = {
   used: new Prop("every key the code names exists in EN"),
   prefix: new Prop("every t(`ns.${…}`) prefix used in code has entries"),
   vars: new Prop("every call that passes vars passes each placeholder of its key"),
+  same: new Prop("no language copies an English sentence instead of translating it"),
 };
+/** Values that are English in every language: a vLLM log sample, a config name. */
+const SAME_OK = new Set(["logcheck.placeholder", "model.badge.base"]);
+/** The English words of a value, leaving out placeholders, code, tags and flags. */
+const englishWords = (s: string) =>
+  s.replace(/\{\w+\}/g, " ").replace(/<code>.*?<\/code>/g, " ").replace(/<[^>]+>/g, " ").replace(/--[\w-]+/g, " ").match(/\b[a-z]{3,}\b/g) ?? [];
 
 for (const lang of OTHERS) {
   const dict = DICTS[lang];
@@ -58,6 +67,7 @@ for (const lang of OTHERS) {
     const t = placeholders(dict[k]);
     const ok = t.every((p) => e.includes(p)) && e.every((p) => t.includes(p) || p === PLURAL);
     P.ph.ok(ok, () => `${k}: EN {${e.join("},{")}} | ${lang.toUpperCase()} {${t.join("},{")}}`);
+    P.same.ok(SAME_OK.has(k) || dict[k] !== en[k] || englishWords(en[k]).length < 3, () => `${lang} ${k}: "${en[k].slice(0, 80)}"`);
   }
 }
 
