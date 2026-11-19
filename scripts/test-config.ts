@@ -16,6 +16,7 @@ import { ALIASES, FIELD_GROUPS, GLOSSARY, GROUP_LABEL, PATTERNS, lookupField } f
 import {
   configFromArch,
   explainConfig,
+  fmtInt,
   humanValue,
   jsonLines,
   lineCited,
@@ -298,6 +299,23 @@ console.log("\n--- a count of one takes the dictionary's singular word ---");
   check("id: 2 ahli", v("n_shared_experts", 2, "id") === "2 ahli", v("n_shared_experts", 2, "id"));
   check("bn: 1 বিশেষজ্ঞ", v("n_shared_experts", 1, "bn") === "1 বিশেষজ্ঞ", v("n_shared_experts", 1, "bn"));
   check("bn: 2 বিশেষজ্ঞ", v("n_shared_experts", 2, "bn") === "2 বিশেষজ্ঞ", v("n_shared_experts", 2, "bn"));
+}
+
+console.log("\n--- a language with one form for more than one keeps it for every other count ---");
+{
+  // Plural rules put 0 with 1 in French, Portuguese, Hindi and Bengali, and give
+  // Spanish, French and Portuguese a "many" form for a million; without entries of
+  // its own for those forms (countKey), a language reads the same as before.
+  const v = (field: string, value: number | number[], lang: Lang) => humanValue(value, GLOSSARY[field], lang);
+  for (const lang of ENABLED_LANGS.filter((l) => !Object.keys(DICTS[l]).some((k) => k.startsWith("gloss.unit.experts."))))
+    for (const n of [0, 2, 21, 1_000_000]) {
+      const want = `${fmtInt(n, lang)} ${DICTS[lang]["gloss.unit.experts"]}`;
+      check(`${lang}: ${want}`, v("n_shared_experts", n, lang) === want, v("n_shared_experts", n, lang));
+    }
+  check("en: 0 ids", v("eos_token_id", [], "en") === "0 ids", v("eos_token_id", [], "en"));
+  check("fr: 0 identifiant stays plural", v("eos_token_id", [], "fr") === `0 ${DICTS.fr["config.w.ids"]}`, v("eos_token_id", [], "fr"));
+  const fp8 = humanValue("float8_e4m3fn", GLOSSARY.torch_dtype, "en");
+  check("en: FP8 · 1 bytes per parameter, as before", fp8 === "FP8 · 1 bytes per parameter", fp8);
 }
 
 console.log("\n--- a layer count meets its tally the way its language writes a colon (colon.sep) ---");

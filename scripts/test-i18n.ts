@@ -8,6 +8,10 @@
 //   - each key has the same {placeholders} in every language, except English's
 //     plural {s}, which other languages may not need — a string missing one shows
 //     the raw braces;
+//   - a language whose plural rules have more forms than one and other (Russian:
+//     1 слой, 2 слоя, 5 слоёв) gives every word and sentence that changes with a
+//     count an entry per form, <key>.<category> (countKey in src/lib/dict.ts), and
+//     the code passes each {s} sentence its count (vars.count) to choose by;
 //   - no language leaves an English sentence untranslated: a value identical to
 //     EN's with three or more English words (codes, flags and placeholders aside)
 //     fails unless the key is one that stays English everywhere (SAME_OK);
@@ -31,7 +35,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { DICTS } from "../src/locales/index.ts";
-import { DEFAULT_LANG, ENABLED_LANGS, htmlLangAttrs, LANG_META, LANGS } from "../src/lib/langs.ts";
+import { DEFAULT_LANG, ENABLED_LANGS, htmlLangAttrs, LANG_META, LANGS, type Lang } from "../src/lib/langs.ts";
 import { PAGE_TEXT } from "./locales/index.ts";
 import { finish, Prop } from "./sweep-kit.ts";
 
@@ -41,15 +45,41 @@ const OTHERS = ENABLED_LANGS.filter((l) => l !== "en");
 const placeholders = (s: string) => [...new Set([...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort();
 /** English's plural suffix: "{n} file{s}". */
 const PLURAL = "s";
+/** Words the code puts after a count (configExplain humanValue and tally, serving
+ *  tensorsWord), beside the sentences that take English's {s}. */
+const COUNT_WORDS = [
+  "gloss.unit.layers", "gloss.unit.heads", "gloss.unit.experts", "gloss.unit.tokens",
+  "config.w.tokens", "config.w.ids", "config.w.items", "config.w.fields", "config.w.layers", "config.w.bytesPerParam",
+  "serve.tensor.other",
+];
+/** Whether EN's value ends a word with the plural {s} ("file{s}"); {s} is also an
+ *  ordinary placeholder elsewhere ("({s})", "{s} of its layers"). */
+const takesPlural = (k: string) => /[A-Za-z]\{s\}/.test(en[k]);
+const COUNTED = new Set([...COUNT_WORDS, ...Object.keys(en).filter(takesPlural)]);
+/** A language's CLDR plural categories, as the site formats its numbers. */
+const categories = (lang: Lang): string[] => new Intl.PluralRules(LANG_META[lang].intl).resolvedOptions().pluralCategories;
+/** The categories the counts the site writes fall in: whole numbers, 0 to 1000 (a
+ *  million is "many" in Spanish, French and Portuguese, but no count gets there). */
+const countCategories = (lang: Lang) => {
+  const rules = new Intl.PluralRules(LANG_META[lang].intl);
+  return [...new Set(Array.from({ length: 1001 }, (_, n) => rules.select(n)))];
+};
+/** The counted key a key beyond EN's gives a form of (`<key>.<category>`), if it is one. */
+const variantOf = (lang: Lang, k: string) => {
+  const i = k.lastIndexOf(".");
+  return COUNTED.has(k.slice(0, i)) && categories(lang).includes(k.slice(i + 1)) ? k.slice(0, i) : undefined;
+};
 
 const P = {
-  keys: new Prop("every enabled language defines exactly EN's dictionary keys"),
+  keys: new Prop("every enabled language defines exactly EN's dictionary keys, and a count's forms its plural rules have"),
   shape: new Prop("every enabled language gives the built guides the same words as EN (scripts/locales/)"),
   ph: new Prop("every language uses EN's {placeholders} per key (it may leave out the plural {s})"),
   used: new Prop("every key the code names exists in EN"),
   prefix: new Prop("every t(`ns.${…}`) prefix used in code has entries"),
   vars: new Prop("every call that passes vars passes each placeholder of its key"),
   same: new Prop("no language copies an English sentence instead of translating it"),
+  plural: new Prop("a language with plural forms beyond one and other gives each count word and {s} sentence an entry per form, with EN's placeholders"),
+  counted: new Prop("every call and part that fills English's plural {s} passes its count too (vars.count)"),
 };
 /** Values that are English in every language: a vLLM log sample, a config name. */
 const SAME_OK = new Set(["logcheck.placeholder", "model.badge.base"]);
@@ -60,7 +90,7 @@ const englishWords = (s: string) =>
 for (const lang of OTHERS) {
   const dict = DICTS[lang];
   for (const k of Object.keys(en)) P.keys.ok(k in dict, () => `${lang} lacks ${k}`);
-  for (const k of Object.keys(dict)) P.keys.ok(k in en, () => `${lang} has ${k}, EN does not`);
+  for (const k of Object.keys(dict)) P.keys.ok(k in en || variantOf(lang, k) !== undefined, () => `${lang} has ${k}, EN does not`);
   for (const k of Object.keys(en)) {
     if (!(k in dict)) continue; // reported above
     const e = placeholders(en[k]);
@@ -69,6 +99,22 @@ for (const lang of OTHERS) {
     P.ph.ok(ok, () => `${k}: EN {${e.join("},{")}} | ${lang.toUpperCase()} {${t.join("},{")}}`);
     P.same.ok(SAME_OK.has(k) || dict[k] !== en[k] || englishWords(en[k]).length < 3, () => `${lang} ${k}: "${en[k].slice(0, 80)}"`);
   }
+}
+
+for (const k of COUNT_WORDS) P.plural.ok(k in en, () => `COUNT_WORDS names ${k}, which EN does not have`);
+for (const lang of OTHERS) {
+  const dict = DICTS[lang];
+  for (const k of Object.keys(dict)) {
+    const base = k in en ? undefined : variantOf(lang, k);
+    if (!base) continue;
+    const e = placeholders(en[base]).filter((p) => p !== PLURAL);
+    const t = placeholders(dict[k]);
+    P.plural.ok(t.every((p) => e.includes(p)) && e.every((p) => t.includes(p)), () => `${k}: EN {${e.join("},{")}} | ${lang.toUpperCase()} {${t.join("},{")}}`);
+  }
+  const cats = countCategories(lang);
+  // Russian counts fall in one, few and many; other is for fractions and is the key itself.
+  if (cats.some((c) => c !== "one" && c !== "other"))
+    for (const base of COUNTED) for (const c of cats.filter((c) => c !== "other")) P.plural.ok(`${base}.${c}` in dict, () => `${lang} lacks ${base}.${c}`);
 }
 
 /** The leaves of a locale object, as "path: string" or "path: function". */
@@ -188,6 +234,7 @@ for (const f of files) {
       if (!given) continue;
       const missing = need.filter((p) => !given.includes(p));
       P.vars.ok(!missing.length, () => `${rel}: t("${key}", {${given.join(", ")}}) leaves {${missing.join("},{")}} unfilled`);
+      if (takesPlural(key)) P.counted.ok(given.includes("count"), () => `${rel}: t("${key}", {${given.join(", ")}}) fills {s} without a count`);
     } else if (need.length) {
       P.vars.ok(false, () => `${rel}: t("${key}") without vars, but the string has {${need.join("},{")}}`);
     }
@@ -205,6 +252,7 @@ for (const f of files) {
       if (!given) continue;
       const missing = placeholders(en[key]).filter((p) => !given.includes(p));
       P.vars.ok(!missing.length, () => `${rel}: ${key} with {${given.join(", ")}} leaves {${missing.join("},{")}} unfilled`);
+      if (takesPlural(key)) P.counted.ok(given.includes("count"), () => `${rel}: ${key} with {${given.join(", ")}} fills {s} without a count`);
     }
   }
   for (const m of src.matchAll(/\bt\(\s*`([a-zA-Z0-9_.]+)\$\{/g)) {
