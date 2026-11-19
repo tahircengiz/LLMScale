@@ -43,6 +43,7 @@ Her sayfa WebFetch ile açıldı ve tablodaki biçim o sayfada görüldü. Okunm
   - [K5d] 18-fine-tuning — https://github.com/microsoft/generative-ai-for-beginners/blob/main/translations/hi/18-fine-tuning/README.md (okunma tarihi 2026-11-19)
   - [K5e] 19-slm — https://github.com/microsoft/generative-ai-for-beginners/blob/main/translations/hi/19-slm/README.md (okunma tarihi 2026-11-19)
   - [K5f] 15-rag-and-vector-databases — https://github.com/microsoft/generative-ai-for-beginners/blob/main/translations/hi/15-rag-and-vector-databases/README.md (okunma tarihi 2026-11-19)
+  - [K5g] 04-prompt-engineering-fundamentals — https://github.com/microsoft/generative-ai-for-beginners/blob/main/translations/hi/04-prompt-engineering-fundamentals/README.md (okunma tarihi 2026-11-19)
 - [K6] Microsoft, Phi Cookbook, `translations/hi`. Makine çevirisi (CO-OP TRANSLATOR).
   - [K6a] md/01.Introduction/03/iOS_Inference_MLX.md — https://github.com/microsoft/PhiCookBook/blob/main/translations/hi/md/01.Introduction/03/iOS_Inference_MLX.md (okunma tarihi 2026-11-19)
   - [K6b] md/01.Introduction/03/Rust_Inference.md — https://github.com/microsoft/PhiCookBook/blob/main/translations/hi/md/01.Introduction/03/Rust_Inference.md (okunma tarihi 2026-11-19)
@@ -133,6 +134,7 @@ Kısaltma: oy = kaynak oyları, geçiş = toplam geçiş (yaklaşık).
 | data parallelism | डेटा पैरेललिज़्म | K6f | "डेटा पैरेललिज़्म का मेमोरी-कुशल रूप". |
 | capacity planning | क्षमता योजना | K4d | "सावधानीपूर्वक क्षमता योजना". |
 | fine-tuning | फाइन-ट्यूनिंग | K1a, K4b, K5d | Bütün kaynaklar. Alternatif yazım: फ़ाइन-ट्यूनिंग (K1, 4 geçiş). |
+| instruction tuning / instruction-tuned | निर्देश-ट्यूनिंग / निर्देश-ट्यून्ड (निर्देश-ट्यून किया गया) | K4e, K4f | K4e "हल्का निर्देश-ट्यून किया गया मॉडल", K4f "निर्देश-ट्यून किए गए वेरिएंट". İsim biçimi निर्देश-ट्यूनिंग kaynakta görülmedi; फाइन-ट्यूनिंग gibi aynı kökten kuruldu (aile kuralı). Alternatif: इंस्ट्रक्शन-ट्यूनड (K5g, 7 geçiş, yalnız sıfat). Karar (2026-11-19): sitede İngilizce bırakılan "instruction tuning" geçişleri (fit.crit.instruct, fit.msg.*, fit.taskHint.*) bu terime çekildi. |
 | full fine-tuning | पूर्ण फाइन-ट्यूनिंग | K4l | "पूर्ण फाइन-ट्यूनिंग में ... सभी मॉडल पैरामीटर अपडेट किए जाते हैं". |
 | low-rank adaptation (LoRA açılımı) | लो-रैंक अडैप्टेशन | K4i | Geçiş 2 / 1. Alternatif: लो-रैंक अनुकूलन (K4l). Kısaltma LoRA kalır. |
 | rank (LoRA) | रैंक | K4i, K4l | Kaynakta लो-रैंक içinde. |
