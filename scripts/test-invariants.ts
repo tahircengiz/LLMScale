@@ -34,9 +34,12 @@ const css = read("src/index.css");
 
 // ── 1. the dictionaries stay in step ──────────────────────────────────────
 const en = Object.keys(DICTS.en);
+// A language with more plural forms than English adds `<key>.<category>` beside an
+// English key (countKey in src/lib/dict.ts): its own entries, not drift.
+const pluralVariant = (k: string) => /\.(zero|one|two|few|many)$/.test(k) && k.replace(/\.[a-z]+$/, "") in DICTS.en;
 for (const lang of ENABLED_LANGS.filter((l) => l !== "en")) {
   const onlyEn = en.filter((k) => !(k in DICTS[lang]));
-  const onlyThis = Object.keys(DICTS[lang]).filter((k) => !(k in DICTS.en));
+  const onlyThis = Object.keys(DICTS[lang]).filter((k) => !(k in DICTS.en) && !pluralVariant(k));
   check(`EN and ${lang.toUpperCase()} define the same keys`, onlyEn.length === 0 && onlyThis.length === 0,
     onlyEn.length || onlyThis.length ? `only EN: ${onlyEn.join(", ")} | only ${lang.toUpperCase()}: ${onlyThis.join(", ")}` : `${en.length} keys`);
 }
