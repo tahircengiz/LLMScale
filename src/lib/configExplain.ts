@@ -18,7 +18,7 @@ import { archFromConfig } from "./hf.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
 import { LANG_META, type Lang } from "./langs.ts";
-import { hasKey, translate } from "./dict.ts";
+import { hasKey, joinList, translate } from "./dict.ts";
 import { lookupField, type FieldGroup, type GlossaryEntry, type Relevance } from "./configGlossary.ts";
 import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers, mimoAttention, nasAttention, textConfig, textConfigPrefix } from "./layers.ts";
 
@@ -132,7 +132,7 @@ function tally(items: string[], lang: Lang): string {
   const counts = new Map<string, number>();
   for (const it of items) counts.set(it, (counts.get(it) ?? 0) + 1);
   const parts = [...counts].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${fmtInt(n, lang)} ${k}`);
-  return `${fmtInt(items.length, lang)} ${w("layers", lang)}: ${parts.join(", ")}`;
+  return `${fmtInt(items.length, lang)} ${w("layers", lang)}: ${joinList(lang, parts)}`;
 }
 
 // ── the file as lines ─────────────────────────────────────────────────────
@@ -642,7 +642,7 @@ export function explainConfig({ cfg, lang, numParams = 0, rebuilt = false, isMoE
   if (!rebuilt) {
     const training = fields.filter((f) => f.rel === "training");
     const parts: Part[] = training.length
-      ? [{ k: "training.some", v: { n: training.length, list: training.slice(0, 6).map((f) => f.key).join(", ") + (training.length > 6 ? "…" : "") } }]
+      ? [{ k: "training.some", v: { n: training.length, list: joinList(lang, training.slice(0, 6).map((f) => f.key)) + (training.length > 6 ? "…" : "") } }]
       : [{ k: "training.none" }];
     answers.push({ id: "training", parts, working: [], cites: training.map((f) => f.path) });
   }

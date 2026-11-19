@@ -11,7 +11,7 @@ import {
 import { KNOWN_MODELS } from "../lib/models";
 import { formatParams } from "../lib/format";
 import { track } from "../lib/analytics";
-import { useLang } from "../lib/i18n";
+import { joinList, useLang } from "../lib/i18n";
 import { usesCompressedAttn, usesDsa, usesMla } from "../lib/calc";
 import { Badge, Field, NumberInput, SectionTitle, Segmented } from "./ui";
 
@@ -62,7 +62,7 @@ export function ModelPicker({
    * puts the tab switch + search on one row, tightens the resolved summary. */
   compact?: boolean;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [tab, setTab] = useState<Tab>("search");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<HfSearchResult[]>([]);
@@ -342,7 +342,7 @@ export function ModelPicker({
       {arch?.placeholder ? <p className="mt-2 text-xs text-warn">{t("warning.placeholder")}</p> : null}
       {/* Layers the sizing does not follow yet: the figures stay, marked approximate. */}
       {arch?.unmodelled?.length ? (
-        <p className="mt-2 text-xs text-warn">{t("warning.archPartial", { keys: arch.unmodelled.join(", ") })}</p>
+        <p className="mt-2 text-xs text-warn">{t("warning.archPartial", { keys: joinList(lang, arch.unmodelled) })}</p>
       ) : null}
       {/* vLLM 0.31 will not load it: the figures stay, so nobody plans a deployment that will not start. */}
       {arch?.notInVllm ? (

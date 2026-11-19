@@ -16,7 +16,7 @@
 import type { Dtype } from "./calc.ts";
 import { fmtBytes, fmtInt, fmtNum, shortTokens } from "./configExplain.ts";
 import type { Lang } from "./langs.ts";
-import { translate } from "./dict.ts";
+import { joinList, translate } from "./dict.ts";
 import { textConfig } from "./layers.ts";
 import { specTensors, type TensorDigest } from "./tensors.ts";
 import { specFileBytes } from "./hf.ts";
@@ -645,11 +645,11 @@ export function buildBrief(s: RepoSnapshot, lang: Lang, sizing: BriefSizing = {}
   const sections: Section[] = [
     repoSection(s, facts, lang, g),
     chatSection(s, facts, g),
-    samplingSection(s, facts, g),
+    samplingSection(s, facts, lang, g),
     weightsSection(s, facts, lang, g),
     mtpSection(facts, lang, g),
     contextSection(s, c, lang, g),
-    loadSection(s, facts, g),
+    loadSection(s, facts, lang, g),
   ].filter((x): x is Section => !!x);
 
   return {
@@ -680,7 +680,7 @@ function repoSection(s: RepoSnapshot, f: Facts, lang: Lang, g: G): Section {
       if (has(s, "config.json") && s.files.some((x) => top(x) && /^model[\w.-]*\.safetensors$/.test(x.name))) parts.push({ k: "repo.mistralAlsoHf" });
       break;
     case "gguf": {
-      const labels = f.gguf.slice(0, 6).map((x) => x.label).join(", ");
+      const labels = joinList(lang, f.gguf.slice(0, 6).map((x) => x.label));
       parts.push({ k: "repo.gguf", v: { n: f.gguf.length, labels } });
       cites.push({ file: "*.gguf", value: `${f.shards} files` });
       if (s.config) g("repo", "warn", "g.ggufConfig");
@@ -721,7 +721,7 @@ function repoSection(s: RepoSnapshot, f: Facts, lang: Lang, g: G): Section {
   }
   if (f.vision || f.audio) parts.push({ k: f.vision && f.audio ? "repo.visionAudio" : f.vision ? "repo.vision" : "repo.audio" });
   if (s.gated) g("repo", "info", "g.gated");
-  if (s.unreadable?.length) g("repo", "warn", "g.unreadable", { files: s.unreadable.slice(0, 4).join(", ") });
+  if (s.unreadable?.length) g("repo", "warn", "g.unreadable", { files: joinList(lang, s.unreadable.slice(0, 4)) });
   return { id: "repo", parts, cites };
 }
 
@@ -765,7 +765,7 @@ function chatSection(s: RepoSnapshot, f: Facts, g: G): Section | null {
 
 const SAMPLING_KEYS = ["temperature", "top_p", "top_k", "min_p", "repetition_penalty", "presence_penalty", "frequency_penalty"] as const;
 
-function samplingSection(s: RepoSnapshot, f: Facts, g: G): Section | null {
+function samplingSection(s: RepoSnapshot, f: Facts, lang: Lang, g: G): Section | null {
   if (f.role === "embedding" || f.role === "reranker" || f.role === "adapter" || f.role === "draft") return null;
   const gc = s.generationConfig;
   const parts: Part[] = [];
@@ -777,13 +777,13 @@ function samplingSection(s: RepoSnapshot, f: Facts, g: G): Section | null {
   }
   const set = SAMPLING_KEYS.filter((k) => typeof gc[k] === "number");
   if (set.length) {
-    parts.push({ k: "sampling.set", v: { list: set.map((k) => `${k} ${gc[k]}`).join(", ") } });
+    parts.push({ k: "sampling.set", v: { list: joinList(lang, set.map((k) => `${k} ${gc[k]}`)) } });
     for (const k of set) cites.push({ file: "generation_config.json", key: k, value: String(gc[k]) });
     if (gc.do_sample === false) parts.push({ k: "sampling.greedy" });
     parts.push({ k: "sampling.engines" });
   } else parts.push({ k: gc.do_sample === false ? "sampling.greedyOnly" : "sampling.noValues" });
   if (f.eos.extra.length) {
-    parts.push({ k: "sampling.eosExtra", v: { gen: f.eos.generation.join(", "), cfg: f.eos.config.join(", ") || "—" } });
+    parts.push({ k: "sampling.eosExtra", v: { gen: joinList(lang, f.eos.generation), cfg: joinList(lang, f.eos.config) || "—" } });
     cites.push({ file: "generation_config.json", key: "eos_token_id", value: json(s.generationConfig.eos_token_id) });
     if (f.eos.config.length) cites.push({ file: "config.json", key: "eos_token_id", value: json(s.config?.eos_token_id ?? textCfg(s.config).eos_token_id) });
     g("sampling", "info", "g.eosExtra", { n: f.eos.extra.length, s: s_(f.eos.extra.length) });
@@ -834,7 +834,7 @@ function weightsSection(s: RepoSnapshot, f: Facts, lang: Lang, g: G): Section | 
     parts.push({ k: "weights.mix", v: { mix } });
   }
   if (kept.length) {
-    parts.push({ k: "weights.kept", v: { n: kept.length, s: s_(kept.length), list: kept.slice(0, 3).map((x) => short(x, 28)).join(", ") } });
+    parts.push({ k: "weights.kept", v: { n: kept.length, s: s_(kept.length), list: joinList(lang, kept.slice(0, 3).map((x) => short(x, 28))) } });
     cites.push({ file: declared?.file ?? "config.json", key: keptKey(s), value: short(kept[0], 28) });
   }
   if (kvScales) parts.push({ k: "weights.kvScales" });
@@ -939,7 +939,7 @@ function contextSection(s: RepoSnapshot, c: Json, lang: Lang, g: G): Section | n
   return { id: "context", parts, cites };
 }
 
-function loadSection(s: RepoSnapshot, f: Facts, g: G): Section | null {
+function loadSection(s: RepoSnapshot, f: Facts, lang: Lang, g: G): Section | null {
   const parts: Part[] = [];
   const cites: Cite[] = [];
   const archs: string[] = Array.isArray(s.config?.architectures) ? s.config.architectures : [];
@@ -949,7 +949,7 @@ function loadSection(s: RepoSnapshot, f: Facts, g: G): Section | null {
   }
   const rc = f.remoteCode;
   if (rc.arch || rc.tokenizer) {
-    parts.push({ k: rc.tokenizer ? (rc.arch ? "load.remoteBoth" : "load.remoteTokenizer") : "load.remoteArch", v: { files: rc.files.slice(0, 3).join(", ") || "auto_map" } });
+    parts.push({ k: rc.tokenizer ? (rc.arch ? "load.remoteBoth" : "load.remoteTokenizer") : "load.remoteArch", v: { files: joinList(lang, rc.files.slice(0, 3)) || "auto_map" } });
     if (s.config?.auto_map) cites.push({ file: "config.json", key: "auto_map", value: Object.keys(s.config.auto_map).slice(0, 2).join(", ") });
     if (s.tokenizerConfig?.auto_map) cites.push({ file: "tokenizer_config.json", key: "auto_map" });
     g("load", "warn", "g.remoteCode");
@@ -967,7 +967,7 @@ function loadSection(s: RepoSnapshot, f: Facts, g: G): Section | null {
 const ability = (k: string, lang: Lang) => translate(lang, `serve.ability.${k}`);
 
 const listOf = (xs: string[], lang: Lang) =>
-  xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} ${translate(lang, "serve.and")} ${xs[xs.length - 1]}`;
+  xs.length < 2 ? xs.join("") : `${joinList(lang, xs.slice(0, -1))} ${translate(lang, "serve.and")} ${xs[xs.length - 1]}`;
 
 function portraitOf(f: Facts, lang: Lang): Part[] {
   const out: Part[] = [];
