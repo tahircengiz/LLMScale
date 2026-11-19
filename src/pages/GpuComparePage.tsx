@@ -4,6 +4,7 @@ import { MAX_GPUS, bestOf, migMax, parseGpuIds, servedBy } from "../lib/gpuCompa
 import { gpuHint } from "../lib/choices";
 import { specOf, type GpuSpec } from "../lib/gpuSpecs";
 import { useLang } from "../lib/i18n";
+import { formatDate, formatNumber } from "../lib/format";
 import { Card, Field } from "../components/ui";
 import { Select, type Choice } from "../components/choice";
 import { InfoTip } from "../components/tip";
@@ -25,8 +26,8 @@ export function GpuComparePage() {
   const gpus = ids.map((id) => GPUS.find((g) => g.id === id)).filter((g): g is Gpu => !!g);
   const specs = gpus.map((g) => specOf(g.id));
 
-  const n = (v: number) => v.toLocaleString(lang === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: 0 });
-  const month = (ym: string) => new Date(`${ym}-15T00:00:00Z`).toLocaleDateString(lang === "tr" ? "tr-TR" : "en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+  const n = (v: number) => formatNumber(v, lang, { maximumFractionDigits: 0 });
+  const month = (ym: string) => formatDate(new Date(`${ym}-15T00:00:00Z`), lang, { month: "short", year: "numeric", timeZone: "UTC" });
   const power = (s: GpuSpec) => {
     if (!s.powerW) return undefined;
     const w = s.powerMaxW ? `${n(s.powerW)}–${n(s.powerMaxW)} W` : `${n(s.powerW)} W`;
@@ -71,10 +72,10 @@ export function GpuComparePage() {
       ) : (
         <Card className="overflow-hidden p-0">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
+            <table className="w-full border-collapse text-start">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="sticky left-0 z-10 bg-ink-900 px-3 py-3" />
+                  <th className="sticky start-0 z-10 bg-ink-900 px-3 py-3" />
                   {gpus.map((g) => (
                     <th key={g.id} scope="col" className="min-w-[150px] px-3 py-3 align-top">
                       <div className="flex items-start justify-between gap-2">
@@ -160,9 +161,9 @@ export function GpuComparePage() {
 function Section({ title, span, hint }: { title: string; span: number; hint?: string }) {
   return (
     <tr>
-      <th colSpan={span + 1} scope="colgroup" className="bg-ink-850/70 px-3 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+      <th colSpan={span + 1} scope="colgroup" className="bg-ink-850/70 px-3 py-1.5 text-start text-[11px] font-semibold uppercase tracking-wide text-slate-400">
         {title}
-        {hint && <span className="ml-2 font-normal normal-case tracking-normal text-slate-500">{hint}</span>}
+        {hint && <span className="ms-2 font-normal normal-case tracking-normal text-slate-500">{hint}</span>}
       </th>
     </tr>
   );
@@ -177,7 +178,7 @@ function SpecRow({ label, tip, vals }: { label: string; tip?: string; vals: (str
 function Row({ label, tip, cells, wins }: { label: string; tip?: string; cells: ReactNode[]; wins?: boolean[] }) {
   return (
     <tr className="group transition-colors hover:bg-white/5">
-      <th scope="row" className="sticky left-0 z-10 whitespace-nowrap bg-ink-900 px-3 py-2 text-left text-xs font-medium text-slate-400 transition-colors group-hover:bg-ink-850">
+      <th scope="row" className="sticky start-0 z-10 whitespace-nowrap bg-ink-900 px-3 py-2 text-start text-xs font-medium text-slate-400 transition-colors group-hover:bg-ink-850">
         <span className="inline-flex items-center gap-1.5">
           {label}
           {tip && <InfoTip text={tip} />}

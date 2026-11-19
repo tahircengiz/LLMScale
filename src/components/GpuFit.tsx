@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { calculate, contextShortfall, layoutFor, layoutsOn, maxConcurrency, maxContextLength, typicalConcurrency, DTYPE_BYTES, DTYPE_LABELS, type Dtype, type Layout, type ModelArch, type TypicalLoad } from "../lib/calc";
 import { batchFor, GPUS, GPU_CATEGORIES, migBandwidthShare, migMem, migProfilesFor, stepDevice, usableGiB, type Gpu, type GpuCategory } from "../lib/gpus";
 import { splitDevices } from "../lib/deviceGrid";
-import { formatGiB, formatInt } from "../lib/format";
+import { formatGiB, formatInt, formatNumber } from "../lib/format";
 import { GREEN, RED } from "../lib/palette";
 import { BANDWIDTH_EFFICIENCY, decodeStep, LAYER_MS, layoutSpeed } from "../lib/perf";
 import { SpeedPanel } from "./SpeedPanel";
 import { useLang } from "../lib/i18n";
+import { langHome } from "../lib/langPath";
 import { layoutFlags, layoutKey, layoutLabel } from "../lib/parallel";
 import { Badge, SectionTitle, Stat } from "./ui";
 
@@ -112,7 +113,7 @@ export function GpuFit({
   const selUsage = usage(selected, migId);
   /** The vLLM page for this model on this card, set up with a layout. */
   const vllmLink = (l: Layout) =>
-    `${import.meta.env.BASE_URL}${lang === "tr" ? "tr/" : ""}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${l.gpus}&ctx=${contextLength}&lay=${layoutKey(l)}`;
+    `${langHome(import.meta.env.BASE_URL, lang)}vllm.html?m=${encodeURIComponent(hfId)}&gpu=${selected.id}&n=${l.gpus}&ctx=${contextLength}&lay=${layoutKey(l)}`;
   const kvHeads = arch.numKeyValueHeads ?? arch.numAttentionHeads;
   const heads = arch.numAttentionHeads;
   const layout = selUsage.layout;
@@ -221,7 +222,7 @@ export function GpuFit({
         // would repaint an over-budget card in brand colours; this overrides it.
         data-over-budget={overBudget ? "true" : undefined}
         className={
-          "gpu-card rounded-xl p-2.5 text-left ring-1 transition " +
+          "gpu-card rounded-xl p-2.5 text-start ring-1 transition " +
           (overBudget
             ? "ring-bad/50 bg-bad/10"
             : g.id === gpuId
@@ -231,7 +232,7 @@ export function GpuFit({
       >
         <div className="flex items-center justify-between">
           <span className="truncate text-xs font-medium text-slate-200">{g.name}</span>
-          <span className="ml-1 shrink-0 text-[10px] text-slate-500">{g.totalGiB ?? g.vramGiB}GB</span>
+          <span className="ms-1 shrink-0 text-[10px] text-slate-500">{g.totalGiB ?? g.vramGiB}GB</span>
         </div>
         <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
           <div className="h-full rounded-full" style={{ width: `${Math.min(100, u.pct * 100)}%`, backgroundColor: u.fits ? GREEN : RED }} />
@@ -435,7 +436,7 @@ export function GpuFit({
               p: Math.round(BANDWIDTH_EFFICIENCY * 100),
               c: Math.round(selDevice.computeEfficiency * 100),
               // The device's own measured per-layer cost where it has one (Strix Halo).
-              l: (selected.layerMs ?? LAYER_MS).toLocaleString(lang === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: 3 }),
+              l: formatNumber(selected.layerMs ?? LAYER_MS, lang, { maximumFractionDigits: 3 }),
             })}
           </p>
         )}
@@ -463,7 +464,7 @@ export function GpuFit({
                 <button
                   type="button"
                   onClick={() => onGpu(smallestFit.id)}
-                  className="rounded-lg bg-ink-800 px-2.5 py-1.5 text-left text-[11.5px] ring-1 ring-control transition hover:bg-white/5"
+                  className="rounded-lg bg-ink-800 px-2.5 py-1.5 text-start text-[11.5px] ring-1 ring-control transition hover:bg-white/5"
                 >
                   <span className="block font-medium text-white">{smallestFit.name}</span>
                   <span className="text-slate-400">
@@ -480,7 +481,7 @@ export function GpuFit({
                   type="button"
                   onClick={() => onWeightDtype?.(quantFix.d)}
                   disabled={!onWeightDtype}
-                  className="rounded-lg bg-ink-800 px-2.5 py-1.5 text-left text-[11.5px] ring-1 ring-control transition enabled:hover:bg-white/5 disabled:opacity-60"
+                  className="rounded-lg bg-ink-800 px-2.5 py-1.5 text-start text-[11.5px] ring-1 ring-control transition enabled:hover:bg-white/5 disabled:opacity-60"
                 >
                   <span className="block font-medium text-white">{DTYPE_LABELS[quantFix.d]}</span>
                   <span className="text-slate-400">
@@ -586,23 +587,23 @@ export function GpuFit({
                 <table className="w-full text-[11px] tabular-nums">
                   <thead className="text-slate-500">
                     <tr>
-                      <th scope="col" className="py-1 pr-2 text-left font-medium">{t("gpu.alt.layout")}</th>
-                      {ranked && <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.speed")}</th>}
-                      <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.perGpu")}</th>
-                      <th scope="col" className="py-1 pr-2 text-right font-medium">{t("gpu.alt.users", { x: ctxLabel(contextLength) })}</th>
-                      <th scope="col" className="py-1 text-right font-medium">{t("gpu.alt.ctx", { n: formatInt(concurrency) })}</th>
+                      <th scope="col" className="py-1 pe-2 text-start font-medium">{t("gpu.alt.layout")}</th>
+                      {ranked && <th scope="col" className="py-1 pe-2 text-end font-medium">{t("gpu.alt.speed")}</th>}
+                      <th scope="col" className="py-1 pe-2 text-end font-medium">{t("gpu.alt.perGpu")}</th>
+                      <th scope="col" className="py-1 pe-2 text-end font-medium">{t("gpu.alt.users", { x: ctxLabel(contextLength) })}</th>
+                      <th scope="col" className="py-1 text-end font-medium">{t("gpu.alt.ctx", { n: formatInt(concurrency) })}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {multi.map((f, i) => (
                       <tr key={layoutLabel(f.layout)} className={i === 0 ? "font-semibold text-white" : f.fits ? "text-slate-300" : "text-slate-500"}>
-                        <td className="whitespace-nowrap py-0.5 pr-2">{layoutLabel(f.layout)}</td>
+                        <td className="whitespace-nowrap py-0.5 pe-2">{layoutLabel(f.layout)}</td>
                         {ranked && (
-                          <td className="py-0.5 pr-2 text-right">{f.fits && f.stepMs && Number.isFinite(f.stepMs) ? formatInt(Math.round(1000 / f.stepMs)) : "—"}</td>
+                          <td className="py-0.5 pe-2 text-end">{f.fits && f.stepMs && Number.isFinite(f.stepMs) ? formatInt(Math.round(1000 / f.stepMs)) : "—"}</td>
                         )}
-                        <td className="py-0.5 pr-2 text-right">{formatGiB(f.layout.perGpuGiB)}</td>
-                        <td className="py-0.5 pr-2 text-right">{formatInt(f.maxUsers)}</td>
-                        <td className="py-0.5 text-right">{formatInt(f.maxContext)}</td>
+                        <td className="py-0.5 pe-2 text-end">{formatGiB(f.layout.perGpuGiB)}</td>
+                        <td className="py-0.5 pe-2 text-end">{formatInt(f.maxUsers)}</td>
+                        <td className="py-0.5 text-end">{formatInt(f.maxContext)}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -29,7 +29,7 @@ function Chart({ points, pick, color, label }: { points: DecodePoint[]; pick: (p
   return (
     <figure className="min-w-0">
       <figcaption className="mb-1 text-[11px] text-slate-400">{label}</figcaption>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={label}>
+      <svg direction="ltr" viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={label}>
         {firstCompute >= 0 && (
           <rect
             x={firstCompute === 0 ? PAD.l : (x(firstCompute - 1) + x(firstCompute)) / 2}

@@ -1,4 +1,5 @@
 // Display formatting helpers.
+import { LANG_META, type Lang } from "./langs.ts";
 
 export function formatGiB(gib: number): string {
   if (gib < 0.01) return "<0.01 GiB";
@@ -22,4 +23,26 @@ export function formatBytes(bytes: number): string {
 
 export function formatInt(n: number): string {
   return n.toLocaleString();
+}
+
+// ── by the page's language ────────────────────────────────────────────────────
+// Grouping and decimal separator follow the language's Intl locale (LANG_META),
+// with Latin digits in every language (D6). The build formats explicitly too: the
+// build machine's own locale must not leak into a page.
+
+/** A number as `lang` writes it: 131,072 in English, 131.072 in Turkish. */
+export function formatNumber(n: number, lang: Lang, opts?: Intl.NumberFormatOptions): string {
+  return new Intl.NumberFormat(LANG_META[lang].intl, opts).format(n);
+}
+
+/** A date as `lang` writes it. */
+export function formatDate(d: Date, lang: Lang, opts?: Intl.DateTimeFormatOptions): string {
+  return new Intl.DateTimeFormat(LANG_META[lang].intl, opts).format(d);
+}
+
+/** Rewrite the decimal points in already-formatted text the way `lang` writes
+ *  them: "12.34 GiB" stays in English and reads "12,34 GiB" in Turkish. */
+export function localizeDecimals(s: string, lang: Lang): string {
+  const sep = new Intl.NumberFormat(LANG_META[lang].intl).formatToParts(1.5).find((p) => p.type === "decimal")?.value ?? ".";
+  return sep === "." ? s : s.replace(/(\d)\.(\d)/g, `$1${sep}$2`);
 }

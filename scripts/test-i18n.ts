@@ -1,9 +1,13 @@
-// The two dictionaries against each other and against the code that reads them
-// (audit phase 4, from the 2026-10-15 audit's i18n.ts). Run: node scripts/test-i18n.ts
+// The dictionaries against each other and against the code that reads them
+// (audit phase 4, from the 2026-10-15 audit's i18n.ts), and the rules that keep the
+// site open to more languages (docs/i18n-plan.md). Run: node scripts/test-i18n.ts
 //
-// test-invariants.ts checks that EN and TR define the same keys. Here:
-//   - each key has the same {placeholders} in both, except English's plural {s},
-//     which Turkish does not need — a TR string missing one shows the raw braces;
+// Here:
+//   - every enabled language defines exactly English's keys, and the built
+//     guides' words (scripts/locales/) in the same shape;
+//   - each key has the same {placeholders} in every language, except English's
+//     plural {s}, which other languages may not need — a string missing one shows
+//     the raw braces;
 //   - every key the code names exists: t("ns.key"), key: "ns.key" in warning and
 //     reason objects, and the explainer parts { k, v } the config and serving pages
 //     translate under config.a. and serve.a.; every t(`ns.${…}`) prefix has entries;
@@ -12,32 +16,62 @@
 // were fine (vars with nested calls or template literals, config keys taken for
 // dictionary ones); this one reads the vars object with brackets and strings
 // balanced, and the explainer parts by the prefix their page puts on them.
+//   - no code picks its words with an inline language test (lang === "tr" ? … : …,
+//     const en = …) or a hand list of languages: words live in the locale files,
+//     languages in src/lib/langs.ts, so enabling one is a file and a line;
+//   - every right-to-left language's pages say dir="rtl", every other dir="ltr"
+//     (none is enabled yet: the check stands ready);
+//   - in a built site (dist/), every page's hreflang set is reciprocal: each
+//     version it names names the same set back, and x-default is the default
+//     language's version.
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
-import { DICTS } from "../src/lib/dict.ts";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
+import { DICTS } from "../src/locales/index.ts";
+import { DEFAULT_LANG, ENABLED_LANGS, htmlLangAttrs, LANG_META, LANGS } from "../src/lib/langs.ts";
+import { PAGE_TEXT } from "./locales/index.ts";
 import { finish, Prop } from "./sweep-kit.ts";
 
 const t0 = Date.now();
 const en = DICTS.en;
-const tr = DICTS.tr;
+const OTHERS = ENABLED_LANGS.filter((l) => l !== "en");
 const placeholders = (s: string) => [...new Set([...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort();
 /** English's plural suffix: "{n} file{s}". */
 const PLURAL = "s";
 
 const P = {
-  ph: new Prop("EN and TR use the same {placeholders} per key (TR may leave out the plural {s})"),
+  keys: new Prop("every enabled language defines exactly EN's dictionary keys"),
+  shape: new Prop("every enabled language gives the built guides the same words as EN (scripts/locales/)"),
+  ph: new Prop("every language uses EN's {placeholders} per key (it may leave out the plural {s})"),
   used: new Prop("every key the code names exists in EN"),
   prefix: new Prop("every t(`ns.${…}`) prefix used in code has entries"),
   vars: new Prop("every call that passes vars passes each placeholder of its key"),
 };
 
-for (const k of Object.keys(en)) {
-  if (!(k in tr)) continue; // test-invariants.ts reports it
-  const e = placeholders(en[k]);
-  const t = placeholders(tr[k]);
-  const ok = t.every((p) => e.includes(p)) && e.every((p) => t.includes(p) || p === PLURAL);
-  P.ph.ok(ok, () => `${k}: EN {${e.join("},{")}} | TR {${t.join("},{")}}`);
+for (const lang of OTHERS) {
+  const dict = DICTS[lang];
+  for (const k of Object.keys(en)) P.keys.ok(k in dict, () => `${lang} lacks ${k}`);
+  for (const k of Object.keys(dict)) P.keys.ok(k in en, () => `${lang} has ${k}, EN does not`);
+  for (const k of Object.keys(en)) {
+    if (!(k in dict)) continue; // reported above
+    const e = placeholders(en[k]);
+    const t = placeholders(dict[k]);
+    const ok = t.every((p) => e.includes(p)) && e.every((p) => t.includes(p) || p === PLURAL);
+    P.ph.ok(ok, () => `${k}: EN {${e.join("},{")}} | ${lang.toUpperCase()} {${t.join("},{")}}`);
+  }
+}
+
+/** The leaves of a locale object, as "path: string" or "path: function". */
+function leaves(o: object, path = ""): string[] {
+  return Object.entries(o).flatMap(([k, v]) =>
+    v && typeof v === "object" ? leaves(v, `${path}${k}.`) : [`${path}${k}: ${typeof v}`]
+  );
+}
+const enShape = leaves(PAGE_TEXT.en);
+for (const lang of OTHERS) {
+  const shape = new Set(leaves(PAGE_TEXT[lang]));
+  for (const l of enShape) P.shape.ok(shape.has(l), () => `${lang} lacks ${l}`);
+  for (const l of shape) P.shape.ok(enShape.includes(l), () => `${lang} has ${l}, EN does not`);
 }
 
 /** Index just past the string literal that opens at `i` (', " or `, with ${…} inside templates). */
@@ -111,6 +145,8 @@ const walk = (d: string) => {
   }
 };
 walk(join(root, "src"));
+// The dictionaries are what the code is checked against, not code that names keys.
+files.splice(0, files.length, ...files.filter((f) => !f.includes("/src/locales/")));
 
 const namespaces = new Set(Object.keys(en).map((k) => k.split(".")[0]));
 /** Explainer parts { k, v }: the prefix their page translates them under
@@ -166,5 +202,99 @@ for (const f of files) {
   }
 }
 
-console.log(`${Object.keys(en).length} keys, ${files.length} source files, ${calls} t() calls`);
-finish(Object.values(P), t0);
+// ── no inline language branches ───────────────────────────────────────────────
+// Words chosen by testing the language in place are words a new language cannot
+// supply. The locale files, the language list and the tests are where language
+// codes belong.
+const branch = new Prop("no code picks its words by testing the language inline, or lists the languages by hand");
+const CODES = LANGS.join("|");
+const BRANCHES = [
+  // lang === "tr", p.lang !== "en", "tr" === lang
+  new RegExp(`\\b\\w*[lL]ang\\w*\\s*[!=]==?\\s*["'](?:${CODES})["']`),
+  new RegExp(`["'](?:${CODES})["']\\s*[!=]==?\\s*[\\w.]*[lL]ang\\b`),
+  // const en = …, the flag a whole page's ternaries hang on
+  /\b(?:const|let|var)\s+(?:en|tr|isEn|isTr)\s*=/,
+  // a hand list of languages
+  new RegExp(`\\[\\s*["'](?:${CODES})["']\\s*,\\s*["'](?:${CODES})["']`),
+];
+const codeFiles: string[] = [];
+const walkCode = (d: string) => {
+  for (const f of readdirSync(d)) {
+    const p = join(d, f);
+    const rel = relative(root, p);
+    if (statSync(p).isDirectory()) {
+      if (!["node_modules", "locales", "data"].includes(f)) walkCode(p);
+    } else if (/\.(tsx?|jsx?)$/.test(f) && !/^test-/.test(f) && rel !== "src/lib/langs.ts") codeFiles.push(p);
+  }
+};
+for (const d of ["src", "scripts", "newsroom"]) walkCode(join(root, d));
+for (const f of codeFiles) {
+  const rel = relative(root, f);
+  readFileSync(f, "utf8").split("\n").forEach((line, i) => {
+    if (/^\s*(\/\/|\*|\/\*)/.test(line)) return; // a comment may name a language
+    const hit = BRANCHES.find((re) => re.test(line));
+    branch.ok(!hit, () => `${rel}:${i + 1}: ${line.trim().slice(0, 120)}`);
+  });
+}
+
+// ── direction ─────────────────────────────────────────────────────────────────
+const dir = new Prop("a right-to-left language's pages say dir=\"rtl\", every other language's dir=\"ltr\"");
+const RTL = LANGS.filter((l) => LANG_META[l].dir === "rtl");
+dir.ok(RTL.length > 0, () => "no right-to-left language in LANG_META to check against");
+for (const l of LANGS) {
+  const want = l === "ar" || l === "ur" ? "rtl" : "ltr";
+  dir.ok(LANG_META[l].dir === want, () => `${l}: LANG_META says ${LANG_META[l].dir}, should be ${want}`);
+  dir.ok(htmlLangAttrs(l) === `lang="${LANG_META[l].hreflang}" dir="${want}"`, () => `${l}: <html ${htmlLangAttrs(l)}>`);
+}
+const enabledRtl = ENABLED_LANGS.filter((l) => LANG_META[l].dir === "rtl");
+console.log(enabledRtl.length ? `right-to-left languages enabled: ${enabledRtl.join(", ")}` : "no right-to-left language enabled yet: the built-page check below covers left-to-right only");
+
+// ── the built site ────────────────────────────────────────────────────────────
+const dist = join(root, "dist");
+const builtProps: Prop[] = [];
+if (existsSync(join(dist, "index.html"))) {
+  const builtDir = new Prop("every built page's <html> carries its language's dir");
+  const recip = new Prop("every built page's hreflang set is reciprocal, with x-default on the default language");
+  builtProps.push(builtDir, recip);
+  const htmlFiles: string[] = [];
+  const walkDist = (d: string) => {
+    for (const f of readdirSync(d)) {
+      const p = join(d, f);
+      if (statSync(p).isDirectory()) walkDist(p);
+      else if (f.endsWith(".html")) htmlFiles.push(p);
+    }
+  };
+  walkDist(dist);
+  const byUrl = new Map<string, { rel: string; alts: Record<string, string> }>();
+  const byHreflang = new Map(ENABLED_LANGS.map((l) => [LANG_META[l].hreflang, l]));
+  for (const f of htmlFiles) {
+    const rel = relative(dist, f);
+    const html = readFileSync(f, "utf8");
+    const attrs = html.match(/<html lang="([^"]+)"(?: dir="([^"]+)")?/);
+    const lang = attrs ? byHreflang.get(attrs[1]) : undefined;
+    const canonical = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
+    if (!lang || !canonical) continue; // a fragment, not a page (sitemap.ts refuses pages without them)
+    builtDir.ok(attrs![2] === LANG_META[lang].dir, () => `${rel}: <html lang="${attrs![1]}" dir="${attrs![2] ?? ""}">`);
+    const alts = Object.fromEntries([...html.matchAll(/<link rel="alternate" hreflang="([A-Za-z-]+)" href="([^"]+)"/g)].map((m) => [m[1], m[2]]));
+    recip.ok(alts[LANG_META[lang].hreflang] === canonical, () => `${rel}: its ${lang} version is not its canonical`);
+    byUrl.set(canonical, { rel, alts });
+  }
+  for (const [, p] of byUrl) {
+    const def = p.alts[LANG_META[DEFAULT_LANG].hreflang];
+    recip.ok(def !== undefined && p.alts["x-default"] === def, () => `${p.rel}: x-default ${p.alts["x-default"]} is not the ${DEFAULT_LANG} version`);
+    for (const [l, target] of Object.entries(p.alts)) {
+      if (l === "x-default") continue;
+      const other = byUrl.get(target);
+      recip.ok(
+        !!other && Object.keys(other.alts).length === Object.keys(p.alts).length && Object.entries(p.alts).every(([k, u]) => other.alts[k] === u),
+        () => `${p.rel} names ${target} (${l}), which ${other ? "names a different set" : "was not built"}`
+      );
+    }
+  }
+  console.log(`dist: ${byUrl.size} pages`);
+} else {
+  console.log("SKIP  the built-site checks: no dist/ (run npm run build first)");
+}
+
+console.log(`${Object.keys(en).length} keys, ${files.length} source files, ${calls} t() calls, ${codeFiles.length} files checked for language branches`);
+finish([...Object.values(P), branch, dir, ...builtProps], t0);

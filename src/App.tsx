@@ -7,7 +7,7 @@ import {
   themeOnSystemChange,
   type Theme,
 } from "./lib/theme";
-import { useLang, type Lang } from "./lib/i18n";
+import { useLang } from "./lib/i18n";
 import { SizingPage } from "./pages/SizingPage";
 import { FitPage } from "./pages/FitPage";
 import { VllmPage } from "./pages/VllmPage";
@@ -21,11 +21,13 @@ import { PlanPage } from "./pages/PlanPage";
 import { GpuComparePage } from "./pages/GpuComparePage";
 import { Badge, Segmented } from "./components/ui";
 import { About } from "./components/About";
-import { LANG_NAME, pathFor } from "./lib/langPath";
+import { langHome, pathFor } from "./lib/langPath";
+import { ENABLED_LANGS, LANG_META } from "./lib/langs";
 import { CONCEPTS_HUB, GPUS_HUB, MODELS_HUB } from "./lib/staticPages";
 import { FEED_HUB } from "./lib/feed";
 import { StaticPageLink } from "./components/StaticPageLink";
 import { SiteNav } from "./components/SiteNav";
+import { LangMenu } from "./components/LangMenu";
 
 // Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
@@ -48,7 +50,7 @@ function currentPage(): "fit" | "sizing" | "vllm" | "decode" | "anatomy" | "comp
 }
 
 export default function App() {
-  const { t, lang, setLang } = useLang();
+  const { t, lang } = useLang();
   const page = currentPage();
   const [copied, setCopied] = useState(false);
   // Each entry's inline bootstrap has already put the theme class on <html> before
@@ -61,7 +63,7 @@ export default function App() {
   });
   const base = import.meta.env.BASE_URL;
   // Links stay in the language the page is in: /tr/ pages link to /tr/ pages.
-  const home = base + (lang === "tr" ? "tr/" : "");
+  const home = langHome(base, lang);
 
   function showTheme(next: Theme) {
     setTheme(next);
@@ -144,16 +146,7 @@ export default function App() {
                 nowrap
                 options={THEMES.map((v) => ({ value: v, label: t(`theme.${v}`) }))}
               />
-              <Segmented<Lang>
-                value={lang}
-                onChange={setLang}
-                size="sm"
-                nowrap
-                options={[
-                  { value: "en", label: "EN" },
-                  { value: "tr", label: "TR" },
-                ]}
-              />
+              <LangMenu />
               {/* Both labels sit in one grid cell and the idle one only turns
                   invisible, so the button keeps its width while it confirms the
                   copy and nothing beside it moves. A phone has no room for the
@@ -226,7 +219,6 @@ export default function App() {
 
 function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: string }) {
   const { t, lang } = useLang();
-  const other: Lang = lang === "tr" ? "en" : "tr";
   return (
     <footer className="mt-8 flex flex-col items-center gap-2 border-t border-white/10 pt-6 text-center text-sm text-slate-400">
       <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-slate-400">
@@ -236,11 +228,13 @@ function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: st
         <a href={linkedinUrl} target="_blank" rel="noreferrer" className="hover:text-brand-400">
           linkedin.com/tahircengiz
         </a>
-        {/* A plain link to this page in the other language, so the two versions
-            link to each other in the HTML itself, not only through hreflang. */}
-        <a href={pathFor(window.location.pathname, other)} hrefLang={other} lang={other} className="hover:text-brand-400">
-          {LANG_NAME[other]}
-        </a>
+        {/* Plain links to this page in the other languages, so the versions link
+            to each other in the HTML itself, not only through hreflang. */}
+        {ENABLED_LANGS.filter((l) => l !== lang).map((l) => (
+          <a key={l} href={pathFor(window.location.pathname, l)} hrefLang={LANG_META[l].hreflang} lang={LANG_META[l].hreflang} className="hover:text-brand-400">
+            {LANG_META[l].name}
+          </a>
+        ))}
       </div>
       <nav aria-label={t("footer.guides")} className="flex flex-wrap justify-center gap-x-4 gap-y-1">
         <StaticPageLink file={MODELS_HUB}>{t("footer.models")}</StaticPageLink>

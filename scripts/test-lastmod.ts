@@ -32,6 +32,7 @@ import { type U, d } from "./mixed.ts";
 import "./side.css";
 export * from "./reexport.ts";
 export const s = "./not-an-import.ts";
+export const load = () => import("./lazy.ts");
 `);
 put("multi.ts", `import { s } from "./page.tsx";\nexport const a = 1, b = 2;`);
 put("bare.ts", "export const c = 3;");
@@ -40,16 +41,17 @@ put("mixed.ts", "export type U = number; export const d = 4;");
 put("side.css", "body{}");
 put("reexport.ts", "export const e = 5;");
 put("not-an-import.ts", "");
+put("lazy.ts", "export default 6;");
 const got = new Set(sourcesOf(join(dir, "page.tsx")).map((p) => p.slice(dir.length + 1)));
-const want = ["page.tsx", "multi.ts", "bare.ts", "mixed.ts", "side.css", "reexport.ts"];
-check("follows imports across lines, without extensions, re-exports and side effects", want.every((f) => got.has(f)), [...got].join(" "));
+const want = ["page.tsx", "multi.ts", "bare.ts", "mixed.ts", "side.css", "reexport.ts", "lazy.ts"];
+check("follows imports across lines, without extensions, re-exports, side effects and import()", want.every((f) => got.has(f)), [...got].join(" "));
 check("leaves out type-only imports, packages and strings that only look like paths", got.size === want.length, [...got].join(" "));
 rmSync(dir, { recursive: true });
 
 const fit = sourcesOf("fit.html", "src/pages/FitPage.tsx");
 check("the task-fit page is dated by its entry and its component", fit.includes("fit.html") && fit.includes("src/pages/FitPage.tsx"));
 check("…by the scoring it shows", fit.includes("src/lib/fit.ts"));
-check("…and by the dictionary its words come from, re-exported through i18n.ts", fit.includes("src/lib/dict.ts"));
+check("…and by the dictionaries its words come from, which i18n.ts loads through dict.ts", fit.includes("src/lib/dict.ts") && fit.includes("src/locales/en.ts") && fit.includes("src/locales/tr.ts"));
 check("…but not by the app's other pages", !fit.some((f) => f.startsWith("src/pages/") && f !== "src/pages/FitPage.tsx"), fit.filter((f) => f.startsWith("src/pages/")).join(" "));
 let missing = "";
 try {

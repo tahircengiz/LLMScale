@@ -18,7 +18,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { FEED_CATEGORIES, validatePost, type FeedCategory, type FeedPost } from "../src/lib/feed.ts";
 import { KNOWN_MODELS } from "../src/lib/models.ts";
-import type { Lang } from "../src/lib/dict.ts";
+import { FEED_LANGS, LANG_META, type FeedLang as Lang } from "../src/lib/langs.ts";
 import { article, CSS as FEED_CSS, type RenderCtx } from "../scripts/feedRender.ts";
 import { esc, SHELL_CSS, THEME_BOOT } from "../scripts/shell.ts";
 import { runAll, runWrite } from "./pipeline.ts";
@@ -45,8 +45,8 @@ const KNOWN = new Set(KNOWN_MODELS.map((m) => m.id));
 const RC: RenderCtx = {
   base: "/",
   home: SITE,
-  href: (lang, file = "") => `${SITE}${lang === "tr" ? "tr/" : ""}${file}`,
-  url: (lang, file = "") => `${SITE}${lang === "tr" ? "tr/" : ""}${file}`,
+  href: (lang, file = "") => `${SITE}${LANG_META[lang].prefix}${file}`,
+  url: (lang, file = "") => `${SITE}${LANG_META[lang].prefix}${file}`,
 };
 
 const store = new Store(DB);
@@ -348,7 +348,9 @@ export async function handle(req: IncomingMessage, res: ServerResponse): Promise
   if (url.pathname === "/healthz") return send(res, 200, "ok", "text/plain");
   if (url.pathname === "/favicon.svg") return send(res, 200, FAVICON, "image/svg+xml");
   if (!gateOk(req)) return send(res, 403, "forbidden", "text/plain");
-  const lang: Lang = url.searchParams.get("lang") === "en" ? "en" : "tr";
+  // The reviewer reads the panel in Turkish unless they ask for another feed language.
+  const asked = url.searchParams.get("lang");
+  const lang: Lang = FEED_LANGS.find((l) => l === asked) ?? "tr";
   const flash = url.searchParams.get("m") ?? "";
 
   if (req.method === "GET") {

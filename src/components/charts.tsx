@@ -33,7 +33,7 @@ export function Donut({
   return (
     <div className="flex flex-wrap items-center gap-5">
       <div className="relative shrink-0" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <svg direction="ltr" width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
             <circle
               cx={size / 2}
@@ -78,7 +78,7 @@ export function Donut({
           <li key={i} className="flex items-center gap-2">
             <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: s.color }} />
             <span className="truncate text-slate-300">{s.label}</span>
-            {s.sub && <span className="ml-auto shrink-0 text-xs text-slate-500">{s.sub}</span>}
+            {s.sub && <span className="ms-auto shrink-0 text-xs text-slate-500">{s.sub}</span>}
           </li>
         ))}
       </ul>
@@ -103,7 +103,7 @@ export function HBars({ items }: { items: BarItem[] }) {
           <div className="mb-1 flex items-baseline justify-between text-xs">
             <span className={it.highlight ? "font-semibold text-white" : "text-slate-300"}>
               {it.label}
-              {it.highlight && <span className="ml-1.5 text-[10px] text-accent-400">●</span>}
+              {it.highlight && <span className="ms-1.5 text-[10px] text-accent-400">●</span>}
             </span>
             <span className="tabular-nums text-slate-400">{it.valueLabel}</span>
           </div>
@@ -155,7 +155,7 @@ export function LineChart({
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * yMax);
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="text-slate-400" role="img">
+    <svg direction="ltr" width="100%" viewBox={`0 0 ${W} ${H}`} className="text-slate-400" role="img">
       {/* y grid + labels */}
       {yTicks.map((yt, i) => (
         <g key={i}>

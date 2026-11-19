@@ -15,7 +15,8 @@
 // does not have fails here rather than in someone's launch command.
 
 import { readFileSync, readdirSync } from "node:fs";
-import { DICTS, type Lang } from "../src/lib/dict.ts";
+import { DICTS } from "../src/locales/index.ts";
+import { ENABLED_LANGS, type Lang } from "../src/lib/langs.ts";
 import { buildBrief, commandText, digestTensors, ENGINE_VERSIONS, type Part, type RepoSnapshot, type ServingBrief } from "../src/lib/serving.ts";
 
 let fails = 0;
@@ -248,7 +249,7 @@ console.log("\n--- Gemma 2: no system role ---");
 console.log("\n--- every fixture: names the engines have, sentences in both languages ---");
 for (const f of readdirSync(dir).filter((x) => x.endsWith(".json")).sort()) {
   const name = f.replace(/\.json$/, "");
-  for (const lang of ["en", "tr"] as Lang[]) {
+  for (const lang of ENABLED_LANGS) {
     const b = brief(name, lang);
     const missing = keys(b).filter((p) => !(`serve.a.${p.k}` in DICTS[lang])).map((p) => p.k);
     check(`${name} [${lang}]: every sentence exists`, missing.length === 0, missing.join(", "));

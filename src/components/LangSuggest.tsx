@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLang, type Lang } from "../lib/i18n";
 import { SUGGEST, pathFor, preferredLang, rememberLang } from "../lib/langPath";
+import { LANG_META } from "../lib/langs";
 import { track } from "../lib/analytics";
 
-/** Offers the other language version to a visitor whose preference differs from
+/** Offers another language version to a visitor whose preference differs from
  *  the page's. It never switches for them: the URL decides what a page is in, and
  *  search engines must find each version where its hreflang says it is.
  *
@@ -26,7 +27,8 @@ export function LangSuggest() {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
       <div
-        lang={offer}
+        lang={LANG_META[offer].hreflang}
+        dir={LANG_META[offer].dir}
         role="region"
         aria-label={s.text}
         className="pointer-events-auto flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-white/10 bg-ink-900/90 px-4 py-2.5 text-sm text-slate-300 shadow-xl shadow-black/30 backdrop-blur-sm"
@@ -34,7 +36,7 @@ export function LangSuggest() {
         <span>{s.text}</span>
         <a
           href={href}
-          hrefLang={offer}
+          hrefLang={LANG_META[offer].hreflang}
           onClick={() => {
             rememberLang(offer);
             track("lang-suggest", { action: "switch", to: offer });

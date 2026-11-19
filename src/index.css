@@ -49,6 +49,27 @@
   --chart-grey: #8b919c;
 }
 
+/* Code, commands, model ids and config keys read left to right in every
+ * language: on a right-to-left page each stays one isolated left-to-right run.
+ * On a left-to-right page this changes nothing. */
+@layer base {
+  code,
+  pre,
+  kbd,
+  samp,
+  .font-mono {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  /* A table set to text-start holds the initial value, and the browser's own
+   * rule then centres a th that sets no alignment; this keeps it on the
+   * table's start side, as text-left did. */
+  th {
+    text-align: inherit;
+  }
+}
+
 /* #root arrives holding the page prerendered at build time, in its URL's language
  * with nothing chosen. For a link carrying its own state (?m=…) the entry's
  * bootstrap sets this class, and Root removes it once React has rendered. */

@@ -3,8 +3,9 @@
 // tiers while the database had five, so a whole tier was unreachable and
 // nothing failed. Run: node scripts/test-invariants.ts
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { DICTS } from "../src/lib/dict.ts";
-import { TR_META } from "../src/lib/pageMeta.ts";
+import { DICTS } from "../src/locales/index.ts";
+import { PAGE_META } from "../src/lib/pageMeta.ts";
+import { DEFAULT_LANG, ENABLED_LANGS, LANG_META } from "../src/lib/langs.ts";
 import { CONCEPT_FILES, FEATURED_GPU_IDS } from "../src/lib/staticPages.ts";
 import { SOURCE_URLS } from "../src/lib/sources.ts";
 import { TASKS } from "../src/lib/fit.ts";
@@ -31,13 +32,14 @@ const root = new URL("../", import.meta.url);
 const read = (rel: string) => readFileSync(new URL(rel, root), "utf8");
 const css = read("src/index.css");
 
-// ── 1. the two dictionaries stay in step ──────────────────────────────────
+// ── 1. the dictionaries stay in step ──────────────────────────────────────
 const en = Object.keys(DICTS.en);
-const tr = Object.keys(DICTS.tr);
-const onlyEn = en.filter((k) => !(k in DICTS.tr));
-const onlyTr = tr.filter((k) => !(k in DICTS.en));
-check("EN and TR define the same keys", onlyEn.length === 0 && onlyTr.length === 0,
-  onlyEn.length || onlyTr.length ? `only EN: ${onlyEn.join(", ")} | only TR: ${onlyTr.join(", ")}` : `${en.length} keys`);
+for (const lang of ENABLED_LANGS.filter((l) => l !== "en")) {
+  const onlyEn = en.filter((k) => !(k in DICTS[lang]));
+  const onlyThis = Object.keys(DICTS[lang]).filter((k) => !(k in DICTS.en));
+  check(`EN and ${lang.toUpperCase()} define the same keys`, onlyEn.length === 0 && onlyThis.length === 0,
+    onlyEn.length || onlyThis.length ? `only EN: ${onlyEn.join(", ")} | only ${lang.toUpperCase()}: ${onlyThis.join(", ")}` : `${en.length} keys`);
+}
 
 // ── 2. every enumerated set is fully translated, with no stale leftovers ───
 const sets: { label: string; members: readonly string[]; prefix: string }[] = [
@@ -47,7 +49,7 @@ const sets: { label: string; members: readonly string[]; prefix: string }[] = [
   { label: "GPU_CATEGORIES", members: GPU_CATEGORIES, prefix: "cat." },
 ];
 for (const { label, members, prefix } of sets) {
-  for (const lang of ["en", "tr"] as const) {
+  for (const lang of ENABLED_LANGS) {
     const dict = DICTS[lang];
     const missing = members.filter((m) => !(prefix + m in dict));
     check(`${label} fully covered by ${prefix}* (${lang})`, missing.length === 0, missing.join(", "));
@@ -256,13 +258,13 @@ const aboutGaps = aboutPages.filter((pg) => {
 check("each has a title, text and at least three answered questions", aboutGaps.length === 0, aboutGaps.join(", "));
 // The sizing page claimed MLA was not modelled for two weeks after calc.ts began
 // modelling it. Copy is where the engine's changes are easiest to leave behind.
-const allCopy = Object.values(DICTS.en).join(" ") + Object.values(DICTS.tr).join(" ");
+const allCopy = ENABLED_LANGS.map((l) => Object.values(DICTS[l]).join(" ")).join(" ");
 check("no copy still says MLA is not modelled", !/MLA[^.]*(not yet capture|henüz modellenmemiş)/.test(allCopy));
 // The About cards link the papers and repository files their copy cites. A moved
 // file leaves a dead link; an arXiv label names its paper by the id its link opens,
 // in both languages.
 const badSources = Object.entries(SOURCE_URLS).filter(([k, url]) => {
-  const labels = [DICTS.en[`source.${k}`], DICTS.tr[`source.${k}`]];
+  const labels = ENABLED_LANGS.map((l) => DICTS[l][`source.${k}`]);
   if (labels.some((l) => !l)) return true;
   const arxiv = url.match(/^https:\/\/arxiv\.org\/abs\/(\d{4}\.\d{4,5})$/)?.[1];
   if (arxiv) return !labels.every((l) => l.includes(`arXiv ${arxiv}`));
@@ -271,19 +273,22 @@ const badSources = Object.entries(SOURCE_URLS).filter(([k, url]) => {
 }).map(([k]) => k);
 check("every cited source has its label and a target that exists", badSources.length === 0, badSources.join(", "));
 
-console.log("\n--- both languages have pages of their own ---");
-// scripts/prerender.ts builds tr/<entry> from each entry and the head in
-// src/lib/pageMeta.ts. An entry with no Turkish head fails the build; catch it here
-// first, along with a head for a page that no longer exists.
-const untranslated = pages.filter((p) => !(p in TR_META));
-check("every entry has a Turkish head", untranslated.length === 0, untranslated.join(", "));
-const orphaned = Object.keys(TR_META).filter((f) => !pages.includes(f));
-check("and no Turkish head outlives its page", orphaned.length === 0, orphaned.join(", "));
+console.log("\n--- every language has pages of its own ---");
+// scripts/prerender.ts builds <lang>/<entry> from each entry and the head in
+// src/lib/pageMeta.ts. An entry with no head in a language fails the build; catch
+// it here first, along with a head for a page that no longer exists.
+for (const lang of ENABLED_LANGS.filter((l) => l !== DEFAULT_LANG)) {
+  const meta = PAGE_META[lang];
+  const untranslated = pages.filter((p) => !(p in meta));
+  check(`every entry has a ${lang} head`, untranslated.length === 0, untranslated.join(", "));
+  const orphaned = Object.keys(meta).filter((f) => !pages.includes(f));
+  check(`and no ${lang} head outlives its page`, orphaned.length === 0, orphaned.join(", "));
+}
 // Search results cut titles around 60 characters; the cut falls on the brand if it
 // falls anywhere, but past that it eats the words people searched for.
 const longTitles = [
   ...pages.map((p) => [p, read(p).match(/<title>([^<]*)<\/title>/)?.[1] ?? ""]),
-  ...Object.entries(TR_META).map(([f, m]) => [`tr/${f}`, m.title]),
+  ...ENABLED_LANGS.filter((l) => l !== DEFAULT_LANG).flatMap((l) => Object.entries(PAGE_META[l]).map(([f, m]) => [`${LANG_META[l].prefix}${f}`, m.title])),
 ].filter(([, title]) => [...title].length > 60);
 check("every title fits in 60 characters", longTitles.length === 0, longTitles.map(([f, t]) => `${f} (${[...t].length})`).join(", "));
 // Links inside a page stay in its language; a /tr/ page linking to English pages
@@ -308,14 +313,14 @@ check("the app header builds its nav from src/lib/nav.ts", read("src/components/
 check("so do the static pages", read("scripts/appLook.ts").includes('from "../src/lib/nav.ts"') && !/export const NAV\b/.test(read("scripts/appLook.ts")));
 const navItems = navPages(NAV_MENUS);
 const navWords = navItems.flatMap((i) => [i.label, ...(i.desc ? [i.desc] : []), ...(i.more ? [i.more] : [])]).concat(["nav.peek"]).concat(NAV_MENUS.flatMap((m) => [m.label, ...m.sections.flatMap((x) => (x.title ? [x.title] : []))]));
-const navUnworded = navWords.filter((k) => !(k in DICTS.en) || !(k in DICTS.tr));
-check("every nav entry has its words in both languages", navUnworded.length === 0, navUnworded.join(", "));
+const navUnworded = navWords.filter((k) => ENABLED_LANGS.some((l) => !(k in DICTS[l])));
+check("every nav entry has its words in every language", navUnworded.length === 0, navUnworded.join(", "));
 check("every menu entry says what the page holds", navItems.filter((i) => i !== navItems[0] && !i.more).length === 0);
 const navDead = navItems.filter((i) => i.file !== "" && !inputs.includes(i.file) && !/\/$/.test(i.file)).map((i) => i.file);
 check("every nav entry leads to an entry page or a guide hub", navDead.length === 0, navDead.join(", "));
 const navMissing = aboutPages.filter((pg) => !navItems.some((i) => i.page === pg));
 check("every tool is in the nav", navMissing.length === 0, navMissing.join(", "));
-check("so does the calculator's link to the vLLM helper", read("src/components/GpuFit.tsx").includes('${lang === "tr" ? "tr/" : ""}vllm.html'));
+check("so does the calculator's link to the vLLM helper", read("src/components/GpuFit.tsx").includes("${langHome(import.meta.env.BASE_URL, lang)}vllm.html"));
 
 console.log("\n--- the generated model and GPU guides ---");
 // scripts/genPages.ts builds a page per preset and per featured GPU, and the app

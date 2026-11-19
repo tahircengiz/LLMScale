@@ -5,11 +5,15 @@
 //
 // Runs last in the build, from the built pages, the same way sitemap.ts does: the
 // title, description and canonical URL of every English page, grouped by what the
-// page is. A hand-written list is how a new page goes missing from it. Turkish
-// pages are not listed one by one; the header says where they live.
+// page is. A hand-written list is how a new page goes missing from it. Pages in
+// the other languages are not listed one by one; the header says where they live.
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { ENABLED_LANGS, LANG_META } from "../src/lib/langs.ts";
+
+/** The folders the other languages' pages live in: "tr/". */
+const OTHER_LANG_DIRS = ENABLED_LANGS.map((l) => LANG_META[l].prefix).filter(Boolean);
 
 const outDir = process.argv[2] ?? "dist";
 
@@ -28,7 +32,7 @@ interface Entry { rel: string; url: string; title: string; description: string }
 const entries: Entry[] = [];
 for (const path of htmlFiles(outDir)) {
   const rel = relative(outDir, path).replaceAll("\\", "/");
-  if (rel.startsWith("tr/")) continue;
+  if (OTHER_LANG_DIRS.some((d) => rel.startsWith(d))) continue;
   const html = readFileSync(path, "utf8");
   const url = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
   const title = html.match(/<title>([^<]*)<\/title>/)?.[1];

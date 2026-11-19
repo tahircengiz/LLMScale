@@ -32,6 +32,7 @@ export function DecodePage() {
       <Card className="mb-5 p-5">
         <SectionTitle step="1" title={t("decode.input")} />
         <input
+          dir="ltr"
           value={hfId}
           onChange={(e) => setHfId(e.target.value)}
           spellCheck={false}
@@ -112,7 +113,7 @@ export function DecodePage() {
                     </code>
                     <span className="text-xs font-medium text-slate-300">{info.title[lang]}</span>
                   </div>
-                  <p className={"mt-1 pl-[18px] text-xs transition " + (on ? "text-slate-200" : "text-slate-400")}>
+                  <p className={"mt-1 ps-[18px] text-xs transition " + (on ? "text-slate-200" : "text-slate-400")}>
                     {info.desc[lang]}
                   </p>
                 </div>

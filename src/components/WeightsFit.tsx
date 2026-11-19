@@ -42,7 +42,7 @@ export function WeightsFit({ weightsGiB, gpuId, onGpu }: { weightsGiB: number; g
         aria-pressed={g.id === gpuId}
         data-over-budget={overBudget ? "true" : undefined}
         className={
-          "gpu-card rounded-xl p-2.5 text-left ring-1 transition " +
+          "gpu-card rounded-xl p-2.5 text-start ring-1 transition " +
           (overBudget
             ? "ring-bad/50 bg-bad/10"
             : g.id === gpuId
@@ -52,7 +52,7 @@ export function WeightsFit({ weightsGiB, gpuId, onGpu }: { weightsGiB: number; g
       >
         <div className="flex items-center justify-between">
           <span className="truncate text-xs font-medium text-slate-200">{g.name}</span>
-          <span className="ml-1 shrink-0 text-[10px] text-slate-500">{g.totalGiB ?? g.vramGiB}GB</span>
+          <span className="ms-1 shrink-0 text-[10px] text-slate-500">{g.totalGiB ?? g.vramGiB}GB</span>
         </div>
         <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
           <div className="h-full rounded-full" style={{ width: `${Math.min(100, pct * 100)}%`, backgroundColor: ok ? GREEN : RED }} />

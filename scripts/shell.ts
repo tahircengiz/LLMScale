@@ -8,13 +8,13 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Lang } from "../src/lib/dict.ts";
-import { formatGiB, formatParams } from "../src/lib/format.ts";
+import { DEFAULT_LANG, ENABLED_LANGS, htmlLangAttrs, LANG_META, type Lang } from "../src/lib/langs.ts";
+import { formatGiB, formatNumber, formatParams, localizeDecimals } from "../src/lib/format.ts";
 import { SUGGEST } from "../src/lib/langPath.ts";
-import { APP_CSS, APP_SCRIPT, APP_THEME_BOOT, appFooter, appHeader, esc, other, type FrameCtx } from "./appLook.ts";
+import { APP_CSS, APP_SCRIPT, APP_THEME_BOOT, appFooter, appHeader, esc, type FrameCtx } from "./appLook.ts";
+import { PAGE_TEXT } from "./locales/index.ts";
 
-export { esc, other };
-export const LANGS: Lang[] = ["en", "tr"];
+export { esc };
 
 // ── the site, as built ────────────────────────────────────────────────────────
 export interface Site {
@@ -37,9 +37,9 @@ export function readSite(outDir: string): Site {
 // ── formatting ────────────────────────────────────────────────────────────────
 // Build-time output formats explicitly: the build machine's locale must not leak
 // into a page (it once rendered 131072 as "131.072" on an English one).
-export const dec = (lang: Lang, s: string) => (lang === "tr" ? s.replace(/(\d)\.(\d)/g, "$1,$2") : s);
+export const dec = (lang: Lang, s: string) => localizeDecimals(s, lang);
 export const gib = (lang: Lang, n: number) => dec(lang, formatGiB(n));
-export const int = (lang: Lang, n: number) => n.toLocaleString(lang === "tr" ? "tr-TR" : "en-US");
+export const int = (lang: Lang, n: number) => formatNumber(n, lang);
 export const params = (lang: Lang, n: number) => dec(lang, formatParams(n));
 export const ratio = (lang: Lang, r: number) => `${dec(lang, String(Math.round(r * 10) / 10))}×`;
 /** A context length as people say it: 8k, 128k, 1M; Llama 4 Scout's 10,485,760 read "10240k". */
@@ -47,6 +47,12 @@ export const ctxK = (c: number) =>
   c >= 1048576 && c % 1048576 === 0 ? `${c / 1048576}M` : c >= 1e6 && c % 1e6 === 0 ? `${c / 1e6}M` : `${c % 1000 === 0 ? c / 1000 : Math.round(c / 1024)}k`;
 export const words = (html: string) =>
   html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").split(/\s+/).filter(Boolean).length;
+
+/** The browser half of matchLang (src/lib/langPath.ts), for the static pages'
+ *  offer: the first of a browser's preferred languages (`n`) among `E`, skipping
+ *  Traditional Chinese for the Simplified version. test-langpath.ts runs both on
+ *  the same lists. */
+export const MATCH_LANG_JS = `function(E,n){for(var i=0;i<n.length;i++){var p=String(n[i]||"").toLowerCase().split(/[-_]/),c=p[0];if(c==="zh"){var s="";for(var j=1;j<p.length;j++)if(p[j]==="hans"||p[j]==="hant"){s=p[j];break}if(s==="hant"||(!s&&(p.indexOf("tw")>0||p.indexOf("hk")>0||p.indexOf("mo")>0)))continue}if(E.indexOf(c)>=0)return c}return null}`;
 
 // ── a guide's content ─────────────────────────────────────────────────────────
 // A guide sits in one card in the middle of the page, like the app's panels: the
@@ -75,7 +81,7 @@ const GUIDE_CSS = `
 .ok{color:var(--good);font-weight:600}
 .no{color:var(--bad)}
 .note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
-ul.plain{padding-left:1.1rem;margin:0 0 .9rem}
+ul.plain{padding-inline-start:1.1rem;margin:0 0 .9rem}
 ul.plain li{margin:.3rem 0}
 .links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
 .links a{display:inline-block;background:var(--inset);border:1px solid var(--line);border-radius:.75rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
@@ -84,6 +90,7 @@ ul.plain li{margin:.3rem 0}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
 pre{background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.75rem 1rem;overflow-x:auto;margin:0 0 .9rem;line-height:1.55}
 pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
+code,pre{direction:ltr;unicode-bidi:isolate}
 @media (max-width:40rem){.guide{padding:1rem;margin-inline:-.25rem}}
 `.trim();
 
@@ -91,6 +98,9 @@ export type Section = "models" | "gpus" | "concepts" | "feed";
 
 export interface PageSpec {
   lang: Lang;
+  /** The languages this page is built in, every enabled one unless said
+   *  otherwise: its hreflang links, language menu and offer list these. */
+  langs?: readonly Lang[];
   file: string;
   section: Section;
   title: string;
@@ -119,26 +129,24 @@ export interface PageSpec {
  *  it builds last changed (lastModified.ts), their dateModified unless a page's
  *  own structured data has one. */
 export function createShell(site: Site, { feed, modified }: { feed: boolean; modified?: string }) {
-  const href = (lang: Lang, file = "") => `${site.base}${lang === "tr" ? "tr/" : ""}${file}`;
-  const url = (lang: Lang, file = "") => `${site.home}${lang === "tr" ? "tr/" : ""}${file}`;
+  const href = (lang: Lang, file = "") => `${site.base}${LANG_META[lang].prefix}${file}`;
+  const url = (lang: Lang, file = "") => `${site.home}${LANG_META[lang].prefix}${file}`;
 
   /** The same offer as the app's LangSuggest: shown only when the visitor prefers
-   *  the other language, never a redirect, and remembered either way. */
-  function suggestScript(lang: Lang, file: string): string {
-    const o = other(lang);
-    const data = JSON.stringify({ L: lang, O: o, S: SUGGEST[o], H: href(o, file) }).replace(/</g, "\\u003c");
-    return `(function(d){var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(p!=="en"&&p!=="tr")p=/^tr/.test(navigator.language||"")?"tr":"en";if(p===d.L)return;var b=document.createElement("div");b.className="langsuggest";b.lang=d.O;b.setAttribute("role","region");b.setAttribute("aria-label",d.S.text);var s=document.createElement("span");s.textContent=d.S.text;var a=document.createElement("a");a.href=d.H;a.hreflang=d.O;a.textContent=d.S.go;a.onclick=function(){try{localStorage.setItem("lang",d.O)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\\u2715";c.setAttribute("aria-label",d.S.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})(${data});`;
+   *  another of the page's languages, never a redirect, and remembered either way. */
+  function suggestScript(lang: Lang, langs: readonly Lang[], file: string): string {
+    const offers = Object.fromEntries(
+      langs.filter((l) => l !== lang).map((l) => [l, { ...SUGGEST[l], h: href(l, file), l: LANG_META[l].hreflang, r: LANG_META[l].dir }])
+    );
+    const data = JSON.stringify({ L: lang, D: DEFAULT_LANG, E: langs, S: offers }).replace(/</g, "\\u003c");
+    return `(function(d){var m=${MATCH_LANG_JS};var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(d.E.indexOf(p)<0)p=m(d.E,navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language])||d.D;var o=d.S[p];if(p===d.L||!o)return;var b=document.createElement("div");b.className="langsuggest";b.lang=o.l;b.dir=o.r;b.setAttribute("role","region");b.setAttribute("aria-label",o.text);var s=document.createElement("span");s.textContent=o.text;var a=document.createElement("a");a.href=o.h;a.hreflang=o.l;a.textContent=o.go;a.onclick=function(){try{localStorage.setItem("lang",p)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\\u2715";c.setAttribute("aria-label",o.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})(${data});`;
   }
 
-  /** What a page's section is called: the phone menu's label on a page the nav does not list. */
-  const SECTION = {
-    en: { models: "Models", gpus: "GPUs", concepts: "Concepts", feed: "Feed", crumbs: "Breadcrumb" },
-    tr: { models: "Modeller", gpus: "GPU'lar", concepts: "Kavramlar", feed: "Akış", crumbs: "Konum" },
-  };
-
   function page(p: PageSpec): string {
-    const c = SECTION[p.lang];
-    const frame: FrameCtx = { lang: p.lang, file: p.file, href, base: site.base, feed };
+    const c = PAGE_TEXT[p.lang].section;
+    const langs = p.langs ?? ENABLED_LANGS;
+    if (!langs.includes(p.lang)) throw new Error(`${p.lang}/${p.file}: not among its own languages`);
+    const frame: FrameCtx = { lang: p.lang, langs, file: p.file, href, base: site.base, feed };
     // Titles are cut around 60 characters in results; the brand goes first when one
     // runs long, since the words people searched for are the part worth keeping.
     const title = [...`${p.title} | LLMScale`].length <= 60 ? `${p.title} | LLMScale` : p.title;
@@ -162,16 +170,15 @@ ${p.body}
 </div>`;
 
     return `<!doctype html>
-<html lang="${p.lang}">
+<html ${htmlLangAttrs(p.lang)}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(p.description)}">
 <link rel="canonical" href="${url(p.lang, p.file)}">
-<link rel="alternate" hreflang="en" href="${url("en", p.file)}">
-<link rel="alternate" hreflang="tr" href="${url("tr", p.file)}">
-<link rel="alternate" hreflang="x-default" href="${url("en", p.file)}">
+${langs.map((l) => `<link rel="alternate" hreflang="${LANG_META[l].hreflang}" href="${url(l, p.file)}">`).join("\n")}
+<link rel="alternate" hreflang="x-default" href="${url(DEFAULT_LANG, p.file)}">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="author" content="Tahir Ali Cengiz">
 <link rel="icon" type="image/svg+xml" href="${site.base}favicon.svg">
@@ -181,8 +188,8 @@ ${p.body}
 <meta property="og:url" content="${url(p.lang, p.file)}">
 <meta property="og:site_name" content="LLMScale">
 <meta property="og:image" content="${p.ogImage ?? `${site.home}og.png`}">
-<meta property="og:locale" content="${p.lang === "tr" ? "tr_TR" : "en_US"}">
-<meta property="og:locale:alternate" content="${p.lang === "tr" ? "en_US" : "tr_TR"}">
+<meta property="og:locale" content="${LANG_META[p.lang].og}">
+${langs.filter((l) => l !== p.lang).map((l) => `<meta property="og:locale:alternate" content="${LANG_META[l].og}">`).join("\n")}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(p.h1)}">
 <meta name="twitter:description" content="${esc(p.description)}">
@@ -199,7 +206,7 @@ ${appHeader(frame, p.section === "feed" ? "news" : null, c[p.section])}
 ${main}
 </main>
 ${appFooter(frame)}
-<script>${suggestScript(p.lang, p.file)}</script>
+<script>${suggestScript(p.lang, langs, p.file)}</script>
 <script>${APP_SCRIPT}</script>
 ${p.script ? `<script>${p.script}</script>\n` : ""}</body>
 </html>

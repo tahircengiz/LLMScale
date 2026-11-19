@@ -20,9 +20,9 @@
 
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { Lang } from "../src/lib/dict.ts";
+import { FEED_LANGS, LANG_META, type FeedLang as Lang } from "../src/lib/langs.ts";
 import { FEED_HUB, FEED_MEDIA, feedPostFile, feedRssFile, paragraphs, type FeedPost } from "../src/lib/feed.ts";
-import { createShell, esc, LANGS, readSite, words } from "./shell.ts";
+import { createShell, esc, readSite, words } from "./shell.ts";
 import { article, CSS, ICON, postLd, script, shortTitle, summary, T } from "./feedRender.ts";
 import { FEED_DIR, loadFeed } from "./feedData.ts";
 import { modifiedDate } from "./lastModified.ts";
@@ -67,6 +67,7 @@ ${pager ? `<nav class="more" aria-label="${t.all}">${pager}</nav>\n` : ""}<p cla
 </div>`;
   return page({
     lang,
+    langs: FEED_LANGS,
     file,
     section: "feed",
     title: n === 1 ? t.title : h1,
@@ -79,7 +80,7 @@ ${pager ? `<nav class="more" aria-label="${t.all}">${pager}</nav>\n` : ""}<p cla
     head: rssHead(lang),
     script: script(lang),
     ogType: "website",
-    ld: { "@context": "https://schema.org", "@type": "CollectionPage", name: t.h1, inLanguage: lang, url: url(lang, file), hasPart: chunk.map((p) => ({ "@type": "BlogPosting", headline: p[lang].title, url: url(lang, feedPostFile(p.id)), datePublished: p.published })) },
+    ld: { "@context": "https://schema.org", "@type": "CollectionPage", name: t.h1, inLanguage: LANG_META[lang].hreflang, url: url(lang, file), hasPart: chunk.map((p) => ({ "@type": "BlogPosting", headline: p[lang].title, url: url(lang, feedPostFile(p.id)), datePublished: p.published })) },
   });
 }
 
@@ -95,6 +96,7 @@ ${others.length ? `<h2 class="morehead">${t.more}</h2>\n${others.map((o) => arti
 </div>`;
   return page({
     lang,
+    langs: FEED_LANGS,
     file: feedPostFile(p.id),
     section: "feed",
     title: shortTitle(p[lang].title),
@@ -146,7 +148,7 @@ ${items.join("\n")}
 // ── write ─────────────────────────────────────────────────────────────────────
 const written: { path: string; words: number }[] = [];
 function write(lang: Lang, file: string, content: string) {
-  const rel = `${lang === "tr" ? "tr/" : ""}${file.endsWith("/") ? `${file}index.html` : file}`;
+  const rel = `${LANG_META[lang].prefix}${file.endsWith("/") ? `${file}index.html` : file}`;
   const path = join(outDir, rel);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content);
@@ -154,7 +156,7 @@ function write(lang: Lang, file: string, content: string) {
 }
 
 const pages = Math.ceil(posts.length / PAGE_SIZE);
-for (const lang of LANGS) {
+for (const lang of FEED_LANGS) {
   for (let n = 1; n <= pages; n++) write(lang, streamFile(n), streamPage(lang, n, pages, posts.slice((n - 1) * PAGE_SIZE, n * PAGE_SIZE)));
   posts.forEach((p, i) => write(lang, feedPostFile(p.id), postPage(lang, p, i)));
   write(lang, feedRssFile, rss(lang));
@@ -164,4 +166,4 @@ if (media.length) mkdirSync(join(outDir, FEED_MEDIA), { recursive: true });
 for (const f of media) copyFileSync(join(FEED_DIR, "media", f), join(outDir, FEED_MEDIA, f));
 
 const fewest = [...written].sort((a, b) => a.words - b.words)[0];
-console.log(`ok    feed  ${posts.length} posts → ${written.length} pages (${pages} stream page${pages > 1 ? "s" : ""} + posts, × ${LANGS.length} languages), 2 RSS feeds, ${media.length} images; fewest words: ${fewest.path} ${fewest.words}`);
+console.log(`ok    feed  ${posts.length} posts → ${written.length} pages (${pages} stream page${pages > 1 ? "s" : ""} + posts, × ${FEED_LANGS.length} languages), 2 RSS feeds, ${media.length} images; fewest words: ${fewest.path} ${fewest.words}`);

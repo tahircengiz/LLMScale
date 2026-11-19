@@ -3,8 +3,9 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
-import { CH } from "./learnChapters.js";
+import { CH, UI } from "./learnChapters.js";
 import { langOfPath, pathFor, preferredLang, rememberLang, SUGGEST } from "./lib/langPath.ts";
+import { ENABLED_LANGS, LANG_META } from "./lib/langs.ts";
 
 const canvas = document.getElementById("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -161,15 +162,16 @@ composer.addPass(new OutputPass());
 // The URL decides: /tr/learn.html is Turkish. This page used to pick a language
 // per visitor, so search engines only ever saw one version of it.
 const lang = langOfPath(location.pathname);
+const ui = UI[lang];
 const scrollEl = document.getElementById("scroll");
 // learn.html may already hold these sections: scripts/prerender.ts writes the
-// English cards in at build time so the text is readable without JavaScript.
+// page's cards in at build time so the text is readable without JavaScript.
 // Reuse them instead of building a second set; applyLang() sets the language.
 const sections = CH.map((ch, i) => {
   let sec = scrollEl.querySelector(`section[data-i="${i}"]`);
   const prerendered = !!sec;
   if (!sec) { sec = document.createElement("section"); sec.dataset.i = i; }
-  if (ch.tr) {
+  if (ch.text) {
     let card = sec.querySelector(".card");
     if (!card) {
       card = document.createElement("div"); card.className = "card";
@@ -199,26 +201,30 @@ const PRED = [["mat",72],["floor",11],["rug",8],["ground",5],["couch",4]];
 const barsEl = document.getElementById("bars");
 barsEl.innerHTML = PRED.map(([w,pct],i) => `<div class="brow ${i===0?"win":""}"><div class="btop"><span class="w">${w}</span><span class="pct">${pct}%</span></div><div class="track"><div class="fill" data-pct="${pct}"></div></div></div>`).join("");
 
+// The button names the next language the page is in and goes there; with two
+// languages that is the other one.
+const nextLang = ENABLED_LANGS[(ENABLED_LANGS.indexOf(lang) + 1) % ENABLED_LANGS.length];
 function applyLang() {
-  document.querySelectorAll("[data-tr]").forEach(el => el.textContent = el.dataset[lang]);
+  document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = ui[el.dataset.i18n]);
   CH.forEach((ch, i) => {
-    if (!ch.tr) return;
-    const c = sections[i].querySelector(".card"); const t = ch[lang];
+    if (!ch.text) return;
+    const c = sections[i].querySelector(".card"); const t = ch.text[lang];
     c.querySelector(".eyebrow").textContent = t.e;
     c.querySelector("h2").innerHTML = t.h;
     c.querySelector("p").innerHTML = t.p;
-    const ah = c.querySelector('[data-role="attnhint"]'); if (ah) ah.textContent = lang==="tr" ? "⊹ bir düğümün üzerine gel · head’leri aç/kapa · tıkla" : "⊹ hover a node · toggle heads · click to fire";
-    const cta = c.querySelector('[data-role="cta"]'); if (cta) cta.textContent = lang==="tr" ? "→ LLMScale ile VRAM hesapla" : "→ Size it on LLMScale";
+    const ah = c.querySelector('[data-role="attnhint"]'); if (ah) ah.textContent = ui.attnHint;
+    const cta = c.querySelector('[data-role="cta"]'); if (cta) cta.textContent = ui.cta;
   });
-  document.getElementById("lang").textContent = lang==="tr" ? "EN" : "TR";
-  document.documentElement.lang = lang;
+  const btn = document.getElementById("lang");
+  btn.textContent = nextLang.toUpperCase();
+  document.documentElement.lang = LANG_META[lang].hreflang;
+  document.documentElement.dir = LANG_META[lang].dir;
 }
-// Switching language is going to the other version's address; the choice is
+// Switching language is going to that version's address; the choice is
 // remembered so that version is not offered back.
 document.getElementById("lang").onclick = () => {
-  const other = lang === "tr" ? "en" : "tr";
-  rememberLang(other);
-  location.assign(pathFor(location.pathname, other) + location.search + location.hash);
+  rememberLang(nextLang);
+  location.assign(pathFor(location.pathname, nextLang) + location.search + location.hash);
 };
 applyLang();
 
@@ -229,12 +235,12 @@ applyLang();
   if (offer === lang) return;
   const s = SUGGEST[offer];
   const bar = document.createElement("div");
-  bar.id = "langsuggest"; bar.lang = offer;
+  bar.id = "langsuggest"; bar.lang = LANG_META[offer].hreflang;
   bar.setAttribute("role", "region"); bar.setAttribute("aria-label", s.text);
   const text = document.createElement("span"); text.textContent = s.text;
   const go = document.createElement("a");
   go.href = pathFor(location.pathname, offer) + location.search + location.hash;
-  go.hreflang = offer; go.textContent = s.go;
+  go.hreflang = LANG_META[offer].hreflang; go.textContent = s.go;
   go.onclick = () => rememberLang(offer);
   const close = document.createElement("button");
   close.type = "button"; close.textContent = "✕"; close.setAttribute("aria-label", s.dismiss);
@@ -269,7 +275,7 @@ const rev = { edges:0, axes:0, planes:0, field:0, loop:0 };
 const camPos = new THREE.Vector3(0,0,11), camLook = new THREE.Vector3(0,0,0);
 function setChapter(i) {
   if (i === chap) return; chap = i;
-  sections.forEach((s, si) => s.classList.toggle("active", si===i && CH[si].tr));
+  sections.forEach((s, si) => s.classList.toggle("active", si===i && !!CH[si].text));
   barsEl.classList.toggle("show", !!CH[i].bars);
   if (CH[i].bars) barsEl.querySelectorAll(".fill").forEach(f => f.style.width = f.dataset.pct + "%");
   else barsEl.querySelectorAll(".fill").forEach(f => f.style.width = "0");

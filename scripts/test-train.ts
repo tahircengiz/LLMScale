@@ -2,7 +2,8 @@
 import { readFileSync } from "node:fs";
 import { estimateTraining, loraParams, type TrainInput } from "../src/lib/train.ts";
 import type { ModelArch } from "../src/lib/calc.ts";
-import { DICTS } from "../src/lib/dict.ts";
+import { DICTS } from "../src/locales/index.ts";
+import { ENABLED_LANGS } from "../src/lib/langs.ts";
 
 let fails = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -83,7 +84,7 @@ console.log("\n--- what the page says about the budget ---");
 const trainPage = readFileSync(new URL("../src/pages/TrainPage.tsx", import.meta.url), "utf8");
 check("the fit list does not borrow the serving pages' vLLM hint", !trainPage.includes('t("gpu.usableHint"'));
 check("…it has its own", trainPage.includes('t("train.usableHint", { p: Math.round(DRIVER_RESERVE * 100) })'));
-for (const lang of ["en", "tr"] as const) {
+for (const lang of ENABLED_LANGS) {
   const hint = DICTS[lang]["train.usableHint"] ?? "";
   check(`…which gives the share without calling it vLLM's (${lang})`, hint.includes("{p}") && !hint.includes("vLLM"), hint);
 }

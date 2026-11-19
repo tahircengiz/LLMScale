@@ -8,6 +8,7 @@ import { findKnownByHfId, HERO_MODEL_ID, HERO_MODEL_TYPE } from "../lib/models";
 import { decodeState, encodeState, isBlankStart, DEFAULT_STATE, type AppState } from "../lib/urlState";
 import { track } from "../lib/analytics";
 import { useLang } from "../lib/i18n";
+import { langHome } from "../lib/langPath";
 import { ModelPicker, type ResolvedMeta } from "../components/ModelPicker";
 import { Controls } from "../components/Controls";
 import { Results } from "../components/Results";
@@ -133,7 +134,7 @@ export function SizingPage() {
 
   // A preset has a static page of its own (scripts/genPages.ts); point to it.
   const known = state.hfId ? findKnownByHfId(state.hfId) : undefined;
-  const home = import.meta.env.BASE_URL + (lang === "tr" ? "tr/" : "");
+  const home = langHome(import.meta.env.BASE_URL, lang);
   const modelQuery = `?m=${encodeURIComponent(state.hfId).replace(/%2F/g, "/")}`;
 
   return (
@@ -174,7 +175,7 @@ export function SizingPage() {
                   {t("model.link.serving")}
                 </a>
                 {known && (
-                  <span className="ml-1">
+                  <span className="ms-1">
                     <StaticPageLink file={modelPageFile(known.id)}>{t("model.page", { name: known.displayName })}</StaticPageLink>
                   </span>
                 )}

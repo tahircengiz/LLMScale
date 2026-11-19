@@ -12,7 +12,7 @@
 //
 // React-free, so scripts/test-config.ts can hold every entry to both languages.
 
-import type { Lang } from "./dict.ts";
+import type { Lang } from "./langs.ts";
 
 export type FieldGroup =
   | "identity"

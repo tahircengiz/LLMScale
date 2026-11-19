@@ -4,7 +4,9 @@
 // left unfilled and no key missing; the values have to climb so a menu reads in
 // order; and the hints worked out from a value have to say the right thing.
 
-import { DICTS, translate, type Lang } from "../src/lib/dict.ts";
+import { DICTS } from "../src/locales/index.ts";
+import { translate } from "../src/lib/dict.ts";
+import { ENABLED_LANGS } from "../src/lib/langs.ts";
 import {
   batchChoices, contextChoices, gpuCountChoices, gpuHint, outputChoices, prefixChoices, promptChoices,
   rankChoices, rpsChoices, seqChoices, tpotChoices, ttftChoices, userChoices, utilChoices, type Opt,
@@ -17,7 +19,7 @@ function check(name: string, cond: boolean, detail = "") {
   if (!cond) fails++;
 }
 
-for (const lang of ["en", "tr"] as Lang[]) {
+for (const lang of ENABLED_LANGS) {
   const t = (k: string, v?: Record<string, string | number>) => translate(lang, k, v);
   const lists: [string, Opt[]][] = [
     ["context", contextChoices(t, lang)],

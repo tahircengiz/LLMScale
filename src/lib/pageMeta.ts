@@ -1,9 +1,13 @@
-// The Turkish head of every page, for the /tr/ copies scripts/prerender.ts builds.
+// The head of every page in each language but English, for the copies
+// scripts/prerender.ts builds in /tr/ and the other language folders.
 //
-// The English head lives in each .html entry, as it always has. The Turkish one
-// cannot: /tr/ pages exist only in the build. Keyed by entry file; the prerender
-// refuses to build if an entry has no row here, and scripts/test-invariants.ts
-// checks the same. Titles stay within 60 characters so results do not cut them.
+// The English head lives in each .html entry, as it always has. The others
+// cannot: their pages exist only in the build. Keyed by language, then entry
+// file; the prerender refuses to build if an entry has no row here, and
+// scripts/test-invariants.ts checks the same. Titles stay within 60 characters so
+// results do not cut them.
+
+import type { DEFAULT_LANG, Lang } from "./langs.ts";
 
 export interface PageMeta {
   title: string;
@@ -12,7 +16,7 @@ export interface PageMeta {
   ogDescription: string;
 }
 
-export const TR_META: Record<string, PageMeta> = {
+const tr: Record<string, PageMeta> = {
   "index.html": {
     title: "LLM VRAM Hesaplama — KV Cache ve GPU Uyumu | LLMScale",
     description:
@@ -109,3 +113,5 @@ export const TR_META: Record<string, PageMeta> = {
       "Bir dil modelinin bir cümleyi nasıl sıradaki kelimeye dönüştürdüğünü anlatan etkileşimli yolculuk — token, embedding, attention, katmanlar ve örnekleme, 3B olarak.",
   },
 };
+
+export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr };

@@ -5,7 +5,8 @@
 // the page renders, and that the figures its copy quotes stay true.
 
 import { readFileSync } from "node:fs";
-import { DICTS } from "../src/lib/dict.ts";
+import { DICTS } from "../src/locales/index.ts";
+import { ENABLED_LANGS } from "../src/lib/langs.ts";
 import { GPUS } from "../src/lib/gpus.ts";
 import { GPU_SPECS } from "../src/lib/gpuSpecs.ts";
 import { findKnownByHfId } from "../src/lib/models.ts";
@@ -72,7 +73,7 @@ console.log("\n--- what the about text says ---");
   check("Strix Halo's GPU gets 96 of its 128 GB", gpu("amd-strixhalo-128").vramGiB === 96 && gpu("amd-strixhalo-128").totalGiB === 128);
   // "Pick two to four of the 45 devices LLMScale knows": a count typed into the
   // copy, so it is held to the list the picker offers (it once said 43 of 45).
-  for (const lang of ["en", "tr"] as const) {
+  for (const lang of ENABLED_LANGS) {
     const said = Number(DICTS[lang]["about.gpucompare.p1"].match(/\d+/)?.[0]);
     check(`the ${lang} text counts the devices the picker offers`, said === GPUS.length, `${said} vs ${GPUS.length}`);
   }

@@ -183,7 +183,7 @@ export function VllmPage() {
                     aria-pressed={task === tid}
                     onClick={() => setTask(tid)}
                     className={
-                      "w-full rounded-xl px-3 py-2 text-left text-xs ring-1 transition " +
+                      "w-full rounded-xl px-3 py-2 text-start text-xs ring-1 transition " +
                       (task === tid ? "bg-brand-600/30 ring-brand-500/50 text-white" : "bg-ink-850 ring-white/10 text-slate-300 hover:bg-white/5")
                     }
                   >
@@ -363,7 +363,7 @@ export function VllmPage() {
                                   setGpuCount(Number(w.vars!.gpus));
                                   setLay(String(w.vars!.lay));
                                 }}
-                                className="ml-1 font-medium underline hover:no-underline"
+                                className="ms-1 font-medium underline hover:no-underline"
                               >
                                 {t("vllm.useLayout", { n: w.vars!.gpus, layout: w.vars!.layout })}
                               </button>
