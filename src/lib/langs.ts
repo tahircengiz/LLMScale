@@ -39,7 +39,8 @@ export interface LangMeta {
   intl: string;
   /** Open Graph locale. */
   og: string;
-  /** Translated by Claude (D2): its pages say so and link to a correction. */
+  /** Translated by Claude (D2). The AI notice above every page, in every
+   *  language, now says the translations were made with AI; nothing reads this. */
   ai: boolean;
 }
 

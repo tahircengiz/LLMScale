@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { DEFAULT_LANG, ENABLED_LANGS, htmlLangAttrs, LANG_META, type Lang } from "../src/lib/langs.ts";
 import { formatGiB, formatNumber, formatParams, localizeDecimals } from "../src/lib/format.ts";
 import { SUGGEST } from "../src/lib/langPath.ts";
-import { APP_CSS, APP_SCRIPT, APP_THEME_BOOT, appFooter, appHeader, esc, type FrameCtx } from "./appLook.ts";
+import { AINOTE_BOOT, APP_CSS, APP_SCRIPT, APP_THEME_BOOT, appFooter, appHeader, appNote, esc, type FrameCtx } from "./appLook.ts";
 import { PAGE_TEXT } from "./locales/index.ts";
 
 export { esc };
@@ -194,13 +194,14 @@ ${langs.filter((l) => l !== p.lang).map((l) => `<meta property="og:locale:altern
 <meta name="twitter:title" content="${esc(p.h1)}">
 <meta name="twitter:description" content="${esc(p.description)}">
 <meta name="twitter:image" content="${p.ogImage ?? `${site.home}og.png`}">
-${p.head ? `${p.head}\n` : ""}<script>${APP_THEME_BOOT}</script>
+${p.head ? `${p.head}\n` : ""}<script>${APP_THEME_BOOT}${AINOTE_BOOT}</script>
 ${site.tracker}
 <style>${APP_CSS}
 ${GUIDE_CSS}${p.css ? `\n${p.css}` : ""}</style>
 ${ld}
 </head>
 <body>
+${appNote(frame)}
 ${appHeader(frame, p.section === "feed" ? "news" : null, c[p.section])}
 <main class="fmain">
 ${main}

@@ -361,9 +361,9 @@ const fr = {
 
   "footer.builtBy": "Réalisé par",
   "footer.privacy": "Le dimensionnement s'exécute dans votre navigateur — sans compte, sans backend. Les visites sont comptées de façon anonyme, sans cookies.",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "Cette page a été traduite avec l'IA",
+  "ainote.label": "Avis sur l'IA",
+  "ainote.text": "Les données, calculs et traductions de ce site ont été préparés avec l'aide de l'IA et peuvent contenir des erreurs. Avant toute décision importante, vérifiez auprès d'une autre source.",
+  "ainote.close": "Fermer l'avis",
   "footer.suggestFix": "Proposer une correction",
   "footer.guides": "Guides",
   "footer.models": "Besoins en VRAM par modèle",

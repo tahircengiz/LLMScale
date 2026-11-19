@@ -21,13 +21,14 @@ import { PlanPage } from "./pages/PlanPage";
 import { GpuComparePage } from "./pages/GpuComparePage";
 import { Badge, Segmented } from "./components/ui";
 import { About } from "./components/About";
-import { fixUrl, langHome, pathFor } from "./lib/langPath";
+import { langHome, pathFor } from "./lib/langPath";
 import { ENABLED_LANGS, LANG_META } from "./lib/langs";
 import { CONCEPTS_HUB, GPUS_HUB, MODELS_HUB } from "./lib/staticPages";
 import { FEED_HUB } from "./lib/feed";
 import { StaticPageLink } from "./components/StaticPageLink";
 import { SiteNav } from "./components/SiteNav";
 import { LangMenu } from "./components/LangMenu";
+import { AiNote } from "./components/AiNote";
 
 // Footer links.
 const GITHUB_URL = "https://github.com/tahircengiz/LLMScale";
@@ -124,6 +125,7 @@ export default function App() {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
+      <AiNote />
       {/* Above the page, so an open nav menu lies over the cards beneath it. */}
       <header className="relative z-40 shrink-0 border-b border-white/10 px-4 py-2 sm:px-6">
         <div className="mx-auto max-w-6xl">
@@ -243,14 +245,6 @@ function Footer({ githubUrl, linkedinUrl }: { githubUrl: string; linkedinUrl: st
         {__HAS_FEED__ && <StaticPageLink file={FEED_HUB}>{t("footer.feed")}</StaticPageLink>}
       </nav>
       <p className="text-xs text-slate-500">{t("footer.privacy")}</p>
-      {LANG_META[lang].ai && (
-        <p className="text-xs text-slate-500">
-          {t("footer.aiTranslated")} ·{" "}
-          <a href={fixUrl(lang, window.location.pathname)} target="_blank" rel="noreferrer" className="hover:text-brand-400">
-            {t("footer.suggestFix")}
-          </a>
-        </p>
-      )}
     </footer>
   );
 }

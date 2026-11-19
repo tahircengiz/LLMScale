@@ -125,8 +125,9 @@ geçişi (`text-start/end`, `ms/me`, `ps/pe`, `start/end-*`) ve `test-i18n`'deki
 - Her dil için bir terim sözlüğü: `docs/i18n/glossary/<lang>.md`. Terimler o dildeki birincil kaynaklardan alınır
   (Hugging Face kursunun ve resmi dokümanların o dildeki çevirileri) ve kaynak linkiyle yazılır. Karşılığı bulunamayan
   terim İngilizce kalır (TR'deki kural).
-- Çeviriyi Claude yapar (D2). Her sayfanın altbilgisinde "Bu sayfa AI ile çevrildi · Düzeltme öner" yazar; link,
-  GitHub'da başlığı hazır yeni bir issue açar.
+- Çeviriyi Claude yapar (D2). Her sayfanın üstündeki yapay zekâ uyarı barı (`src/components/AiNote.tsx`) verinin,
+  hesaplamaların ve çevirilerin AI ile hazırlandığını söyler; "Düzeltme öner" linki GitHub'da başlığı hazır yeni bir
+  issue açar. Altbilgideki eski "Bu sayfa AI ile çevrildi" satırı 2026-11-19'da bu bara katıldı.
 - Hacim: dil başına ≈20.000 kelime (sözlük ≈16.800, üretilen sayfa metni ≈2.200, learn.html ayrıca); 10 yeni dil
   ≈200.000 kelime.
 
