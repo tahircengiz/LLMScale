@@ -1,12 +1,12 @@
 # Çok dilli LLMScale — teknik spec
 
-Durum: **SPEC ONAYLI** (2026-11-19) · D1 ve D10 verildi: en çok konuşulan ilk 10 dil, 4. dalgada ru, de, ja · PR 0 sürüyor.
+Durum: **SPEC ONAYLI** (2026-11-19) · D1 ve D10 verildi: en çok konuşulan ilk 10 dil, 4. dalgada ru, de, ja · D11: Dalga 3 (ar, ur) plan dışı, hedef 12 dil · PR 0 sürüyor.
 
 ## 1. Hedef ve başarı ölçütü
 
 LLMScale'i İngilizce + Türkçe'den dünyada en çok konuşulan 10 dile ve LLM konusunun kendi dilinde en çok okunduğu üç
-dile (Rusça, Almanca, Japonca) açmak. Her dilde arama motorları ve AI asistanları
-siteyi o dilde bulup önerebilsin.
+dile (Rusça, Almanca, Japonca) açmak. Arapça ve Urduca plan dışı (D11, 2026-11-19): en çok konuşulan 10 dilden 8'i ve bu
+üç dil, mevcut Türkçe ile 12 dil. Her dilde arama motorları ve AI asistanları siteyi o dilde bulup önerebilsin.
 
 Başarı ölçütü:
 - **PR 0 (altyapı):** `typecheck` ve `test:all` geçer. Yalnız en ve tr açıkken prerender çıktısı dil menüsü dışında
@@ -19,6 +19,8 @@ Başarı ölçütü:
 ## 2. Dil seti (D1 ve D10, kullanıcı kararları 2026-11-19)
 
 Ethnologue 2026'ya göre toplam konuşanı en çok olan 10 dil, mevcut Türkçe ve 4. dalgada Rusça, Almanca, Japonca: 14 dil.
+Arapça ve Urduca (Dalga 3) 2026-11-19'da plandan çıktı (D11): hedef 12 dil. İkisi `LANGS` ve `LANG_META`'da tanımlı ve
+kapalı kalır; karar geri alınırsa §3.5 uygulanır.
 
 | Kod | Dil | Önek | hreflang ve `lang` | Yön | Yazı | Dalga |
 |---|---|---|---|---|---|---|
@@ -31,8 +33,8 @@ Ethnologue 2026'ya göre toplam konuşanı en çok olan 10 dil, mevcut Türkçe 
 | pt | Português | `/pt/` | `pt` (metin Brezilya Portekizcesi) | ltr | Latin | 2 |
 | id | Bahasa Indonesia | `/id/` | `id` | ltr | Latin | 2 |
 | bn | বাংলা | `/bn/` | `bn` | ltr | Bengali | 2 |
-| ar | العربية | `/ar/` | `ar` | rtl | Arap | 3 |
-| ur | اردو | `/ur/` | `ur` | rtl | Arap (Nastaliq) | 3 |
+| ar | العربية | `/ar/` | `ar` | rtl | Arap | plan dışı (D11) |
+| ur | اردو | `/ur/` | `ur` | rtl | Arap (Nastaliq) | plan dışı (D11) |
 | ru | Русский | `/ru/` | `ru` | ltr | Kiril | 4 |
 | de | Deutsch | `/de/` | `de` | ltr | Latin | 4 |
 | ja | 日本語 | `/ja/` | `ja` | ltr | Kanji ve kana | 4 |
@@ -57,7 +59,7 @@ suite'inde var.
 ### 3.2 Sözlük dosyaları ve paket boyutu
 
 Bugün iki sözlük tek modülde (`src/lib/dict.ts`, 282 KB; dil başına ≈41–44 KB gzip) ve her ziyaretçi ikisini de
-indiriyor. 14 dilde bu ≈600 KB gzip olurdu.
+indiriyor. 12 dilde bu ≈520 KB gzip olurdu.
 
 Karar: `src/locales/<lang>.ts`, her biri `satisfies Record<Key, string>` (`Key = keyof typeof en`). Eksik ya da fazla
 anahtar `tsc`'de hata verir. İstemci sayfanın dilini adresten okur ve yalnız o sözlüğü dinamik olarak yükler
@@ -81,6 +83,9 @@ Bir test, kaynakta yeni satır içi dil dalı açılmasını engeller.
 
 ### 3.5 Sağdan sola (ar, ur)
 
+ar ve ur plan dışı (D11). Bu bölüm ileride açılırlarsa uygulanacak tasarım olarak kalır. PR 0'da yapılan mantıksal yön
+geçişi (`text-start/end`, `ms/me`, `ps/pe`, `start/end-*`) ve `test-i18n`'deki `dir` denetimi yerinde duruyor.
+
 - `<html lang dir>`; `dir` değeri `LANG_META`'dan gelir.
 - Fiziksel yön sınıfları mantıksal karşılıklarına geçer: `text-left/right` → `text-start/end`, `ml/mr` → `ms/me`,
   `pl/pr` → `ps/pe`, `left/right-*` → `start/end-*`. `src` içinde ≈77 kullanım, CSS ve satır içi stilde 16 fiziksel
@@ -103,7 +108,7 @@ Bir test, kaynakta yeni satır içi dil dalı açılmasını engeller.
 ### 3.7 Feed ve learn.html
 
 - Feed gönderileri en ve tr'de kalır; feed sayfaları ve RSS yalnız bu iki dilde üretilir. Diğer dillerde menüdeki
-  "Feed" İngilizce feed'e gider ve feed sayfalarının hreflang kümesi en+tr olur (D3). Panel incelemesi 2 dilden 14'e
+  "Feed" İngilizce feed'e gider ve feed sayfalarının hreflang kümesi en+tr olur (D3). Panel incelemesi 2 dilden 12'ye
   çıkmaz ve çeviri yinelenen içerik üretmez.
 - learn.html: `data-tr` öznitelikleri ve `ch.tr` alanı dil anahtarlı bir yapıya geçer. Mekanizma PR 0'da, metinler
   dalgalarda gelir. Görsel dünyası değişmez.
@@ -122,8 +127,8 @@ Bir test, kaynakta yeni satır içi dil dalı açılmasını engeller.
   terim İngilizce kalır (TR'deki kural).
 - Çeviriyi Claude yapar (D2). Her sayfanın altbilgisinde "Bu sayfa AI ile çevrildi · Düzeltme öner" yazar; link,
   GitHub'da başlığı hazır yeni bir issue açar.
-- Hacim: dil başına ≈20.000 kelime (sözlük ≈16.800, üretilen sayfa metni ≈2.200, learn.html ayrıca); 12 yeni dil
-  ≈240.000 kelime.
+- Hacim: dil başına ≈20.000 kelime (sözlük ≈16.800, üretilen sayfa metni ≈2.200, learn.html ayrıca); 10 yeni dil
+  ≈200.000 kelime.
 
 ## 5. Testler
 
@@ -189,13 +194,13 @@ değerli 5 sayfası üzerinde: index, fit, compare, bir model rehberi, bir GPU r
 | PR 0 | §3'teki altyapı; yalnız en ve tr açık | Dil menüsü dışında görünür değişiklik yok |
 | Dalga 1 | zh, hi, es | Konuşanı en çok üç dil; Han ve Devanagari yazısı erken denenir |
 | Dalga 2 | fr, pt, id, bn | Latin ve Bengali yazısı |
-| Dalga 3 | ar, ur | Sağdan sola düzende kalite kontrolü |
+| ~~Dalga 3~~ | ~~ar, ur~~ | Plan dışı (D11, 2026-11-19); ileride açılırsa §3.5 |
 | Dalga 4 | ru, de, ja | Kiril ve Japonca yazı; ru için Yandex kaydı |
 
 Her adım kendi PR'ı ve kendi yayın onayı (`npm run deploy`, yalnız kullanıcının açık "evet"inden sonra).
 
-Ölçek: bugün sitemap'te 166 URL var, 24'ü feed. Feed dışındaki 142 URL dil başına 71 eder; 14 dilde ≈994 ve 24 feed ile
-≈1.020 URL. Build süresi PR 0'da ölçülür.
+Ölçek: bugün sitemap'te 166 URL var, 24'ü feed. Feed dışındaki 142 URL dil başına 71 eder; 12 dilde ≈852 ve 24 feed ile
+≈876 URL. Build süresi PR 0'da ölçülür.
 
 ## 9. Değişikliğin ulaşacağı yerler (PR 0)
 
@@ -227,18 +232,20 @@ Her adım kendi PR'ı ve kendi yayın onayı (`npm run deploy`, yalnız kullanı
 | D6 | Rakamlar | Her dilde Latin rakamı (varsayılan) |
 | D7 | Portekizce | hreflang `pt`, metin Brezilya Portekizcesi (varsayılan) |
 | D8 | zh-TW/HK/MO okuru | Basitleştirilmiş Çince önerilmez (varsayılan) |
-| D9 | Urduca font | Sistem fontu, webfont yok (varsayılan) |
+| D9 | Urduca font | Sistem fontu, webfont yok (varsayılan); ur plan dışı (D11) |
 | D10 | ru, de, ja | **Verildi:** 4. dalga (kullanıcı, 2026-11-19) |
+| D11 | Dalga 3 (ar, ur) | **Verildi:** plan dışı (kullanıcı, 2026-11-19: "dalga 3'ü plandan çıkart"). Hedef 14 dilden 12'ye iner. ar ve ur `LANGS` ve `LANG_META`'da tanımlı ve kapalı kalır, koddan silinmez; karar geri alınabilir, o zaman §3.5 uygulanır |
 
 ## 11. Riskler
 
 - [Orta] Yeni dillerin hiçbirini anadilinde kimse gözden geçirmiyor. Önlem: kaynaklı terim sözlüğü, anahtar ve
   değişken eşitliği testte, altbilgide düzeltme linki.
-- [Orta] hi, bn, ur, id ve ar'da kendi dilinde talep düşük ölçüldü (Ek A); bu dillerin ≈100.000 kelimelik çevirisi az
-  trafik getirebilir. Önlem: dalga sırası Search Console verisine göre ayarlanabilir; dil seti değişmez.
-- [Orta] Her yeni sözlük anahtarı 14 dilde çeviri ister; eksik anahtar `tsc`'yi kırar. Önlem: her PR'da çeviri
+- [Orta] hi, bn ve id'de kendi dilinde talep düşük ölçüldü (Ek A; ur ve ar da düşüktü, ikisi plan dışı, D11); bu
+  dillerin ≈60.000 kelimelik çevirisi az trafik getirebilir. Önlem: dalga sırası Search Console verisine göre
+  ayarlanabilir.
+- [Orta] Her yeni sözlük anahtarı 12 dilde çeviri ister; eksik anahtar `tsc`'yi kırar. Önlem: her PR'da çeviri
   birlikte yapılır.
-- [Düşük] Build süresi ve çıktı boyutu yaklaşık 7 kat artar; PR 0'da ölçülür.
+- [Düşük] Build süresi ve çıktı boyutu yaklaşık 6 kat artar; PR 0'da ölçülür.
 
 ## Ek A — dil seçimi verisi
 
@@ -255,12 +262,12 @@ görünemez (seçilim yanlılığı). Bu yüzden sitemizden bağımsız iki öl�
 | Çince | 1.183 / 988 | ~81.500 ¹ | Dalga 1 |
 | Hintçe | 611 / 347 | ~700 | Dalga 1 |
 | İspanyolca | 561 / 487 | ~40.800 | Dalga 1 |
-| Arapça (MSA) | 335 / — ² | ~3.700 | Dalga 3 |
+| Arapça (MSA) | 335 / — ² | ~3.700 | plan dışı (D11) |
 | Fransızca | 334 / 75 | ~84.600 | Dalga 2 |
 | Bengalce | 274 / 234 | ~200 | Dalga 2 |
 | Portekizce | 269 / 252 | ~17.900 | Dalga 2 |
 | Endonezce | 255 / 78 | ~1.500 | Dalga 2 |
-| Urduca | 246 / 78 | ~300 | Dalga 3 |
+| Urduca | 246 / 78 | ~300 | plan dışı (D11) |
 | Rusça | 210 / 133 | ≥94.000 ³ | Dalga 4 |
 | Almanca | 133 / 76 | ~134.000 | Dalga 4 |
 | Japonca | 126 / 124 | ~78.700 | Dalga 4 |
