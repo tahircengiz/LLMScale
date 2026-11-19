@@ -198,7 +198,7 @@ export function appHeader({ lang, langs, file, href, base, feed }: FrameCtx, cur
       return `<li><a href="${href(l, file)}" hreflang="${m.hreflang}" lang="${m.hreflang}" dir="${m.dir}" data-lang="${l}"${l === lang ? ` aria-current="page"><span>${esc(m.name)}</span>${CHECK}` : `><span>${esc(m.name)}</span>`}</a></li>`;
     })
     .join("");
-  const langMenu = `<div class="lmenu"><div class="seg"><button type="button" class="ltrig" aria-expanded="false" aria-controls="lang-menu" aria-label="${esc(`${d["lang.label"]}: ${mine.name}`)}">${GLOBE}<span>${esc(mine.name)}</span>${CHEVRON.replace("<svg ", '<svg class="chev" ')}</button></div><div class="lpanel" id="lang-menu"><ul>${langItems}</ul></div></div>`;
+  const langMenu = `<div class="lmenu"><div class="seg"><button type="button" class="ltrig" aria-expanded="false" aria-controls="lang-menu" aria-label="${esc(`${d["lang.label"]}${d["colon.sep"]}${mine.name}`)}">${GLOBE}<span>${esc(mine.name)}</span>${CHEVRON.replace("<svg ", '<svg class="chev" ')}</button></div><div class="lpanel" id="lang-menu"><ul>${langItems}</ul></div></div>`;
   return `<header class="hdr"><div class="hin">
 <div class="hrow"><a class="brand" href="${href(lang)}"><img src="${base}favicon.svg" alt="" width="28" height="28"><b>LLMScale</b><span class="badge">${esc(d["header.badge"])}</span></a>
 <div class="ctrls"><div class="seg" role="group" aria-label="${esc(d["theme.label"])}">${themes}</div>${langMenu}</div></div>

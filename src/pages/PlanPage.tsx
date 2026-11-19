@@ -131,7 +131,7 @@ export function PlanPage() {
     }
     return [...bySize].sort((a, b) => a[0] - b[0]).slice(0, MAX_ROWS);
   })();
-  const blockedText = (reasons: Set<Infeasible["reason"]>) => [...reasons].map((r) => t(`plan.no.${r}`)).join("; ");
+  const blockedText = (reasons: Set<Infeasible["reason"]>) => [...reasons].map((r) => t(`plan.no.${r}`)).join(t("semicolon.sep"));
   const limitText = (l: Limit) => t(`plan.limit.${l}`);
   /** The chips: a few common values out of each setting's options. */
   const pick = (opts: Choice<number>[], values: number[]) => opts.filter((o) => values.includes(o.value));
@@ -293,7 +293,9 @@ export function PlanPage() {
                 <ul className="space-y-1 text-xs text-slate-400">
                   {blocked.map(([size, reasons]) => (
                     <li key={size}>
-                      {t("plan.sizeRow", { n: size })}: {blockedText(reasons)}
+                      {t("plan.sizeRow", { n: size })}
+                      {t("colon.sep")}
+                      {blockedText(reasons)}
                     </li>
                   ))}
                 </ul>

@@ -300,5 +300,15 @@ console.log("\n--- a count of one takes the dictionary's singular word ---");
   check("bn: 2 বিশেষজ্ঞ", v("n_shared_experts", 2, "bn") === "2 বিশেষজ্ঞ", v("n_shared_experts", 2, "bn"));
 }
 
+console.log("\n--- a layer count meets its tally the way its language writes a colon (colon.sep) ---");
+{
+  const pattern = (lang: Lang) => humanValue("MM*-", GLOSSARY.hybrid_override_pattern, lang);
+  const types = (lang: Lang) => humanValue(["sliding_attention", "full_attention", "sliding_attention"], GLOSSARY.layer_types, lang);
+  check("en: colon and space", pattern("en") === "4 layers: 2 Mamba, 1 attention, 1 feed-forward", pattern("en"));
+  check("tr: colon and space", types("tr") === "3 katman: 2 sliding_attention, 1 full_attention", types("tr"));
+  check("fr: no-break space before the colon, as docs/i18n/glossary/fr.md has it", types("fr") === "3 couches : 2 sliding_attention, 1 full_attention", types("fr"));
+  check("zh: full-width colon and 、", types("zh") === "3 层：2 sliding_attention、1 full_attention", types("zh"));
+}
+
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
 process.exit(fails === 0 ? 0 : 1);

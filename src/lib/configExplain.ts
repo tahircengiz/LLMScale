@@ -132,7 +132,7 @@ function tally(items: string[], lang: Lang): string {
   const counts = new Map<string, number>();
   for (const it of items) counts.set(it, (counts.get(it) ?? 0) + 1);
   const parts = [...counts].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${fmtInt(n, lang)} ${k}`);
-  return `${fmtInt(items.length, lang)} ${w("layers", lang)}: ${joinList(lang, parts)}`;
+  return `${fmtInt(items.length, lang)} ${w("layers", lang)}${translate(lang, "colon.sep")}${joinList(lang, parts)}`;
 }
 
 // ── the file as lines ─────────────────────────────────────────────────────

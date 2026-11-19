@@ -1485,6 +1485,8 @@ const fr = {
   "serve.ability.vision": "entrée d'images",
   "serve.and": "et",
   "list.sep": ", ",
+  "colon.sep": "\u00a0: ",
+  "semicolon.sep": "\u00a0; ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.
