@@ -288,6 +288,7 @@ console.log("\n--- a count of one takes the dictionary's singular word ---");
   check("tr: 1 uzman", v("n_shared_experts", 1, "tr") === "1 uzman", v("n_shared_experts", 1, "tr"));
   check("es: 1 experto", v("n_shared_experts", 1, "es") === "1 experto", v("n_shared_experts", 1, "es"));
   check("es: 2 expertos", v("n_shared_experts", 2, "es") === "2 expertos", v("n_shared_experts", 2, "es"));
+  check("hi: 1 एक्सपर्ट", v("n_shared_experts", 1, "hi") === "1 एक्सपर्ट", v("n_shared_experts", 1, "hi"));
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);

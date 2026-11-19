@@ -5,6 +5,7 @@ import type { Lang } from "../../src/lib/langs.ts";
 import en from "./en.ts";
 import tr from "./tr.ts";
 import es from "./es.ts";
+import hi from "./hi.ts";
 import type { PageText } from "./types.ts";
 
-export const PAGE_TEXT: Record<Lang, PageText> = { en, tr, es };
+export const PAGE_TEXT: Record<Lang, PageText> = { en, tr, hi, es };

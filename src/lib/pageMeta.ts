@@ -213,4 +213,103 @@ const es: Record<string, PageMeta> = {
   },
 };
 
-export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, es };
+const hi: Record<string, PageMeta> = {
+  "index.html": {
+    title: "LLM VRAM कैलकुलेटर — वज़न, KV कैश और GPU फिट | LLMScale",
+    description:
+      "किसी LLM को कितनी GPU मेमोरी चाहिए, इसका अनुमान लगाएं: मॉडल वज़न, KV कैश, संदर्भ विंडो और समवर्ती उपयोगकर्ता — फिर देखें कि कौन-से GPU फिट होते हैं। Hugging Face से लाइव कॉन्फ़िगरेशन लेता है।",
+    ogTitle: "LLMScale — LLM VRAM कैलकुलेटर",
+    ogDescription:
+      "आपके LLM को कितनी VRAM चाहिए? वज़न + KV कैश + संदर्भ + समवर्तीता, GPU सुझावों के साथ।",
+  },
+  "train.html": {
+    title: "फाइन-ट्यूनिंग VRAM कैलकुलेटर — LoRA, QLoRA, पूर्ण | LLMScale",
+    description:
+      "किसी फाइन-ट्यून को कितनी GPU मेमोरी चाहिए, यह निकालें: LoRA, QLoRA या पूर्ण। ग्रेडिएंट, ऑप्टिमाइज़र स्टेट और backward pass के लिए रखे गए सक्रियण, फिट होने वाले GPU के साथ। ZeRO और QLoRA पेपर से मिलान करके जाँचा गया।",
+    ogTitle: "LLMScale — फाइन-ट्यूनिंग VRAM",
+    ogDescription:
+      "फाइन-ट्यूनिंग में VRAM कितनी लगती है? LoRA, QLoRA और पूर्ण फाइन-ट्यूनिंग, वज़न, ग्रेडिएंट, ऑप्टिमाइज़र स्टेट और सक्रियण में बाँटकर।",
+  },
+  "fit.html": {
+    title: "LLM कार्य उपयुक्तता — मॉडल इस काम के लिए सही है? | LLMScale",
+    description:
+      "जाँचें कि कोई LLM आपके काम के लिए उपयुक्त है या नहीं — चैट, कोड, RAG, एजेंट, रीज़निंग, विज़न, एम्बेडिंग — मॉडल के वास्तविक आकार, संदर्भ, ट्यूनिंग और मोडैलिटी से स्कोर किया गया। लाइव Hugging Face डेटा।",
+    ogTitle: "LLMScale — मॉडल ↔ कार्य उपयुक्तता",
+    ogDescription:
+      "क्या यह LLM आपके काम के लिए सही है? चैट, कोड, RAG, एजेंट, रीज़निंग, विज़न और अन्य कामों में पारदर्शी, नियम-आधारित उपयुक्तता स्कोरिंग।",
+  },
+  "anatomy.html": {
+    title: "LLM संरचना — पैरामीटर, सटीकता और KV कैश | LLMScale",
+    description:
+      "किसी भी Hugging Face मॉडल का विज़ुअल एक्स-रे: उसके पैरामीटर कहाँ जाते हैं (एम्बेडिंग / ध्यान / एक्सपर्ट), हर सटीकता पर उसके वज़न का आकार, आर्किटेक्चर, GQA और KV कैश की बढ़त — लाइव Hugging Face डेटा से।",
+    ogTitle: "LLMScale — मॉडल संरचना",
+    ogDescription:
+      "किसी भी LLM का विज़ुअल एक्स-रे: पैरामीटर का बँटवारा, हर सटीकता पर वज़न का आकार, आर्किटेक्चर, GQA और KV कैश की बढ़त, लाइव Hugging Face डेटा से।",
+  },
+  "compare.html": {
+    title: "LLM की साथ-साथ तुलना — विनिर्देश, कार्य उपयुक्तता | LLMScale",
+    description:
+      "2–4 Hugging Face LLM की साथ-साथ तुलना करें: पैरामीटर, संदर्भ, क्वांटाइजेशन, क्षमताएं और हर काम के लिए उपयुक्तता — देखें कि कौन-सा मॉडल किस उपयोग के लिए बेहतर है, लाइव Hugging Face डेटा से।",
+    ogTitle: "LLMScale — मॉडल तुलना",
+    ogDescription:
+      "2–4 LLM की साथ-साथ तुलना: विनिर्देश, क्षमताएं और हर काम के लिए उपयुक्तता — कौन-सा मॉडल किस उपयोग के लिए बेहतर है।",
+  },
+  "decode.html": {
+    title: "LLM नाम डिकोडर — 70B, A3B, AWQ, GGUF, FP8 | LLMScale",
+    description:
+      "किसी भी LLM मॉडल का नाम डिकोड करें: 70B, AWQ, GGUF, FP8, A3B, Instruct और बाकी का क्या मतलब है — रंग-कोडेड, समझाया हुआ और इंटरैक्टिव।",
+    ogTitle: "LLMScale — मॉडल नाम डिकोडर",
+    ogDescription:
+      "LLM मॉडल के नाम के हर हिस्से का क्या मतलब है? 70B · AWQ · GGUF · FP8 · A3B… रंग-कोडेड और समझाया हुआ, इंटरैक्टिव रूप में।",
+  },
+  "vllm.html": {
+    title: "vLLM serve पैरामीटर — ट्यून किया गया कमांड हेल्पर | LLMScale",
+    description:
+      "किसी भी मॉडल के लिए ट्यून किया गया vllm serve कमांड बनाएं — थ्रूपुट, विलंबता, शुद्धता या मेमोरी के लिए फ्लैग, साथ में टूल कॉलिंग, लंबा संदर्भ और क्वांटाइजेशन, कॉपी करने योग्य कमांड के साथ।",
+    ogTitle: "LLMScale — vLLM पैरामीटर हेल्पर",
+    ogDescription:
+      "एक मॉडल + वर्कलोड चुनें और प्रदर्शन, शुद्धता और विश्वसनीयता के लिए ऑप्टिमाइज़ किया गया, ट्यून किया हुआ, कॉपी करने योग्य vllm serve कमांड पाएं।",
+  },
+  "config.html": {
+    title: "LLM config.json की व्याख्या — सरल भाषा में | LLMScale",
+    description:
+      "किसी भी Hugging Face मॉडल की config.json सरल भाषा में पढ़ें: लेयर, attention head, GQA और MLA, एक्सपर्ट, संदर्भ और RoPE स्केलिंग, क्वांटाइजेशन — हर उत्तर असली फ़ाइल की पंक्तियों से जुड़ा हुआ।",
+    ogTitle: "LLMScale — config.json डिकोडर",
+    ogDescription:
+      "किसी LLM की config.json के हर फ़ील्ड का क्या मतलब है? मेमोरी, संदर्भ, ध्यान तंत्र और एक्सपर्ट पर सरल भाषा में उत्तर, असली फ़ाइल से जुड़े हुए।",
+  },
+  "serving.html": {
+    title: "सर्विंग सारांश — चैट टेम्पलेट, MTP, क्वांटाइजेशन | LLMScale",
+    description:
+      "किसी Hugging Face मॉडल रिपॉजिटरी को वैसे पढ़ें जैसे इन्फरेंस इंजन पढ़ता है: चैट टेम्पलेट, टूल और रीज़निंग parser, generation_config, टेंसर नामों से क्वांटाइजेशन, और क्या इसकी MTP लेयर साथ आती हैं — vLLM और SGLang फ्लैग के साथ।",
+    ogTitle: "LLMScale — सर्विंग सारांश",
+    ogDescription:
+      "किसी मॉडल की फ़ाइलें उसे सर्व करने के बारे में क्या कहती हैं: टूल और रीज़निंग parser, सैंपलिंग डिफ़ॉल्ट, क्वांटाइजेशन, MTP — और vLLM व SGLang फ्लैग।",
+  },
+  "plan.html": {
+    title: "LLM क्षमता योजना — आपके लोड के लिए GPU | LLMScale",
+    description:
+      "किसी लोड के लिए कितने GPU चाहिए: इनपुट में requests per second, प्रॉम्प्ट और जवाब की लंबाई, और पहला-टोकन विलंब व प्रति-टोकन लक्ष्य; आउटपुट में replica, टेंसर पैरेललिज़्म और GPU संख्या, vLLM की अपनी मेमोरी और GPU की बैंडविड्थ और tensor throughput से।",
+    ogTitle: "LLMScale — क्षमता योजना",
+    ogDescription:
+      "इनपुट में requests per second और विलंबता लक्ष्य, आउटपुट में GPU: vLLM के लिए replica और टेंसर पैरेललिज़्म, मेमोरी, बैंडविड्थ और tensor throughput से आकलित।",
+  },
+  "gpu-compare.html": {
+    title: "GPU विनिर्देश तुलना — VRAM, बैंडविड्थ, TFLOPS | LLMScale",
+    description:
+      "2–4 GPU की उनकी datasheets से साथ-साथ तुलना करें: आर्किटेक्चर, मेमोरी प्रकार और बैंडविड्थ, डेंस BF16, FP8 और FP4 TFLOPS, पावर, NVLink और फॉर्म फैक्टर — उपभोक्ता और डेटा सेंटर GPU, Apple Silicon और AI PC।",
+    ogTitle: "LLMScale — GPU तुलना",
+    ogDescription:
+      "2–4 GPU साथ-साथ: आर्किटेक्चर, मेमोरी और बैंडविड्थ, डेंस टेंसर TFLOPS, पावर और लिंक, निर्माताओं की datasheets से।",
+  },
+  "learn.html": {
+    title: "LLM 101 — LLM कैसे काम करता है, विज़ुअल रूप में | LLMScale",
+    description:
+      "एक इंटरैक्टिव, एनिमेटेड यात्रा कि एक बड़ा भाषा मॉडल किसी वाक्य को अगले शब्द में कैसे बदलता है — टोकनाइज़ेशन, एम्बेडिंग, ध्यान, लेयर और सैंपलिंग, एक 3D न्यूरल तारामंडल के रूप में।",
+    ogTitle: "LLM 101 — LLM कैसे काम करता है, विज़ुअल रूप में",
+    ogDescription:
+      "एक इंटरैक्टिव यात्रा कि भाषा मॉडल किसी वाक्य को अगले शब्द में कैसे बदलता है — टोकन, एम्बेडिंग, ध्यान, लेयर और सैंपलिंग, 3D में।",
+  },
+};
+
+export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, hi, es };
