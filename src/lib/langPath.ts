@@ -94,4 +94,5 @@ export const SUGGEST: Record<Lang, { text: string; go: string; dismiss: string }
   tr: { text: "Bu sayfa Türkçe olarak da var.", go: "Türkçe'ye geç", dismiss: "Kapat" },
   es: { text: "Esta página también está disponible en español.", go: "Cambiar a español", dismiss: "Cerrar" },
   hi: { text: "यह पेज हिन्दी में भी उपलब्ध है।", go: "हिन्दी में देखें", dismiss: "बंद करें" },
+  zh: { text: "本页面也有简体中文版。", go: "切换到简体中文", dismiss: "关闭" },
 };

@@ -21,6 +21,7 @@ const LOADERS: Record<Lang, () => Promise<{ default: Record<Key, string> }>> = {
   tr: () => import("../locales/tr.ts"),
   es: () => import("../locales/es.ts"),
   hi: () => import("../locales/hi.ts"),
+  zh: () => import("../locales/zh.ts"),
 };
 
 const loaded: Partial<Record<Lang, Dict>> = {};

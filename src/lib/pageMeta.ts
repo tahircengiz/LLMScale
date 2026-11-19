@@ -312,4 +312,103 @@ const hi: Record<string, PageMeta> = {
   },
 };
 
-export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, hi, es };
+const zh: Record<string, PageMeta> = {
+  "index.html": {
+    title: "LLM 显存计算：权重、KV 缓存、GPU | LLMScale",
+    description:
+      "估算 LLM 需要多少显存：模型权重、KV 缓存、上下文窗口和并发用户，再看哪些 GPU 放得下。从 Hugging Face 实时读取配置。",
+    ogTitle: "LLMScale — LLM 显存计算器",
+    ogDescription:
+      "你的 LLM 需要多少显存？权重 + KV 缓存 + 上下文 + 并发，并附 GPU 推荐。",
+  },
+  "train.html": {
+    title: "微调显存：LoRA、QLoRA、完全微调 | LLMScale",
+    description:
+      "算出一次微调需要多少显存：LoRA、QLoRA 或完全微调。涵盖梯度、优化器状态和为反向传播保留的激活值，并列出放得下的 GPU。已对照 ZeRO 和 QLoRA 论文验证。",
+    ogTitle: "LLMScale — 微调显存",
+    ogDescription:
+      "微调要占用多少显存？把 LoRA、QLoRA 和完全微调拆分为权重、梯度、优化器状态和激活值。",
+  },
+  "fit.html": {
+    title: "LLM 任务匹配：这个模型适合这项任务吗？ | LLMScale",
+    description:
+      "检查一个 LLM 是否适合你的任务（聊天、代码、RAG、智能体、推理、视觉、嵌入），根据模型的实际规模、上下文、调优方式和模态打分。数据实时来自 Hugging Face。",
+    ogTitle: "LLMScale — 模型 ↔ 任务匹配",
+    ogDescription:
+      "这个 LLM 适合你的任务吗？透明、基于规则的匹配评分，覆盖聊天、代码、RAG、智能体、推理、视觉等。",
+  },
+  "anatomy.html": {
+    title: "LLM 剖析：参数、精度与 KV 缓存 | LLMScale",
+    description:
+      "为任意 Hugging Face 模型做可视化“X 光”：参数分布在哪里（嵌入 / 注意力 / 专家）、各精度下的权重大小、架构、GQA 和 KV 缓存增长，数据实时来自 Hugging Face。",
+    ogTitle: "LLMScale — 模型剖析",
+    ogDescription:
+      "为任意 LLM 做可视化“X 光”：参数分布、各精度下的权重大小、架构、GQA 和 KV 缓存增长，数据实时来自 Hugging Face。",
+  },
+  "compare.html": {
+    title: "LLM 并排对比：规格与任务匹配 | LLMScale",
+    description:
+      "并排对比 2–4 个 Hugging Face LLM：参数、上下文、量化、能力和各任务匹配度，看哪个模型更适合哪种用途，数据实时来自 Hugging Face。",
+    ogTitle: "LLMScale — 模型对比",
+    ogDescription:
+      "并排对比 2–4 个 LLM：规格、能力和各任务匹配度，看哪个模型更适合哪种用途。",
+  },
+  "decode.html": {
+    title: "LLM 名称解读：70B、AWQ、GGUF | LLMScale",
+    description:
+      "解读任意 LLM 模型名称：70B、AWQ、GGUF、FP8、A3B、Instruct 等分别是什么意思，用颜色区分、逐项解释，并可交互。",
+    ogTitle: "LLMScale — 模型名称解读",
+    ogDescription:
+      "LLM 模型名称的每一部分是什么意思？70B · AWQ · GGUF · FP8 · A3B……用颜色区分并逐项解释，可交互。",
+  },
+  "vllm.html": {
+    title: "vLLM serve 参数：调优命令助手 | LLMScale",
+    description:
+      "为任意模型生成调优后的 vllm serve 命令：针对吞吐量、延迟、准确性或显存的参数，以及工具调用、长上下文和量化，命令可直接复制。",
+    ogTitle: "LLMScale — vLLM 参数助手",
+    ogDescription:
+      "选择模型和工作负载，获得针对性能、准确性和可靠性调优、可直接复制的 vllm serve 命令。",
+  },
+  "config.html": {
+    title: "LLM config.json 通俗解读 | LLMScale",
+    description:
+      "用通俗的语言读懂任意 Hugging Face 模型的 config.json：层数、注意力头、GQA 和 MLA、专家、上下文与 RoPE 缩放、量化，每个解答都对应真实文件中的具体行。",
+    ogTitle: "LLMScale — config.json 解读",
+    ogDescription:
+      "LLM 的 config.json 中每个字段是什么意思？用通俗的语言解答显存、上下文、注意力和专家相关问题，并对应真实文件。",
+  },
+  "serving.html": {
+    title: "推理服务简报：聊天模板、MTP、量化 | LLMScale",
+    description:
+      "像推理引擎那样读懂 Hugging Face 模型仓库：聊天模板、工具与推理 parser、generation_config、根据张量名判断的量化方式，以及是否附带 MTP 层，并给出 vLLM 和 SGLang 参数。",
+    ogTitle: "LLMScale — 推理服务简报",
+    ogDescription:
+      "模型文件对推理服务说明了什么：工具与推理 parser、采样默认值、量化、MTP，以及对应的 vLLM 和 SGLang 参数。",
+  },
+  "plan.html": {
+    title: "LLM 容量规划：你的负载需要多少 GPU | LLMScale",
+    description:
+      "一个负载需要多少 GPU：输入每秒请求数、提示与回复长度，以及首 token 延迟和每 token 延迟目标；输出副本数、张量并行和 GPU 数量。依据 vLLM 自身的显存占用，以及 GPU 的显存带宽和算力计算。",
+    ogTitle: "LLMScale — 容量规划",
+    ogDescription:
+      "输入每秒请求数和延迟目标，输出 GPU 数量：vLLM 的副本数和张量并行，依据显存、带宽和算力计算。",
+  },
+  "gpu-compare.html": {
+    title: "GPU 规格对比：显存、带宽、TFLOPS | LLMScale",
+    description:
+      "根据数据表并排对比 2–4 款 GPU：架构、显存类型与带宽、稠密 BF16、FP8 和 FP4 TFLOPS、功耗、NVLink 和外形规格，涵盖消费级与数据中心显卡、Apple Silicon 和 AI PC。",
+    ogTitle: "LLMScale — GPU 对比",
+    ogDescription:
+      "2–4 款 GPU 并排对比：架构、显存与带宽、稠密 Tensor TFLOPS、功耗和互连，数据来自厂商数据表。",
+  },
+  "learn.html": {
+    title: "LLM 101：图解 LLM 工作原理 | LLMScale",
+    description:
+      "交互式动画讲解：大语言模型如何把一句话变成下一个词——分词、嵌入、注意力、层和采样，以 3D 神经星座的形式呈现。",
+    ogTitle: "LLM 101：图解 LLM 工作原理",
+    ogDescription:
+      "交互式讲解语言模型如何把一句话变成下一个词：token、嵌入、注意力、层和采样，3D 呈现。",
+  },
+};
+
+export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, zh, hi, es };
