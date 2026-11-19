@@ -30,6 +30,13 @@ export function pathFor(pathname: string, lang: Lang): string {
   return LANG_META[lang].prefix ? root.replace(/\/([^/]*)$/, `/${LANG_META[lang].prefix}$1`) : root;
 }
 
+/** A new GitHub issue about the translation of the page at `pathname`, its
+ *  title filled in: the "Suggest a correction" link under an AI-translated page. */
+export function fixUrl(lang: Lang, pathname: string): string {
+  const title = `Translation (${lang}): ${pathname}`;
+  return `https://github.com/tahircengiz/LLMScale/issues/new?title=${encodeURIComponent(title)}`;
+}
+
 /** A language's home under the site's base path: "/LLMScale/" + "tr/". */
 export const langHome = (base: string, lang: Lang) => base + LANG_META[lang].prefix;
 

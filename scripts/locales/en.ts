@@ -28,10 +28,12 @@ const en: PageText = {
       `${name} needs ${bf16} of GPU memory at BF16 and ${int4} at INT4 for one user at ${ctx} context. Memory by precision and context, the GPUs that hold it, concurrent users and fine-tuning memory.`,
     h1: (name) => `${name}: how much VRAM does it need?`,
     oneUser: "one user",
+    ctx: (k) => `${k} context`,
     answer: ({ weights, kv, overhead, int4 }) =>
       `${weights} of weights, ${kv} of KV cache and ${overhead} of vLLM's overhead. At INT4 the same workload needs ${int4}.`,
     specLayers: "layers",
     specMaxContext: "max context",
+    specHeads: "heads",
     h2Memory: (name) => `${name} memory by precision and context`,
     thPrecision: "Precision",
     kvCache: "KV cache",
@@ -116,6 +118,7 @@ const en: PageText = {
       lede: (models) =>
         `How much GPU memory ${models} popular open models need, computed from each one's own architecture: weights, KV cache and overhead at BF16 and INT4 for one user at 8k context. Each page breaks it down by precision and context, lists the GPUs that hold it and how many users fit, and adds fine-tuning memory.`,
       active: "active",
+      thModel: "Model",
       thParams: "Parameters",
       thMaxContext: "Max context",
       note: "One user, FP16 KV cache and vLLM's overhead on one GPU; models with a shorter maximum context are shown at that maximum.",
@@ -148,6 +151,7 @@ const en: PageText = {
 
   concepts: {
     kvCache: {
+      thModel: "Model",
       thLayers: "Layers",
       thShape: "KV heads × head dim",
       thPerToken: "Per token",
@@ -190,8 +194,10 @@ ${v.table}
       }),
     },
     attention: {
+      thModel: "Model",
       thQueryHeads: "Query heads",
       thKvHeads: "KV heads",
+      thAttention: "Attention",
       thPerToken: "Per token",
       thVsMha: "vs MHA",
       kvLink: "KV cache size",

@@ -28,9 +28,11 @@ const tr: PageText = {
       `${name}, ${ctx} context'te tek kullanıcı için BF16'da ${bf16}, INT4'te ${int4} GPU belleği ister. Hassasiyet ve context'e göre bellek, onu taşıyan GPU'lar, eşzamanlı kullanıcılar ve ince ayar belleği.`,
     h1: (name) => `${name} kaç GB VRAM ister?`,
     oneUser: "tek kullanıcı",
+    ctx: (k) => `${k} context`,
     answer: ({ weights, kv, overhead, int4 }) => `${weights} ağırlık, ${kv} KV cache ve ${overhead} vLLM'in ek yükü. Aynı iş yükü INT4'te ${int4} ister.`,
     specLayers: "katman",
     specMaxContext: "maks context",
+    specHeads: "head",
     h2Memory: (name) => `Hassasiyet ve context'e göre ${name} belleği`,
     thPrecision: "Hassasiyet",
     kvCache: "KV cache",
@@ -115,6 +117,7 @@ const tr: PageText = {
       lede: (models) =>
         `${models} popüler açık modelin ne kadar GPU belleği istediği, her birinin kendi mimarisinden hesaplanmış olarak: 8k context'te tek kullanıcı için BF16 ve INT4'te ağırlık, KV cache ve ek yük. Her sayfa bunu hassasiyet ve context'e göre ayırır, onu taşıyan GPU'ları ve kaç kullanıcı sığdığını listeler, ince ayar belleğini de ekler.`,
       active: "aktif",
+      thModel: "Model",
       thParams: "Parametre",
       thMaxContext: "Maks context",
       note: "Tek kullanıcı, FP16 KV cache ve tek GPU'da vLLM'in ek yükü; maksimum context'i daha kısa olan modeller o maksimumla gösterilir.",
@@ -147,6 +150,7 @@ const tr: PageText = {
 
   concepts: {
     kvCache: {
+      thModel: "Model",
       thLayers: "Katman",
       thShape: "KV head × head boyutu",
       thPerToken: "Token başına",
@@ -189,8 +193,10 @@ ${v.table}
       }),
     },
     attention: {
+      thModel: "Model",
       thQueryHeads: "Query head",
       thKvHeads: "KV head",
+      thAttention: "Attention",
       thPerToken: "Token başına",
       thVsMha: "MHA'ya göre",
       kvLink: "KV cache boyutu",

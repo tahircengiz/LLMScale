@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import Root from "./Root.tsx";
 import "./index.css";
 import { loadDict } from "./lib/dict";
+import { setFormatLang } from "./lib/format";
 import { langOfPath } from "./lib/langPath";
 
 // #root arrives holding the page prerendered at build time (scripts/prerender.ts)
@@ -18,6 +19,7 @@ import { langOfPath } from "./lib/langPath";
 // The page's dictionary comes first, in a chunk of its own: only this language's
 // (src/lib/dict.ts). Until it arrives the prerendered page stays on screen.
 const lang = langOfPath(window.location.pathname);
+setFormatLang(lang);
 loadDict(lang).then(() =>
   createRoot(document.getElementById("root")!).render(
     <StrictMode>

@@ -1,5 +1,13 @@
 // Display formatting helpers.
-import { LANG_META, type Lang } from "./langs.ts";
+import { DEFAULT_LANG, LANG_META, type Lang } from "./langs.ts";
+
+/** The language formatInt and formatParams group digits in: the page's, set
+ *  before it renders (main.tsx in the browser, entry-server.tsx per page in the
+ *  build), so neither the visitor's browser nor the build machine picks it. */
+let pageLang: Lang = DEFAULT_LANG;
+export function setFormatLang(lang: Lang): void {
+  pageLang = lang;
+}
 
 export function formatGiB(gib: number): string {
   if (gib < 0.01) return "<0.01 GiB";
@@ -12,7 +20,7 @@ export function formatParams(n: number): string {
   if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
   if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-  return n.toLocaleString();
+  return formatNumber(n, pageLang);
 }
 
 export function formatBytes(bytes: number): string {
@@ -22,7 +30,7 @@ export function formatBytes(bytes: number): string {
 }
 
 export function formatInt(n: number): string {
-  return n.toLocaleString();
+  return formatNumber(n, pageLang);
 }
 
 // ── by the page's language ────────────────────────────────────────────────────

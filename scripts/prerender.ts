@@ -147,6 +147,15 @@ const entries = readdirSync(outDir)
   .filter((f) => f.endsWith(".html"))
   .sort((a, b) => (a === "index.html" ? -1 : b === "index.html" ? 1 : a.localeCompare(b)));
 let rendered = 0;
+// An app page fetches its language's dictionary before it first renders
+// (src/main.tsx); preloading it saves the round trip after the main chunk.
+// vite.config.ts names those chunks dict-<lang>-<hash>.js.
+const dictChunk = Object.fromEntries(
+  readdirSync(join(outDir, "assets")).flatMap((f) => {
+    const m = /^dict-([a-z]{2})-[\w-]+\.js$/.exec(f);
+    return m ? [[m[1], `assets/${f}`]] : [];
+  })
+) as Partial<Record<Lang, string>>;
 // compare.html opens on two models the browser asks the Hub about; the kept
 // answers fill them in, judged for age at this commit's date.
 const compare = await replayCompare(lastCommitDate(["."]));
@@ -189,6 +198,10 @@ for (const file of entries) {
       ...ENABLED_LANGS.map((l) => `<link rel="alternate" hreflang="${LANG_META[l].hreflang}" href="${urls[l]}" />`),
       `<link rel="alternate" hreflang="x-default" href="${urls[DEFAULT_LANG]}" />`,
     ];
+    if (isApp) {
+      if (!dictChunk[lang]) throw new Error(`no dict-${lang}-*.js in ${outDir}/assets for ${file}`);
+      head.push(`<link rel="modulepreload" crossorigin href="${base}${dictChunk[lang]}" />`);
+    }
     if (file !== "index.html") {
       head.push(ld({
         "@context": "https://schema.org",

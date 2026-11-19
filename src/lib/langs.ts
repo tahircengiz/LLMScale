@@ -39,23 +39,25 @@ export interface LangMeta {
   intl: string;
   /** Open Graph locale. */
   og: string;
+  /** Translated by Claude (D2): its pages say so and link to a correction. */
+  ai: boolean;
 }
 
 export const LANG_META: Record<LangCode, LangMeta> = {
-  en: { prefix: "", hreflang: "en", dir: "ltr", name: "English", intl: "en-US-u-nu-latn", og: "en_US" },
-  tr: { prefix: "tr/", hreflang: "tr", dir: "ltr", name: "Türkçe", intl: "tr-TR-u-nu-latn", og: "tr_TR" },
-  zh: { prefix: "zh/", hreflang: "zh-Hans", dir: "ltr", name: "简体中文", intl: "zh-Hans-CN-u-nu-latn", og: "zh_CN" },
-  hi: { prefix: "hi/", hreflang: "hi", dir: "ltr", name: "हिन्दी", intl: "hi-IN-u-nu-latn", og: "hi_IN" },
-  es: { prefix: "es/", hreflang: "es", dir: "ltr", name: "Español", intl: "es-u-nu-latn", og: "es_ES" },
-  fr: { prefix: "fr/", hreflang: "fr", dir: "ltr", name: "Français", intl: "fr-FR-u-nu-latn", og: "fr_FR" },
-  pt: { prefix: "pt/", hreflang: "pt", dir: "ltr", name: "Português", intl: "pt-BR-u-nu-latn", og: "pt_BR" },
-  id: { prefix: "id/", hreflang: "id", dir: "ltr", name: "Bahasa Indonesia", intl: "id-ID-u-nu-latn", og: "id_ID" },
-  bn: { prefix: "bn/", hreflang: "bn", dir: "ltr", name: "বাংলা", intl: "bn-BD-u-nu-latn", og: "bn_IN" },
-  ar: { prefix: "ar/", hreflang: "ar", dir: "rtl", name: "العربية", intl: "ar-u-nu-latn", og: "ar_AR" },
-  ur: { prefix: "ur/", hreflang: "ur", dir: "rtl", name: "اردو", intl: "ur-PK-u-nu-latn", og: "ur_PK" },
-  ru: { prefix: "ru/", hreflang: "ru", dir: "ltr", name: "Русский", intl: "ru-RU-u-nu-latn", og: "ru_RU" },
-  de: { prefix: "de/", hreflang: "de", dir: "ltr", name: "Deutsch", intl: "de-DE-u-nu-latn", og: "de_DE" },
-  ja: { prefix: "ja/", hreflang: "ja", dir: "ltr", name: "日本語", intl: "ja-JP-u-nu-latn", og: "ja_JP" },
+  en: { prefix: "", hreflang: "en", dir: "ltr", name: "English", intl: "en-US-u-nu-latn", og: "en_US", ai: false },
+  tr: { prefix: "tr/", hreflang: "tr", dir: "ltr", name: "Türkçe", intl: "tr-TR-u-nu-latn", og: "tr_TR", ai: false },
+  zh: { prefix: "zh/", hreflang: "zh-Hans", dir: "ltr", name: "简体中文", intl: "zh-Hans-CN-u-nu-latn", og: "zh_CN", ai: true },
+  hi: { prefix: "hi/", hreflang: "hi", dir: "ltr", name: "हिन्दी", intl: "hi-IN-u-nu-latn", og: "hi_IN", ai: true },
+  es: { prefix: "es/", hreflang: "es", dir: "ltr", name: "Español", intl: "es-u-nu-latn", og: "es_ES", ai: true },
+  fr: { prefix: "fr/", hreflang: "fr", dir: "ltr", name: "Français", intl: "fr-FR-u-nu-latn", og: "fr_FR", ai: true },
+  pt: { prefix: "pt/", hreflang: "pt", dir: "ltr", name: "Português", intl: "pt-BR-u-nu-latn", og: "pt_BR", ai: true },
+  id: { prefix: "id/", hreflang: "id", dir: "ltr", name: "Bahasa Indonesia", intl: "id-ID-u-nu-latn", og: "id_ID", ai: true },
+  bn: { prefix: "bn/", hreflang: "bn", dir: "ltr", name: "বাংলা", intl: "bn-BD-u-nu-latn", og: "bn_IN", ai: true },
+  ar: { prefix: "ar/", hreflang: "ar", dir: "rtl", name: "العربية", intl: "ar-u-nu-latn", og: "ar_AR", ai: true },
+  ur: { prefix: "ur/", hreflang: "ur", dir: "rtl", name: "اردو", intl: "ur-PK-u-nu-latn", og: "ur_PK", ai: true },
+  ru: { prefix: "ru/", hreflang: "ru", dir: "ltr", name: "Русский", intl: "ru-RU-u-nu-latn", og: "ru_RU", ai: true },
+  de: { prefix: "de/", hreflang: "de", dir: "ltr", name: "Deutsch", intl: "de-DE-u-nu-latn", og: "de_DE", ai: true },
+  ja: { prefix: "ja/", hreflang: "ja", dir: "ltr", name: "日本語", intl: "ja-JP-u-nu-latn", og: "ja_JP", ai: true },
 };
 
 /** Whether a string names a language this build writes. */
