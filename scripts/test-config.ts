@@ -236,13 +236,15 @@ console.log("\n--- numbers read the way each language writes them ---");
 console.log("\n--- the glossary ---");
 {
   const entries = [...Object.entries(GLOSSARY), ...PATTERNS.map((p, i) => [`pattern ${i}`, p.entry] as const)];
-  const thin = entries.filter(([, e]) => !(e.title.en && e.title.tr && e.meaning.en && e.meaning.tr)).map(([k]) => k);
-  check("every entry is written in both languages", thin.length === 0, thin.join(", ") || `${entries.length} entries`);
-  const same = entries.filter(([, e]) => e.meaning.en === e.meaning.tr).map(([k]) => k);
-  check("no Turkish meaning is a copy of the English", same.length === 0, same.join(", "));
+  // The words are dictionary keys; test-i18n holds every language to EN's keys.
+  const words = (e: (typeof entries)[number][1]) => [e.title, e.meaning, e.unit, e.yes, e.no].filter((k): k is string => !!k);
+  const thin = entries.filter(([, e]) => !ENABLED_LANGS.every((l) => words(e).every((k) => DICTS[l][k]))).map(([k]) => k);
+  check("every entry is written in every language", thin.length === 0, thin.join(", ") || `${entries.length} entries`);
+  const same = entries.filter(([, e]) => ENABLED_LANGS.some((l) => l !== "en" && DICTS[l][e.meaning] === DICTS.en[e.meaning])).map(([k]) => k);
+  check("no meaning is a copy of the English", same.length === 0, same.join(", "));
   const orphans = Object.entries(ALIASES).filter(([, to]) => !(to in GLOSSARY)).map(([from]) => from);
   check("every alias points at an entry", orphans.length === 0, orphans.join(", "));
-  check("every group is labelled in both languages", FIELD_GROUPS.every((g) => GROUP_LABEL[g]?.en && GROUP_LABEL[g]?.tr));
+  check("every group is labelled in every language", FIELD_GROUPS.every((g) => ENABLED_LANGS.every((l) => DICTS[l][GROUP_LABEL[g]])));
   // Across the fixtures, how much of what real configs carry the page can explain.
   const all = readdirSync(dir).filter((f) => f.endsWith(".json")).flatMap((f) => explainConfig({ cfg: load(f.slice(0, -5)), lang: "en" }).fields);
   const explained = all.filter((f) => f.match !== "none").length;

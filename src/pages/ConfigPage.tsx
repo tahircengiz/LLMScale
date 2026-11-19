@@ -585,7 +585,7 @@ function Fields({
   flash: string | null;
   onHover: (cites: string[] | null) => void;
 }) {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const counts = useMemo(
@@ -636,9 +636,9 @@ function Fields({
       {groups.map(([g, fs]) => (
         <section key={g} aria-labelledby={`grp-${g}`} className="mt-7 first-of-type:mt-5">
           <h3 id={`grp-${g}`} className="text-sm font-semibold tracking-tight text-white">
-            {GROUP_LABEL[g][lang]}
+            {t(GROUP_LABEL[g])}
           </h3>
-          {GROUP_NOTE[g] && <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">{GROUP_NOTE[g]![lang]}</p>}
+          {GROUP_NOTE[g] && <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">{t(GROUP_NOTE[g]!)}</p>}
           <dl className="mt-2.5 divide-y divide-white/5 overflow-hidden rounded-xl bg-ink-850/40 ring-1 ring-white/5">
             {fs.map((f) => {
               const on = covers(active, f.path);

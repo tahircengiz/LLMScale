@@ -18,6 +18,7 @@ import { archFromConfig } from "./hf.ts";
 import { activeParamsOf, expertCount, expertsPerToken } from "./moe.ts";
 import { formatParams } from "./format.ts";
 import { LANG_META, type Lang } from "./langs.ts";
+import { hasKey, translate } from "./dict.ts";
 import { lookupField, type FieldGroup, type GlossaryEntry, type Relevance } from "./configGlossary.ts";
 import { activeWindow, compressedLayers, hybridLayers, kvSharedLayers, mimoAttention, nasAttention, textConfig, textConfigPrefix } from "./layers.ts";
 
@@ -61,18 +62,10 @@ export function fmtBytes(bytes: number, lang: Lang): string {
   return `${fmtNum(bytes / BYTES_PER_GIB, lang, 2)} GiB`;
 }
 
-const WORDS: Record<string, Record<Lang, string>> = {
-  tokens: { en: "tokens", tr: "token" },
-  yes: { en: "Yes", tr: "Evet" },
-  no: { en: "No", tr: "Hayır" },
-  none: { en: "none", tr: "yok" },
-  fields: { en: "fields", tr: "alan" },
-  items: { en: "items", tr: "öğe" },
-  ids: { en: "ids", tr: "kimlik" },
-  bytesPerParam: { en: "bytes per parameter", tr: "bayt / parametre" },
-  layers: { en: "layers", tr: "katman" },
-};
-const w = (k: string, lang: Lang) => WORDS[k]?.[lang] ?? k;
+/** A word the explainer puts next to a value: config.w.<k> in the dictionaries. */
+const w = (k: string, lang: Lang) => (hasKey(lang, `config.w.${k}`) ? translate(lang, `config.w.${k}`) : k);
+/** The dictionary's words for a value, if it has them: config.act.silu. */
+const named = (prefix: string, value: string, lang: Lang) => (hasKey(lang, `${prefix}.${value}`) ? translate(lang, `${prefix}.${value}`) : undefined);
 /** English plurals after a count of one. Turkish keeps the noun singular after
  *  any number, so it needs no entry. */
 const SINGULAR: Record<string, string> = { layers: "layer", heads: "head", experts: "expert", tokens: "token", ids: "id" };
@@ -85,52 +78,13 @@ const DTYPE_NAMES: Record<string, { label: string; bytes: number }> = {
   float8_e5m2: { label: "FP8", bytes: 1 },
 };
 
-const ACT_NAMES: Record<string, Record<Lang, string>> = {
-  silu: { en: "SiLU — usually a gated SwiGLU block", tr: "SiLU — genellikle kapılı bir SwiGLU bloğu" },
-  swiglu: { en: "SwiGLU", tr: "SwiGLU" },
-  gelu: { en: "GELU", tr: "GELU" },
-  gelu_new: { en: "GELU (tanh approximation)", tr: "GELU (tanh yaklaşımı)" },
-  gelu_pytorch_tanh: { en: "GELU (tanh approximation) — gated (GeGLU) in Gemma's language model", tr: "GELU (tanh yaklaşımı) — Gemma'nın dil modelinde kapılı (GeGLU)" },
-  relu: { en: "ReLU", tr: "ReLU" },
-  relu2: { en: "squared ReLU", tr: "karesi alınmış ReLU" },
-};
-
-const ROPE_TYPES: Record<string, Record<Lang, string>> = {
-  yarn: {
-    en: "YaRN — stretches low frequencies, keeps high ones, and corrects attention's temperature",
-    tr: "YaRN — düşük frekansları esnetir, yüksekleri korur ve attention'ın sıcaklığını düzeltir",
-  },
-  llama3: {
-    en: "Llama 3 — long wavelengths stretched, short ones kept, the band between blended",
-    tr: "Llama 3 — uzun dalga boyları esnetilir, kısalar korunur, aradaki bant harmanlanır",
-  },
-  linear: { en: "linear — every position divided by the factor", tr: "lineer — her konum çarpana bölünür" },
-  dynamic: {
-    en: "dynamic NTK — the base grows only once the input outruns the original length",
-    tr: "dinamik NTK — taban yalnızca girdi özgün uzunluğu aştığında büyür",
-  },
-  longrope: {
-    en: "LongRoPE — separate per-dimension factors for short and long inputs",
-    tr: "LongRoPE — kısa ve uzun girdiler için ayrı, boyut başına çarpanlar",
-  },
-  su: {
-    en: "LongRoPE — separate per-dimension factors for short and long inputs",
-    tr: "LongRoPE — kısa ve uzun girdiler için ayrı, boyut başına çarpanlar",
-  },
-  mrope: {
-    en: "M-RoPE — positions split across time, height and width for images and video",
-    tr: "M-RoPE — görüntü ve video için konumlar zaman, yükseklik ve genişliğe bölünür",
-  },
-  default: { en: "none — plain RoPE", tr: "yok — düz RoPE" },
-};
-
 /** The sentence-level "what is this value" next to the raw value. */
 export function humanValue(value: Json, entry: GlossaryEntry | undefined, lang: Lang): string | undefined {
   if (value === null || value === undefined) return w("none", lang);
   const kind = entry?.kind;
   if (typeof value === "boolean") {
-    if (value && entry?.yes) return entry.yes[lang];
-    if (!value && entry?.no) return entry.no[lang];
+    if (value && entry?.yes) return translate(lang, entry.yes);
+    if (!value && entry?.no) return translate(lang, entry.no);
     return w(value ? "yes" : "no", lang);
   }
   switch (kind) {
@@ -138,7 +92,7 @@ export function humanValue(value: Json, entry: GlossaryEntry | undefined, lang: 
       return typeof value === "number" ? `${fmtInt(value, lang)} ${w("tokens", lang)} · ${shortTokens(value, lang)}` : undefined;
     case "count": {
       if (typeof value !== "number") return undefined;
-      const unit = entry?.unit?.[lang] ?? "";
+      const unit = entry?.unit ? translate(lang, entry.unit) : "";
       return `${fmtInt(value, lang)} ${value === 1 ? (SINGULAR[unit] ?? unit) : unit}`.trim();
     }
     case "number":
@@ -150,27 +104,23 @@ export function humanValue(value: Json, entry: GlossaryEntry | undefined, lang: 
     case "raw":
       return undefined;
     case "act":
-      return ACT_NAMES[String(value)]?.[lang];
+      return named("config.act", String(value), lang);
     case "ropeType":
-      return ROPE_TYPES[String(value)]?.[lang];
+      return named("config.rope", String(value), lang);
     case "ids":
       return Array.isArray(value) ? `${value.length} ${value.length === 1 ? (SINGULAR[w("ids", lang)] ?? w("ids", lang)) : w("ids", lang)}` : undefined;
     case "layerTypes":
       return Array.isArray(value) ? tally(value.map(String), lang) : undefined;
     case "hybridPattern":
-      return typeof value === "string" ? tally([...value].map((ch) => PATTERN_CHAR[ch]?.[lang] ?? ch), lang) : undefined;
+      return typeof value === "string" ? tally([...value].map((ch) => (PATTERN_CHAR[ch] ? translate(lang, `config.pattern.${PATTERN_CHAR[ch]}`) : ch)), lang) : undefined;
   }
   if (Array.isArray(value)) return `${value.length} ${w("items", lang)}`;
   if (typeof value === "object") return `${Object.keys(value).length} ${w("fields", lang)}`;
   return undefined;
 }
 
-const PATTERN_CHAR: Record<string, Record<Lang, string>> = {
-  M: { en: "Mamba", tr: "Mamba" },
-  "*": { en: "attention", tr: "attention" },
-  "-": { en: "feed-forward", tr: "ileri besleme" },
-  E: { en: "mixture-of-experts", tr: "mixture-of-experts" },
-};
+/** A hybrid pattern's characters, by the dictionary word for each: config.pattern.<word>. */
+const PATTERN_CHAR: Record<string, string> = { M: "mamba", "*": "attention", "-": "ffn", E: "moe" };
 
 /** "24 layers: 12 sliding_attention, 12 full_attention". */
 function tally(items: string[], lang: Lang): string {
@@ -277,8 +227,8 @@ export function explainFields(cfg: Json, lang: Lang): ExplainedField[] {
       group: groupOverride ?? entry?.group ?? "other",
       rel: entry?.rel ?? "detail",
       match: hit?.match ?? "none",
-      title: entry?.title[lang],
-      meaning: entry?.meaning[lang],
+      title: entry && translate(lang, entry.title),
+      meaning: entry && translate(lang, entry.meaning),
     });
   };
   for (const [key, value] of Object.entries(cfg ?? {})) {
