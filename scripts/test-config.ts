@@ -16,6 +16,7 @@ import { ALIASES, FIELD_GROUPS, GLOSSARY, GROUP_LABEL, PATTERNS, lookupField } f
 import {
   configFromArch,
   explainConfig,
+  humanValue,
   jsonLines,
   lineCited,
   shortTokens,
@@ -275,6 +276,16 @@ console.log("\n--- every sentence the engine can produce exists in both dictiona
   const r = explainConfig({ cfg: load("deepseek-ai_DeepSeek-V3"), lang: "tr", numParams: 684.5e9 });
   const unfilled = r.answers.flatMap((a) => [...a.parts, ...a.working]).map((p) => fill("tr", p)).filter((s) => /\{[a-z]+\}/i.test(s));
   check("no sentence keeps an unfilled placeholder", unfilled.length === 0, unfilled.join(" | "));
+}
+
+console.log("\n--- a count of one takes the dictionary's singular word ---");
+{
+  // English drops the plural after one; Turkish keeps the noun singular after any number.
+  const v = (field: string, value: number | number[], lang: Lang) => humanValue(value, GLOSSARY[field], lang);
+  check("en: 1 shared expert", v("n_shared_experts", 1, "en") === "1 expert", v("n_shared_experts", 1, "en"));
+  check("en: 2 shared experts", v("n_shared_experts", 2, "en") === "2 experts", v("n_shared_experts", 2, "en"));
+  check("en: one end-of-sequence id", v("eos_token_id", [2], "en") === "1 id", v("eos_token_id", [2], "en"));
+  check("tr: 1 uzman", v("n_shared_experts", 1, "tr") === "1 uzman", v("n_shared_experts", 1, "tr"));
 }
 
 console.log(fails === 0 ? "\nALL PASS ✅" : `\n${fails} FAILURE(S) ❌`);
