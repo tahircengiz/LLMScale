@@ -96,4 +96,5 @@ export const SUGGEST: Record<Lang, { text: string; go: string; dismiss: string }
   hi: { text: "यह पेज हिन्दी में भी उपलब्ध है।", go: "हिन्दी में देखें", dismiss: "बंद करें" },
   zh: { text: "本页面也有简体中文版。", go: "切换到简体中文", dismiss: "关闭" },
   fr: { text: "Cette page est aussi disponible en français.", go: "Passer au français", dismiss: "Fermer" },
+  pt: { text: "Esta página também está disponível em português.", go: "Mudar para português", dismiss: "Fechar" },
 };

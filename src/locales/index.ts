@@ -9,7 +9,8 @@ import es from "./es.ts";
 import hi from "./hi.ts";
 import zh from "./zh.ts";
 import fr from "./fr.ts";
+import pt from "./pt.ts";
 
-export const DICTS: Record<Lang, Dict> = { en, tr, zh, hi, es, fr };
+export const DICTS: Record<Lang, Dict> = { en, tr, zh, hi, es, fr, pt };
 
 for (const lang of ENABLED_LANGS) setDict(lang, DICTS[lang]);
