@@ -98,4 +98,5 @@ export const SUGGEST: Record<Lang, { text: string; go: string; dismiss: string }
   fr: { text: "Cette page est aussi disponible en français.", go: "Passer au français", dismiss: "Fermer" },
   pt: { text: "Esta página também está disponível em português.", go: "Mudar para português", dismiss: "Fechar" },
   id: { text: "Halaman ini juga tersedia dalam bahasa Indonesia.", go: "Beralih ke bahasa Indonesia", dismiss: "Tutup" },
+  bn: { text: "এই পৃষ্ঠাটি বাংলাতেও পাওয়া যায়।", go: "বাংলায় দেখুন", dismiss: "বন্ধ করুন" },
 };
