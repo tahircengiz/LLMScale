@@ -510,4 +510,103 @@ const fr: Record<string, PageMeta> = {
   },
 };
 
-export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, zh, hi, es, fr };
+const pt: Record<string, PageMeta> = {
+  "index.html": {
+    title: "Calculadora de VRAM de LLM — pesos, cache KV, GPU | LLMScale",
+    description:
+      "Estime a memória da GPU de que um LLM precisa: pesos do modelo, cache KV, janela de contexto e usuários simultâneos — e veja em quais GPUs ele cabe. Lê a configuração ao vivo do Hugging Face.",
+    ogTitle: "LLMScale — Calculadora de VRAM para LLMs",
+    ogDescription:
+      "De quanta VRAM o seu LLM precisa? Pesos + cache KV + contexto + simultaneidade, com recomendações de GPU.",
+  },
+  "train.html": {
+    title: "VRAM para ajuste fino: LoRA, QLoRA e completo | LLMScale",
+    description:
+      "Calcule a memória da GPU de que um ajuste fino precisa: LoRA, QLoRA ou completo. Gradientes, estado do otimizador e as ativações guardadas para a retropropagação, com as GPUs em que ele cabe. Validado com os artigos do ZeRO e do QLoRA.",
+    ogTitle: "LLMScale — VRAM para ajuste fino",
+    ogDescription:
+      "Quanto custa um ajuste fino em VRAM? LoRA, QLoRA e ajuste fino completo, divididos em pesos, gradientes, estado do otimizador e ativações.",
+  },
+  "fit.html": {
+    title: "Adequação à tarefa — este LLM é o certo? | LLMScale",
+    description:
+      "Verifique se um LLM se adequa à sua tarefa — chat, código, RAG, agentes, raciocínio, visão, embeddings — com uma pontuação baseada no tamanho real do modelo, no contexto, no tipo de ajuste e na modalidade. Dados ao vivo do Hugging Face.",
+    ogTitle: "LLMScale — Adequação modelo ↔ tarefa",
+    ogDescription:
+      "Este LLM é o certo para a sua tarefa? Pontuação de adequação transparente e baseada em regras para chat, código, RAG, agentes, raciocínio, visão e mais.",
+  },
+  "anatomy.html": {
+    title: "Anatomia de LLMs: parâmetros, precisão e cache KV | LLMScale",
+    description:
+      "Um raio X visual de qualquer modelo do Hugging Face: para onde vão os parâmetros (embeddings / atenção / especialistas), o tamanho dos pesos em cada precisão, a arquitetura, GQA e o crescimento do cache KV — com dados ao vivo do Hugging Face.",
+    ogTitle: "LLMScale — Anatomia do modelo",
+    ogDescription:
+      "Raio X visual de qualquer LLM: distribuição dos parâmetros, tamanho dos pesos em cada precisão, arquitetura, GQA e crescimento do cache KV, com dados ao vivo do Hugging Face.",
+  },
+  "compare.html": {
+    title: "Compare LLMs lado a lado: ficha técnica e tarefas | LLMScale",
+    description:
+      "Compare de 2 a 4 LLMs do Hugging Face lado a lado: parâmetros, contexto, quantização, capacidades e adequação por tarefa — veja qual modelo é melhor para cada uso, com dados ao vivo do Hugging Face.",
+    ogTitle: "LLMScale — Comparar modelos",
+    ogDescription:
+      "Compare de 2 a 4 LLMs lado a lado: especificações, capacidades e adequação por tarefa — qual modelo é melhor para cada uso.",
+  },
+  "decode.html": {
+    title: "Decifre nomes de LLMs: 70B, A3B, AWQ, GGUF, FP8 | LLMScale",
+    description:
+      "Decifre o nome de qualquer modelo LLM: o que significam 70B, AWQ, GGUF, FP8, A3B, Instruct e mais — com código de cores, explicado e interativo.",
+    ogTitle: "LLMScale — Decodificador de nomes de modelos",
+    ogDescription:
+      "O que significa cada parte do nome de um modelo LLM? 70B · AWQ · GGUF · FP8 · A3B… com código de cores e explicado, de forma interativa.",
+  },
+  "vllm.html": {
+    title: "Parâmetros do vLLM serve — comando ajustado | LLMScale",
+    description:
+      "Gere um comando vllm serve ajustado para qualquer modelo — flags para taxa de transferência, latência, acurácia ou memória, além de chamada de ferramentas, contexto longo e quantização, pronto para copiar.",
+    ogTitle: "LLMScale — Assistente de parâmetros do vLLM",
+    ogDescription:
+      "Escolha um modelo e uma carga de trabalho e receba um comando vllm serve ajustado e pronto para copiar, otimizado para desempenho, acurácia e confiabilidade.",
+  },
+  "config.html": {
+    title: "config.json de LLM explicado em linguagem simples | LLMScale",
+    description:
+      "Leia o config.json de qualquer modelo do Hugging Face em linguagem simples: camadas, cabeças de atenção, GQA e MLA, especialistas, contexto e escalonamento do RoPE, quantização — cada resposta ligada às linhas do arquivo real.",
+    ogTitle: "LLMScale — Decodificador de config.json",
+    ogDescription:
+      "O que significa cada campo do config.json de um LLM? Respostas em linguagem simples sobre memória, contexto, atenção e especialistas, ligadas ao arquivo real.",
+  },
+  "serving.html": {
+    title: "Template de chat, MTP e quantização na inferência | LLMScale",
+    description:
+      "Leia o repositório de um modelo do Hugging Face como um mecanismo de inferência o lê: template de chat, parsers de ferramentas e de raciocínio, generation_config, a quantização a partir dos nomes dos tensores e se as camadas MTP vêm junto — com flags do vLLM e do SGLang.",
+    ogTitle: "LLMScale — Resumo de disponibilização",
+    ogDescription:
+      "O que os arquivos de um modelo dizem sobre como disponibilizá-lo: parsers de ferramentas e de raciocínio, padrões de amostragem, quantização, MTP — e as flags do vLLM e do SGLang.",
+  },
+  "plan.html": {
+    title: "Plano de capacidade de LLM: GPUs para sua carga | LLMScale",
+    description:
+      "Quantas GPUs uma carga exige: entram solicitações por segundo, tamanhos de prompt e de resposta, e metas de tempo para o primeiro token e por token; saem réplicas, paralelismo de tensor e número de GPUs, a partir da memória do próprio vLLM e da largura de banda e do desempenho do Tensor das GPUs.",
+    ogTitle: "LLMScale — Plano de capacidade",
+    ogDescription:
+      "Entram solicitações por segundo e metas de latência; saem GPUs: réplicas e paralelismo de tensor para o vLLM, dimensionados a partir da memória, da largura de banda e do desempenho do Tensor.",
+  },
+  "gpu-compare.html": {
+    title: "Compare GPUs: VRAM, largura de banda e TFLOPS | LLMScale",
+    description:
+      "Compare de 2 a 4 GPUs lado a lado a partir das fichas técnicas: arquitetura, tipo e largura de banda da memória, TFLOPS densos em BF16, FP8 e FP4, potência, NVLink e fator de forma — placas de consumo e de data center, Apple Silicon e PCs de IA.",
+    ogTitle: "LLMScale — Comparar GPUs",
+    ogDescription:
+      "De 2 a 4 GPUs lado a lado: arquitetura, memória e largura de banda, TFLOPS de Tensor densos, potência e interconexões, a partir das fichas técnicas dos fabricantes.",
+  },
+  "learn.html": {
+    title: "LLM 101 — como funciona um LLM, de forma visual | LLMScale",
+    description:
+      "Um passo a passo interativo e animado de como um modelo de linguagem grande transforma uma frase na próxima palavra — tokenização, embeddings, atenção, camadas e amostragem, como uma constelação neural em 3D.",
+    ogTitle: "LLM 101 — como funciona um LLM, de forma visual",
+    ogDescription:
+      "Um passo a passo interativo de como um modelo de linguagem transforma uma frase na próxima palavra — tokens, embeddings, atenção, camadas e amostragem, em 3D.",
+  },
+};
+
+export const PAGE_META: Record<Exclude<Lang, typeof DEFAULT_LANG>, Record<string, PageMeta>> = { tr, zh, hi, es, fr, pt };
