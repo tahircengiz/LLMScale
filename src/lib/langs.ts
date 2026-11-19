@@ -10,7 +10,7 @@
 // React-free and import-free, so the browser bundle, learn.js, the build scripts
 // and vite.config.ts can all read it.
 
-export const LANGS = ["en", "tr", "zh", "hi", "es", "fr", "pt", "id", "bn", "ar", "ur"] as const;
+export const LANGS = ["en", "tr", "zh", "hi", "es", "fr", "pt", "id", "bn", "ar", "ur", "ru", "de", "ja"] as const;
 /** Any planned language, enabled or not. */
 export type LangCode = (typeof LANGS)[number];
 
@@ -53,6 +53,9 @@ export const LANG_META: Record<LangCode, LangMeta> = {
   bn: { prefix: "bn/", hreflang: "bn", dir: "ltr", name: "বাংলা", intl: "bn-BD-u-nu-latn", og: "bn_IN" },
   ar: { prefix: "ar/", hreflang: "ar", dir: "rtl", name: "العربية", intl: "ar-u-nu-latn", og: "ar_AR" },
   ur: { prefix: "ur/", hreflang: "ur", dir: "rtl", name: "اردو", intl: "ur-PK-u-nu-latn", og: "ur_PK" },
+  ru: { prefix: "ru/", hreflang: "ru", dir: "ltr", name: "Русский", intl: "ru-RU-u-nu-latn", og: "ru_RU" },
+  de: { prefix: "de/", hreflang: "de", dir: "ltr", name: "Deutsch", intl: "de-DE-u-nu-latn", og: "de_DE" },
+  ja: { prefix: "ja/", hreflang: "ja", dir: "ltr", name: "日本語", intl: "ja-JP-u-nu-latn", og: "ja_JP" },
 };
 
 /** Whether a string names a language this build writes. */
