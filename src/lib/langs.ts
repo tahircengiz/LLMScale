@@ -52,7 +52,7 @@ export const LANG_META: Record<LangCode, LangMeta> = {
   fr: { prefix: "fr/", hreflang: "fr", dir: "ltr", name: "Français", intl: "fr-FR-u-nu-latn", og: "fr_FR", ai: true },
   pt: { prefix: "pt/", hreflang: "pt", dir: "ltr", name: "Português", intl: "pt-BR-u-nu-latn", og: "pt_BR", ai: true },
   id: { prefix: "id/", hreflang: "id", dir: "ltr", name: "Bahasa Indonesia", intl: "id-ID-u-nu-latn", og: "id_ID", ai: true },
-  bn: { prefix: "bn/", hreflang: "bn", dir: "ltr", name: "বাংলা", intl: "bn-BD-u-nu-latn", og: "bn_IN", ai: true },
+  bn: { prefix: "bn/", hreflang: "bn", dir: "ltr", name: "বাংলা", intl: "bn-BD-u-nu-latn", og: "bn_BD", ai: true },
   ar: { prefix: "ar/", hreflang: "ar", dir: "rtl", name: "العربية", intl: "ar-u-nu-latn", og: "ar_AR", ai: true },
   ur: { prefix: "ur/", hreflang: "ur", dir: "rtl", name: "اردو", intl: "ur-PK-u-nu-latn", og: "ur_PK", ai: true },
   ru: { prefix: "ru/", hreflang: "ru", dir: "ltr", name: "Русский", intl: "ru-RU-u-nu-latn", og: "ru_RU", ai: true },
