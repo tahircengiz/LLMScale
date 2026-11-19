@@ -4,6 +4,7 @@ import type { PageText } from "./types.ts";
 
 const zh: PageText = {
   section: { models: "模型", gpus: "GPU", concepts: "概念", feed: "动态", crumbs: "面包屑导航" },
+  join: { sentence: "", list: "、", colon: "：" },
 
   model: {
     attention: {

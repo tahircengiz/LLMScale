@@ -112,7 +112,7 @@ function modelPage(lang: Lang, m: KnownModel): string {
     m.isMoE && m.activeParams ? T.lede.moe({ active: params(lang, m.activeParams), total: params(lang, m.numParams) }) : "",
     T.lede.context({ max: int(lang, max), kv: gib(lang, kvAtMax) }),
     m.gated ? T.lede.gated : "",
-  ].filter(Boolean).join(" ");
+  ].filter(Boolean).join(P.join.sentence);
 
   const table = `<div class="scroll"><table>
 <thead><tr><th scope="col">${T.thPrecision}</th>${contexts.map((c) => `<th scope="col">${T.ctx(ctxK(c))}</th>`).join("")}</tr></thead>
@@ -131,9 +131,9 @@ function modelPage(lang: Lang, m: KnownModel): string {
     // Not a card vLLM 0.31 does not run on (V100, audit F2).
     const holding = ALL_BY_SIZE.filter((g) => !g.noVllm && needOn(input, g) <= usableGiB(g)).slice(0, 4);
     const label = `<strong>${LABEL[d]}</strong> (${gib(lang, need)})`;
-    if (holding.length) return `<li>${label}: ${holding.map((g) => gpuLink(lang, g)).join(", ")}</li>`;
-    const counts = MULTI_CARDS.map((g) => `${cardsFor(input, g) ?? "—"}× ${gpuLink(lang, g)}`).join(", ");
-    return `<li>${label}: ${T.noSingleGpu(counts)}</li>`;
+    if (holding.length) return `<li>${label}${P.join.colon}${holding.map((g) => gpuLink(lang, g)).join(P.join.list)}</li>`;
+    const counts = MULTI_CARDS.map((g) => `${cardsFor(input, g) ?? "—"}× ${gpuLink(lang, g)}`).join(P.join.list);
+    return `<li>${label}${P.join.colon}${T.noSingleGpu(counts)}</li>`;
   }).join("");
 
   const users = USER_CARDS.map((g) => ({
@@ -242,7 +242,7 @@ function gpuPage(lang: Lang, g: Gpu): string {
     g.bandwidthGBs ? T.lede.bandwidth(int(lang, g.bandwidthGBs)) : "",
     g.vendor === "Apple" ? T.lede.apple : "",
     T.lede.counts({ models: rows.length, bf16: count(0), fp8: count(1), int4: count(2) }),
-  ].filter(Boolean).join(" ");
+  ].filter(Boolean).join(P.join.sentence);
 
   const cell = (fitsHere: boolean, v: number) =>
     fitsHere ? `<td class="ok">${gib(lang, v)}</td>` : `<td><span class="no">${gib(lang, v)}</span><span class="sr">${T.doesNotFit}</span></td>`;

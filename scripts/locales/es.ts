@@ -4,6 +4,7 @@ import type { PageText } from "./types.ts";
 
 const es: PageText = {
   section: { models: "Modelos", gpus: "GPU", concepts: "Conceptos", feed: "Novedades", crumbs: "Ruta de navegación" },
+  join: { sentence: " ", list: ", ", colon: ": " },
 
   model: {
     attention: {

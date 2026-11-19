@@ -266,8 +266,19 @@ export interface ConceptsText {
   };
 }
 
+/** How the language strings the generators' pieces together: between two of its
+ *  sentences, between the items of a list, and after a list item's label. Chinese
+ *  runs sentences on without a space and separates items, Latin names too, with
+ *  、 ("vLLM、SGLang、TGI", docs/i18n/glossary/zh.md). */
+export interface JoinText {
+  sentence: string;
+  list: string;
+  colon: string;
+}
+
 export interface PageText {
   section: SectionText;
+  join: JoinText;
   model: ModelPageText;
   gpu: GpuPageText;
   hubs: HubsText;
