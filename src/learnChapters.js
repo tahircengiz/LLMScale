@@ -14,7 +14,8 @@ export const CH = [
       zh:{e:"01 · 提示", h:"一切从一个<em>句子</em>开始", p:"你把一段文本交给模型：<b>“The cat sat on the mat.”</b>它不会逐个读字母，而是准备把文本看成一个个有意义的片段。"},
       fr:{e:"01 · PROMPT", h:"Tout commence par une <em>phrase</em>", p:"Vous donnez un texte au modèle : <b>« The cat sat on the mat. »</b> Il ne lira pas de lettres — il se prépare à y voir des fragments porteurs de sens."},
       pt:{e:"01 · PROMPT", h:"Tudo começa com uma <em>frase</em>", p:"Você entrega um texto ao modelo: <b>“The cat sat on the mat.”</b> Ele não lê letras — se prepara para ver pedaços com significado."},
-      id:{e:"01 · PROMPT", h:"Semuanya dimulai dari sebuah <em>kalimat</em>", p:"Anda memberikan teks kepada model: <b>“The cat sat on the mat.”</b> Model tidak membaca huruf — ia bersiap melihat potongan-potongan yang bermakna."} } },
+      id:{e:"01 · PROMPT", h:"Semuanya dimulai dari sebuah <em>kalimat</em>", p:"Anda memberikan teks kepada model: <b>“The cat sat on the mat.”</b> Model tidak membaca huruf — ia bersiap melihat potongan-potongan yang bermakna."},
+      bn:{e:"01 · প্রম্পট", h:"শুরু হয় একটি <em>বাক্য</em> দিয়ে", p:"আপনি মডেলকে টেক্সট দেন: <b>“The cat sat on the mat.”</b> মডেল অক্ষর পড়বে না — সে অর্থপূর্ণ টুকরো দেখার জন্য তৈরি হয়।"} } },
   { id:"token", cam:[0,0,8], look:[0,0,0], layout:"row", spin:false, edges:0, axes:0, planes:0, field:0, loop:0, ids:true,
     text:{
       en:{e:"02 · TOKENIZATION", h:'Text is split into <em>tokens</em>', p:'The sentence is chopped into pieces, each mapped to a number (<b>ID</b>). From here the model works in numbers, not words.'},
@@ -24,7 +25,8 @@ export const CH = [
       zh:{e:"02 · 分词", h:"文本被切分成 <em>token</em>", p:"句子被切成若干片段，每个片段映射为一个数字（<b>ID</b>）。从这里开始，模型处理的是数字，而不是词。"},
       fr:{e:"02 · TOKENISATION", h:"Le texte est divisé en <em>jetons</em>", p:"La phrase est découpée en fragments, chacun associé à un nombre (<b>ID</b>). À partir de là, le modèle travaille avec des nombres, pas avec des mots."},
       pt:{e:"02 · TOKENIZAÇÃO", h:"O texto é dividido em <em>tokens</em>", p:"A frase é cortada em pedaços, e cada um é associado a um número (<b>ID</b>). Daqui em diante, o modelo trabalha com números, não com palavras."},
-      id:{e:"02 · TOKENISASI", h:"Teks dipecah menjadi <em>token</em>", p:"Kalimat dipotong menjadi beberapa bagian, dan masing-masing dipetakan ke sebuah angka (<b>ID</b>). Mulai dari sini, model bekerja dengan angka, bukan kata."} } },
+      id:{e:"02 · TOKENISASI", h:"Teks dipecah menjadi <em>token</em>", p:"Kalimat dipotong menjadi beberapa bagian, dan masing-masing dipetakan ke sebuah angka (<b>ID</b>). Mulai dari sini, model bekerja dengan angka, bukan kata."},
+      bn:{e:"02 · টোকেনাইজেশন", h:"টেক্সট <em>টোকেনে</em> ভাগ হয়", p:"বাক্যটিকে টুকরো টুকরো করা হয়, আর প্রতিটি টুকরোকে একটি সংখ্যার (<b>ID</b>) সাথে মেলানো হয়। এখান থেকে মডেল শব্দ নয়, সংখ্যা নিয়ে কাজ করে।"} } },
   { id:"embed", cam:[0.4,0.6,9.4], look:[0,0,0], layout:"scatter", spin:true, edges:0, axes:1, planes:0, field:0, loop:0, ids:true,
     text:{
       en:{e:"03 · EMBEDDING", h:'Each token becomes a <em>vector</em>', p:'Every ID turns into a point in a high-dimensional <b>meaning space</b>. Similar meanings land close together.'},
@@ -34,7 +36,8 @@ export const CH = [
       zh:{e:"03 · 嵌入", h:"每个 token 变成一个<em>向量</em>", p:"每个 ID 都变成高维<b>语义空间</b>中的一个点。意思相近的，位置也相近。"},
       fr:{e:"03 · EMBEDDING", h:"Chaque jeton devient un <em>vecteur</em>", p:"Chaque ID devient un point dans un <b>espace sémantique</b> de grande dimension. Les significations voisines se retrouvent proches les unes des autres."},
       pt:{e:"03 · EMBEDDING", h:"Cada token vira um <em>vetor</em>", p:"Cada ID se transforma em um ponto de um <b>espaço de significado</b> de alta dimensão. Significados parecidos ficam perto uns dos outros."},
-      id:{e:"03 · EMBEDDING", h:"Setiap token menjadi sebuah <em>vektor</em>", p:"Setiap ID berubah menjadi sebuah titik dalam <b>ruang makna</b> berdimensi tinggi. Makna yang mirip berada berdekatan."} } },
+      id:{e:"03 · EMBEDDING", h:"Setiap token menjadi sebuah <em>vektor</em>", p:"Setiap ID berubah menjadi sebuah titik dalam <b>ruang makna</b> berdimensi tinggi. Makna yang mirip berada berdekatan."},
+      bn:{e:"03 · এম্বেডিং", h:"প্রতিটি টোকেন একটি <em>ভেক্টর</em> হয়ে যায়", p:"প্রতিটি ID বহুমাত্রিক একটি <b>অর্থের স্পেসে</b> একটি বিন্দুতে পরিণত হয়। কাছাকাছি অর্থগুলো একে অপরের কাছাকাছি এসে পড়ে।"} } },
   { id:"attention", cam:[0,0,9], look:[0,0,0], layout:"scatter", spin:false, edges:1, axes:0, planes:0, field:0, loop:0, ids:false, attn:true,
     text:{
       en:{e:"04 · ATTENTION", h:'Tokens <em>look at each other</em>', p:'Each token computes <b>how much to attend</b> to the others. With a causal mask, a token only looks at the ones before it.'},
@@ -44,7 +47,8 @@ export const CH = [
       zh:{e:"04 · 注意力", h:"各个 token <em>相互关注</em>", p:"每个 token 计算自己应对其他 token <b>投入多少注意力</b>。在因果掩码下，一个 token 只能看到它之前的 token。"},
       fr:{e:"04 · ATTENTION", h:"Les jetons <em>se regardent entre eux</em>", p:"Chaque jeton calcule <b>quelle attention accorder</b> aux autres. Avec un masque causal, un jeton ne regarde que ceux qui le précèdent."},
       pt:{e:"04 · ATENÇÃO", h:"Os tokens <em>olham uns para os outros</em>", p:"Cada token calcula <b>quanta atenção dar</b> aos outros. Com uma máscara causal, um token só olha para os que vêm antes dele."},
-      id:{e:"04 · PERHATIAN", h:"Token <em>saling memperhatikan</em>", p:"Setiap token menghitung <b>seberapa besar perhatian</b> yang harus diberikannya kepada token lain. Dengan causal mask, sebuah token hanya melihat token-token sebelumnya."} } },
+      id:{e:"04 · PERHATIAN", h:"Token <em>saling memperhatikan</em>", p:"Setiap token menghitung <b>seberapa besar perhatian</b> yang harus diberikannya kepada token lain. Dengan causal mask, sebuah token hanya melihat token-token sebelumnya."},
+      bn:{e:"04 · অ্যাটেনশন", h:"টোকেনগুলো <em>একে অপরের দিকে তাকায়</em>", p:"প্রতিটি টোকেন হিসাব করে অন্যগুলোর প্রতি তাকে <b>কতটা মনোযোগ দিতে হবে</b>। একটি causal mask থাকায় কোনো টোকেন কেবল তার আগের টোকেনগুলোর দিকেই তাকায়।"} } },
   { id:"layers", cam:[0,1.7,10.6], look:[0,-0.3,0], layout:"scatter", spin:false, edges:1, axes:0, planes:1, field:0, loop:0, ids:false,
     text:{
       en:{e:"05 · LAYERS", h:'The same block, <em>stacked deep</em>', p:'Attention + feed-forward repeats, stacked dozens deep (e.g. <b>×32</b>). Every pass refines the representation.'},
@@ -54,7 +58,8 @@ export const CH = [
       zh:{e:"05 · 层", h:"同样的模块，<em>层层堆叠</em>", p:"注意力 + 前馈层不断重复，堆叠数十层（例如 <b>×32</b>）。每经过一层，表示就被进一步细化。"},
       fr:{e:"05 · COUCHES", h:"Le même bloc, <em>empilé en profondeur</em>", p:"Attention + couche feedforward : le bloc se répète, empilé des dizaines de fois (par exemple <b>×32</b>). Chaque passage affine la représentation."},
       pt:{e:"05 · CAMADAS", h:"O mesmo bloco, <em>empilhado em profundidade</em>", p:"Atenção + feed-forward se repetem, empilhados dezenas de vezes (ex.: <b>×32</b>). Cada passada refina a representação."},
-      id:{e:"05 · LAPISAN", h:"Blok yang sama, <em>ditumpuk dalam-dalam</em>", p:"Perhatian + feed-forward berulang, ditumpuk hingga puluhan lapis (mis. <b>×32</b>). Setiap lintasan menyempurnakan representasinya."} } },
+      id:{e:"05 · LAPISAN", h:"Blok yang sama, <em>ditumpuk dalam-dalam</em>", p:"Perhatian + feed-forward berulang, ditumpuk hingga puluhan lapis (mis. <b>×32</b>). Setiap lintasan menyempurnakan representasinya."},
+      bn:{e:"05 · লেয়ার", h:"একই ব্লক, <em>অনেক গভীর পর্যন্ত সাজানো</em>", p:"অ্যাটেনশন + ফিড-ফরোয়ার্ড ব্লকটি বারবার আসে, কয়েক ডজন বার একের ওপর এক সাজানো (যেমন <b>×32</b>)। প্রতিটি ধাপ উপস্থাপনাকে আরও নিখুঁত করে।"} } },
   { id:"predict", cam:[-1.6,0.4,7.8], look:[0.4,0,0], layout:"scatter", spin:false, edges:1, axes:0, planes:0, field:0, loop:0, ids:false, bars:true,
     text:{
       en:{e:"06 · PREDICTION", h:'The next most <em>likely</em> token', p:'The final layer scores the entire vocabulary into a <b>probability distribution</b>. The top token is picked (or sampled).'},
@@ -64,7 +69,8 @@ export const CH = [
       zh:{e:"06 · 预测", h:"下一个<em>最可能</em>的 token", p:"最后一层为整个词汇表打分，得到一个<b>概率分布</b>。概率最高的 token 被选中（或通过采样选出）。"},
       fr:{e:"06 · PRÉDICTION", h:"Le prochain jeton le plus <em>probable</em>", p:"La dernière couche attribue un score à tout le vocabulaire pour en tirer une <b>distribution de probabilité</b>. Le jeton en tête est choisi (ou échantillonné)."},
       pt:{e:"06 · PREVISÃO", h:"O próximo token mais <em>provável</em>", p:"A última camada pontua todo o vocabulário e o transforma em uma <b>distribuição de probabilidade</b>. O token do topo é escolhido (ou amostrado)."},
-      id:{e:"06 · PREDIKSI", h:"Token berikutnya yang paling <em>mungkin</em>", p:"Lapisan terakhir memberi skor pada seluruh kosakata dan mengubahnya menjadi <b>distribusi probabilitas</b>. Token teratas dipilih (atau diambil melalui sampling)."} } },
+      id:{e:"06 · PREDIKSI", h:"Token berikutnya yang paling <em>mungkin</em>", p:"Lapisan terakhir memberi skor pada seluruh kosakata dan mengubahnya menjadi <b>distribusi probabilitas</b>. Token teratas dipilih (atau diambil melalui sampling)."},
+      bn:{e:"06 · পূর্বাভাস", h:"পরের সবচেয়ে <em>সম্ভাব্য</em> টোকেন", p:"শেষ লেয়ার পুরো ভোকাবুলারিকে স্কোর করে একটি <b>সম্ভাবনা বণ্টনে</b> পরিণত করে। সবচেয়ে ওপরের টোকেনটি বেছে নেওয়া হয় (অথবা স্যাম্পল করা হয়)।"} } },
   { id:"loop", cam:[0,0.2,10], look:[0,0,0], layout:"scatter", spin:false, edges:1, axes:0, planes:0, field:0, loop:1, ids:false,
     text:{
       en:{e:"07 · AUTOREGRESSION", h:'The prediction <em>feeds back</em>', p:'The chosen token is appended and the whole process runs <b>again</b>. Word by word, that’s how text is generated.'},
@@ -74,7 +80,8 @@ export const CH = [
       zh:{e:"07 · 自回归", h:"预测结果被<em>送回输入</em>", p:"选中的 token 被追加到末尾，整个过程<b>再次</b>运行。文本就是这样一个词一个词生成的。"},
       fr:{e:"07 · AUTORÉGRESSION", h:"La prédiction <em>est réinjectée</em>", p:"Le jeton choisi est ajouté à la suite, et tout le processus s'exécute <b>à nouveau</b>. Mot après mot, c'est ainsi que le texte est généré."},
       pt:{e:"07 · AUTORREGRESSÃO", h:"A previsão <em>volta como entrada</em>", p:"O token escolhido é acrescentado ao final, e todo o processo roda <b>de novo</b>. Palavra por palavra, é assim que o texto é gerado."},
-      id:{e:"07 · AUTOREGRESI", h:"Prediksi <em>diumpankan kembali</em>", p:"Token yang dipilih ditambahkan di akhir, lalu seluruh proses berjalan <b>lagi</b>. Kata demi kata, begitulah teks dihasilkan."} } },
+      id:{e:"07 · AUTOREGRESI", h:"Prediksi <em>diumpankan kembali</em>", p:"Token yang dipilih ditambahkan di akhir, lalu seluruh proses berjalan <b>lagi</b>. Kata demi kata, begitulah teks dihasilkan."},
+      bn:{e:"07 · অটোরিগ্রেশন", h:"পূর্বাভাস <em>আবার ইনপুটে ফেরে</em>", p:"বেছে নেওয়া টোকেনটি শেষে যোগ করা হয় এবং পুরো প্রক্রিয়াটি <b>আবার</b> চলে। শব্দের পর শব্দ, এভাবেই টেক্সট তৈরি হয়।"} } },
   { id:"scale", cam:[0,0,17], look:[0,0,0], layout:"scatter", spin:true, edges:1, axes:0, planes:0, field:1, loop:0, ids:false, cta:true,
     text:{
       en:{e:"08 · SCALE", h:'Now at <em>billions</em>-scale', p:'This tiny network is really <b>billions of parameters</b> — which is exactly why VRAM matters. Does your model fit a GPU?'},
@@ -84,7 +91,8 @@ export const CH = [
       zh:{e:"08 · 规模", h:"放大到<em>数十亿</em>规模", p:"这个小小的网络，实际上有<b>数十亿个参数</b>——这正是显存如此重要的原因。你的模型放得进 GPU 吗？"},
       fr:{e:"08 · ÉCHELLE", h:"Maintenant, à l'échelle des <em>milliards</em>", p:"Ce minuscule réseau compte en réalité des <b>milliards de paramètres</b> — et c'est justement pour cela que la VRAM est importante. Votre modèle tient-il sur un GPU ?"},
       pt:{e:"08 · ESCALA", h:"Agora, na escala de <em>bilhões</em>", p:"Na verdade, esta rede minúscula tem <b>bilhões de parâmetros</b> — e é exatamente por isso que a VRAM importa. Seu modelo cabe em uma GPU?"},
-      id:{e:"08 · SKALA", h:"Kini dalam skala <em>miliaran</em>", p:"Jaringan kecil ini sebenarnya berisi <b>miliaran parameter</b> — itulah sebabnya VRAM penting. Apakah model Anda muat di sebuah GPU?"} } },
+      id:{e:"08 · SKALA", h:"Kini dalam skala <em>miliaran</em>", p:"Jaringan kecil ini sebenarnya berisi <b>miliaran parameter</b> — itulah sebabnya VRAM penting. Apakah model Anda muat di sebuah GPU?"},
+      bn:{e:"08 · স্কেল", h:"এবার <em>বিলিয়নের</em> মাপে", p:"এই ছোট্ট নেটওয়ার্কটি আসলে <b>বহু বিলিয়ন প্যারামিটার</b> — ঠিক এ কারণেই VRAM গুরুত্বপূর্ণ। আপনার মডেল কি একটি GPU-তে ধরে?"} } },
 ];
 
 // The page's other words, by language: learn.html marks where each goes with
@@ -154,5 +162,13 @@ export const UI = {
     scrollHint: "GULIR ↓",
     attnHint: "⊹ arahkan kursor ke simpul · nyalakan/matikan head · klik untuk memicu",
     cta: "→ Hitung VRAM-nya di LLMScale",
+  },
+  bn: {
+    kicker: "// একটি ভাষা মডেল, নক্ষত্রমণ্ডল হিসেবে",
+    sub: "একটি বাক্য নোডের এক নক্ষত্রমণ্ডলে পরিণত হয়। টেনে আনুন, স্পর্শ করুন, ফায়ার করুন — তারপর স্ক্রল করে ভেতরে যান।",
+    hint: "⊹ টানুন · হোভার · ক্লিক · স্ক্রল",
+    scrollHint: "স্ক্রল করুন ↓",
+    attnHint: "⊹ নোডে হোভার করুন · হেড চালু/বন্ধ · ক্লিক করে ফায়ার",
+    cta: "→ LLMScale-এ VRAM হিসাব করুন",
   },
 };
