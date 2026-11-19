@@ -7,7 +7,8 @@ import en from "./en.ts";
 import tr from "./tr.ts";
 import es from "./es.ts";
 import hi from "./hi.ts";
+import zh from "./zh.ts";
 
-export const DICTS: Record<Lang, Dict> = { en, tr, hi, es };
+export const DICTS: Record<Lang, Dict> = { en, tr, zh, hi, es };
 
 for (const lang of ENABLED_LANGS) setDict(lang, DICTS[lang]);
