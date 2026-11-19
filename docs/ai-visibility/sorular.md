@@ -1,7 +1,8 @@
 # AI görünürlüğü — hedef sorular
 
 Durum: **ONAYLI** (2026-11-01) — ölçüm dili EN; ilk ölçüm: [2026-11-01.md](2026-11-01.md). Dalga 1 dilleri (zh,
-hi, es) için aynı soruların çevirisi aşağıda; ilk ölçümleri: [2026-11-19.md](2026-11-19.md). Bu liste ölçümün sabit
+hi, es) için aynı soruların çevirisi aşağıda; ilk ölçümleri: [2026-11-19.md](2026-11-19.md). Dalga 2 dilleri (fr,
+pt, id, bn) için ikinci tablo; ilk ölçümleri: [2026-11-19-dalga2.md](2026-11-19-dalga2.md). Bu liste ölçümün sabit
 soru setidir: aynı sorular, aynı motorlar, ayda bir (`docs/ai-visibility/<YYYY-MM-DD>.md`). Soru değişirse eski
 ölçümlerle karşılaştırma bozulur; yeni soru eklemek serbest, eskisini değiştirmek yerine yenisini ekle.
 
@@ -49,6 +50,30 @@ görünürlüğünü ölçer; her dil ayrı satır sayılır.
 | 12 | 要以每秒 10 个请求、首 token 延迟 2 秒的目标提供服务，需要多少张 GPU？ | 2 सेकंड के time-to-first-token लक्ष्य के साथ प्रति सेकंड 10 requests serve करने के लिए कितने GPU चाहिए? | ¿Cuántas GPU necesito para atender 10 solicitudes por segundo con un objetivo de 2 segundos de tiempo hasta el primer token? |
 | 13 | DeepSeek 的多头潜在注意力（MLA）如何减少 KV 缓存占用的内存？ | DeepSeek का multi-head latent attention KV cache मेमोरी को कैसे कम करता है? | ¿Cómo reduce la multi-head latent attention de DeepSeek la memoria de la caché KV? |
 | 14 | 做代码助手，Qwen2.5-Coder-7B 和 Qwen2.5-7B-Instruct 相比哪个更合适？ | कोडिंग असिस्टेंट के लिए Qwen2.5-Coder-7B, Qwen2.5-7B-Instruct की तुलना में कितना उपयुक्त है? | Para un asistente de programación, ¿es Qwen2.5-Coder-7B mejor opción que Qwen2.5-7B-Instruct? |
+
+## Dalga 2 dilleri (fr, pt, id, bn)
+
+Aynı 14 soru, anlamı değiştirilmeden çevrildi (2026-11-19); "#" ilk tabloyla aynı soru. Çevirileri Claude yaptı, ana
+dili bu diller olan biri kontrol etmedi. Portekizce sorular Brezilya Portekizcesi (D7). Fransızca sorularda soru
+işaretinden önce, klavyeden yazan birinin yapacağı gibi düz boşluk var. Bengalce sorularda teknik terimlerin bir kısmı
+(fine-tune, dense, time-to-first-token, multi-head latent attention) Latin harfle bırakıldı; Hintçe sorulardaki gibi.
+
+| # | fr | pt | id | bn |
+|---|---|---|---|---|
+| 1 | Combien de VRAM faut-il à Llama 3.3 70B en FP8 avec un contexte de 32k ? | Quanta VRAM o Llama 3.3 70B precisa em FP8 com um contexto de 32k? | Berapa VRAM yang dibutuhkan Llama 3.3 70B dalam FP8 dengan konteks 32k? | 32k কনটেক্সটে FP8-এ Llama 3.3 70B চালাতে কত VRAM লাগে? |
+| 2 | Puis-je faire tourner un modèle 70B sur deux GPU de 24 Go, comme deux RTX 4090 ? | Consigo rodar um modelo de 70B em duas GPUs de 24 GB, como duas RTX 4090? | Bisakah saya menjalankan model 70B di dua GPU 24 GB, seperti dua RTX 4090? | দুটি 24 GB GPU-তে (যেমন দুটি RTX 4090) কি আমি একটি 70B মডেল চালাতে পারব? |
+| 3 | Combien d'utilisateurs simultanés un seul H100 peut-il servir avec un modèle 8B et un contexte de 8k ? | Quantos usuários simultâneos uma única H100 consegue atender com um modelo de 8B e um contexto de 8k? | Berapa banyak pengguna bersamaan yang bisa dilayani satu H100 untuk model 8B dengan konteks 8k? | 8k কনটেক্সটে একটি 8B মডেলের জন্য একটি H100 একসাথে কতজন ব্যবহারকারীকে সার্ভ করতে পারে? |
+| 4 | Quelle est la taille du cache KV pour un contexte de 128k tokens, et comment la calculer ? | Qual é o tamanho do cache KV para um contexto de 128k tokens e como calculá-lo? | Seberapa besar KV cache untuk konteks 128k token, dan bagaimana cara menghitungnya? | 128k টোকেনের কনটেক্সটের জন্য KV ক্যাশ কত বড় হয়, আর এটা কীভাবে হিসাব করব? |
+| 5 | Les modèles Mixture-of-Experts comme Qwen3-30B-A3B ont-ils besoin de moins de mémoire GPU que les modèles denses ? | Modelos Mixture-of-Experts como o Qwen3-30B-A3B precisam de menos memória de GPU que modelos densos? | Apakah model Mixture-of-Experts seperti Qwen3-30B-A3B membutuhkan memori GPU lebih sedikit daripada model dense? | Qwen3-30B-A3B-এর মতো Mixture-of-Experts মডেলে কি dense মডেলের চেয়ে কম GPU মেমরি লাগে? |
+| 6 | Combien de mémoire GPU me faut-il pour le fine-tuning d'un modèle 8B avec QLoRA, comparé à LoRA ? | Quanta memória de GPU eu preciso para fazer fine-tuning de um modelo de 8B com QLoRA em comparação com LoRA? | Berapa memori GPU yang saya butuhkan untuk fine-tuning model 8B dengan QLoRA dibandingkan LoRA? | QLoRA আর LoRA দিয়ে একটি 8B মডেল fine-tune করতে কত GPU মেমরি লাগে? |
+| 7 | Puis-je faire un fine-tuning complet d'un modèle 7B sur un seul GPU de 80 Go ? | Consigo fazer um fine-tuning completo de um modelo de 7B em uma única GPU de 80 GB? | Bisakah saya melakukan full fine-tuning model 7B di satu GPU 80 GB? | একটি মাত্র 80 GB GPU-তে কি 7B মডেলের full fine-tune করা যায়? |
+| 8 | Quels LLM tiennent sur une RTX 5090 de 32 Go ? | Quais LLMs cabem em uma RTX 5090 de 32 GB? | LLM apa saja yang muat di RTX 5090 32 GB? | 32 GB-র RTX 5090-এ কোন কোন LLM ধরবে? |
+| 9 | Un Mac avec 128 Go de mémoire unifiée peut-il faire tourner un modèle 70B ? | Um Mac com 128 GB de memória unificada consegue rodar um modelo de 70B? | Apakah Mac dengan memori terpadu 128 GB bisa menjalankan model 70B? | 128 GB ইউনিফায়েড মেমরির একটি Mac কি 70B মডেল চালাতে পারে? |
+| 10 | À quelle vitesse une RTX 5090 génère-t-elle des tokens par rapport à une L40S, pour le même modèle ? | Quão rápido uma RTX 5090 gera tokens em comparação com uma L40S para o mesmo modelo? | Seberapa cepat RTX 5090 menghasilkan token dibandingkan L40S untuk model yang sama? | একই মডেলে L40S-এর তুলনায় RTX 5090 কত দ্রুত টোকেন তৈরি করবে? |
+| 11 | Quelles valeurs de --gpu-memory-utilization et --max-model-len dois-je définir dans vLLM pour mon modèle et mon GPU ? | Quais valores de --gpu-memory-utilization e --max-model-len devo definir no vLLM para o meu modelo e a minha GPU? | Berapa nilai --gpu-memory-utilization dan --max-model-len yang harus saya atur di vLLM untuk model dan GPU saya? | আমার মডেল আর GPU-র জন্য vLLM-এ --gpu-memory-utilization আর --max-model-len কত সেট করা উচিত? |
+| 12 | Combien de GPU me faut-il pour servir 10 requêtes par seconde avec un objectif de 2 secondes pour le temps jusqu'au premier token ? | Quantas GPUs eu preciso para atender 10 requisições por segundo com uma meta de 2 segundos de tempo até o primeiro token? | Berapa GPU yang saya butuhkan untuk melayani 10 permintaan per detik dengan target time-to-first-token 2 detik? | 2 সেকেন্ডের time-to-first-token লক্ষ্য রেখে প্রতি সেকেন্ডে 10টি রিকোয়েস্ট সার্ভ করতে কয়টি GPU লাগবে? |
+| 13 | Comment la multi-head latent attention de DeepSeek réduit-elle la mémoire du cache KV ? | Como a multi-head latent attention do DeepSeek reduz a memória do cache KV? | Bagaimana multi-head latent attention milik DeepSeek mengurangi memori KV cache? | DeepSeek-এর multi-head latent attention কীভাবে KV ক্যাশের মেমরি কমায়? |
+| 14 | Pour un assistant de programmation, Qwen2.5-Coder-7B est-il un meilleur choix que Qwen2.5-7B-Instruct ? | Para um assistente de programação, o Qwen2.5-Coder-7B é uma opção melhor que o Qwen2.5-7B-Instruct? | Untuk asisten pemrograman, apakah Qwen2.5-Coder-7B lebih cocok dibandingkan Qwen2.5-7B-Instruct? | কোডিং অ্যাসিস্ট্যান্টের জন্য Qwen2.5-Coder-7B কি Qwen2.5-7B-Instruct-এর চেয়ে বেশি উপযুক্ত? |
 
 ## Onaylarken bak
 
