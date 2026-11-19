@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-Hans" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RTX A6000 放得下哪些 LLM？ | LLMScale</title>
+<meta name="description" content="RTX A6000（可用 43.73 GiB）放得下哪些开放 LLM：31 个热门模型中，INT4 下 23 个、BF16 下 16 个放得下，并给出每个模型的并发用户数和最大上下文。">
+<link rel="canonical" href="https://tahircengiz.github.io/LLMScale/zh/gpus/a6000-48.html">
+<link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/gpus/a6000-48.html">
+<link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/gpus/a6000-48.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://tahircengiz.github.io/LLMScale/zh/gpus/a6000-48.html">
+<link rel="alternate" hreflang="hi" href="https://tahircengiz.github.io/LLMScale/hi/gpus/a6000-48.html">
+<link rel="alternate" hreflang="es" href="https://tahircengiz.github.io/LLMScale/es/gpus/a6000-48.html">
+<link rel="alternate" hreflang="fr" href="https://tahircengiz.github.io/LLMScale/fr/gpus/a6000-48.html">
+<link rel="alternate" hreflang="pt" href="https://tahircengiz.github.io/LLMScale/pt/gpus/a6000-48.html">
+<link rel="alternate" hreflang="id" href="https://tahircengiz.github.io/LLMScale/id/gpus/a6000-48.html">
+<link rel="alternate" hreflang="bn" href="https://tahircengiz.github.io/LLMScale/bn/gpus/a6000-48.html">
+<link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/gpus/a6000-48.html">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Tahir Ali Cengiz">
+<link rel="icon" type="image/svg+xml" href="/LLMScale/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RTX A6000 放得下哪些 LLM？">
+<meta property="og:description" content="RTX A6000（可用 43.73 GiB）放得下哪些开放 LLM：31 个热门模型中，INT4 下 23 个、BF16 下 16 个放得下，并给出每个模型的并发用户数和最大上下文。">
+<meta property="og:url" content="https://tahircengiz.github.io/LLMScale/zh/gpus/a6000-48.html">
+<meta property="og:site_name" content="LLMScale">
+<meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale:alternate" content="tr_TR">
+<meta property="og:locale:alternate" content="hi_IN">
+<meta property="og:locale:alternate" content="es_ES">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta property="og:locale:alternate" content="id_ID">
+<meta property="og:locale:alternate" content="bn_BD">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RTX A6000 放得下哪些 LLM？">
+<meta name="twitter:description" content="RTX A6000（可用 43.73 GiB）放得下哪些开放 LLM：31 个热门模型中，INT4 下 23 个、BF16 下 16 个放得下，并给出每个模型的并发用户数和最大上下文。">
+<meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png">
+<script>try{var m=localStorage.getItem("theme");if(m!=="dark"&&m!=="light"&&m!=="glass")m=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"glass";if(m!=="dark")document.documentElement.classList.add(m)}catch(e){}</script>
+<script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+<style>:root{color-scheme:dark;--ink-950:#0e1013;--ink-900:#16181d;--ink-850:#1d2026;--ink-800:#262a31;--ink-700:#353a44;--c-white:#fff;--fg:#e4e7ec;--slate-300:#c1c6cf;--slate-400:#a1a7b2;--slate-500:#8a919d;--brand-400:#7eaaff;--brand-500:#4d8bff;--brand-600:#1f63e6;--accent-400:#29c48a;--accent-500:#3dc28c;--bad-c:#f26b6b;--onbrand:#fff;--bg:var(--ink-950);--card:var(--ink-900);--inset:var(--ink-850);--line:color-mix(in oklab,var(--c-white) 10%,transparent);--text:var(--fg);--muted:var(--slate-300);--faint:var(--slate-400);--brand:var(--brand-400);--button:var(--brand-600);--good:var(--accent-400);--bad:var(--bad-c)}
+.light{color-scheme:light;--ink-950:#eef1f5;--ink-900:#fff;--ink-850:#f5f7fa;--ink-800:#eaedf2;--ink-700:#d9dee6;--c-white:#121620;--fg:#121620;--slate-300:#343a46;--slate-400:#4a515e;--slate-500:#5c6471;--brand-400:#0a47b0;--brand-500:#0f62fe;--brand-600:#0f5be0;--accent-400:#0b6e4a;--accent-500:#0a8f62;--bad-c:#be212d}
+.glass{color-scheme:light;--ink-950:#e2e8f2;--ink-900:#fff;--ink-850:#f2f5fa;--ink-800:#e7ecf4;--ink-700:#ccd5e3;--c-white:#0d1422;--fg:#0d1422;--slate-300:#29324a;--slate-400:#333d58;--slate-500:#39445f;--brand-400:#0946b8;--brand-500:#0f62fe;--brand-600:#0f5be0;--accent-400:#03553a;--accent-500:#046443;--bad-c:#ad011e}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(1100px 620px at 18% -14%,rgba(77,139,255,.08),transparent 62%),var(--ink-950);color:var(--fg);font:400 1rem/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.glass body{background:radial-gradient(46% 42% at 8% 2%,rgba(47,107,255,.55) 0%,transparent 60%),radial-gradient(40% 40% at 96% 6%,rgba(111,179,255,.52) 0%,transparent 62%),radial-gradient(44% 44% at 84% 96%,rgba(19,176,170,.42) 0%,transparent 60%),radial-gradient(38% 38% at 6% 92%,rgba(142,166,212,.5) 0%,transparent 60%),radial-gradient(34% 30% at 50% 46%,rgba(169,212,255,.35) 0%,transparent 66%),var(--ink-950);background-attachment:fixed}
+a{color:var(--brand);text-underline-offset:2px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:start;vertical-align:top}
+thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
+th[scope=row]{font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.card{background:color-mix(in oklab,var(--ink-900) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);box-shadow:0 20px 25px -5px rgb(0 0 0/.3),0 8px 10px -6px rgb(0 0 0/.3)}
+.hdr{position:relative;z-index:40;border-bottom:1px solid var(--line);padding:.5rem 1rem}
+.hin{max-width:72rem;margin:0 auto}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem}
+.brand{display:flex;align-items:center;gap:.5rem;text-decoration:none}
+.brand img{width:28px;height:28px}
+.brand b{font-size:1.125rem;line-height:1.75rem;font-weight:700;letter-spacing:-.025em;color:var(--c-white)}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:.125rem .5rem;font-size:11px;line-height:1rem;font-weight:500;color:var(--accent-400);background:color-mix(in oklab,var(--accent-500) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--accent-500) 30%,transparent)}
+.ctrls{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.seg{display:flex;flex-shrink:0;gap:.25rem;border-radius:.75rem;background:var(--ink-850);padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}
+.seg a,.seg button{display:block;border:0;background:none;font:inherit;font-size:.75rem;line-height:1rem;font-weight:500;padding:.25rem .625rem;border-radius:.5rem;color:var(--slate-300);text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .15s,color .15s}
+.seg a:hover,.seg button:hover,.tab:hover{background:color-mix(in oklab,var(--c-white) 5%,transparent)}
+.seg [aria-pressed=true],.seg [aria-current=page],.tab[aria-current=page],.tab.on{background:var(--brand-600);color:var(--onbrand);box-shadow:0 1px 3px 0 rgb(0 0 0/.1),0 1px 2px -1px rgb(0 0 0/.1)}
+.pnav{margin-top:.5rem;display:flex;justify-content:center}
+.navpill{width:100%;border-radius:.75rem;background:var(--ink-850);padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}
+.tab{display:block;border:0;background:none;font:inherit;border-radius:.5rem;padding:.25rem .625rem;font-size:.875rem;line-height:1.25rem;font-weight:500;white-space:nowrap;color:var(--slate-300);text-decoration:none;cursor:pointer;transition:background-color .15s,color .15s}
+.mbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.mbar button,.trig{display:flex;align-items:center;gap:.375rem}
+.mbar svg,.trig svg{width:14px;height:14px;flex-shrink:0;transition:transform .2s}
+.mbar [aria-expanded=true] svg,.trig[aria-expanded=true] svg{transform:rotate(180deg)}
+#site-nav{display:none;flex-direction:column;gap:.5rem;margin-top:.25rem}
+#site-nav.open{display:flex}
+.grp{display:flex;flex-direction:column;gap:.25rem;border-top:1px solid var(--line);padding-top:.5rem}
+.grp:first-child{border-top:0;padding-top:0}
+.grp .row{display:flex;flex-wrap:wrap;gap:.25rem}
+.cap{margin:0;padding:0 .625rem .25rem;font-size:11px;line-height:1rem;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--slate-500)}
+.menus{display:none;position:relative;align-items:center;gap:.25rem}
+.menus .sep{height:1rem;width:1px;margin:0 .25rem;background:color-mix(in oklab,var(--c-white) 15%,transparent)}
+.trig .gn{opacity:.75}.trig .dot{opacity:.5}
+.panel{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);z-index:50;width:34rem;max-width:calc(100vw - 2rem);padding-top:.5rem}
+.panel.open{display:block}
+.pin{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.375rem;border-radius:.75rem;background:var(--ink-850);padding:.375rem;box-shadow:inset 0 0 0 1px var(--line),0 25px 50px -12px rgb(0 0 0/.25)}
+.panel .sec+.sec{margin-top:.375rem;border-top:1px solid var(--line);padding-top:.375rem}
+.panel a{display:block;border-radius:.5rem;padding:.375rem .75rem;text-decoration:none;transition:background-color .15s}
+.panel a.lit{background:color-mix(in oklab,var(--brand-600) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--brand-500) 50%,transparent)}
+.panel a.lit b{color:var(--brand-400)}
+.panel a[aria-current=page]{background:var(--brand-600);box-shadow:0 1px 3px 0 rgb(0 0 0/.1)}
+.panel a[aria-current=page] b{color:var(--onbrand)}
+.panel a[aria-current=page] span{color:color-mix(in oklab,var(--onbrand) 80%,transparent)}
+.panel b{display:block;font-size:.875rem;line-height:1.25rem;font-weight:500;color:var(--c-white)}
+.panel a span{display:block;margin-top:.125rem;font-size:.75rem;line-height:1.1rem;color:var(--slate-400)}
+.peek{border-radius:.5rem;background:color-mix(in oklab,var(--ink-900) 60%,transparent);padding:.75rem;box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--c-white) 5%,transparent)}
+.peek .cap{padding:0}
+.peek strong{display:block;margin-top:.375rem;font-size:.875rem;line-height:1.25rem;font-weight:600;letter-spacing:-.015em;color:var(--c-white)}
+.peek p.t{margin:.25rem 0 0;font-size:.75rem;line-height:1.6;color:var(--slate-300)}
+@media (min-width:640px){.hdr{padding-inline:1.5rem}.navpill{width:auto;max-width:100%}.mbar,#site-nav,#site-nav.open{display:none}.menus{display:flex}}
+.lmenu{position:relative;flex-shrink:0}
+.seg .ltrig{display:flex;align-items:center;gap:.375rem}
+.ltrig svg{width:14px;height:14px;flex-shrink:0}
+.ltrig svg.chev{width:12px;height:12px;transition:transform .2s}
+.ltrig[aria-expanded=true] svg.chev{transform:rotate(180deg)}
+.lpanel{display:none;position:absolute;top:100%;inset-inline-end:0;z-index:50;min-width:10rem;padding-top:.5rem}
+.lpanel.open{display:block}
+.lpanel ul{list-style:none;margin:0;border-radius:.75rem;background:var(--ink-850);padding:.375rem;box-shadow:inset 0 0 0 1px var(--line),0 25px 50px -12px rgb(0 0 0/.25)}
+.lpanel a{display:flex;align-items:center;justify-content:space-between;gap:.75rem;border-radius:.5rem;padding:.375rem .75rem;font-size:.875rem;line-height:1.25rem;font-weight:500;color:var(--c-white);text-decoration:none;white-space:nowrap;transition:background-color .15s}
+.lpanel a:hover{background:color-mix(in oklab,var(--c-white) 5%,transparent)}
+.lpanel a[aria-current=page]{background:var(--brand-600);color:var(--onbrand);box-shadow:0 1px 3px 0 rgb(0 0 0/.1),0 1px 2px -1px rgb(0 0 0/.1)}
+.lpanel a svg{width:14px;height:14px;flex-shrink:0}
+@media (max-width:360px){.seg a,.seg button{padding-inline:.375rem}.ctrls{gap:.375rem}}
+@media (scripting:none){#site-nav,#site-nav.open{display:flex}.mbar button,.menus{display:none}.lmenu>.seg{display:none}.lpanel{display:block;position:static;min-width:0;padding:0}.lpanel ul{display:flex;gap:.25rem;padding:.25rem;box-shadow:inset 0 0 0 1px var(--line)}.lpanel a{font-size:.75rem;line-height:1rem;padding:.25rem .625rem}.lpanel a svg{display:none}}
+.glass .card{background:rgba(255,255,255,.52);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.65);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),inset 0 -1px 0 0 rgba(255,255,255,.25),0 12px 32px -14px rgba(20,28,66,.42)}
+.glass .hdr{background:rgba(255,255,255,.46);-webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);border-bottom-color:rgba(255,255,255,.55)}
+.glass .navpill{background:rgba(255,255,255,.5);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.8)}
+.glass .pin,.glass .lpanel ul{background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:inset 0 1px 0 0 rgba(255,255,255,.85),0 18px 40px -16px rgba(20,28,66,.45)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.92)}}
+@media (prefers-reduced-transparency:reduce){.glass .card,.glass .hdr,.glass .navpill{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}}
+.theme-switching,.theme-switching *,.theme-switching *::before,.theme-switching *::after{transition:none!important}
+.fmain{max-width:72rem;margin:0 auto;padding:1.5rem 1rem 2rem}
+.ffoot{max-width:72rem;margin:0 auto;padding:1.5rem 1rem 5rem;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:.5rem;text-align:center;font-size:.875rem;color:var(--slate-400)}
+.ffoot .links,.ffoot nav{display:flex;flex-wrap:wrap;justify-content:center;gap:.25rem 1rem}
+.ffoot .links a{color:var(--slate-400);text-decoration:none}
+.ffoot .links a:hover{color:var(--brand)}
+.ffoot nav a{font-size:.75rem;font-weight:500;color:var(--brand);text-decoration:none}
+.ffoot nav a:hover{text-decoration:underline}
+.ffoot p{margin:0;font-size:.75rem;color:var(--slate-500)}
+.ffoot p a{color:inherit}
+.ffoot p a:hover{color:var(--brand)}
+@media (min-width:640px){.fmain{padding-inline:1.5rem}}
+.langsuggest{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;width:max-content;max-width:calc(100vw - 2rem);background:var(--ink-900);border:1px solid var(--line);border-radius:1rem;padding-block:.5rem;padding-inline:1rem .55rem;box-shadow:0 10px 30px rgb(0 0 0/.2);font-size:.875rem;color:var(--slate-300)}
+.langsuggest a{background:var(--brand-600);color:#fff;border-radius:.5rem;padding:.2rem .7rem;text-decoration:none;font-weight:500}
+.langsuggest button{background:none;border:0;color:var(--slate-400);cursor:pointer;padding:.2rem .5rem;border-radius:.5rem;font-size:1rem}
+.guide{max-width:54rem;margin:0 auto;padding:1.25rem 1.5rem 1.5rem;border-radius:1rem}
+.crumbs{font-size:.8125rem;color:var(--faint);margin:0 0 .6rem}
+.crumbs a{color:var(--faint)}
+.guide h1{font-size:clamp(1.55rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.015em;margin:0 0 .75rem;text-wrap:balance}
+.guide h2{font-size:1.15rem;line-height:1.3;letter-spacing:-.01em;margin:2.25rem 0 .6rem;text-wrap:balance}
+.guide p{margin:0 0 .9rem;max-width:68ch}
+.lede{color:var(--muted)}
+.answer{background:var(--inset);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.25rem;margin:1.25rem 0}
+.cap{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.big{font-size:2.1rem;font-weight:700;line-height:1.1;margin:.25rem 0 .45rem;font-variant-numeric:tabular-nums}
+.guide .answer p{margin:0;color:var(--muted);font-size:.9375rem}
+.spec{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;padding:0;margin:.85rem 0 0}
+.spec li{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:.05rem .6rem;font-size:.75rem;color:var(--muted)}
+/* positioned, so a table's screen-reader text (.sr, absolute) scrolls with it instead of widening the page */
+.scroll{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:.75rem;background:var(--inset)}
+.guide table{font-size:.875rem}
+.guide th,.guide td{padding:.5rem .75rem;border-bottom:1px solid var(--line);white-space:nowrap}
+.guide tbody tr:last-child>*{border-bottom:0}
+.guide thead th{background:var(--ink-800)}
+.guide td small{display:block;color:var(--faint);font-size:.75rem}
+.ok{color:var(--good);font-weight:600}
+.no{color:var(--bad)}
+.note{font-size:.8125rem;color:var(--faint);margin-top:.6rem}
+ul.plain{padding-inline-start:1.1rem;margin:0 0 .9rem}
+ul.plain li{margin:.3rem 0}
+.links{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;padding:0;margin:.4rem 0 0}
+.links a{display:inline-block;background:var(--inset);border:1px solid var(--line);border-radius:.75rem;padding:.35rem .75rem;text-decoration:none;font-size:.875rem}
+.links a:hover{border-color:var(--brand)}
+.links a.primary{background:var(--brand-600);border-color:transparent;color:var(--onbrand)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85em;background:var(--inset);padding:.05em .35em;border-radius:4px}
+pre{background:var(--inset);border:1px solid var(--line);border-radius:.6rem;padding:.75rem 1rem;overflow-x:auto;margin:0 0 .9rem;line-height:1.55}
+pre code{background:none;padding:0;font-size:.82rem;white-space:pre}
+code,pre{direction:ltr;unicode-bidi:isolate}
+@media (max-width:40rem){.guide{padding:1rem;margin-inline:-.25rem}}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/zh/"},{"@type":"ListItem","position":2,"name":"GPU","item":"https://tahircengiz.github.io/LLMScale/zh/gpus/"},{"@type":"ListItem","position":3,"name":"RTX A6000","item":"https://tahircengiz.github.io/LLMScale/zh/gpus/a6000-48.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"RTX A6000 放得下哪些 LLM？","inLanguage":"zh-Hans","url":"https://tahircengiz.github.io/LLMScale/zh/gpus/a6000-48.html","about":"RTX A6000","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/zh/"},"author":{"@type":"Person","name":"Tahir Ali Cengiz","url":"https://github.com/tahircengiz"},"dateModified":"2026-11-19T22:19:53+03:00"}</script>
+</head>
+<body>
+<header class="hdr"><div class="hin">
+<div class="hrow"><a class="brand" href="/LLMScale/zh/"><img src="/LLMScale/favicon.svg" alt="" width="28" height="28"><b>LLMScale</b><span class="badge">实时 Hugging Face 数据</span></a>
+<div class="ctrls"><div class="seg" role="group" aria-label="主题"><button type="button" data-theme-set="dark" aria-pressed="false">深色</button><button type="button" data-theme-set="light" aria-pressed="false">浅色</button><button type="button" data-theme-set="glass" aria-pressed="false">玻璃</button></div><div class="lmenu"><div class="seg"><button type="button" class="ltrig" aria-expanded="false" aria-controls="lang-menu" aria-label="语言：简体中文"><svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.25"/><path d="M1.75 8h12.5M8 1.75c1.7 1.75 2.55 3.83 2.55 6.25S9.7 12.5 8 14.25M8 1.75C6.3 3.5 5.45 5.58 5.45 8S6.3 12.5 8 14.25"/></svg><span>简体中文</span><svg class="chev" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button></div><div class="lpanel" id="lang-menu"><ul><li><a href="/LLMScale/gpus/a6000-48.html" hreflang="en" lang="en" dir="ltr" data-lang="en"><span>English</span></a></li><li><a href="/LLMScale/tr/gpus/a6000-48.html" hreflang="tr" lang="tr" dir="ltr" data-lang="tr"><span>Türkçe</span></a></li><li><a href="/LLMScale/zh/gpus/a6000-48.html" hreflang="zh-Hans" lang="zh-Hans" dir="ltr" data-lang="zh" aria-current="page"><span>简体中文</span><svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></a></li><li><a href="/LLMScale/hi/gpus/a6000-48.html" hreflang="hi" lang="hi" dir="ltr" data-lang="hi"><span>हिन्दी</span></a></li><li><a href="/LLMScale/es/gpus/a6000-48.html" hreflang="es" lang="es" dir="ltr" data-lang="es"><span>Español</span></a></li><li><a href="/LLMScale/fr/gpus/a6000-48.html" hreflang="fr" lang="fr" dir="ltr" data-lang="fr"><span>Français</span></a></li><li><a href="/LLMScale/pt/gpus/a6000-48.html" hreflang="pt" lang="pt" dir="ltr" data-lang="pt"><span>Português</span></a></li><li><a href="/LLMScale/id/gpus/a6000-48.html" hreflang="id" lang="id" dir="ltr" data-lang="id"><span>Bahasa Indonesia</span></a></li><li><a href="/LLMScale/bn/gpus/a6000-48.html" hreflang="bn" lang="bn" dir="ltr" data-lang="bn"><span>বাংলা</span></a></li></ul></div></div></div></div>
+<nav class="pnav" aria-label="LLMScale"><div class="navpill">
+<div class="mbar"><span class="tab on">GPU</span><button type="button" class="tab" aria-controls="site-nav" aria-expanded="false">菜单<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button></div>
+<div class="menus"><a class="tab" href="/LLMScale/zh/">显存估算</a><span class="sep" aria-hidden="true"></span><div class="menu"><button type="button" class="tab trig" aria-expanded="false" aria-controls="nm-model">模型<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button><div class="panel" id="nm-model"><div class="pin"><div><div class="sec"><a href="/LLMScale/zh/fit.html" data-more="选择一个模型和一项任务 — 聊天、代码、RAG、智能体、推理、视觉或嵌入 — 逐项查看模型声明的能力与任务的匹配程度。它评估的是调优方式、模态、规模和上下文，而不是回答质量。"><b>任务匹配</b><span>这个模型适合这项工作吗？</span></a><a href="/LLMScale/zh/compare.html" data-more="两到四个模型分列对比：参数、专家、上下文、许可证和基础模型、权重发布时的精度、每个 token 的 KV 缓存、8k token 单用户所需显存，以及各任务的适配度。"><b>模型对比</b><span>两到四个模型并排对比</span></a><a href="/LLMScale/zh/anatomy.html" data-more="一个模型的可视化 X 光片：参数如何分布在嵌入、注意力和前馈层或专家之间，各精度下的大小，注意力头如何共享显存，以及 KV 缓存如何增长。"><b>模型剖析</b><span>它的参数和显存都用在哪里</span></a><a href="/LLMScale/zh/config.html" data-more="用通俗语言解释模型 config.json 中的每个字段，包括它决定了什么 — 规模、上下文、每个 token 的 KV 缓存、注意力结构、专家和精度。每个答案都会指向它所依据的行。"><b>配置解读</b><span>用通俗语言解读它的 config.json</span></a><a href="/LLMScale/zh/decode.html" data-more="输入一个模型名称，查看每个部分的含义 — 规模、活跃参数、调优方式、量化、打包格式 — 按颜色标注并逐一解释。"><b>名称解读</b><span>模型名称里的 70B、A3B、AWQ 或 FP8 是什么意思</span></a></div><div class="sec"><a href="/LLMScale/zh/train.html" data-more="LoRA、QLoRA 或完全微调所需的 GPU 显存：权重、梯度、优化器状态和激活值，并列出装得下的 GPU。已对照 ZeRO 和 QLoRA 论文核验。"><b>微调</b><span>LoRA、QLoRA 与完全微调所需的显存</span></a></div></div><div class="peek"><p class="cap">这里有什么</p><strong>任务匹配</strong><p class="t">选择一个模型和一项任务 — 聊天、代码、RAG、智能体、推理、视觉或嵌入 — 逐项查看模型声明的能力与任务的匹配程度。它评估的是调优方式、模态、规模和上下文，而不是回答质量。</p></div></div></div></div><div class="menu"><button type="button" class="tab trig" aria-expanded="false" aria-controls="nm-serve">推理服务<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button><div class="panel" id="nm-serve"><div class="pin"><div><div class="sec"><a href="/LLMScale/zh/serving.html" data-more="仓库文件对推理服务说明了什么：聊天模板及其解析器、采样默认值和停止 token、从张量名称读出的量化方式、MTP 层，以及它们所需的 vLLM 和 SGLang 参数。"><b>推理服务简报</b><span>它的文件对推理服务说明了什么</span></a><a href="/LLMScale/zh/vllm.html" data-more="选择模型、GPU、上下文、优先目标和任务，得到一条 vllm serve 命令：每个参数都附有理由，同样的参数还可导出为 Kubernetes args。"><b>vLLM 参数</b><span>一条调优过的 vllm serve 命令</span></a><a href="/LLMScale/zh/plan.html" data-more="根据每秒请求数、提示和回复长度以及延迟目标，得出副本数、张量并行规模和 GPU 总数，以及限制每个副本的因素。"><b>容量规划</b><span>你的负载需要多少个 GPU</span></a><a href="/LLMScale/zh/gpu-compare.html" data-more="两到四个 GPU 分列对比，内容与其数据表一致：架构、核心、显存及其类型和带宽、稠密 BF16、FP8 和 FP4 算力、功耗、外形规格、两块之间的互连、MIG，以及在其上提供模型服务的引擎。"><b>GPU 对比</b><span>两到四个 GPU 的数据表并排对比</span></a></div></div><div class="peek"><p class="cap">这里有什么</p><strong>推理服务简报</strong><p class="t">仓库文件对推理服务说明了什么：聊天模板及其解析器、采样默认值和停止 token、从张量名称读出的量化方式、MTP 层，以及它们所需的 vLLM 和 SGLang 参数。</p></div></div></div></div><div class="menu"><button type="button" class="tab trig" aria-expanded="false" aria-controls="nm-learn">学习<svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button><div class="panel" id="nm-learn"><div class="pin"><div><div class="sec"><a href="/LLMScale/zh/learn.html" data-more="以交互动画逐步演示语言模型如何从一个句子得出下一个词：token、嵌入、注意力、层和采样。"><b>LLM 101</b><span>一步步了解语言模型如何工作</span></a><a href="/LLMScale/zh/feed/" data-more="关于新模型、推理引擎和硬件的简短文章，均注明来源；介绍某个模型的文章会说明运行它需要什么。由 AI 起草，经审核后发布。"><b>动态</b><span>新模型、推理引擎和硬件</span></a></div><div class="sec"><p class="cap">指南</p><a href="/LLMScale/zh/models/" data-more="每个热门模型一个页面：按精度和上下文列出显存需求、单个即可装下它的 GPU、可容纳的用户数，以及微调它需要什么。"><b>各模型的 VRAM 需求</b></a><a href="/LLMScale/zh/gpus/" data-more="每个常被搜索的 GPU 一个页面，从消费级显卡到数据中心和统一内存设备：哪些 LLM 能装进它，以什么精度和上下文。"><b>哪些 LLM 能放进哪款 GPU</b></a><a href="/LLMScale/zh/concepts/" data-more="三篇简短指南 — KV 缓存、注意力变体（GQA、MQA、MLA）和量化 — 附计算器使用的公式。"><b>LLM 显存是如何工作的</b></a></div></div><div class="peek"><p class="cap">这里有什么</p><strong>LLM 101</strong><p class="t">以交互动画逐步演示语言模型如何从一个句子得出下一个词：token、嵌入、注意力、层和采样。</p></div></div></div></div></div>
+<div id="site-nav"><div class="grp"><div class="row"><a class="tab" href="/LLMScale/zh/">显存估算</a></div></div><div class="grp"><p class="cap">模型</p><div class="row"><a class="tab" href="/LLMScale/zh/fit.html">任务匹配</a><a class="tab" href="/LLMScale/zh/compare.html">模型对比</a><a class="tab" href="/LLMScale/zh/anatomy.html">模型剖析</a><a class="tab" href="/LLMScale/zh/config.html">配置解读</a><a class="tab" href="/LLMScale/zh/decode.html">名称解读</a><a class="tab" href="/LLMScale/zh/train.html">微调</a></div></div><div class="grp"><p class="cap">推理服务</p><div class="row"><a class="tab" href="/LLMScale/zh/serving.html">推理服务简报</a><a class="tab" href="/LLMScale/zh/vllm.html">vLLM 参数</a><a class="tab" href="/LLMScale/zh/plan.html">容量规划</a><a class="tab" href="/LLMScale/zh/gpu-compare.html">GPU 对比</a></div></div><div class="grp"><p class="cap">学习</p><div class="row"><a class="tab" href="/LLMScale/zh/learn.html">LLM 101</a><a class="tab" href="/LLMScale/zh/feed/">动态</a><a class="tab" href="/LLMScale/zh/models/">各模型的 VRAM 需求</a><a class="tab" href="/LLMScale/zh/gpus/">哪些 LLM 能放进哪款 GPU</a><a class="tab" href="/LLMScale/zh/concepts/">LLM 显存是如何工作的</a></div></div></div>
+</div></nav>
+</div></header>
+<main class="fmain">
+<div class="guide card">
+<nav class="crumbs" aria-label="面包屑导航"><a href="/LLMScale/zh/">LLMScale</a> › <a href="/LLMScale/zh/gpus/">GPU</a> › RTX A6000</nav>
+<h1>RTX A6000 放得下哪些 LLM？</h1>
+<p class="lede">RTX A6000 有 48 GB 显存。LLMScale 为模型分配其中的 43.73 GiB：即显卡报告容量的 0.92（vLLM 默认的 --gpu-memory-utilization），其余留给 CUDA 上下文。它的显存带宽为 768 GB/s；模型放得下之后，限制生成速度的就是它。在下方 31 个热门开放模型中，按 8k 上下文、单用户计算，BF16 下有 16 个放得下，FP8 下有 22 个，INT4 下有 23 个。</p>
+<div class="answer">
+  <div class="cap">工作站 · 可用显存</div>
+  <div class="big">43.73 GiB</div>
+  <p>31 个模型中，INT4 下 23 个放得下，BF16 下 16 个。</p>
+</div>
+<h2>RTX A6000 放得下哪些 LLM</h2>
+<div class="scroll"><table>
+<thead><tr><th scope="col">模型</th><th scope="col">BF16</th><th scope="col">FP8</th><th scope="col">INT4</th><th scope="col">用户数</th><th scope="col">最大上下文</th></tr></thead>
+<tbody><tr><th scope="row"><a href="/LLMScale/zh/models/qwen2.5-0.5b.html">Qwen2.5 0.5B Instruct</a></th><td class="ok">1.85 GiB</td><td class="ok">1.52 GiB</td><td class="ok">1.36 GiB</td><td>447<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/gemma-3-1b.html">Gemma 3 1B IT</a></th><td class="ok">3.27 GiB</td><td class="ok">2.62 GiB</td><td class="ok">2.31 GiB</td><td>296<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/llama-3.2-1b.html">Llama 3.2 1B Instruct</a></th><td class="ok">3.63 GiB</td><td class="ok">2.72 GiB</td><td class="ok">2.29 GiB</td><td>161<small>BF16</small></td><td>128k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/llama-3.2-3b.html">Llama 3.2 3B Instruct</a></th><td class="ok">8.28 GiB</td><td class="ok">5.65 GiB</td><td class="ok">4.42 GiB</td><td>41<small>BF16</small></td><td>128k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/phi-3-mini.html">Phi-3 mini 4k</a></th><td class="ok">9.42 GiB</td><td class="ok">6.04 GiB</td><td class="ok">4.46 GiB</td><td>23<small>BF16</small></td><td>4k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/gemma-3-4b.html">Gemma 3 4B IT</a></th><td class="ok">10.57 GiB</td><td class="ok">7.19 GiB</td><td class="ok">5.61 GiB</td><td>45<small>BF16</small></td><td>128k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/mistral-7b-v0.3.html">Mistral 7B Instruct v0.3</a></th><td class="ok">15.43 GiB</td><td class="ok">8.93 GiB</td><td class="ok">5.88 GiB</td><td>29<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/qwen2.5-coder-7b.html">Qwen2.5 Coder 7B</a></th><td class="ok">16.37 GiB</td><td class="ok">10.30 GiB</td><td class="ok">7.45 GiB</td><td>63<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/qwen2.5-7b.html">Qwen2.5 7B Instruct</a></th><td class="ok">16.37 GiB</td><td class="ok">10.30 GiB</td><td class="ok">7.45 GiB</td><td>63<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/llama-3.1-8b.html">Llama 3.1 8B Instruct</a></th><td class="ok">17.71 GiB</td><td class="ok">11.21 GiB</td><td class="ok">8.16 GiB</td><td>27<small>BF16</small></td><td>128k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/qwen3-8b.html">Qwen3 8B</a></th><td class="ok">18.37 GiB</td><td class="ok">11.90 GiB</td><td class="ok">8.87 GiB</td><td>23<small>BF16</small></td><td>40k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/gemma-2-9b.html">Gemma 2 9B IT</a></th><td class="ok">22.48 GiB</td><td class="ok">14.73 GiB</td><td class="ok">11.09 GiB</td><td>9<small>BF16</small></td><td>8k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/gemma-3-12b.html">Gemma 3 12B IT</a></th><td class="ok">26.85 GiB</td><td class="ok">16.44 GiB</td><td class="ok">11.55 GiB</td><td>9<small>BF16</small></td><td>128k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/mistral-nemo-12b.html">Mistral Nemo 12B Instruct</a></th><td class="ok">26.23 GiB</td><td class="ok">16.07 GiB</td><td class="ok">11.31 GiB</td><td>14<small>BF16</small></td><td>120k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/qwen2.5-14b.html">Qwen2.5 14B Instruct</a></th><td class="ok">31.48 GiB</td><td class="ok">19.17 GiB</td><td class="ok">13.40 GiB</td><td>9<small>BF16</small></td><td>32k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/gpt-oss-20b.html">gpt-oss 20B</a></th><td class="ok">41.22 GiB</td><td class="ok">22.82 GiB</td><td class="ok">15.96 GiB</td><td>9<small>BF16</small></td><td>115k<small>BF16</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/gemma-2-27b.html">Gemma 2 27B IT</a></th><td><span class="no">56.79 GiB</span><span class="sr">（放不下）</span></td><td class="ok">32.55 GiB</td><td class="ok">21.19 GiB</td><td>4<small>FP8</small></td><td>8k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/gemma-3-27b.html">Gemma 3 27B IT</a></th><td><span class="no">56.53 GiB</span><span class="sr">（放不下）</span></td><td class="ok">32.29 GiB</td><td class="ok">20.93 GiB</td><td>4<small>FP8</small></td><td>128k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/qwen3-30b-a3b.html">Qwen3 30B A3B</a></th><td><span class="no">59.07 GiB</span><span class="sr">（放不下）</span></td><td class="ok">31.21 GiB</td><td class="ok">18.15 GiB</td><td>17<small>FP8</small></td><td>40k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/qwen3-coder-30b-a3b.html">Qwen3 Coder 30B A3B</a></th><td><span class="no">59.07 GiB</span><span class="sr">（放不下）</span></td><td class="ok">31.21 GiB</td><td class="ok">18.15 GiB</td><td>17<small>FP8</small></td><td>142k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/qwen2.5-32b.html">Qwen2.5 32B Instruct</a></th><td><span class="no">65.64 GiB</span><span class="sr">（放不下）</span></td><td class="ok">36.58 GiB</td><td class="ok">22.96 GiB</td><td>4<small>FP8</small></td><td>32k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/qwen3-32b.html">Qwen3 32B</a></th><td><span class="no">65.64 GiB</span><span class="sr">（放不下）</span></td><td class="ok">36.58 GiB</td><td class="ok">22.96 GiB</td><td>4<small>FP8</small></td><td>37k<small>FP8</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/mixtral-8x7b.html">Mixtral 8x7B Instruct</a></th><td><span class="no">89.46 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">46.21 GiB</span><span class="sr">（放不下）</span></td><td class="ok">25.94 GiB</td><td>18<small>INT4</small></td><td>32k<small>INT4</small></td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/llama-3.3-70b.html">Llama 3.3 70B Instruct</a></th><td><span class="no">137.6 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">73.89 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">44.01 GiB</span><span class="sr">（放不下）</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/llama-3.1-70b.html">Llama 3.1 70B Instruct</a></th><td><span class="no">137.6 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">73.89 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">44.01 GiB</span><span class="sr">（放不下）</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/qwen2.5-72b.html">Qwen2.5 72B Instruct</a></th><td><span class="no">142.0 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">76.64 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">45.99 GiB</span><span class="sr">（放不下）</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/llama-4-scout.html">Llama 4 Scout 17B-16E Instruct</a></th><td><span class="no">205.4 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">106.2 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">59.64 GiB</span><span class="sr">（放不下）</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/gpt-oss-120b.html">gpt-oss 120B</a></th><td><span class="no">220.1 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">112.4 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">68.40 GiB</span><span class="sr">（放不下）</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/mixtral-8x22b.html">Mixtral 8x22B Instruct</a></th><td><span class="no">265.6 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">135.1 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">73.87 GiB</span><span class="sr">（放不下）</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/llama-3.1-405b.html">Llama 3.1 405B Instruct</a></th><td><span class="no">768.3 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">394.2 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">218.9 GiB</span><span class="sr">（放不下）</span></td><td>—</td><td>—</td></tr><tr><th scope="row"><a href="/LLMScale/zh/models/deepseek-v3.html">DeepSeek V3</a></th><td><span class="no">1279.1 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">643.3 GiB</span><span class="sr">（放不下）</span></td><td><span class="no">345.2 GiB</span><span class="sr">（放不下）</span></td><td>—</td><td>—</td></tr></tbody>
+</table></div>
+<p class="note">显存按 8k 上下文、单用户计算（若模型的最大上下文更短，则按其最大值），含 FP16 KV 缓存和按此 GPU 默认设置计算的 vLLM 开销。用户数（每人 8k）和最大上下文均针对放得下的最高精度。</p>
+<p>BF16、FP8 和 INT4 对显存意味着什么：<a href="/LLMScale/zh/concepts/quantization.html">量化与显存</a>。</p>
+<p>单个 GPU 放不下的模型，仍可在多个 GPU 上运行：张量并行会把它的权重和 KV 缓存拆分到这些 GPU 上。需要几个，由计算器算出。</p>
+<h2>在 RTX A6000 上估算模型</h2>
+<ul class="links">
+  <li><a class="primary" href="/LLMScale/zh/?g=a6000-48">用这款 GPU 打开计算器</a></li>
+</ul>
+<h2>其他 GPU</h2>
+<ul class="links"><li><a href="/LLMScale/zh/gpus/rtx3060-12.html">RTX 3060</a></li><li><a href="/LLMScale/zh/gpus/rtx4060ti-16.html">RTX 4060 Ti 16GB</a></li><li><a href="/LLMScale/zh/gpus/rtx3090-24.html">RTX 3090 / Ti</a></li><li><a href="/LLMScale/zh/gpus/rtx4090-24.html">RTX 4090</a></li><li><a href="/LLMScale/zh/gpus/rx7900xtx-24.html">AMD RX 7900 XTX</a></li><li><a href="/LLMScale/zh/gpus/rtx5090-32.html">RTX 5090</a></li><li><a href="/LLMScale/zh/gpus/l40s-48.html">NVIDIA L40S</a></li><li><a href="/LLMScale/zh/gpus/rtx6000ada-48.html">RTX 6000 Ada</a></li><li><a href="/LLMScale/zh/gpus/a100-80.html">A100 80GB</a></li><li><a href="/LLMScale/zh/gpus/h100-80.html">H100 SXM 80GB</a></li><li><a href="/LLMScale/zh/gpus/rtxpro6000-96.html">RTX PRO 6000 Blackwell</a></li><li><a href="/LLMScale/zh/gpus/amd-strixhalo-128.html">AMD Ryzen AI Max+ 395 (128GB)</a></li><li><a href="/LLMScale/zh/gpus/apple-m4max-128.html">Apple M4 Max (128GB)</a></li><li><a href="/LLMScale/zh/gpus/nv-dgxspark-128.html">NVIDIA DGX Spark (GB10)</a></li><li><a href="/LLMScale/zh/gpus/h200-141.html">H200 141GB</a></li><li><a href="/LLMScale/zh/gpus/b200-192.html">B200 180GB</a></li><li><a href="/LLMScale/zh/gpus/apple-m3ultra-512.html">Apple M3 Ultra (512GB)</a></li></ul>
+</div>
+</main>
+<footer class="ffoot">
+<div class="links"><a href="https://github.com/tahircengiz/LLMScale" rel="noreferrer">github.com/tahircengiz/LLMScale</a><a href="https://tr.linkedin.com/in/tahircengiz" rel="noreferrer">linkedin.com/tahircengiz</a><a href="/LLMScale/gpus/a6000-48.html" hreflang="en" lang="en" data-lang="en">English</a><a href="/LLMScale/tr/gpus/a6000-48.html" hreflang="tr" lang="tr" data-lang="tr">Türkçe</a><a href="/LLMScale/hi/gpus/a6000-48.html" hreflang="hi" lang="hi" data-lang="hi">हिन्दी</a><a href="/LLMScale/es/gpus/a6000-48.html" hreflang="es" lang="es" data-lang="es">Español</a><a href="/LLMScale/fr/gpus/a6000-48.html" hreflang="fr" lang="fr" data-lang="fr">Français</a><a href="/LLMScale/pt/gpus/a6000-48.html" hreflang="pt" lang="pt" data-lang="pt">Português</a><a href="/LLMScale/id/gpus/a6000-48.html" hreflang="id" lang="id" data-lang="id">Bahasa Indonesia</a><a href="/LLMScale/bn/gpus/a6000-48.html" hreflang="bn" lang="bn" data-lang="bn">বাংলা</a></div>
+<nav aria-label="指南"><a href="/LLMScale/zh/models/">各模型的 VRAM 需求</a><a href="/LLMScale/zh/gpus/">哪些 LLM 能放进哪款 GPU</a><a href="/LLMScale/zh/concepts/">LLM 显存是如何工作的</a></nav>
+<p>计算在你的浏览器中运行——无需账号，没有后端。访问以匿名方式统计，不使用 cookie。</p>
+<p>本页由 AI 翻译 · <a href="https://github.com/tahircengiz/LLMScale/issues/new?title=Translation%20(zh)%3A%20%2FLLMScale%2Fzh%2Fgpus%2Fa6000-48.html" rel="noreferrer">建议更正</a></p>
+</footer>
+<script>(function(d){var m=function(E,n){for(var i=0;i<n.length;i++){var p=String(n[i]||"").toLowerCase().split(/[-_]/),c=p[0];if(c==="zh"){var s="";for(var j=1;j<p.length;j++)if(p[j]==="hans"||p[j]==="hant"){s=p[j];break}if(s==="hant"||(!s&&(p.indexOf("tw")>0||p.indexOf("hk")>0||p.indexOf("mo")>0)))continue}if(E.indexOf(c)>=0)return c}return null};var p=null;try{p=localStorage.getItem("lang")}catch(e){}if(d.E.indexOf(p)<0)p=m(d.E,navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language])||d.D;var o=d.S[p];if(p===d.L||!o)return;var b=document.createElement("div");b.className="langsuggest";b.lang=o.l;b.dir=o.r;b.setAttribute("role","region");b.setAttribute("aria-label",o.text);var s=document.createElement("span");s.textContent=o.text;var a=document.createElement("a");a.href=o.h;a.hreflang=o.l;a.textContent=o.go;a.onclick=function(){try{localStorage.setItem("lang",p)}catch(e){}};var c=document.createElement("button");c.type="button";c.textContent="\u2715";c.setAttribute("aria-label",o.dismiss);c.onclick=function(){try{localStorage.setItem("lang",d.L)}catch(e){}b.remove()};b.append(s,a,c);document.body.appendChild(b)})({"L":"zh","D":"en","E":["en","tr","zh","hi","es","fr","pt","id","bn"],"S":{"en":{"text":"This page is also available in English.","go":"Switch to English","dismiss":"Dismiss","h":"/LLMScale/gpus/a6000-48.html","l":"en","r":"ltr"},"tr":{"text":"Bu sayfa Türkçe olarak da var.","go":"Türkçe'ye geç","dismiss":"Kapat","h":"/LLMScale/tr/gpus/a6000-48.html","l":"tr","r":"ltr"},"hi":{"text":"यह पेज हिन्दी में भी उपलब्ध है।","go":"हिन्दी में देखें","dismiss":"बंद करें","h":"/LLMScale/hi/gpus/a6000-48.html","l":"hi","r":"ltr"},"es":{"text":"Esta página también está disponible en español.","go":"Cambiar a español","dismiss":"Cerrar","h":"/LLMScale/es/gpus/a6000-48.html","l":"es","r":"ltr"},"fr":{"text":"Cette page est aussi disponible en français.","go":"Passer au français","dismiss":"Fermer","h":"/LLMScale/fr/gpus/a6000-48.html","l":"fr","r":"ltr"},"pt":{"text":"Esta página também está disponível em português.","go":"Mudar para português","dismiss":"Fechar","h":"/LLMScale/pt/gpus/a6000-48.html","l":"pt","r":"ltr"},"id":{"text":"Halaman ini juga tersedia dalam bahasa Indonesia.","go":"Beralih ke bahasa Indonesia","dismiss":"Tutup","h":"/LLMScale/id/gpus/a6000-48.html","l":"id","r":"ltr"},"bn":{"text":"এই পৃষ্ঠাটি বাংলাতেও পাওয়া যায়।","go":"বাংলায় দেখুন","dismiss":"বন্ধ করুন","h":"/LLMScale/bn/gpus/a6000-48.html","l":"bn","r":"ltr"}}});</script>
+<script>(function(){var r=document.documentElement,bs=document.querySelectorAll("[data-theme-set]");
+function cur(){return r.classList.contains("glass")?"glass":r.classList.contains("light")?"light":"dark"}
+function mark(){var c=cur();bs.forEach(function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-theme-set")===c))})}
+function show(t){r.classList.add("theme-switching");r.classList.toggle("light",t==="light");r.classList.toggle("glass",t==="glass");void getComputedStyle(r).transitionProperty;r.classList.remove("theme-switching");mark()}
+bs.forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-theme-set");show(t);try{localStorage.setItem("theme",t)}catch(e){}})});mark();
+try{var mq=matchMedia("(prefers-color-scheme: dark)");mq.addEventListener("change",function(e){var s=null;try{s=localStorage.getItem("theme")}catch(x){}if(s!=="dark"&&s!=="light"&&s!=="glass")show(e.matches?"dark":"glass")})}catch(e){}
+var mb=document.querySelector("[aria-controls=site-nav]"),l=document.getElementById("site-nav");if(mb&&l)mb.addEventListener("click",function(){mb.setAttribute("aria-expanded",String(l.classList.toggle("open")))});
+var ts=document.querySelectorAll(".trig"),tm=0;function shut(x){ts.forEach(function(t){if(t===x)return;t.setAttribute("aria-expanded","false");var p=document.getElementById(t.getAttribute("aria-controls"));if(p)p.classList.remove("open")})}
+function show(t){clearTimeout(tm);shut(t);if(!t)return;t.setAttribute("aria-expanded","true");var p=document.getElementById(t.getAttribute("aria-controls"));if(p)p.classList.add("open")}
+function isOpen(){return!!document.querySelector(".trig[aria-expanded=true]")}
+ts.forEach(function(t){var pb="mouse";t.addEventListener("pointerdown",function(e){pb=e.pointerType});t.addEventListener("click",function(e){var o=t.getAttribute("aria-expanded")==="true";show(o&&(e.detail===0||pb!=="mouse")?null:t)});t.addEventListener("keydown",function(e){if(e.key!=="ArrowDown")return;e.preventDefault();show(t);var a=document.querySelector("#"+t.getAttribute("aria-controls")+" a");if(a)a.focus()})});
+document.querySelectorAll(".menu").forEach(function(m){var t=m.querySelector(".trig");m.addEventListener("pointerenter",function(e){if(e.pointerType!=="mouse")return;clearTimeout(tm);if(isOpen())show(t);else tm=setTimeout(function(){show(t)},90)});m.addEventListener("pointerleave",function(e){if(e.pointerType!=="mouse")return;clearTimeout(tm);tm=setTimeout(function(){show(null)},220)});m.addEventListener("focusout",function(e){if(!m.contains(e.relatedTarget))shut(null)});
+var pk=m.querySelector(".peek");m.querySelectorAll(".panel a").forEach(function(a){function lit(){m.querySelectorAll(".panel a.lit").forEach(function(x){x.classList.remove("lit")});a.classList.add("lit");if(pk&&a.dataset.more){pk.querySelector("strong").textContent=a.querySelector("b").textContent;pk.querySelector("p.t").textContent=a.dataset.more}}a.addEventListener("pointerenter",lit);a.addEventListener("focus",lit)})});
+document.addEventListener("pointerdown",function(e){if(!(e.target.closest&&e.target.closest(".menu")))shut(null)});
+document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;var t=document.querySelector(".trig[aria-expanded=true]");if(t){shut(null);t.focus()}else if(mb&&l&&l.classList.contains("open")){l.classList.remove("open");mb.setAttribute("aria-expanded","false");mb.focus()}});
+document.querySelectorAll("[data-lang]").forEach(function(a){a.addEventListener("click",function(){try{localStorage.setItem("lang",a.getAttribute("data-lang"))}catch(e){}})});
+var lb=document.querySelector(".ltrig"),lp=document.getElementById("lang-menu"),lm=lb&&lb.closest(".lmenu");if(lb&&lp&&lm){var lset=function(o){lb.setAttribute("aria-expanded",String(o));lp.classList.toggle("open",o)};lb.addEventListener("click",function(){lset(lb.getAttribute("aria-expanded")!=="true")});lb.addEventListener("keydown",function(e){if(e.key!=="ArrowDown")return;e.preventDefault();lset(true);var a=lp.querySelector("a");if(a)a.focus()});lm.addEventListener("focusout",function(e){if(!lm.contains(e.relatedTarget))lset(false)});lm.addEventListener("keydown",function(e){if(e.key==="Escape"&&lb.getAttribute("aria-expanded")==="true"){e.stopPropagation();lset(false);lb.focus()}});document.addEventListener("pointerdown",function(e){if(!lm.contains(e.target))lset(false)});addEventListener("pageshow",function(e){if(e.persisted)lset(false)})}})();</script>
+</body>
+</html>

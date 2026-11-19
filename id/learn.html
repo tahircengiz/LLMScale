@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="id" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <title>LLM 101 — cara kerja LLM, divisualisasikan | LLMScale</title>
+    <meta name="description" content="Penjelajahan interaktif dan beranimasi tentang cara model bahasa besar mengubah sebuah kalimat menjadi kata berikutnya — tokenisasi, embedding, perhatian, lapisan, dan sampling, sebagai konstelasi neural 3D." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=VT323&display=swap" rel="stylesheet" />
+    <link rel="canonical" href="https://tahircengiz.github.io/LLMScale/id/learn.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="LLM 101 — cara kerja LLM, divisualisasikan" />
+    <meta property="og:description" content="Penjelajahan interaktif tentang cara model bahasa mengubah sebuah kalimat menjadi kata berikutnya — token, embedding, perhatian, lapisan, dan sampling, dalam 3D." />
+    <meta property="og:image" content="https://tahircengiz.github.io/LLMScale/og.png" />
+    <meta property="og:url" content="https://tahircengiz.github.io/LLMScale/id/learn.html" />
+    <meta property="og:site_name" content="LLMScale" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="hi_IN" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="pt_BR" />
+    <meta property="og:locale:alternate" content="bn_BD" />
+    <meta name="twitter:image" content="https://tahircengiz.github.io/LLMScale/og.png" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LLM 101 — cara kerja LLM, divisualisasikan" />
+    <meta name="twitter:description" content="Penjelajahan interaktif tentang cara model bahasa mengubah sebuah kalimat menjadi kata berikutnya — token, embedding, perhatian, lapisan, dan sampling, dalam 3D." />
+    <!-- Umami analytics (self-hosted, privacy-friendly, cookieless) -->
+    <!-- data-domains gates the tracker to the live site. Without it the script
+         reports from anywhere it loads: a file:// open of this page sent a
+         pageview whose path was a local disk path, and every localhost preview
+         landed in production traffic. -->
+    <script defer src="https://stats.delix.dev/u.js" data-website-id="22ee565e-f235-43fe-bd5e-3b693cbf86ca" data-domains="tahircengiz.github.io"></script>
+    <style>
+      :root {
+        --cyan: #22d3ee; --pink: #a855f7; --purple: #8b5cf6; --indigo: #6366f1;
+        --blue: #8bd6ff; --ink: #e6ebf5; --dim: #93a1bd;
+        --panel: rgba(9, 12, 24, 0.88); --line: rgba(130, 150, 200, 0.28);
+        --disp: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+        --term: "VT323", ui-monospace, "Courier New", monospace;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: #010208; }
+      body { color: var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; }
+
+      #c { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; cursor: grab; }
+      #c.grabbing { cursor: grabbing; }
+      #c.pointing { cursor: pointer; }
+      /* Under the language button it offers the alternative to, where the scene is
+         empty sky; lower down it would cover the hero text on a phone. */
+      #langsuggest { position: fixed; top: 60px; right: 18px; z-index: 13;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; max-width: min(360px, calc(100vw - 36px));
+        padding: 9px 10px 9px 14px; border-radius: 10px; background: var(--panel); backdrop-filter: blur(8px);
+        border: 1px solid var(--line); color: var(--ink); font: 13px/1.35 ui-sans-serif, system-ui, sans-serif; }
+      #langsuggest a { color: var(--cyan); font-weight: 700; text-decoration: none; }
+      #langsuggest a:hover, #langsuggest a:focus-visible { text-decoration: underline; }
+      #langsuggest button { background: none; border: 0; color: var(--dim); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 6px; }
+      #langsuggest button:hover, #langsuggest button:focus-visible { color: var(--ink); }
+
+      .vign { position: fixed; inset: 0; z-index: 4; pointer-events: none;
+        background: radial-gradient(125% 105% at 50% 40%, transparent 44%, rgba(0,0,2,0.9) 100%); }
+      .grain { position: fixed; inset: 0; z-index: 4; pointer-events: none; opacity: .035; mix-blend-mode: screen;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); }
+
+      #brand { position: fixed; top: 18px; left: 22px; z-index: 12; font: 700 13px/1 var(--term);
+        letter-spacing: 3px; color: var(--cyan); text-decoration: none; text-shadow: 0 0 6px rgba(34,211,238,.4); opacity: .9; }
+      #brand:hover { opacity: 1; }
+      #brand b { color: var(--pink); }
+      #chrome { position: fixed; top: 16px; right: 18px; z-index: 12; display: flex; gap: 8px; }
+      #chrome button { font: 700 12px/1 var(--term); letter-spacing: 2px; padding: 8px 12px; border-radius: 9px; cursor: pointer;
+        background: var(--panel); backdrop-filter: blur(8px); border: 1px solid var(--line); color: var(--ink); }
+
+      #hero { position: fixed; inset: 0; z-index: 7; pointer-events: none; }
+      /* One bottom-anchored column, so each line sits on the one below it. The four
+         used to be placed separately at fixed distances from the bottom, and a
+         subtitle that wrapped to three lines — the Turkish one, on a phone — grew up
+         into the heading. The gaps are the ones those offsets gave on a desktop. */
+      #hero .stack { position: absolute; left: 32px; right: 32px; bottom: calc(13vh - 34px);
+        display: flex; flex-direction: column; align-items: flex-start; }
+      #hero .kicker { margin-bottom: 10px;
+        font: 700 13px/1 var(--term); letter-spacing: 6px; color: var(--purple); text-shadow: 0 0 8px rgba(139,92,246,.5); }
+      #hero h1 { margin: 0 0 7px -2px; font-family: var(--disp); font-weight: 900;
+        line-height: .98; font-size: clamp(38px, 8vw, 82px); letter-spacing: 1px; color: var(--ink);
+        text-shadow: 0 0 6px rgba(34,211,238,.4), 0 0 22px rgba(34,211,238,.2), 2px 0 0 rgba(168,85,247,.28); }
+      #hero h1 .p { color: var(--pink); text-shadow: 0 0 8px rgba(168,85,247,.5), 0 0 24px rgba(168,85,247,.3); }
+      #hero .sub { margin: 0 0 22px; max-width: min(46ch, 84vw);
+        font: 400 clamp(17px,2.4vw,23px)/1.45 var(--term); color: #cfdaee; letter-spacing: .5px; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
+      #hero .hint2 { font: 700 12px/1 var(--term);
+        letter-spacing: 3px; color: var(--blue); opacity: .82; text-shadow: 0 0 8px rgba(139,214,255,.35); }
+
+      #scroll { position: relative; z-index: 2; pointer-events: none; }
+      section { min-height: 100vh; display: flex; align-items: center; }
+      .card { pointer-events: auto; margin: 0 0 0 clamp(16px, 5vw, 84px); max-width: min(410px, 86vw);
+        background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 16px;
+        padding: 20px 22px; box-shadow: 0 24px 60px -30px rgba(0,0,0,.8);
+        opacity: 0; transform: translateY(16px); transition: opacity .5s, transform .5s; }
+      section.active .card { opacity: 1; transform: none; }
+      .eyebrow { font: 700 12px/1 var(--term); letter-spacing: 4px; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; text-shadow: 0 0 10px rgba(34,211,238,.4); }
+      .card h2 { font-size: 24px; line-height: 1.16; margin: 0 0 11px; font-weight: 800; letter-spacing: -.01em; color: #f2f6ff; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+      .card h2 em { font-style: normal; color: #c084fc; }
+      .card p { font-size: 15px; line-height: 1.62; color: #c8d3e8; margin: 0; text-shadow: 0 1px 8px rgba(0,0,0,.5); }
+      .card p b { color: #ffffff; font-weight: 700; }
+
+      .heads { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+      .head { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font: 600 12px/1 ui-sans-serif, system-ui;
+        padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid var(--line);
+        color: var(--ink); user-select: none; transition: opacity .15s; }
+      .head .dot { width: 9px; height: 9px; border-radius: 999px; box-shadow: 0 0 8px currentColor; }
+      .head.off { opacity: .35; }
+      .hint { font-size: 12.5px; color: #b0bcd6; margin-top: 11px; font-family: var(--term); letter-spacing: 1px; }
+
+      .cta { display: inline-flex; margin-top: 15px; font: 700 13px/1 var(--term); letter-spacing: 2px; text-decoration: none;
+        padding: 11px 16px; border-radius: 10px; color: #04060e; background: linear-gradient(100deg, var(--cyan), var(--purple));
+        box-shadow: 0 0 14px -2px rgba(34,211,238,.5); }
+
+      #bars { position: fixed; right: clamp(16px, 6vw, 90px); top: 50%; transform: translateY(-50%); z-index: 6;
+        width: min(300px, 42vw); pointer-events: none; opacity: 0; transition: opacity .5s; }
+      #bars.show { opacity: 1; }
+      #bars .brow { margin: 7px 0; }
+      #bars .btop { display: flex; justify-content: space-between; font: 700 15px/1 var(--term); letter-spacing: 1px; margin-bottom: 5px; }
+      #bars .btop .w { color: var(--ink); } #bars .btop .pct { color: var(--blue); }
+      #bars .track { height: 8px; border-radius: 6px; background: rgba(255,255,255,.06); overflow: hidden; }
+      #bars .fill { height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--cyan), var(--purple)); transition: width .8s cubic-bezier(.2,.7,.2,1); }
+      #bars .brow.win .w { color: var(--cyan); } #bars .brow.win .fill { background: linear-gradient(90deg, var(--cyan), var(--pink)); box-shadow: 0 0 12px -2px var(--cyan); }
+
+      #scrollhint { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
+        font: 700 11px/1 var(--term); letter-spacing: 3px; color: var(--dim); animation: bob 1.8s ease-in-out infinite; }
+      @keyframes bob { 0%,100% { transform: translate(-50%,0); opacity: .55; } 50% { transform: translate(-50%,6px); opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) { #scrollhint { animation: none; } }
+      @media (max-width: 620px) { .card { margin: 0 12px; } #bars { display: none; } }
+    </style>
+    <script type="module" crossorigin src="/LLMScale/assets/learn-Jjl1JrZq.js"></script>
+    <link rel="modulepreload" crossorigin href="/LLMScale/assets/langPath-KaY4uXCb.js">
+    <!-- prerender: language alternates and structured data -->
+    <link rel="alternate" hreflang="en" href="https://tahircengiz.github.io/LLMScale/learn.html" />
+    <link rel="alternate" hreflang="tr" href="https://tahircengiz.github.io/LLMScale/tr/learn.html" />
+    <link rel="alternate" hreflang="zh-Hans" href="https://tahircengiz.github.io/LLMScale/zh/learn.html" />
+    <link rel="alternate" hreflang="hi" href="https://tahircengiz.github.io/LLMScale/hi/learn.html" />
+    <link rel="alternate" hreflang="es" href="https://tahircengiz.github.io/LLMScale/es/learn.html" />
+    <link rel="alternate" hreflang="fr" href="https://tahircengiz.github.io/LLMScale/fr/learn.html" />
+    <link rel="alternate" hreflang="pt" href="https://tahircengiz.github.io/LLMScale/pt/learn.html" />
+    <link rel="alternate" hreflang="id" href="https://tahircengiz.github.io/LLMScale/id/learn.html" />
+    <link rel="alternate" hreflang="bn" href="https://tahircengiz.github.io/LLMScale/bn/learn.html" />
+    <link rel="alternate" hreflang="x-default" href="https://tahircengiz.github.io/LLMScale/learn.html" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"LLMScale","item":"https://tahircengiz.github.io/LLMScale/id/"},{"@type":"ListItem","position":2,"name":"LLM 101 — cara kerja LLM, divisualisasikan","item":"https://tahircengiz.github.io/LLMScale/id/learn.html"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"LLM 101 — cara kerja LLM, divisualisasikan","url":"https://tahircengiz.github.io/LLMScale/id/learn.html","description":"Penjelajahan interaktif dan beranimasi tentang cara model bahasa besar mengubah sebuah kalimat menjadi kata berikutnya — tokenisasi, embedding, perhatian, lapisan, dan sampling, sebagai konstelasi neural 3D.","inLanguage":"id","isPartOf":{"@type":"WebSite","name":"LLMScale","url":"https://tahircengiz.github.io/LLMScale/id/"},"author":{"@type":"Person","name":"Tahir Ali Cengiz","url":"https://github.com/tahircengiz"},"dateModified":"2026-11-19T22:16:47+03:00"}</script>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <div class="grain"></div>
+    <div class="vign"></div>
+
+    <a id="brand" href="index.html">← <b>LLMScale</b></a>
+    <div id="chrome"><button id="lang">EN</button></div>
+
+    <div id="hero"><div class="stack">
+      <div class="kicker" data-i18n="kicker">// MODEL BAHASA, SEBAGAI KONSTELASI</div>
+      <h1>A MACHINE<br />READS YOUR <span class="p">WORDS</span></h1>
+      <p class="sub" data-i18n="sub">Sebuah kalimat menjadi konstelasi simpul. Seret, sentuh, picu — lalu gulir untuk masuk ke dalamnya.</p>
+      <div class="hint2" data-i18n="hint">⊹ SERET · ARAHKAN KURSOR · KLIK · GULIR</div>
+    </div></div>
+
+    <div id="scroll"><section data-i="0"></section><section data-i="1"><div class="card"><div class="eyebrow">01 · PROMPT</div><h2>Semuanya dimulai dari sebuah <em>kalimat</em></h2><p>Anda memberikan teks kepada model: <b>“The cat sat on the mat.”</b> Model tidak membaca huruf — ia bersiap melihat potongan-potongan yang bermakna.</p></div></section><section data-i="2"><div class="card"><div class="eyebrow">02 · TOKENISASI</div><h2>Teks dipecah menjadi <em>token</em></h2><p>Kalimat dipotong menjadi beberapa bagian, dan masing-masing dipetakan ke sebuah angka (<b>ID</b>). Mulai dari sini, model bekerja dengan angka, bukan kata.</p></div></section><section data-i="3"><div class="card"><div class="eyebrow">03 · EMBEDDING</div><h2>Setiap token menjadi sebuah <em>vektor</em></h2><p>Setiap ID berubah menjadi sebuah titik dalam <b>ruang makna</b> berdimensi tinggi. Makna yang mirip berada berdekatan.</p></div></section><section data-i="4"><div class="card"><div class="eyebrow">04 · PERHATIAN</div><h2>Token <em>saling memperhatikan</em></h2><p>Setiap token menghitung <b>seberapa besar perhatian</b> yang harus diberikannya kepada token lain. Dengan causal mask, sebuah token hanya melihat token-token sebelumnya.</p></div></section><section data-i="5"><div class="card"><div class="eyebrow">05 · LAPISAN</div><h2>Blok yang sama, <em>ditumpuk dalam-dalam</em></h2><p>Perhatian + feed-forward berulang, ditumpuk hingga puluhan lapis (mis. <b>×32</b>). Setiap lintasan menyempurnakan representasinya.</p></div></section><section data-i="6"><div class="card"><div class="eyebrow">06 · PREDIKSI</div><h2>Token berikutnya yang paling <em>mungkin</em></h2><p>Lapisan terakhir memberi skor pada seluruh kosakata dan mengubahnya menjadi <b>distribusi probabilitas</b>. Token teratas dipilih (atau diambil melalui sampling).</p></div></section><section data-i="7"><div class="card"><div class="eyebrow">07 · AUTOREGRESI</div><h2>Prediksi <em>diumpankan kembali</em></h2><p>Token yang dipilih ditambahkan di akhir, lalu seluruh proses berjalan <b>lagi</b>. Kata demi kata, begitulah teks dihasilkan.</p></div></section><section data-i="8"><div class="card"><div class="eyebrow">08 · SKALA</div><h2>Kini dalam skala <em>miliaran</em></h2><p>Jaringan kecil ini sebenarnya berisi <b>miliaran parameter</b> — itulah sebabnya VRAM penting. Apakah model Anda muat di sebuah GPU?</p></div></section></div>
+    <div id="bars"></div>
+    <div id="scrollhint" data-i18n="scrollHint">GULIR ↓</div>
+
+  </body>
+</html>
