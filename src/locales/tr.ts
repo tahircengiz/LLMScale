@@ -355,7 +355,7 @@ const tr = {
   "footer.builtBy": "Yapan:",
   "footer.privacy": "Hesaplama tarayıcında yapılır — hesap yok, sunucu yok. Ziyaretler anonim ve çerezsiz sayılır.",
   "ainote.label": "Yapay zekâ uyarısı",
-  "ainote.text": "Sitedeki veriler, hesaplamalar ve çeviriler yapay zekâ yardımıyla hazırlandı; hata içerebilir. Önemli bir karardan önce ikinci bir kaynakla kontrol et.",
+  "ainote.text": "Sitedeki veriler, hesaplamalar ve çeviriler yapay zekâ yardımıyla hazırlandı; hata içerebilir. Önemli bir karardan önce ikinci bir kaynakla kontrol ediniz.",
   "ainote.close": "Uyarıyı kapat",
   "footer.suggestFix": "Düzeltme öner",
   "footer.guides": "Rehberler",

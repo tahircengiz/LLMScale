@@ -362,7 +362,7 @@ const es = {
   "footer.builtBy": "Creado por",
   "footer.privacy": "El cálculo se ejecuta en tu navegador — sin cuenta, sin backend. Las visitas se cuentan de forma anónima, sin cookies.",
   "ainote.label": "Aviso sobre IA",
-  "ainote.text": "Los datos, cálculos y traducciones de este sitio se hicieron con ayuda de IA y pueden contener errores. Antes de tomar una decisión importante, consulta una segunda fuente.",
+  "ainote.text": "Los datos, cálculos y traducciones de este sitio se hicieron con ayuda de IA y pueden contener errores. Antes de tomar una decisión importante, te recomendamos consultar una segunda fuente.",
   "ainote.close": "Cerrar aviso",
   "footer.suggestFix": "Sugerir una corrección",
   "footer.guides": "Guías",

@@ -364,7 +364,7 @@ const en = {
   // The AI notice above every page's header (src/components/AiNote.tsx; appNote()
   // in scripts/appLook.ts for the guides and the feed). Its link is footer.suggestFix.
   "ainote.label": "AI notice",
-  "ainote.text": "Data, calculations and translations on this site are AI-assisted and may contain errors. Check a second source before important decisions.",
+  "ainote.text": "Data, calculations and translations on this site are AI-assisted and may contain errors. Please check a second source before important decisions.",
   "ainote.close": "Dismiss notice",
   "footer.suggestFix": "Suggest a correction",
   "footer.guides": "Guides",
