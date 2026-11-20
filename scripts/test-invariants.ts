@@ -260,6 +260,7 @@ const unbooted = reactEntries.filter((p) => !read(p).includes(noteBoot));
 check("every React entry hides a closed notice before first paint", noteKey !== "" && unbooted.length === 0, unbooted.join(", "));
 check("index.css hides the notice under that class", css.includes(`.${noteClass} .ainote`));
 check("the app draws the notice above its header", /<AiNote \/>\s*\{\/\*[^*]*\*\/\}\s*<header/.test(read("src/App.tsx")));
+check("AiNote puts sentence.sep between its text and the link, none after the Chinese 。", noteSrc.includes('{t("ainote.text")}{t("sentence.sep")}'));
 // LLM 101 keeps its own look (2026-10-14): no notice, no bootstrap for one.
 check("learn.html has no notice", !read("learn.html").includes(noteKey) && !read("src/learn.js").includes(noteKey));
 
@@ -386,6 +387,18 @@ check("the static pages hide a closed notice like the entries",
   AINOTE_BOOT.includes(`localStorage.getItem("${noteKey}")==="off"`) && AINOTE_BOOT.includes(`classList.add("${noteClass}")`) &&
   APP_CSS.includes(`.${noteClass} .ainote{display:none}`) && APP_SCRIPT.includes(`localStorage.setItem("${noteKey}","off")`) &&
   APP_SCRIPT.includes(`classList.add("${noteClass}")`));
+{
+  // Text, then the correction link, joined like two sentences (sentence.sep):
+  // docs/i18n/glossary/zh.md and ja.md put no space after 。.
+  const { appNote } = await import("./appLook.ts");
+  const joint = (lang: "en" | "zh" | "ja") => {
+    const html = appNote({ lang, langs: ENABLED_LANGS, file: "index.html", href: (l, f) => `/${l}/${f ?? ""}`, base: "/", feed: false });
+    return html.slice(html.indexOf("<p>") + 3, html.indexOf("<a ") + 3);
+  };
+  check("the static notice: a space before the link in English", joint("en").endsWith("decisions. <a "), joint("en"));
+  check("the static notice: no space after 。 in Chinese", joint("zh").endsWith("来源核对。<a "), joint("zh"));
+  check("the static notice: no space after 。 in Japanese", joint("ja").endsWith("確認してください。<a "), joint("ja"));
+}
 check("the static pages run that bootstrap and draw the notice", /<script>\$\{APP_THEME_BOOT\}\$\{AINOTE_BOOT\}<\/script>/.test(read("scripts/shell.ts")) && read("scripts/shell.ts").includes("${appNote(frame)}\n${appHeader("));
 check("the static pages bootstrap their theme like the entries",
   APP_THEME_BOOT.includes(`"${DEFAULT_THEME_DARK}":"${DEFAULT_THEME}"`) && APP_THEME_BOOT.includes("classList.add(m)") && APP_THEME_BOOT.includes(DARK_QUERY) && !APP_THEME_BOOT.includes('add("dark")'));
