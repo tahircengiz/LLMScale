@@ -361,9 +361,9 @@ const ja = {
 
   "footer.builtBy": "作成者",
   "footer.privacy": "計算はブラウザ内で行われます。アカウントもバックエンドも不要です。訪問数は Cookie を使わずに匿名で集計しています。",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "このページは AI によって翻訳されました",
+  "ainote.label": "AI に関するお知らせ",
+  "ainote.text": "このサイトのデータ、計算、翻訳は AI の支援を受けて作成されており、誤りが含まれる可能性があります。重要な判断の前に、別の情報源で確認してください。",
+  "ainote.close": "お知らせを閉じる",
   "footer.suggestFix": "修正を提案",
   "footer.guides": "ガイド",
   "footer.models": "モデル別の VRAM 要件",

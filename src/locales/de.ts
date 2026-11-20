@@ -363,9 +363,9 @@ const de = {
 
   "footer.builtBy": "Erstellt von",
   "footer.privacy": "Die Dimensionierung läuft in Ihrem Browser – kein Konto, kein Backend. Besuche werden anonym gezählt, ohne Cookies.",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "Diese Seite wurde mit KI übersetzt",
+  "ainote.label": "KI-Hinweis",
+  "ainote.text": "Daten, Berechnungen und Übersetzungen dieser Website sind KI-gestützt und können Fehler enthalten. Prüfen Sie vor wichtigen Entscheidungen eine zweite Quelle.",
+  "ainote.close": "Hinweis schließen",
   "footer.suggestFix": "Korrektur vorschlagen",
   "footer.guides": "Leitfäden",
   "footer.models": "VRAM-Bedarf nach Modell",

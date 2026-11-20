@@ -363,9 +363,9 @@ const ru = {
 
   "footer.builtBy": "Автор:",
   "footer.privacy": "Расчеты выполняются в вашем браузере — без аккаунта и без бэкенда. Посещения считаются анонимно, без файлов cookie.",
-  // Under a page in a language Claude translated (LANG_META.ai), with a link to a
-  // new GitHub issue.
-  "footer.aiTranslated": "Эта страница переведена с помощью ИИ",
+  "ainote.label": "Уведомление об ИИ",
+  "ainote.text": "Данные, расчеты и переводы на сайте подготовлены с помощью ИИ и могут содержать ошибки. Перед важным решением сверьтесь с другим источником.",
+  "ainote.close": "Закрыть уведомление",
   "footer.suggestFix": "Предложить исправление",
   "footer.guides": "Руководства",
   "footer.models": "Требования к VRAM по моделям",
