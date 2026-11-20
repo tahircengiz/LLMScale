@@ -187,7 +187,7 @@ export interface FrameCtx {
  *  APP_SCRIPT. */
 export function appNote({ lang, file, href }: FrameCtx): string {
   const d = DICTS[lang];
-  return `<aside class="ainote" aria-label="${esc(d["ainote.label"])}"><div class="hin">${INFO}<p>${esc(d["ainote.text"])} <a href="${esc(fixUrl(lang, href(lang, file)))}" rel="noreferrer">${esc(d["footer.suggestFix"])}</a></p><button type="button" aria-label="${esc(d["ainote.close"])}">${CLOSE}</button></div></aside>`;
+  return `<aside class="ainote" aria-label="${esc(d["ainote.label"])}"><div class="hin">${INFO}<p>${esc(d["ainote.text"])}${d["sentence.sep"]}<a href="${esc(fixUrl(lang, href(lang, file)))}" rel="noreferrer">${esc(d["footer.suggestFix"])}</a></p><button type="button" aria-label="${esc(d["ainote.close"])}">${CLOSE}</button></div></aside>`;
 }
 
 /** The app's header. `current` is the nav page this one is (the news), or null for

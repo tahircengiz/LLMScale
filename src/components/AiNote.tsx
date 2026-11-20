@@ -43,7 +43,7 @@ export function AiNote() {
           <path d="M8 7.25v3.5M8 5.1v.01" />
         </svg>
         <p className="m-0 min-w-0 flex-1">
-          {t("ainote.text")}{" "}
+          {t("ainote.text")}{t("sentence.sep")}
           <a
             href={fixUrl(lang, window.location.pathname)}
             target="_blank"
