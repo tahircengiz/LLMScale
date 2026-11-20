@@ -1483,10 +1483,11 @@ const es = {
   "serve.ability.reason": "razonamiento",
   "serve.ability.reasonToggle": "razonamiento que se puede desactivar",
   "serve.ability.vision": "entrada de imágenes",
-  "serve.and": "y",
+  "list.and": " y ",
   "list.sep": ", ",
   "colon.sep": ": ",
   "semicolon.sep": "; ",
+  "sentence.sep": " ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

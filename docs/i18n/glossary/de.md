@@ -271,7 +271,7 @@ Kodda dile göre tutulan ayırıcılar ve Almanca değerleri. Sayımlar düzyaz�
 
 | Anahtar | de değeri | Kanıt |
 |---|---|---|
-| `list.sep` | ", " | Virgülden önce boşluk yok, sonra boşluk var (Almanca kural, İngilizceyle aynı). Liste son öğeden önce "und" ile biter, "und"dan önce virgül konmaz: `Intl.ListFormat("de")` çıktısı "a, b und c" (GTR9, Node 24.21.0). Microsoft kuralı: "und" önüne virgül yalnız iki tam cümleyi bağlarken (K48). `serve.and` → "und". |
+| `list.sep` | ", " | Virgülden önce boşluk yok, sonra boşluk var (Almanca kural, İngilizceyle aynı). Liste son öğeden önce "und" ile biter, "und"dan önce virgül konmaz: `Intl.ListFormat("de")` çıktısı "a, b und c" (GTR9, Node 24.21.0). Microsoft kuralı: "und" önüne virgül yalnız iki tam cümleyi bağlarken (K48). `list.and` → " und " (boşluk değerin içinde). |
 | `colon.sep` | ": " | İki noktadan önce boşluk yok: boşluksuz 2424 / boşluklu 21 geçiş (boşlukluların çoğu kod kalıntısı), NBSP 0. Sonra boşluk: 2383 / bitişik 35 (Google MT yazım hataları, ör. "Roofline-Analyse:Die" (K28)). Fransızcadaki gibi bölünmez boşluk yok. |
 | `semicolon.sep` | "; " | Önce boşluk yok: 70 / 1 geçiş; sonra boşluk 70. |
 | `join.sentence` | " " | Cümleler arasında tek düz boşluk. |

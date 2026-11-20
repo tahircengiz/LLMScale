@@ -1483,10 +1483,11 @@ const pt = {
   "serve.ability.reason": "raciocínio",
   "serve.ability.reasonToggle": "raciocínio que pode ser desligado",
   "serve.ability.vision": "entrada de imagens",
-  "serve.and": "e",
+  "list.and": " e ",
   "list.sep": ", ",
   "colon.sep": ": ",
   "semicolon.sep": "; ",
+  "sentence.sep": " ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

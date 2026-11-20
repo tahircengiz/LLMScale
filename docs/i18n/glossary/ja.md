@@ -306,4 +306,4 @@ Sitede sayı sözcüğü `{n}`'den sonra boşlukla gelir (`config.w.*`, `gloss.u
 - **Birim kısaltması.** Sayı alanlarının yanındaki birim "tok" (en, de, ru ve fr ile aynı): "トークン" 375 px'te alanın içinde iki satıra kırılıyordu.
 - **Menü adı.** "LLM 入門" (sözlüğün LLM 101 karşılığı); menü, başlık ve h1 aynı. Diğer diller "LLM 101" yazıyor.
 - **Sözcük sayısı.** "≈ {w} words" → "英単語で約 {w} 語": site token başına 0,75 İngilizce sözcük sayıyor, çıplak 語 Japon okuru yanıltırdı.
-- **Bilinen sınır.** Kodda sabit iki birleştirici: `serve.and` çevresindeki boşluklar ("A、B および C") ve uygulama içi açıklamalarda cümleler arası " " (src/lib/choices.ts). zh'de de aynı; çeviriyle değil kodla çözülür.
+- **Birleştiriciler (2026-11-20).** Uygulama içi açıklamalarda cümleler `sentence.sep` ile boşluksuz, son öğeden önceki "および" `list.and` ile boşluksuz birleşir: "ツール呼び出し、リーズニングおよび画像入力". Boşluk kodda değil sözlük değerinde durur. Alternatif "、および": K52 son öğeyi "xxx、yyy、および zzz" (K52) diye bağlıyor, K63 de "、および値 (V)" yazıyor; iki öğede "ツール呼び出し、および画像入力" olurdu.

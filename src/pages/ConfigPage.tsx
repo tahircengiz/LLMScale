@@ -276,7 +276,7 @@ function Loading({ id }: { id: string }) {
 
 function useSay() {
   const { t } = useLang();
-  return (parts: Part[]) => parts.map((p) => t(`config.a.${p.k}`, p.v)).join(" ");
+  return (parts: Part[]) => parts.map((p) => t(`config.a.${p.k}`, p.v)).join(t("sentence.sep"));
 }
 
 function RetryButton({ onRetry }: { onRetry: () => void }) {

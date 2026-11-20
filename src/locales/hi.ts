@@ -1483,10 +1483,11 @@ const hi = {
   "serve.ability.reason": "रीज़निंग",
   "serve.ability.reasonToggle": "बंद की जा सकने वाली रीज़निंग",
   "serve.ability.vision": "इमेज इनपुट",
-  "serve.and": "और",
+  "list.and": " और ",
   "list.sep": ", ",
   "colon.sep": ": ",
   "semicolon.sep": "; ",
+  "sentence.sep": " ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

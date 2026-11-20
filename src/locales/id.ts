@@ -1483,10 +1483,11 @@ const id = {
   "serve.ability.reason": "penalaran",
   "serve.ability.reasonToggle": "penalaran yang dapat dinonaktifkan",
   "serve.ability.vision": "input gambar",
-  "serve.and": "dan",
+  "list.and": " dan ",
   "list.sep": ", ",
   "colon.sep": ": ",
   "semicolon.sep": "; ",
+  "sentence.sep": " ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

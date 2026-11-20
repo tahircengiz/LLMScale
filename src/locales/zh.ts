@@ -1483,10 +1483,11 @@ const zh = {
   "serve.ability.reason": "推理",
   "serve.ability.reasonToggle": "可关闭的推理",
   "serve.ability.vision": "图像输入",
-  "serve.and": "和",
+  "list.and": "和",
   "list.sep": "、",
   "colon.sep": "：",
   "semicolon.sep": "；",
+  "sentence.sep": "",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

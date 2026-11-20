@@ -1483,10 +1483,11 @@ const bn = {
   "serve.ability.reason": "রিজনিং",
   "serve.ability.reasonToggle": "বন্ধ করা যায় এমন রিজনিং",
   "serve.ability.vision": "ছবি ইনপুট",
-  "serve.and": "ও",
+  "list.and": " ও ",
   "list.sep": ", ",
   "colon.sep": ": ",
   "semicolon.sep": "; ",
+  "sentence.sep": " ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.
