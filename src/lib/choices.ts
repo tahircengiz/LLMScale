@@ -33,6 +33,8 @@ function size(t: T, n: number, lang: Lang): string {
   return n * WORDS_PER_TOKEN >= WORDS_PER_PAGE ? t("choice.tokensPages", { w, p }) : t("choice.tokensWords", { w });
 }
 const band = <B extends string>(n: number, bands: [number, B][], last: B): B => bands.find(([max]) => n <= max)?.[1] ?? last;
+/** A hint's sentences, joined the way its language joins them (sentence.sep). */
+const sentences = (t: T, ...s: string[]) => s.filter(Boolean).join(t("sentence.sep"));
 
 export function contextChoices(t: T, lang: Lang, modelMax?: number): Opt[] {
   const all = [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576];
@@ -41,7 +43,7 @@ export function contextChoices(t: T, lang: Lang, modelMax?: number): Opt[] {
   return list.map((n) => ({
     value: n,
     label: `${k(n)} · ${fmt(n, lang)}`,
-    hint: `${size(t, n, lang)} ${t(`choice.ctx.${band(n, [[4096, "short"], [16384, "medium"], [65536, "long"], [262144, "huge"]], "max")}`)}${n === modelMax ? " " + t("choice.ctx.modelMax") : ""}`,
+    hint: sentences(t, size(t, n, lang), t(`choice.ctx.${band(n, [[4096, "short"], [16384, "medium"], [65536, "long"], [262144, "huge"]], "max")}`), n === modelMax ? t("choice.ctx.modelMax") : ""),
   }));
 }
 
@@ -49,7 +51,7 @@ export function userChoices(t: T, lang: Lang): Opt[] {
   return [1, 2, 4, 8, 16, 32, 64, 128, 256, 512].map((n) => ({
     value: n,
     label: fmt(n, lang),
-    hint: `${t("choice.users", { n: fmt(n, lang) })} ${t(`choice.users.${band(n, [[1, "one"], [8, "team"], [64, "tool"]], "service")}`)}`,
+    hint: sentences(t, t("choice.users", { n: fmt(n, lang) }), t(`choice.users.${band(n, [[1, "one"], [8, "team"], [64, "tool"]], "service")}`)),
   }));
 }
 
@@ -69,7 +71,7 @@ export function promptChoices(t: T, lang: Lang): Opt[] {
   return [128, 256, 512, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000].map((n) => ({
     value: n,
     label: fmt(n, lang),
-    hint: `${size(t, n, lang)} ${t(`choice.prompt.${band(n, [[256, "question"], [1000, "chat"], [4000, "rag"], [16000, "doc"]], "book")}`)}`,
+    hint: sentences(t, size(t, n, lang), t(`choice.prompt.${band(n, [[256, "question"], [1000, "chat"], [4000, "rag"], [16000, "doc"]], "book")}`)),
   }));
 }
 
@@ -77,7 +79,7 @@ export function outputChoices(t: T, lang: Lang): Opt[] {
   return [0, 16, 32, 64, 128, 256, 512, 1000, 2000, 4000, 8000, 16000].map((n) => ({
     value: n,
     label: fmt(n, lang),
-    hint: n === 0 ? t("choice.output.none") : `${size(t, n, lang)} ${t(`choice.output.${band(n, [[32, "line"], [128, "short"], [512, "answer"], [2000, "long"]], "reasoning")}`)}`,
+    hint: n === 0 ? t("choice.output.none") : sentences(t, size(t, n, lang), t(`choice.output.${band(n, [[32, "line"], [128, "short"], [512, "answer"], [2000, "long"]], "reasoning")}`)),
   }));
 }
 
@@ -85,7 +87,7 @@ export function prefixChoices(t: T, lang: Lang): Opt[] {
   return [0, 128, 256, 512, 1000, 2000, 4000, 8000].map((n) => ({
     value: n,
     label: fmt(n, lang),
-    hint: n === 0 ? t("choice.prefix.none") : `${size(t, n, lang)} ${t(`choice.prefix.${band(n, [[256, "instruction"], [1000, "system"]], "tools")}`)}`,
+    hint: n === 0 ? t("choice.prefix.none") : sentences(t, size(t, n, lang), t(`choice.prefix.${band(n, [[256, "instruction"], [1000, "system"]], "tools")}`)),
   }));
 }
 
@@ -111,7 +113,7 @@ export function tpotChoices(t: T, lang: Lang): Opt[] {
     return {
       value: ms,
       label: `${ms} ms`,
-      hint: t("choice.tpot", { tps: fmt(Math.round(tps), lang), wpm: fmt(Math.round((tps * WORDS_PER_TOKEN * 60) / 10) * 10, lang) }) + " " + t(`choice.tpot.${band(ms, [[20, "fast"], [50, "chat"], [100, "read"]], "slow")}`),
+      hint: sentences(t, t("choice.tpot", { tps: fmt(Math.round(tps), lang), wpm: fmt(Math.round((tps * WORDS_PER_TOKEN * 60) / 10) * 10, lang) }), t(`choice.tpot.${band(ms, [[20, "fast"], [50, "chat"], [100, "read"]], "slow")}`)),
     };
   });
 }
@@ -125,7 +127,7 @@ export function batchChoices(t: T): Opt[] {
 }
 
 export function seqChoices(t: T, lang: Lang): Opt[] {
-  return [512, 1024, 2048, 4096, 8192, 16384, 32768].map((n) => ({ value: n, label: `${k(n)} · ${fmt(n, lang)}`, hint: `${size(t, n, lang)} ${t(`choice.seq.${band(n, [[1024, "short"], [4096, "common"]], "long")}`)}` }));
+  return [512, 1024, 2048, 4096, 8192, 16384, 32768].map((n) => ({ value: n, label: `${k(n)} · ${fmt(n, lang)}`, hint: sentences(t, size(t, n, lang), t(`choice.seq.${band(n, [[1024, "short"], [4096, "common"]], "long")}`)) }));
 }
 
 /** A device's figures in one line, for hovering it in a menu. */

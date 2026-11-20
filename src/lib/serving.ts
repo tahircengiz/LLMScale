@@ -969,7 +969,7 @@ function loadSection(s: RepoSnapshot, f: Facts, lang: Lang, g: G): Section | nul
 const ability = (k: string, lang: Lang) => translate(lang, `serve.ability.${k}`);
 
 const listOf = (xs: string[], lang: Lang) =>
-  xs.length < 2 ? xs.join("") : `${joinList(lang, xs.slice(0, -1))} ${translate(lang, "serve.and")} ${xs[xs.length - 1]}`;
+  xs.length < 2 ? xs.join("") : `${joinList(lang, xs.slice(0, -1))}${translate(lang, "list.and")}${xs[xs.length - 1]}`;
 
 function portraitOf(f: Facts, lang: Lang): Part[] {
   const out: Part[] = [];

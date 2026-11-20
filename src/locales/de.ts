@@ -1495,12 +1495,13 @@ const de = {
   "serve.ability.reason": "Reasoning",
   "serve.ability.reasonToggle": "abschaltbarem Reasoning",
   "serve.ability.vision": "Bildeingabe",
-  "serve.and": "und",
+  "list.and": " und ",
   "list.sep": ", ",
   // "Label: value" and "one reason; another" in running text. French puts a no-break
   // space (U+00A0) before both marks; Chinese writes the full-width ： and ； with no space.
   "colon.sep": ": ",
   "semicolon.sep": "; ",
+  "sentence.sep": " ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

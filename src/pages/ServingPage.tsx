@@ -74,7 +74,7 @@ function Rich({ text }: { text: string }) {
 
 function useSay() {
   const { t } = useLang();
-  return (parts: Part[]) => parts.map((p) => t(`serve.a.${p.k}`, p.v)).join(" ");
+  return (parts: Part[]) => parts.map((p) => t(`serve.a.${p.k}`, p.v)).join(t("sentence.sep"));
 }
 
 export function ServingPage() {

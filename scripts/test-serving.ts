@@ -340,6 +340,17 @@ console.log("\n--- a list in running text is joined the way its language writes 
   const listed = (lang: Lang) => String(brief("Qwen_Qwen2.5-7B-Instruct-AWQ", lang).sections.find((s) => s.id === "sampling")?.parts.find((p) => p.k === "sampling.set")?.v?.list);
   check("en: comma and space", listed("en") === "temperature 0.7, top_p 0.8, top_k 20, repetition_penalty 1.05", listed("en"));
   check("zh: 、, as docs/i18n/glossary/zh.md has it", listed("zh") === "temperature 0.7、top_p 0.8、top_k 20、repetition_penalty 1.05", listed("zh"));
+  // What a chat model can do, as the portrait lists it. Mistral Small 3.2 takes tools and
+  // images; a template that takes tools and writes [THINK] adds reasoning, for a list of three.
+  const mistral = load("mistralai_Mistral-Small-3.2-24B-Instruct-2506");
+  const three: RepoSnapshot = { ...mistral, chatTemplate: { text: "{% if tools %}[AVAILABLE_TOOLS]{% endif %}[THINK]", file: "chat_template.jinja" } };
+  const abil = (s: RepoSnapshot, lang: Lang) => String(buildBrief(s, lang).portrait.find((p) => p.k === "p.chatWith")?.v?.abil);
+  check("en: two abilities, \"and\" with a space each side (list.and)", abil(mistral, "en") === "tool calling and image input", abil(mistral, "en"));
+  check("en: three abilities, commas then \"and\"", abil(three, "en") === "tool calling, reasoning and image input", abil(three, "en"));
+  check("zh: 和 with no space, as docs/i18n/glossary/zh.md has it", abil(mistral, "zh") === "工具调用和图像输入", abil(mistral, "zh"));
+  check("zh: three abilities, 、 then 和", abil(three, "zh") === "工具调用、推理和图像输入", abil(three, "zh"));
+  check("ja: および with no space, as docs/i18n/glossary/ja.md has it", abil(mistral, "ja") === "ツール呼び出しおよび画像入力", abil(mistral, "ja"));
+  check("ja: three abilities, 、 then および", abil(three, "ja") === "ツール呼び出し、リーズニングおよび画像入力", abil(three, "ja"));
 }
 
 console.log(fails ? `\n${fails} FAILED` : "\nALL PASS");

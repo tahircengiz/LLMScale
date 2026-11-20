@@ -6,7 +6,7 @@
 
 import { DICTS } from "../src/locales/index.ts";
 import { translate } from "../src/lib/dict.ts";
-import { ENABLED_LANGS } from "../src/lib/langs.ts";
+import { ENABLED_LANGS, type Lang } from "../src/lib/langs.ts";
 import {
   batchChoices, contextChoices, gpuCountChoices, gpuHint, outputChoices, prefixChoices, promptChoices,
   rankChoices, rpsChoices, seqChoices, tpotChoices, ttftChoices, userChoices, utilChoices, type Opt,
@@ -63,6 +63,20 @@ console.log("--- the worked-out hints ---");
   check("an H100 shows its memory, bandwidth and TFLOPS", gpuHint(t, GPUS.find((g) => g.id === "h100-80")!, "en") === "80 GB · 3,350 GB/s · 990 TFLOPS BF16");
   const tr = (k: string, v?: Record<string, string | number>) => translate("tr", k, v);
   check("Turkish groups thousands with a dot", /6\.100 kelime/.test(contextChoices(tr, "tr").find((o) => o.value === 8192)!.hint));
+}
+
+console.log("--- a hint's sentences are joined the way its language joins them (sentence.sep) ---");
+{
+  const hint = (lang: Lang) => contextChoices((k, v) => translate(lang, k, v), lang, 40960).at(-1)!.hint;
+  check("en: a space between sentences", hint("en") === "≈ 30,700 words, about 61 pages. A long document, or a set of source files. This model's maximum.", hint("en"));
+  check("zh: no space after 。, as docs/i18n/glossary/zh.md has it", hint("zh") === "≈ 30,700 个词，约 61 页。一份长文档，或一组源文件。此模型的最大值。", hint("zh"));
+  check("ja: no space after 。, as docs/i18n/glossary/ja.md has it", hint("ja") === "英単語で約 30,700 語、約 61 ページ。長いドキュメント、または一連のソース ファイル。このモデルの最大値。", hint("ja"));
+  for (const lang of ENABLED_LANGS) {
+    const t = (k: string, v?: Record<string, string | number>) => translate(lang, k, v);
+    const all = [contextChoices(t, lang, 40960), userChoices(t, lang), promptChoices(t, lang), outputChoices(t, lang), prefixChoices(t, lang), tpotChoices(t, lang), seqChoices(t, lang)].flat();
+    const spaced = all.filter((o) => /[。！？] /.test(o.hint));
+    check(`${lang}: no space after a full-width stop`, spaced.length === 0, spaced.map((o) => o.hint).join(" | "));
+  }
 }
 
 console.log(fails ? `\n${fails} FAILED` : "\nALL PASS");

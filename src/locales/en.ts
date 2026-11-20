@@ -1485,12 +1485,15 @@ const en = {
   "serve.ability.reason": "reasoning",
   "serve.ability.reasonToggle": "reasoning that can be switched off",
   "serve.ability.vision": "image input",
-  "serve.and": "and",
+  // The word before a list's last item carries its own spaces: Chinese writes 和 with none.
+  "list.and": " and ",
   "list.sep": ", ",
   // "Label: value" and "one reason; another" in running text. French puts a no-break
   // space (U+00A0) before both marks; Chinese writes the full-width ： and ； with no space.
   "colon.sep": ": ",
   "semicolon.sep": "; ",
+  // Between two sentences of an answer or a hint: a space, none after the Chinese 。.
+  "sentence.sep": " ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.

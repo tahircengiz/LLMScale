@@ -1483,10 +1483,11 @@ const fr = {
   "serve.ability.reason": "raisonnement",
   "serve.ability.reasonToggle": "raisonnement désactivable",
   "serve.ability.vision": "entrée d'images",
-  "serve.and": "et",
+  "list.and": " et ",
   "list.sep": ", ",
   "colon.sep": "\u00a0: ",
   "semicolon.sep": "\u00a0; ",
+  "sentence.sep": " ",
 
   // The config.json field reference (src/lib/configGlossary.ts): gloss.<field>.title
   // and .meaning, .yes/.no for a flag, gloss.unit.*, gloss.group.* and gloss.groupNote.*.
