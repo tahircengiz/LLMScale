@@ -362,7 +362,7 @@ const id = {
   "footer.builtBy": "Dibuat oleh",
   "footer.privacy": "Perhitungan berjalan di browser Anda — tanpa akun, tanpa backend. Kunjungan dihitung secara anonim, tanpa cookie.",
   "ainote.label": "Pemberitahuan AI",
-  "ainote.text": "Data, perhitungan, dan terjemahan di situs ini disiapkan dengan bantuan AI dan mungkin mengandung kesalahan. Sebelum mengambil keputusan penting, periksa dengan sumber lain.",
+  "ainote.text": "Data, perhitungan, dan terjemahan di situs ini disiapkan dengan bantuan AI dan mungkin mengandung kesalahan. Sebelum mengambil keputusan penting, sebaiknya Anda memeriksanya dengan sumber lain.",
   "ainote.close": "Tutup pemberitahuan",
   "footer.suggestFix": "Usulkan koreksi",
   "footer.guides": "Panduan",
