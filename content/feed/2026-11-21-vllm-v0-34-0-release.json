@@ -1,0 +1,24 @@
+{
+  "id": "2026-11-21-vllm-v0-34-0-release",
+  "published": "2026-11-21T16:45:41Z",
+  "category": "release",
+  "en": {
+    "title": "vLLM v0.34.0 released",
+    "body": "The vLLM project has published v0.34.0 on GitHub, dated 16 November 2026. The excerpt we received contains only the version tag, with no release notes, so the changes in this version are not described here.\n\nvLLM is a widely used serving engine. If you run it in production, read the full release notes before upgrading, then re-check memory use, KV cache behaviour and throughput on your own models and GPUs."
+  },
+  "tr": {
+    "title": "vLLM v0.34.0 yayımlandı",
+    "body": "vLLM projesi, 16 Kasım 2026 tarihli v0.34.0 sürümünü GitHub'da yayımladı. Elimizdeki metinde yalnızca sürüm etiketi var, sürüm notu yok. Bu yüzden bu sürümdeki değişiklikleri burada aktaramıyoruz.\n\nvLLM yaygın kullanılan bir serving motoru. Production'da kullanıyorsanız güncellemeden önce sürüm notlarının tamamını okuyun. Ardından kendi modelleriniz ve GPU'larınızla bellek kullanımını, KV cache davranışını ve throughput'u yeniden ölçün."
+  },
+  "refs": [
+    {
+      "url": "https://github.com/vllm-project/vllm/releases/tag/v0.34.0",
+      "title": "Release v0.34.0 · vllm-project/vllm",
+      "source": "GitHub"
+    }
+  ],
+  "tags": [
+    "vllm",
+    "serving"
+  ]
+}
