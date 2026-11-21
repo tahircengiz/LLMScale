@@ -1,0 +1,41 @@
+{
+  "id": "2026-11-21-microsoft-aion-instruct-2b-release",
+  "published": "2026-11-21T16:41:28Z",
+  "category": "model",
+  "en": {
+    "title": "Microsoft releases Aion 1.0 Instruct, a 2.3B on-device model with 32K context",
+    "body": "Microsoft has released Aion 1.0 Instruct, a 2.3B MIT-licensed model with 32K context and eight languages. An optimised version becomes the Windows OS SLM by end of January 2027. BF16 weights come first, with quantized ones to follow.\n\nLLMScale estimates 6.44 GiB in BF16 and 3.87 GiB in INT4 for one user at 8K context, which fits an RTX 3060. Only 7 of 28 layers use full attention. The rest use a 2048-token sliding window, which keeps the KV cache small at long context."
+  },
+  "tr": {
+    "title": "Microsoft, cihaz üstü kullanım için 32K context'li 2,3B Aion 1.0 Instruct'ı yayımladı",
+    "body": "Microsoft, 32K context ve sekiz dil destekleyen, MIT lisanslı 2,3B parametreli Aion 1.0 Instruct'ı yayımladı. Modelin optimize edilmiş bir sürümü Ocak 2027 sonuna kadar Windows'un yerleşik SLM'i olacak. Önce BF16 ağırlıklar geldi, quantized sürümler ardından gelecek.\n\nLLMScale tahminine göre tek kullanıcı ve 8K context için BF16'da 6,44 GiB, INT4'te 3,87 GiB gerekiyor; bu RTX 3060'a sığıyor. 28 katmanın yalnızca 7'si tam attention kullanıyor. Kalanlar 2048 token'lık kayan pencereyle çalışıyor, bu da uzun context'te KV cache'i küçük tutuyor."
+  },
+  "refs": [
+    {
+      "url": "https://huggingface.co/microsoft/Aion-1.0-Instruct-2.3B",
+      "title": "microsoft/Aion-1.0-Instruct-2.3B",
+      "source": "Hugging Face"
+    },
+    {
+      "url": "https://github.com/microsoft/Aion-Instruct-Preview-Sample",
+      "title": "microsoft/Aion-Instruct-Preview-Sample",
+      "source": "GitHub"
+    }
+  ],
+  "tags": [
+    "small-models",
+    "on-device",
+    "sliding-window",
+    "kv-cache"
+  ],
+  "hf": "microsoft/Aion-1.0-Instruct-2.3B",
+  "arch": {
+    "numParams": 2288831488,
+    "numLayers": 28,
+    "hiddenSize": 2048,
+    "numAttentionHeads": 24,
+    "numKeyValueHeads": 8,
+    "headDim": 128,
+    "maxContext": 32768
+  }
+}
