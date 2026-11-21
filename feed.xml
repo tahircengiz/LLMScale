@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:42:40 GMT</lastBuildDate>
+<lastBuildDate>Sat, 21 Nov 2026 16:39:59 GMT</lastBuildDate>
+<item>
+<title>vLLM adds day-0 support for Inkling 2 Mini, a looped 26B MoE</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-11-21-vllm-inkling-2-mini-looped-moe.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-11-21-vllm-inkling-2-mini-looped-moe.html</guid>
+<pubDate>Sat, 21 Nov 2026 16:39:59 GMT</pubDate>
+<category>Tooling</category>
+<description>&lt;p&gt;vLLM supports Thinking Machines' Inkling 2 Mini from day 0 on Blackwell, Hopper and DGX Spark. The multimodal MoE (26B total, 3.5B active, up to 1M context) runs its middle 12 layers three times per token with shared weights. Each pass keeps its own KV cache, giving 24 layers but 48 KV caches.&lt;/p&gt;&lt;p&gt;For sizing, extra passes cost cache, not weights. On one GB200 at 4K context, a variable-loop research checkpoint holds 352K tokens of KV cache with 1 pass, 175K with 3, and 194K with 3 passes sharing one cache.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://vllm.ai/blog/2026-11-20-inkling2-mini"&gt;vLLM&lt;/a&gt; · &lt;a href="https://huggingface.co/thinkingmachines/Inkling-2-Mini"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://huggingface.co/thinkingmachines/TML-d24-varloop-research"&gt;Hugging Face&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>inclusionAI releases Ling-3.1-flash, a 560B hybrid-linear MoE with 25B active</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-10-20-inclusionai-ling-3-1-flash-moe.html</link>

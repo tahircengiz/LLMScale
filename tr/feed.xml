@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Tue, 20 Oct 2026 05:42:40 GMT</lastBuildDate>
+<lastBuildDate>Sat, 21 Nov 2026 16:39:59 GMT</lastBuildDate>
+<item>
+<title>vLLM, döngülü 26B MoE modeli Inkling 2 Mini'ye ilk gün desteği verdi</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-11-21-vllm-inkling-2-mini-looped-moe.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-11-21-vllm-inkling-2-mini-looped-moe.html</guid>
+<pubDate>Sat, 21 Nov 2026 16:39:59 GMT</pubDate>
+<category>Araç</category>
+<description>&lt;p&gt;vLLM, Thinking Machines'in Inkling 2 Mini modelini Blackwell, Hopper ve DGX Spark üzerinde ilk günden destekliyor. Toplam 26B, aktif 3,5B parametreli ve 1M token context'e kadar çıkan multimodal MoE, ortadaki 12 katmanı token başına paylaşılan ağırlıklarla üç kez çalıştırıyor. Her geçişin ayrı KV cache'i var: 24 katman, 48 KV cache.&lt;/p&gt;&lt;p&gt;Ek geçişlerin maliyeti ağırlıkta değil cache'te. Tek GB200'de 4K context'te değişken döngülü araştırma checkpoint'i 1 geçişle 352K, 3 geçişle 175K, cache paylaşan 3 geçişle 194K token KV cache tutuyor.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://vllm.ai/blog/2026-11-20-inkling2-mini"&gt;vLLM&lt;/a&gt; · &lt;a href="https://huggingface.co/thinkingmachines/Inkling-2-Mini"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://huggingface.co/thinkingmachines/TML-d24-varloop-research"&gt;Hugging Face&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>inclusionAI, 25B aktif parametreli 560B hybrid-linear MoE Ling-3.1-flash'ı yayınladı</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-10-20-inclusionai-ling-3-1-flash-moe.html</link>
