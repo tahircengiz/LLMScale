@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Sat, 21 Nov 2026 16:44:12 GMT</lastBuildDate>
+<lastBuildDate>Sat, 21 Nov 2026 16:45:41 GMT</lastBuildDate>
+<item>
+<title>vLLM v0.34.0 yayımlandı</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-11-21-vllm-v0-34-0-release.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-11-21-vllm-v0-34-0-release.html</guid>
+<pubDate>Sat, 21 Nov 2026 16:45:41 GMT</pubDate>
+<category>Sürüm</category>
+<description>&lt;p&gt;vLLM projesi, 16 Kasım 2026 tarihli v0.34.0 sürümünü GitHub'da yayımladı. Elimizdeki metinde yalnızca sürüm etiketi var, sürüm notu yok. Bu yüzden bu sürümdeki değişiklikleri burada aktaramıyoruz.&lt;/p&gt;&lt;p&gt;vLLM yaygın kullanılan bir serving motoru. Production'da kullanıyorsanız güncellemeden önce sürüm notlarının tamamını okuyun. Ardından kendi modelleriniz ve GPU'larınızla bellek kullanımını, KV cache davranışını ve throughput'u yeniden ölçün.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://github.com/vllm-project/vllm/releases/tag/v0.34.0"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>AMD Loom Radeon 9700 desteği ekledi, llama.cpp'ye göre ortalama %42 hız bildiriyor</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-11-21-amd-loom-radeon-9700-support.html</link>

@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Sat, 21 Nov 2026 16:44:12 GMT</lastBuildDate>
+<lastBuildDate>Sat, 21 Nov 2026 16:45:41 GMT</lastBuildDate>
+<item>
+<title>vLLM v0.34.0 released</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-11-21-vllm-v0-34-0-release.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-11-21-vllm-v0-34-0-release.html</guid>
+<pubDate>Sat, 21 Nov 2026 16:45:41 GMT</pubDate>
+<category>Release</category>
+<description>&lt;p&gt;The vLLM project has published v0.34.0 on GitHub, dated 16 November 2026. The excerpt we received contains only the version tag, with no release notes, so the changes in this version are not described here.&lt;/p&gt;&lt;p&gt;vLLM is a widely used serving engine. If you run it in production, read the full release notes before upgrading, then re-check memory use, KV cache behaviour and throughput on your own models and GPUs.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://github.com/vllm-project/vllm/releases/tag/v0.34.0"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>AMD Loom adds Radeon 9700 support, reports 42% average speedup over llama.cpp</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-11-21-amd-loom-radeon-9700-support.html</link>
