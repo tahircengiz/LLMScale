@@ -1,0 +1,47 @@
+{
+  "id": "2026-11-21-vllm-inkling-2-mini-looped-moe",
+  "published": "2026-11-21T16:39:59Z",
+  "category": "tooling",
+  "en": {
+    "title": "vLLM adds day-0 support for Inkling 2 Mini, a looped 26B MoE",
+    "body": "vLLM supports Thinking Machines' Inkling 2 Mini from day 0 on Blackwell, Hopper and DGX Spark. The multimodal MoE (26B total, 3.5B active, up to 1M context) runs its middle 12 layers three times per token with shared weights. Each pass keeps its own KV cache, giving 24 layers but 48 KV caches.\n\nFor sizing, extra passes cost cache, not weights. On one GB200 at 4K context, a variable-loop research checkpoint holds 352K tokens of KV cache with 1 pass, 175K with 3, and 194K with 3 passes sharing one cache."
+  },
+  "tr": {
+    "title": "vLLM, döngülü 26B MoE modeli Inkling 2 Mini'ye ilk gün desteği verdi",
+    "body": "vLLM, Thinking Machines'in Inkling 2 Mini modelini Blackwell, Hopper ve DGX Spark üzerinde ilk günden destekliyor. Toplam 26B, aktif 3,5B parametreli ve 1M token context'e kadar çıkan multimodal MoE, ortadaki 12 katmanı token başına paylaşılan ağırlıklarla üç kez çalıştırıyor. Her geçişin ayrı KV cache'i var: 24 katman, 48 KV cache.\n\nEk geçişlerin maliyeti ağırlıkta değil cache'te. Tek GB200'de 4K context'te değişken döngülü araştırma checkpoint'i 1 geçişle 352K, 3 geçişle 175K, cache paylaşan 3 geçişle 194K token KV cache tutuyor."
+  },
+  "refs": [
+    {
+      "url": "https://vllm.ai/blog/2026-11-20-inkling2-mini",
+      "title": "Inkling 2 Mini on vLLM: Day-0 Support for a Looped Model",
+      "source": "vLLM"
+    },
+    {
+      "url": "https://huggingface.co/thinkingmachines/Inkling-2-Mini",
+      "title": "thinkingmachines/Inkling-2-Mini",
+      "source": "Hugging Face"
+    },
+    {
+      "url": "https://huggingface.co/thinkingmachines/TML-d24-varloop-research",
+      "title": "thinkingmachines/TML-d24-varloop-research",
+      "source": "Hugging Face"
+    }
+  ],
+  "tags": [
+    "vllm",
+    "moe",
+    "kv-cache",
+    "looped-models"
+  ],
+  "hf": "thinkingmachines/Inkling-2-Mini",
+  "arch": {
+    "numParams": 26388646440,
+    "numLayers": 24,
+    "hiddenSize": 2304,
+    "numAttentionHeads": 24,
+    "numKeyValueHeads": 8,
+    "headDim": 128,
+    "maxContext": 1048576,
+    "activeParams": 3456289320
+  }
+}
