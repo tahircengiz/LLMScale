@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Short posts on new open LLMs, serving engines and GPUs, each with its sources — and, for every new model, the GPU memory it needs at BF16, FP8 and INT4.</description>
 <language>en</language>
-<lastBuildDate>Sat, 21 Nov 2026 16:39:59 GMT</lastBuildDate>
+<lastBuildDate>Sat, 21 Nov 2026 16:41:28 GMT</lastBuildDate>
+<item>
+<title>Microsoft releases Aion 1.0 Instruct, a 2.3B on-device model with 32K context</title>
+<link>https://tahircengiz.github.io/LLMScale/feed/2026-11-21-microsoft-aion-instruct-2b-release.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/feed/2026-11-21-microsoft-aion-instruct-2b-release.html</guid>
+<pubDate>Sat, 21 Nov 2026 16:41:28 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;Microsoft has released Aion 1.0 Instruct, a 2.3B MIT-licensed model with 32K context and eight languages. An optimised version becomes the Windows OS SLM by end of January 2027. BF16 weights come first, with quantized ones to follow.&lt;/p&gt;&lt;p&gt;LLMScale estimates 6.44 GiB in BF16 and 3.87 GiB in INT4 for one user at 8K context, which fits an RTX 3060. Only 7 of 28 layers use full attention. The rest use a 2048-token sliding window, which keeps the KV cache small at long context.&lt;/p&gt;&lt;p&gt;Sources: &lt;a href="https://huggingface.co/microsoft/Aion-1.0-Instruct-2.3B"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://github.com/microsoft/Aion-Instruct-Preview-Sample"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>vLLM adds day-0 support for Inkling 2 Mini, a looped 26B MoE</title>
 <link>https://tahircengiz.github.io/LLMScale/feed/2026-11-21-vllm-inkling-2-mini-looped-moe.html</link>

@@ -6,7 +6,15 @@
 <atom:link href="https://tahircengiz.github.io/LLMScale/tr/feed.xml" rel="self" type="application/rss+xml"/>
 <description>Yeni açık LLM'ler, servis motorları ve GPU'lar üzerine kaynaklı kısa postlar; her yeni model için BF16, FP8 ve INT4'te gereken GPU belleğiyle.</description>
 <language>tr</language>
-<lastBuildDate>Sat, 21 Nov 2026 16:39:59 GMT</lastBuildDate>
+<lastBuildDate>Sat, 21 Nov 2026 16:41:28 GMT</lastBuildDate>
+<item>
+<title>Microsoft, cihaz üstü kullanım için 32K context'li 2,3B Aion 1.0 Instruct'ı yayımladı</title>
+<link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-11-21-microsoft-aion-instruct-2b-release.html</link>
+<guid isPermaLink="true">https://tahircengiz.github.io/LLMScale/tr/feed/2026-11-21-microsoft-aion-instruct-2b-release.html</guid>
+<pubDate>Sat, 21 Nov 2026 16:41:28 GMT</pubDate>
+<category>Model</category>
+<description>&lt;p&gt;Microsoft, 32K context ve sekiz dil destekleyen, MIT lisanslı 2,3B parametreli Aion 1.0 Instruct'ı yayımladı. Modelin optimize edilmiş bir sürümü Ocak 2027 sonuna kadar Windows'un yerleşik SLM'i olacak. Önce BF16 ağırlıklar geldi, quantized sürümler ardından gelecek.&lt;/p&gt;&lt;p&gt;LLMScale tahminine göre tek kullanıcı ve 8K context için BF16'da 6,44 GiB, INT4'te 3,87 GiB gerekiyor; bu RTX 3060'a sığıyor. 28 katmanın yalnızca 7'si tam attention kullanıyor. Kalanlar 2048 token'lık kayan pencereyle çalışıyor, bu da uzun context'te KV cache'i küçük tutuyor.&lt;/p&gt;&lt;p&gt;Kaynaklar: &lt;a href="https://huggingface.co/microsoft/Aion-1.0-Instruct-2.3B"&gt;Hugging Face&lt;/a&gt; · &lt;a href="https://github.com/microsoft/Aion-Instruct-Preview-Sample"&gt;GitHub&lt;/a&gt;&lt;/p&gt;</description>
+</item>
 <item>
 <title>vLLM, döngülü 26B MoE modeli Inkling 2 Mini'ye ilk gün desteği verdi</title>
 <link>https://tahircengiz.github.io/LLMScale/tr/feed/2026-11-21-vllm-inkling-2-mini-looped-moe.html</link>
